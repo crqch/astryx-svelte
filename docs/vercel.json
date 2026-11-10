@@ -1,4 +1,4 @@
 {
 	"$schema": "https://openapi.vercel.sh/vercel.json",
-	"buildCommand": "pnpm --filter docs... build"
+	"buildCommand": "bun run --filter 'docs...' build"
 }

@@ -2,7 +2,7 @@
 //
 // Two rules encoded here, both of which this repo has already paid for:
 //
-//   - A stage never throws. `pnpm -r lint` used to be chained with `&&`, which
+//   - A stage never throws. `bun run --filter '*' lint` used to be chained with `&&`, which
 //     reports "failed" identically whether one stage failed or both ran — a
 //     stray scratch file short-circuited eslint and hid six real errors for
 //     several batches. Callers collect every result and report all of them.
@@ -12,7 +12,7 @@
 
 import { spawnSync } from 'node:child_process';
 
-// Well clear of the slowest legitimate stage (`pnpm -r test` with the browser
+// Well clear of the slowest legitimate stage (`bun run --filter '*' test` with the browser
 // suite) and well under GitHub's six-hour job cap, so a stuck stage fails with
 // its own name attached instead of taking the whole job down anonymously.
 const DEFAULT_TIMEOUT = 30 * 60 * 1000;
@@ -89,11 +89,11 @@ export function runStage(name, command, args, opts = {}) {
 		// defaults every stream to a pipe, and a child that reads stdin blocks
 		// on a pipe nothing will ever write to. On Windows `shell: true` hides
 		// it; on Linux it does not. CI's first real run of this gate hung for
-		// six hours in `pnpm verify --no-client` and printed nothing at all
+		// six hours in `bun run verify --no-client` and printed nothing at all
 		// before the runner killed it at its cap.
 		stdio: ['ignore', 'pipe', 'pipe'],
 		// A hang should cost minutes, not a whole CI budget. The slowest
-		// legitimate stage is `pnpm -r test` with the browser suite; 30 minutes
+		// legitimate stage is `bun run --filter '*' test` with the browser suite; 30 minutes
 		// is well clear of it and well under GitHub's six-hour job cap, so a
 		// stuck stage fails with its own name attached instead of taking the
 		// job down anonymously.

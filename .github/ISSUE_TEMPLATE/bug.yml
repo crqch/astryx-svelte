@@ -65,7 +65,7 @@ body:
       label: Environment
       description: >
         Svelte and SvelteKit versions, package manager, browser, OS. Paste the output of
-        `pnpm ls svelte @astryx-svelte/core` if that's easiest.
+        `bun pm ls | grep -E "svelte|@astryx-svelte/core"` if that's easiest.
       render: shell
     validations:
       required: false

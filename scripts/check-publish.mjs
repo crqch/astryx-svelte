@@ -7,11 +7,11 @@
  * page for it, and nothing else in this repo would ever notice).
  *
  * Why a script rather than a per-package `publint` devDependency: the binary is
- * only linked into the package that declares it, so `pnpm -r exec publint`
+ * only linked into the package that declares it, so `bun run check:publish`
  * fails everywhere but `packages/core`. The API takes a directory, so one root
  * script covers all ten.
  *
- * Reads the built `dist/` where a package has one, so `pnpm -r build` must have
+ * Reads the built `dist/` where a package has one, so `bun run --filter '*' build` must have
  * run first — publint checks that `exports` resolve to files that exist, and an
  * unbuilt package fails on every entry point at once.
  *
@@ -23,7 +23,7 @@
  *
  * @input  packages/{core,cli}, packages/themes/*
  * @output exit 0, or exit 1 with the offending package and message
- * @position `pnpm check:publish`; a gate in .github/workflows/release.yml
+ * @position `bun run check:publish`; a gate in .github/workflows/release.yml
  */
 
 import fs from 'node:fs';
