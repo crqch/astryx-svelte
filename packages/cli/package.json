@@ -71,15 +71,15 @@
 		"node": ">=22"
 	},
 	"scripts": {
-		"astryx-svelte": "node bin/astryx-svelte.mjs",
+		"astryx-svelte": "bun bin/astryx-svelte.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test:core-src": "node scripts/assert-core-ships-src.mjs",
-		"generate-themes": "node scripts/generate-cli-themes.mjs",
-		"test:themes-bundle": "node scripts/generate-cli-themes.mjs --check",
-		"test": "npm run test:unit -- --run && npm run test:core-src && npm run test:themes-bundle"
+		"test:core-src": "bun scripts/assert-core-ships-src.mjs",
+		"generate-themes": "bun scripts/generate-cli-themes.mjs",
+		"test:themes-bundle": "bun scripts/generate-cli-themes.mjs --check",
+		"test": "vitest --run && bun run test:core-src && bun run test:themes-bundle"
 	},
 	"dependencies": {
 		"commander": "^14.0.0",

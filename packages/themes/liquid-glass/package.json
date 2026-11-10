@@ -1,7 +1,7 @@
 {
 	"name": "@astryx-svelte/theme-liquid-glass",
 	"version": "0.5.2",
-	"description": "Liquid Glass theme for astryx-svelte — macOS translucent materials, capsule controls and the Apple system palette. Has no upstream Astryx counterpart.",
+	"description": "Liquid Glass theme for astryx-svelte \u2014 macOS translucent materials, capsule controls and the Apple system palette. Has no upstream Astryx counterpart.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -35,13 +35,13 @@
 		"src"
 	],
 	"scripts": {
-		"build": "node --experimental-strip-types scripts/build-theme.mjs",
+		"build": "bun scripts/build-theme.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
-		"test:self": "node --experimental-strip-types scripts/check-theme.mjs",
-		"test:icons": "node scripts/check-icons.mjs",
-		"test": "npm run build && npm run test:self && npm run test:icons"
+		"test:self": "bun scripts/check-theme.mjs",
+		"test:icons": "bun scripts/check-icons.mjs",
+		"test": "bun run build && bun run test:self && bun run test:icons"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.25.0"

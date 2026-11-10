@@ -17,7 +17,7 @@
 	},
 	"description": "Svelte 5 components for Astryx, Meta's open source design system.",
 	"scripts": {
-		"build": "npm run prepack",
+		"build": "bun run prepack",
 		"prepare": "svelte-kit sync || echo ''",
 		"prepack": "svelte-kit sync && svelte-package && node scripts/build-css.mjs && node scripts/compile-dist-stylex.mjs && publint",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -25,14 +25,14 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test:client": "node scripts/run-client-tests.mjs",
+		"test:client": "bun scripts/run-client-tests.mjs",
 		"test:parity": "node scripts/compare-upstream-classes.mjs",
 		"test:css": "node scripts/compare-upstream-css.mjs",
 		"build:css": "node scripts/build-css.mjs",
-		"build:pseudo": "node scripts/build-pseudo-locale.mjs",
-		"test:pseudo": "node scripts/build-pseudo-locale.mjs --check",
-		"test:node": "npm run test:unit -- --run --project=server && npm run test:parity && npm run test:css && npm run test:pseudo",
-		"test": "npm run test:node && npm run test:client"
+		"build:pseudo": "bun scripts/build-pseudo-locale.mjs",
+		"test:pseudo": "bun scripts/build-pseudo-locale.mjs --check",
+		"test:node": "vitest --run --project=server && bun run test:parity && bun run test:css && bun run test:pseudo",
+		"test": "bun run test:node && bun run test:client"
 	},
 	"files": [
 		"dist",

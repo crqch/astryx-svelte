@@ -5,23 +5,23 @@
   "description": "A Svelte 5 port of Astryx, Meta's open source design system. Unofficial and not affiliated with Meta.",
   "license": "MIT",
   "type": "module",
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "bun@1.3.14",
   "engines": {
-    "node": ">=22"
+    "bun": ">=1.3.14"
   },
   "scripts": {
-    "dev": "pnpm --filter docs dev",
-    "build": "pnpm -r build",
-    "check": "pnpm -r check",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "dev": "bun run --filter docs dev",
+    "build": "bun run --filter '*' build",
+    "check": "bun run --filter '*' check",
+    "test": "bun run --filter '*' test",
+    "lint": "bun run --filter '*' lint",
     "lint:root": "prettier --check port/*.md *.md",
-    "format": "pnpm -r format",
-    "check:publish": "node scripts/check-publish.mjs",
-    "status": "node scripts/status.mjs",
-    "status:full": "node scripts/status.mjs --full",
-    "verify": "node scripts/verify.mjs",
-    "verify:fast": "node scripts/verify.mjs --fast"
+    "format": "bun run --filter '*' format",
+    "check:publish": "bun scripts/check-publish.mjs",
+    "status": "bun scripts/status.mjs",
+    "status:full": "bun scripts/status.mjs --full",
+    "verify": "bun scripts/verify.mjs",
+    "verify:fast": "bun scripts/verify.mjs --fast"
   },
   "workspaces": [
     "packages/*",

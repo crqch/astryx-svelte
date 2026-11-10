@@ -1,7 +1,7 @@
 {
 	"name": "@astryx-svelte/theme-y2k",
 	"version": "0.5.2",
-	"description": "Y2K theme for astryx-svelte — hot pinks, lime greens, and Poppins.",
+	"description": "Y2K theme for astryx-svelte \u2014 hot pinks, lime greens, and Poppins.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -35,13 +35,13 @@
 		"src"
 	],
 	"scripts": {
-		"build": "node --experimental-strip-types scripts/build-theme.mjs",
+		"build": "bun scripts/build-theme.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
-		"test:parity": "node scripts/compare-upstream.mjs",
-		"test:icons": "node scripts/check-icons.mjs",
-		"test": "npm run build && npm run test:parity && npm run test:icons"
+		"test:parity": "bun scripts/compare-upstream.mjs",
+		"test:icons": "bun scripts/check-icons.mjs",
+		"test": "bun run build && bun run test:parity && bun run test:icons"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.25.0"
