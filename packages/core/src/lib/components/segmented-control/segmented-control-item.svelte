@@ -20,6 +20,7 @@
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { segmentTitleProps } from '../../private-attributes/segment-title.js';
+	import { segmentDisabledProps } from '../../private-attributes/segment-disabled.js';
 	import { useSegmentedControlContext } from './segmented-control-context.svelte.js';
 	import {
 		segmentedControlIconAttrs,
@@ -37,6 +38,7 @@
 		isLabelHidden = false,
 		icon,
 		isDisabled = false,
+		'aria-describedby': ariaDescribedByProp,
 		onclick: onClickProp,
 		...rest
 	}: SegmentedControlItemProps = $props();
@@ -45,12 +47,15 @@
 
 	const isSelected = $derived(group().value === value);
 	const isItemDisabled = $derived(isDisabled || group().isDisabled);
-	// When the whole group is disabled with a disabledMessage, keep the selected
-	// segment focusable so the reason tooltip is keyboard-discoverable. Per-item
-	// disabling always drops out of the tab order; activation stays blocked.
-	const keepsSelectedFocusable = $derived(
-		isSelected && (group().hasDisabledMessage ?? false) && !isDisabled
+	const isTouchPresentation = $derived(group().isTouchPresentation);
+	/** The group's reason describes each segment, after a caller's own ids. */
+	const describedBy = $derived(
+		[ariaDescribedByProp, group().disabledReasonID]
+			.filter((id): id is string => typeof id === 'string' && id.length > 0)
+			.join(' ') || undefined
 	);
+	/** A press can change an unselected, enabled segment: it paints the overlay. */
+	const isPressable = $derived(!isSelected && !isItemDisabled);
 	const size = $derived(group().size);
 	const isFill = $derived(group().layout === 'fill');
 
@@ -62,7 +67,14 @@
 		})
 	);
 	const itemAttrs = $derived(
-		segmentedControlItemAttrs({ size, isSelected, isItemDisabled, isFill })
+		segmentedControlItemAttrs({
+			size,
+			isSelected,
+			isItemDisabled,
+			isFill,
+			isLabelHidden,
+			isTouchPresentation
+		})
 	);
 	const iconAttrs = $derived(segmentedControlIconAttrs(size));
 	const labelTextAttrs = segmentedControlLabelTextAttrs();
@@ -70,11 +82,16 @@
 	// Consumer-first: a consumer `onclick` can `preventDefault()` to opt out of
 	// selection; otherwise selection proceeds when enabled and not already selected.
 	function handleClick(e: MouseEvent & { currentTarget: HTMLButtonElement }): void {
+		// A disabled segment runs no caller handler: a group disabled with a
+		// reason stays focusable, so Enter and Space can synthesize a click.
+		if (isItemDisabled) {
+			return;
+		}
 		onClickProp?.(e);
 		if (e.defaultPrevented) {
 			return;
 		}
-		if (!isItemDisabled && !isSelected) {
+		if (!isSelected) {
 			group().onChange(value);
 		}
 	}
@@ -87,8 +104,11 @@
 	aria-checked={isSelected}
 	aria-disabled={isItemDisabled || undefined}
 	aria-label={isLabelHidden ? label : undefined}
+	aria-describedby={describedBy}
 	data-value={value}
-	tabindex={(isSelected && !isItemDisabled) || keepsSelectedFocusable ? 0 : -1}
+	{...segmentDisabledProps(isDisabled)}
+	data-astryx-pressable={isPressable ? '' : undefined}
+	tabindex={isSelected ? 0 : -1}
 	onclick={handleClick}
 	{...theme}
 	class={cx(theme.class, itemAttrs.class)}

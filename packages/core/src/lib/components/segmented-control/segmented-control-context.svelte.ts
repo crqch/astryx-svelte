@@ -18,6 +18,10 @@ export interface SegmentedControlContextValue {
 	size: SegmentedControlSize;
 	layout: SegmentedControlLayout;
 	isDisabled: boolean;
+	/** The group's touch presentation: the selection slides on a spring. */
+	isTouchPresentation: boolean;
+	/** The disabled reason's tooltip id, which describes each segment. */
+	disabledReasonID?: string;
 	/**
 	 * True when the whole control is disabled *and* a `disabledMessage` is set. The
 	 * selected segment then stays focusable via `aria-disabled` (not dropped from

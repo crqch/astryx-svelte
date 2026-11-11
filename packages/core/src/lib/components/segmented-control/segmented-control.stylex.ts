@@ -12,6 +12,18 @@ const styles = stylex.create({
 		isolation: 'isolate',
 		display: 'inline-flex',
 		alignItems: 'center',
+		// Hug sizes to its segments but never past its container: in a narrow
+		// card or a phone row the segments shrink and their labels truncate
+		// instead of the control running off the edge.
+		width: 'fit-content',
+		maxWidth: {
+			default: 'none',
+			':has([role="radio"]:not([aria-label]))': '100%'
+		},
+		minWidth: {
+			default: 'auto',
+			':has([role="radio"]:not([aria-label]))': 0
+		},
 		gap: spacingVars['--spacing-0-5'],
 		'--_segmented-control-padding': spacingVars['--spacing-0-5'],
 		padding: 'var(--_segmented-control-padding)',

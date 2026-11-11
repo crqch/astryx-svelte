@@ -487,9 +487,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 12188          |
-| Declared here              | 8106           |
-| **Short**                  | **4101**       |
-| Over, across 6 groups      | +19            |
+| Declared here              | 8134           |
+| **Short**                  | **4080**       |
+| Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s
@@ -499,7 +499,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (208)</summary>
+<details><summary>Suites short of upstream (207)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -570,7 +570,6 @@ per connected group.
 | `NavMenu/NavHeadingMenu.test.tsx`                                                                                                                                                        | 45       | 23   | 22    |
 | `PowerSearch/PowerSearchEditPopover.test.tsx`                                                                                                                                            | 25       | 3    | 22    |
 | `Field/Field.test.tsx`<br>`Field/FieldLabel.test.tsx`                                                                                                                                    | 73       | 52   | 21    |
-| `SegmentedControl/SegmentedControl.test.tsx`                                                                                                                                             | 63       | 42   | 21    |
 | `CommandPalette/CommandPalette.test.tsx`                                                                                                                                                 | 39       | 19   | 20    |
 | `ButtonGroup/ButtonGroup.test.tsx`                                                                                                                                                       | 44       | 25   | 19    |
 | `Switch/Switch.test.tsx`                                                                                                                                                                 | 71       | 52   | 19    |
@@ -718,7 +717,7 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 7     | 1     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 11    | 2     |
 | `getByText` with a string, no `exact`                         | 1     | 1     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string
