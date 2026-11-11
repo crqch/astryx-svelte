@@ -8,9 +8,9 @@
 
 |                           |                                                                          |
 | ------------------------- | ------------------------------------------------------------------------ |
-| Component dirs (ours)     | 101                                                                      |
+| Component dirs (ours)     | 102                                                                      |
 | Component dirs (upstream) | 109                                                                      |
-| Missing here              | Drawer, InfoTip, ScrollableArea, SnapPaging                              |
+| Missing here              | Drawer, ScrollableArea, SnapPaging                                       |
 | Not in upstream           | none                                                                     |
 | Theme packages            | 8 — butter, chocolate, gothic, liquid-glass, matcha, neutral, stone, y2k |
 | Upstream pin              | `@astryxdesign/core` 0.7.13                                              |
@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 272     | 10568          |
+| Ported here              | 273     | 10590          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **525** | **6357**       |
+| **Unported**             | **524** | **6335**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -102,7 +102,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Typeahead/BaseTypeahead.incremental.test.tsx`                     | 23    |
 | `animator/createAnimator.test.ts`                                  | 22    |
 | `Chat/ChatSendButton.test.tsx`                                     | 22    |
-| `InfoTip/InfoTip.test.tsx`                                         | 22    |
 | `Switch/switchTouch.test.ts`                                       | 22    |
 | `Markdown/plugins/sourceDecoration.test.tsx`                       | 21    |
 | `__tests__/BusyOwnerAnnouncement.test.tsx`                         | 20    |
@@ -566,9 +565,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10568          |
-| Declared here              | 6543           |
-| **Short**                  | **4041**       |
+| Upstream, in ported suites | 10590          |
+| Declared here              | 6561           |
+| **Short**                  | **4045**       |
 | Over, across 6 groups      | +16            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -579,7 +578,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (199)</summary>
+<details><summary>Suites short of upstream (200)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -731,6 +730,7 @@ per connected group.
 | `hooks/useDevWarning.test.tsx`                                                                                                                                                           | 7        | 3    | 4     |
 | `hooks/useMediaQuery.test.ts`                                                                                                                                                            | 14       | 10   | 4     |
 | `hooks/useTreeFocus.test.tsx`                                                                                                                                                            | 20       | 16   | 4     |
+| `InfoTip/InfoTip.test.tsx`                                                                                                                                                               | 22       | 18   | 4     |
 | `theme/derivedVarRegistry.test.ts`                                                                                                                                                       | 14       | 10   | 4     |
 | `theme/useTheme.test.tsx`                                                                                                                                                                | 22       | 18   | 4     |
 | `utils/devWarning.test.ts`                                                                                                                                                               | 9        | 5    | 4     |
@@ -801,7 +801,7 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 649    |
+| Ported      | 652    |
 | **Pending** | **67** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so

@@ -176,6 +176,7 @@ export { default as IconButton } from './components/icon-button/icon-button.svel
 export { default as ImperativeAlertDialogLayer } from './components/alert-dialog/imperative-alert-dialog-layer.svelte';
 export { default as ImperativeDialogLayer } from './components/dialog/imperative-dialog-layer.svelte';
 export { default as InputClearButton } from './components/field/input-clear-button.svelte';
+export { default as InfoTip } from './components/info-tip/info-tip.svelte';
 export { default as InputGroup } from './components/input-group/input-group.svelte';
 export { default as InputGroupText } from './components/input-group/input-group-text.svelte';
 export { default as Item } from './components/item/item.svelte';
@@ -658,6 +659,7 @@ export type { ImperativeAlertDialogLayerProps } from './components/alert-dialog/
 export type { ImperativeDialogLayerProps } from './components/dialog/imperative-dialog-layer.svelte';
 // `InputClearButtonProps` is deliberately absent: upstream's `Field/index.ts`
 // exports the component but keeps its props type module-local, so we do too.
+export type { InfoTipProps, InfoTipSize } from './components/info-tip/info-tip.svelte';
 export type { InputGroupProps } from './components/input-group/input-group.svelte';
 export type { InputGroupSize } from './components/input-group/input-group.stylex.js';
 export type { InputGroupTextProps } from './components/input-group/input-group-text.svelte';
