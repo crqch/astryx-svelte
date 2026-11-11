@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 279     | 10736          |
+| Ported here              | 286     | 10812          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **518** | **6189**       |
+| **Unported**             | **511** | **6113**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -67,7 +67,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `utils/calendarSystem.test.ts`                                     | 36    |
 | `hooks/useActionGroupTracking.test.tsx`                            | 35    |
 | `utils/pressGesture.test.ts`                                       | 35    |
-| `Layer/inputHold.test.tsx`                                         | 33    |
 | `Tooltip/useTooltip.test.tsx`                                      | 33    |
 | `Layer/useLayerKeyboardClearance.test.tsx`                         | 32    |
 | `theme/dynamicType.test.ts`                                        | 32    |
@@ -176,7 +175,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `motion/progress.test.ts`                                          | 12    |
 | `motion/uikit/uikit.test.ts`                                       | 12    |
 | `theme/tokenValueCompat.test.ts`                                   | 12    |
-| `utils/inputStream.test.ts`                                        | 12    |
 | `AlertDialog/useImperativeAlertDialog.test.tsx`                    | 11    |
 | `CodeBlock/languages.test.ts`                                      | 11    |
 | `DateTimeInput/DateTimeInput.calendar.test.tsx`                    | 11    |
@@ -185,7 +183,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `hooks/useDragToSnapPoints.test.tsx`                               | 11    |
 | `Indicator/touchTarget.test.tsx`                                   | 11    |
 | `Layer/gestureCounter.test.ts`                                     | 11    |
-| `Layer/holdEntranceInput.test.ts`                                  | 11    |
 | `Layout/__tests__/nestedPadding.test.tsx`                          | 11    |
 | `Markdown/Markdown.fr23.perf.test.ts`                              | 11    |
 | `motion/reducedMotionPlan.test.ts`                                 | 11    |
@@ -247,7 +244,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `theme/MediaTheme.dom.test.tsx`                                    | 8     |
 | `TimeInput/Presentation.test.tsx`                                  | 8     |
 | `utils/edgeAutoscroll.test.ts`                                     | 8     |
-| `utils/flatTree.test.ts`                                           | 8     |
 | `utils/sharedMutationObserver.test.ts`                             | 8     |
 | `Button/Button.hitArea.test.tsx`                                   | 7     |
 | `DateInput/DateInput.noTemporal.test.tsx`                          | 7     |
@@ -367,8 +363,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Chat/__tests__/ChatMessageBubble.auditProvenance.test.ts`         | 4     |
 | `Collapsible/__tests__/Collapsible.a11y.test.tsx`                  | 4     |
 | `DateInput/TouchDateToday.ssr.test.tsx`                            | 4     |
-| `Dialog/DialogTouchEntrance.test.tsx`                              | 4     |
-| `Drawer/DrawerTouchEntrance.test.tsx`                              | 4     |
 | `DropdownMenu/DropdownMenuThemeReflection.test.tsx`                | 4     |
 | `Field/textEntryTraits.public.test.ts`                             | 4     |
 | `FieldStatus/__tests__/StatusMessage.a11y.test.tsx`                | 4     |
@@ -394,7 +388,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `theme/themeReducedMotionMark.test.tsx`                            | 4     |
 | `Tokenizer/Tokenizer.composites.test.tsx`                          | 4     |
 | `Tokenizer/Tokenizer.ssr.test.tsx`                                 | 4     |
-| `utils/coarsePointer.test.ts`                                      | 4     |
 | `utils/pressableCoverage.test.ts`                                  | 4     |
 | `utils/touchQueries.test.ts`                                       | 4     |
 | `utils/unicodeDigits.test.ts`                                      | 4     |
@@ -559,9 +552,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10736          |
-| Declared here              | 6701           |
-| **Short**                  | **4050**       |
+| Upstream, in ported suites | 10812          |
+| Declared here              | 6775           |
+| **Short**                  | **4052**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -572,7 +565,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (200)</summary>
+<details><summary>Suites short of upstream (201)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -754,6 +747,7 @@ per connected group.
 | `SizeContext/SizeContext.test.tsx`                                                                                                                                                       | 23       | 21   | 2     |
 | `Skeleton/Skeleton.test.tsx`                                                                                                                                                             | 6        | 4    | 2     |
 | `Table/plugins/selection/useTableSelectionState.test.tsx`                                                                                                                                | 15       | 13   | 2     |
+| `utils/inputStream.test.ts`                                                                                                                                                              | 12       | 10   | 2     |
 | `VisuallyHidden/VisuallyHidden.test.tsx`                                                                                                                                                 | 9        | 7    | 2     |
 | `__tests__/stubMatchMedia.test.ts`                                                                                                                                                       | 7        | 6    | 1     |
 | `Avatar/AvatarStatusDot.test.tsx`                                                                                                                                                        | 20       | 19   | 1     |

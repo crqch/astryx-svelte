@@ -10,6 +10,8 @@
  * still-fixed panel and it paints back into the page for a frame.
  */
 
+import { holdEntranceInput } from '../layer/hold-entrance-input.js';
+
 const EXIT_BACKSTOP_BUFFER_MS = 50;
 const EXIT_FALLBACK_MS = 250;
 
@@ -196,7 +198,10 @@ export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): v
 				isHostShown = true;
 				dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 			}
-			return;
+			// Under a coarse primary pointer, a tap or drag during the slide-in
+			// reaches nothing. A non-modal drawer holds only its panel, so its page
+			// stays live. The effect cleanup releases the hold on close or unmount.
+			return holdEntranceInput(dialog, { isModal }) ?? undefined;
 		}
 
 		if (!isDrawerHostOpen(dialog, isModal)) return;

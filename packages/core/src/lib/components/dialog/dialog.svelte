@@ -83,6 +83,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { devWarn } from '../../utils/dev-warning.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import { holdEntranceInput } from '../layer/hold-entrance-input.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
 	import { spacingStepToToken } from '../../internal/padding.stylex.js';
@@ -258,6 +259,10 @@
 				const autofocusTarget = dialog.querySelector<HTMLElement>('[data-autofocus]');
 				if (autofocusTarget) autofocusTarget.focus();
 			}
+			// Under a coarse primary pointer, nothing takes a tap during the
+			// entrance; keys and assistive technology stay live. The effect cleanup
+			// releases the hold on close or unmount.
+			return holdEntranceInput(dialog) ?? undefined;
 		} else {
 			if (dialog.open) dialog.close();
 			triggerEl?.focus();
