@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 352     | 12188          |
+| Ported here              | 353     | 12214          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **445** | **4737**       |
+| **Unported**             | **444** | **4711**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -73,7 +73,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Typeahead/BaseTypeahead.menu.test.tsx`                            | 29    |
 | `SideNav/SideNavRailMotion.test.tsx`                               | 27    |
 | `Typeahead/BaseTypeahead.test.tsx`                                 | 27    |
-| `hooks/actionGroupTracker.test.ts`                                 | 26    |
 | `Layer/layerExitCopy.test.ts`                                      | 25    |
 | `Popover/popoverSurfaceMotion.test.ts`                             | 25    |
 | `Resizable/paneReveal.test.tsx`                                    | 24    |
@@ -486,8 +485,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12188          |
-| Declared here              | 8134           |
+| Upstream, in ported suites | 12214          |
+| Declared here              | 8160           |
 | **Short**                  | **4080**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |

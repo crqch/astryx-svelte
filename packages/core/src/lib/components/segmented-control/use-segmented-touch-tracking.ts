@@ -8,8 +8,10 @@
  * functions, unchanged.
  */
 
+import { SEGMENT_SELECTOR } from './segmented-selection-motion.js';
+
 /** The segments, in DOM order. */
-export const SEGMENT_SELECTOR = '[role="radio"][data-value]';
+export { SEGMENT_SELECTOR };
 
 /** The control's box as measured when the finger landed: viewport px. */
 export interface ControlBounds {

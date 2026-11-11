@@ -20,7 +20,7 @@ export interface UseGestureRecognizerOptions {
 	 * calling `onGesture`.
 	 * @default true
 	 */
-	isEnabled?: boolean;
+	isEnabled?: boolean | (() => boolean);
 	/** Let the host set touch-action (and long-press callout) styles. @default true */
 	manageStyle?: boolean;
 	/** Accepted and ignored: every attachment reads each event's pointer. */
@@ -31,6 +31,11 @@ export interface UseGestureRecognizerOptions {
 	 * @default false
 	 */
 	actionGroup?: boolean;
+}
+
+/** A live enabled flag, read in an effect so a getter's reads are tracked. */
+function readEnabled(value: boolean | (() => boolean) | undefined): boolean {
+	return typeof value === 'function' ? value() : (value ?? true);
 }
 
 /**
@@ -78,7 +83,7 @@ export function useGestureRecognizer<R extends GestureRecognizer>(
 	});
 
 	$effect(() => {
-		const isEnabled = options.isEnabled ?? true;
+		const isEnabled = readEnabled(options.isEnabled);
 		syncingGestures(() =>
 			deferringResolution(recognizer, () => {
 				recognizer.setEnabled(isEnabled);
@@ -88,7 +93,7 @@ export function useGestureRecognizer<R extends GestureRecognizer>(
 
 	$effect(() => {
 		const element = getElement();
-		const isEnabled = options.isEnabled ?? true;
+		const isEnabled = readEnabled(options.isEnabled);
 		const manageStyle = options.manageStyle ?? true;
 		const actionGroup = options.actionGroup ?? false;
 		if (element == null || !isEnabled) {

@@ -1910,19 +1910,20 @@ kebab modules and current adopters). `animatedLayoutAdopters` has 1/18: the
 wired to the handle, their exit holds, chevron motion and a `LayoutChangeSnapshot`
 commit hook.
 
-### SegmentedControl's press tracking is pointer handlers, not the Pan recognizer
+### SegmentedControl's press paint is its CSS arm, not the delegated press controller
 
 - **units:** SegmentedControl
 - **kind:** divergence
-- **retires:** when `useSegmentedTouchTracking`'s recognizer half is wired in
+- **retires:** when `utils/pressFeedback.ts` (the delegated press controller)
+  is ported
 
-The selection lens is upstream's `SegmentedSelectionMotion`: the full
-`useSegmentedSelectionMotion` suite passes 52/52 (slide, hand-back, mid-flight
-retarget, Reduced Motion cross-fade, press, chase, commit and title faces), and
-the component paints it on the radiogroup's `::before`/`::after`. The touch
-layer's segment/lift geometry is ported and green (8/8). Its Pan
-recognizer/action-group press tracker is replaced by the container's pointer
-handlers with a four-pixel slop, `liftTargetAt` on release, a browser-click
-wait for taps and `touch-action: pan-y`; the drag, lift commit and
-outside-cancel behavior is covered by `segmented-control-motion.svelte.test.ts`
-and the browser probes.
+The touch layer now runs upstream's path: `useSegmentedTouchTracking` drives
+`usePressTracker` (landing to lift), a horizontal `PanGestureRecognizer` (the
+lens chase and highlight move, with `lockSelection`), and the ported
+`createActionGroupTracker` (26/26 upstream cases) for the lift target, the
+once-only click and the shared click guard. What remains is the paint: the
+tracker deliberately paints nothing (`paintsHighlight: false`), so the selected
+and pressable arms are the component's own `data-astryx-pressable` mark and CSS
+`:active` overlay, not the delegated controller's `data-astryx-press` clock.
+The press still tracks, commits and cancels identically; only the release fade
+and the touch-paint arm are the CSS approximation.

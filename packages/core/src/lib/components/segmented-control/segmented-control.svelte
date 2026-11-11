@@ -47,14 +47,9 @@
 	import { setSegmentedControlContext } from './segmented-control-context.svelte.js';
 	import { isSegmentDisabledOnItsOwn } from '../../private-attributes/segment-disabled.js';
 	import { isCoarsePointer, watchCoarsePointer } from '../../utils/coarse-pointer.js';
-	import { awaitBrowserClick, clickForLift } from '../../utils/browser-click-wait.js';
 	import { segmentedControlContainerAttrs } from './segmented-control.stylex.js';
 	import { SegmentedSelectionMotion } from './segmented-selection-motion.js';
-	import {
-		liftTargetAt,
-		measureLiftArea,
-		measureSegments
-	} from './use-segmented-touch-tracking.js';
+	import { useSegmentedTouchTracking } from './use-segmented-touch-tracking.svelte.js';
 
 	/**
 	 * Segmented button group for single selection (radiogroup semantics). Items
@@ -154,13 +149,11 @@
 	let containerEl = $state<HTMLDivElement | null>(null);
 	const motion = new SegmentedSelectionMotion();
 	let previousValue = value;
-
-	/** The segment under a pointer, for the press that begins there. */
-	function segmentAtTarget(target: EventTarget | null): HTMLElement | null {
-		return target instanceof Element
-			? (target.closest<HTMLElement>('[role="radio"][data-value]') ?? null)
-			: null;
-	}
+	const clickWait = useSegmentedTouchTracking(
+		() => containerEl,
+		motion,
+		() => !isDisabled
+	);
 
 	$effect(() => {
 		isTouchPresentation = isCoarsePointer(window);
@@ -198,117 +191,6 @@
 		};
 	});
 
-	interface SegmentedDrag {
-		pointerId: number;
-		startX: number;
-		carriesLens: boolean;
-		moved: boolean;
-	}
-	let drag: SegmentedDrag | null = null;
-	let suppressClick = false;
-	/** The browser's click a lift is waiting for, if any. */
-	let endClickWait: (() => void) | null = null;
-
-	function endWait(): void {
-		endClickWait?.();
-		endClickWait = null;
-	}
-
-	/**
-	 * A tap: the browser's own click commits it. The wait reports after the
-	 * segment's click handlers run, and clicks the segment itself when no click
-	 * comes (a hold), so the selection commits either way.
-	 */
-	function waitForClick(segment: HTMLElement, track: HTMLElement, committed: string): void {
-		endWait();
-		const end = awaitBrowserClick(segment, {
-			onClicked: (isCancelled) => {
-				endClickWait = null;
-				motion.clicked(track, committed, isCancelled);
-			},
-			onNoClick: () => {
-				endClickWait = null;
-				motion.clicked(track, committed, clickForLift(segment));
-			}
-		});
-		endClickWait = end;
-	}
-
-	function handlePointerDown(event: PointerEvent): void {
-		const container = containerEl;
-		if (isDisabled || event.button !== 0 || container == null) return;
-		endWait();
-		const target = segmentAtTarget(event.target);
-		if (target == null || target.getAttribute('aria-disabled') === 'true') return;
-		motion.begin(container, target, event.pointerType === 'touch');
-		drag = {
-			pointerId: event.pointerId,
-			startX: event.clientX,
-			carriesLens: target.dataset.value === value,
-			moved: false
-		};
-		try {
-			container.setPointerCapture?.(event.pointerId);
-		} catch {
-			// A synthetic pointer may not be active; the container still hears it.
-		}
-	}
-
-	function handlePointerMove(event: PointerEvent): void {
-		if (drag == null || event.pointerId !== drag.pointerId) return;
-		if (!drag.moved && Math.abs(event.clientX - drag.startX) < 4) return;
-		drag.moved = true;
-		if (drag.carriesLens) motion.drag(event.clientX);
-	}
-
-	function finishDrag(event: PointerEvent, isCancelled = false): void {
-		const container = containerEl;
-		if (drag == null || container == null || event.pointerId !== drag.pointerId) return;
-		const wasMoved = drag.moved;
-		const carriesLens = drag.carriesLens;
-		const pointerType = event.pointerType;
-		drag = null;
-		try {
-			container.releasePointerCapture?.(event.pointerId);
-		} catch {
-			// The pointer capture may already have ended.
-		}
-		if (isCancelled) {
-			motion.cancel();
-			if (wasMoved) suppressClick = true;
-			return;
-		}
-		const spans = measureSegments(container);
-		const target = liftTargetAt(
-			event.clientX,
-			event.clientY,
-			measureLiftArea(container, spans),
-			spans
-		);
-		const committed = motion.release(target);
-		if (committed == null) return;
-		if (!wasMoved && target != null && pointerType === 'touch') {
-			// A finger's tap: its click (and the focus it moves) comes after the
-			// lift, so the press stays in force until the click has run.
-			waitForClick(target, container, committed);
-			return;
-		}
-		// The browser sends no click for a drag (or a mouse tap has already
-		// dispatched it): commit now and settle the lens on the new value.
-		if (wasMoved) suppressClick = true;
-		onChange(committed);
-		queueMicrotask(() => {
-			if (containerEl != null) motion.clicked(containerEl, committed, false);
-		});
-	}
-
-	function handleClickCapture(event: MouseEvent): void {
-		if (!suppressClick) return;
-		suppressClick = false;
-		event.preventDefault();
-		event.stopPropagation();
-	}
-
 	const describedBy = $derived(
 		[ariaDescribedByProp, showsDisabledMessage ? disabledMessageTooltip.describedBy : undefined]
 			.filter((id): id is string => typeof id === 'string' && id.length > 0)
@@ -321,7 +203,7 @@
 
 	function handleContainerKeyDown(e: KeyboardEvent): void {
 		// A key going down makes a focus move the keyboard's, which selects.
-		endWait();
+		clickWait.end();
 		onKeyDownProp?.(e as KeyboardEvent & { currentTarget: HTMLDivElement });
 		if (e.defaultPrevented) {
 			return;
@@ -343,7 +225,7 @@
 		listFocus.handleFocus(e);
 		// A pointer press moves focus before its click commits; that click owns
 		// the selection, so the focus move itself selects nothing.
-		if (isDisabled || motion.isPressed || endClickWait != null) {
+		if (isDisabled || motion.isPressed || clickWait.isAwaiting()) {
 			return;
 		}
 		const currentTarget = e.currentTarget as HTMLElement;
@@ -383,11 +265,6 @@
 	onkeydown={handleContainerKeyDown}
 	onfocusin={handleContainerFocus}
 	onfocusout={handleContainerBlur}
-	onpointerdown={handlePointerDown}
-	onpointermove={handlePointerMove}
-	onpointerup={(event) => finishDrag(event)}
-	onpointercancel={(event) => finishDrag(event, true)}
-	onclickcapture={handleClickCapture}
 	{...theme}
 	class={cx(theme.class, containerAttrs.class, className)}
 	style={mergeStyle(containerAttrs.style, styleProp as string | undefined)}
