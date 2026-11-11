@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 340     | 11927          |
+| Ported here              | 341     | 11969          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **457** | **4998**       |
+| **Unported**             | **456** | **4956**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -52,7 +52,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `motion/animatedLayout.test.ts`                                    | 47    |
 | `keyboard/keyboardTarget.test.ts`                                  | 44    |
 | `theme/themeMotion.test.ts`                                        | 43    |
-| `gestures/__tests__/useGestureRecognizer.test.tsx`                 | 42    |
 | `DateInput/Wheel.test.tsx`                                         | 41    |
 | `hooks/menuPressGesture.test.ts`                                   | 39    |
 | `hooks/useAnnounce.modal.test.tsx`                                 | 38    |
@@ -498,8 +497,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11927          |
-| Declared here              | 7893           |
+| Upstream, in ported suites | 11969          |
+| Declared here              | 7935           |
 | **Short**                  | **4049**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |

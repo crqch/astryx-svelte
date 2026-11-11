@@ -1881,17 +1881,13 @@ the host's rule itself), `caretRangeFromPoint` finding real text under a synthet
 (stubbed away for the three claim-during-selection cases), and the shared page's input
 stream outliving a case (reset between cases). The behaviour asserted is the same.
 
-### The gesture hook suites still need Svelte counterparts
+### One `usePanGesture` case has no Svelte counterpart
 
 - **units:** gestures
 - **kind:** unported
-- **retires:** when `useGestureRecognizer` (42) and the five remaining
-  `usePanGesture` Suspense case are ported and green
+- **retires:** never, unless Svelte gains a discarded-render state
 
-`useFingerScroll` (15) and `usePanGesture` (5 of 6) now have Svelte rune hooks
-with their suites. `useGestureRecognizer` (42 declarations) is the React face of
-the gesture host, covering recognizer identity, enable/disable, action groups,
-replaced nodes, and `usePressTracker`; it needs a rune-hook rewrite and a Svelte
-probe per component shape in its suite. The one `usePanGesture` case left
-asserts that React keeps the last committed `onPan` when a Suspense transition
-is discarded; Svelte has no discarded render to test.
+Upstream's suite keeps the last committed `onPan` through a render React discards
+into Suspense. Every Svelte rerender commits, so there is no state in which a
+discarded listener exists; the other 14 `createPanGesture`/`usePanGesture`
+declarations are ported and green.
