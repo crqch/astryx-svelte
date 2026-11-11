@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { SpacingStep } from '../../internal/types.js';
+	import type { SnapPaging } from '../snap-paging/snap-paging-value.js';
 	import type { CarouselGap } from './carousel.stylex.js';
 
 	/**
@@ -92,10 +93,13 @@
 		 */
 		hasLoop?: boolean;
 		/**
-		 * Enable scroll-snap on items. Each item snaps to the start edge.
+		 * Enable scroll-snap on items. Each item snaps to the start edge. `true`
+		 * uses native CSS scroll snap; a `useSnapPaging()` value adds iOS-style
+		 * paging on the same stops, under a finger and on a trackpad swipe. A
+		 * flick moves one view, or one item with `useSnapPaging({ pages: 'item' })`.
 		 * @default false
 		 */
-		hasSnap?: boolean;
+		hasSnap?: boolean | SnapPaging;
 		/**
 		 * Inline padding on the scroll container, applied as `padding-inline` so
 		 * the gutter is inside the scrollable area. Also sets a matching
@@ -123,6 +127,14 @@
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import {
+		attachSnapPaging,
+		isSnapPaging,
+		moveHeldSnapPaging,
+		moveSnapPaging,
+		nearestStop,
+		snapStops
+	} from '../snap-paging/snap-paging-value.js';
 	import {
 		carouselButtonOverlay,
 		carouselButtonPillAttrs,
@@ -171,6 +183,31 @@
 
 	let scrollEl = $state<HTMLElement | null>(null);
 	const overflow = useScrollOverflow();
+	// The paging value, when `hasSnap` carries one. `true` keeps native snap.
+	const snapPaging = $derived(isSnapPaging(hasSnap) ? hasSnap : null);
+	// A call of the carousel's own into the paging: a detach or a scroll call.
+	// A held row reported during one is not something a finger did.
+	let runningOwnCalls = 0;
+	function ownCall<T>(run: () => T): T {
+		runningOwnCalls += 1;
+		try {
+			return run();
+		} finally {
+			runningOwnCalls -= 1;
+		}
+	}
+
+	// Attaches paging to the scroll area, and detaches when the value or the
+	// element is replaced.
+	$effect(() => {
+		const element = scrollEl;
+		const value = snapPaging;
+		if (element == null || value == null) {
+			return;
+		}
+		const detach = attachSnapPaging(value, element);
+		return () => ownCall(detach);
+	});
 
 	const layerId = $props.id();
 	const layer = useLayer(() => ({ mode: 'context', id: layerId, lightDismiss: false }));
@@ -205,8 +242,47 @@
 		if (el.scrollWidth <= el.clientWidth) {
 			return;
 		}
+		if (
+			!event.defaultPrevented &&
+			moveHeldSnapPaging(el, (at, end) =>
+				nearestStop(snapStops(el, at, end), at + (isRtlElement(el) ? -event.deltaY : event.deltaY))
+			)
+		) {
+			event.preventDefault();
+			event.stopPropagation();
+			return;
+		}
 		event.preventDefault();
 		el.scrollBy({ left: event.deltaY, behavior: 'auto' });
+	}
+
+	/**
+	 * Where an edge press under snap paging goes from offset `at`: about one
+	 * view on, to the nearest stop and at least one stop on. With `wraps`, a
+	 * press past an edge goes to the opposite edge.
+	 */
+	function pagingStep(
+		el: HTMLElement,
+		at: number,
+		end: number,
+		direction: -1 | 1,
+		wraps: boolean
+	): number {
+		if (wraps && (direction === 1 ? at >= end - 0.5 : at <= 0.5)) {
+			return direction === 1 ? 0 : end;
+		}
+		const firstChild = el.firstElementChild as HTMLElement | null;
+		const itemWidth = firstChild ? firstChild.offsetWidth : 0;
+		const amount = el.clientWidth - itemWidth * 0.5;
+		const stops = snapStops(el, at, end);
+		const nearest = nearestStop(stops, at + direction * Math.max(amount, itemWidth));
+		if (direction === 1 && nearest <= at + 0.5) {
+			return stops.find((stop) => stop > at + 0.5) ?? nearest;
+		}
+		if (direction === -1 && nearest >= at - 0.5) {
+			return [...stops].reverse().find((stop) => stop < at - 0.5) ?? nearest;
+		}
+		return nearest;
 	}
 
 	/**
@@ -231,6 +307,14 @@
 		// Under RTL the scroll axis is inverted (start is scrollLeft 0, the end is
 		// negative), so flip the physical delta sign.
 		const rtlSign = isRtlElement(el) ? -1 : 1;
+
+		// Under snap paging the paging moves the row, held or at rest. A touch
+		// then catches the move, and the release rests on a page.
+		if (
+			ownCall(() => moveSnapPaging(el, (at, end) => pagingStep(el, at, end, direction, hasLoop)))
+		) {
+			return;
+		}
 
 		// Wrap-around: when looping over overflowing content, a press that would run
 		// past an edge jumps to the opposite edge instead. Overshoot by the full
@@ -275,6 +359,17 @@
 		const delta = isRtlElement(el)
 			? itemRect.right - containerRect.right
 			: itemRect.left - containerRect.left;
+		// Under snap paging the row goes to the item's stop, inside the scroll
+		// padding, so the hand-back's snap does not pull it back.
+		if (
+			ownCall(() =>
+				moveSnapPaging(el, (at, end) =>
+					nearestStop(snapStops(el, at, end), at + (isRtlElement(el) ? -delta : delta))
+				)
+			)
+		) {
+			return;
+		}
 		el.scrollBy({ left: delta, behavior: scrollBehavior() });
 	}
 
@@ -359,7 +454,7 @@
 			edgeFade: hasEdgeFade ? 'edge-fade' : null
 		})
 	);
-	const scrollerAttrs = $derived(carouselScrollerAttrs(gap, padding, hasSnap, fade));
+	const scrollerAttrs = $derived(carouselScrollerAttrs(gap, padding, Boolean(hasSnap), fade));
 	const itemAttrs = carouselItemAttrs();
 	const startPill = $derived(carouselButtonPillAttrs('start', !canScrollStart));
 	const endPill = $derived(carouselButtonPillAttrs('end', !canScrollEnd));

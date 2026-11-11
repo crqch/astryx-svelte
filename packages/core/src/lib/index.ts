@@ -468,6 +468,8 @@ export type { DateTimeInputSize } from './components/date-time-input/date-time-i
 // `handleRef` target), the `CalendarHandle`/`TokenizerHandle` arrangement.
 export type { CarouselHandle, CarouselProps } from './components/carousel/carousel.svelte';
 export type { CarouselGap } from './components/carousel/carousel.stylex.js';
+export { useSnapPaging } from './components/snap-paging/index.js';
+export type { SnapPaging, SnapPagingOptions } from './components/snap-paging/index.js';
 export type { ClickableCardProps } from './components/clickable-card/clickable-card.svelte';
 export type { CenterProps } from './components/center/center.svelte';
 export type {

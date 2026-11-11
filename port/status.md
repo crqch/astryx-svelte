@@ -8,9 +8,9 @@
 
 |                           |                                                                          |
 | ------------------------- | ------------------------------------------------------------------------ |
-| Component dirs (ours)     | 104                                                                      |
+| Component dirs (ours)     | 105                                                                      |
 | Component dirs (upstream) | 109                                                                      |
-| Missing here              | SnapPaging                                                               |
+| Missing here              | none                                                                     |
 | Not in upstream           | none                                                                     |
 | Theme packages            | 8 — butter, chocolate, gothic, liquid-glass, matcha, neutral, stone, y2k |
 | Upstream pin              | `@astryxdesign/core` 0.7.13                                              |
@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 331     | 11760          |
+| Ported here              | 332     | 11783          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **466** | **5165**       |
+| **Unported**             | **465** | **5142**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -88,7 +88,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `utils/interactionModality.test.ts`                                | 24    |
 | `Markdown/plugins/headingLinks.test.tsx`                           | 23    |
 | `Markdown/plugins/protocol.test.tsx`                               | 23    |
-| `SnapPaging/SnapPaging.test.tsx`                                   | 23    |
 | `TopNav/TopNav.slotPresence.test.tsx`                              | 23    |
 | `Typeahead/BaseTypeahead.incremental.test.tsx`                     | 23    |
 | `animator/createAnimator.test.ts`                                  | 22    |
@@ -507,9 +506,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11760          |
-| Declared here              | 7727           |
-| **Short**                  | **4048**       |
+| Upstream, in ported suites | 11783          |
+| Declared here              | 7737           |
+| **Short**                  | **4061**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -520,7 +519,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (202)</summary>
+<details><summary>Suites short of upstream (203)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -612,6 +611,7 @@ per connected group.
 | `CommandPalette/CommandPaletteItem.test.tsx`                                                                                                                                             | 24       | 11   | 13    |
 | `Layout/Layout.test.tsx`<br>`Layout/__tests__/edgeCompensation.test.tsx`                                                                                                                 | 47       | 34   | 13    |
 | `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 29       | 16   | 13    |
+| `SnapPaging/SnapPaging.test.tsx`                                                                                                                                                         | 23       | 10   | 13    |
 | `Table/plugins/columnResize/useTableColumnResize.test.tsx`                                                                                                                               | 50       | 37   | 13    |
 | `theme/Theme.test.tsx`                                                                                                                                                                   | 24       | 11   | 13    |
 | `TimeInput/TimeInput.test.tsx`                                                                                                                                                           | 57       | 44   | 13    |

@@ -1880,3 +1880,17 @@ Each restatement is marked in the suite: an inline `touch-action` write (a brows
 the host's rule itself), `caretRangeFromPoint` finding real text under a synthetic pointer
 (stubbed away for the three claim-during-selection cases), and the shared page's input
 stream outliving a case (reset between cases). The behaviour asserted is the same.
+
+### `SnapPaging`'s Carousel-facing cases are not yet ported
+
+- **units:** SnapPaging, Carousel
+- **kind:** unported
+- **retires:** when the 12 remaining `SnapPaging/SnapPaging.test.tsx` declarations run
+
+The value's stop arithmetic, held-row geometry and attach/move relay are ported
+(11 cases). The other 12 render a Carousel and assert value stability across
+renders, a single attach, held edge and focus hand-back, and that a paging value
+(not plain `hasSnap`) is what loads gesture code. The integration is wired —
+`Carousel.hasSnap` accepts the value and routes its own moves through it — but
+those render-level assertions need the Carousel harness in this port's data
+model.

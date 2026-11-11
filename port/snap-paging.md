@@ -67,14 +67,26 @@ Already available in this port (useful foundations, none of them the pager):
    Carousel's data model, and port `SnapPaging.test.tsx` (23) plus the two
    interaction specs as the acceptance suite.
 
-Until step 3 lands, publishing a `useSnapPaging` stub would be worse than the
-current absence: `Carousel.hasSnap` is a public type, and a stub that accepts
-the value without snapping would be a silent behavior gap.
+## Where the port stands
 
-## Why it stays deferred for now
+- **Step 1 (motion core):** landed. `motion/*`, the full `motion/uikit` table,
+  `animator`, `coast`, `progress`, `reduced-motion-plan`, `theme-timing` and
+  their suites are green; the animator's esbuild bundle case is the one
+  unported declaration.
+- **Step 2 (gestures):** landed. Recognizers, `GestureArena`, `GestureHost`,
+  `PressTracker`, `VelocityTracker`, `wheelSegmenter`, `touchAction(+Rule)`,
+  `selectionLock`, `nativeScroll`, `pageHold` and their unit suites are green.
+  `recognizerBundle` (3) and `VelocityTracker.harness` (3) inspect esbuild or
+  the Playwright harness and stay unported; `GestureHost.bundle` (5) is the
+  same esbuild prerequisite.
+- **Step 3 (pager):** `createPager` (`lib/pager.ts`), `motion/paging.ts`,
+  `snapPagingValue.ts` and a Svelte `useSnapPaging` are ported. The value's stop
+  arithmetic, held-row geometry and attach/move relay are covered (11 cases).
+- **Step 4 (Carousel):** `hasSnap` now accepts `true | SnapPaging`, attaches
+  the paging to the scroller, and routes edge presses, wheel and `scrollTo`
+  through `moveSnapPaging`/`moveHeldSnapPaging`. The Carousel-facing half of
+  `SnapPaging.test.tsx` (12 cases: value stability, single attach, held edges
+  and focus hand-back) still needs its own browser suite.
 
-The closure is larger than the rest of the missing test surface combined, and
-steps 1–2 are subsystems with no user-visible payoff on their own. The port's
-policy has been to land self-contained components with their suites first
-(Drawer, ScrollableArea, InfoTip, Timer, input hold) and to schedule SnapPaging
-as a deliberate multi-batch workstream rather than a tail-end addition.
+The component surface is no longer missing a directory: `snap-paging` exists
+and is exported from the package root.
