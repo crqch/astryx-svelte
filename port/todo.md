@@ -8,16 +8,17 @@ History lives in [`ledger/`](./ledger). Deviations from upstream live in [`debts
 
 ## Current goal
 
-**Full parity with Astryx `0.5.2`**, across every package except three. Set 2026-08-20 against
+**Full parity with Astryx `0.7.13`**, across every package except three. Set 2026-08-20 against
 `0.4.5`, replacing "track each upstream release and cut a matching version" — that goal was about
 staying level with upstream's _movement_; this one is about closing the distance that predates it.
 **Re-target it in the same batch the pin moves**: a goal naming a version this port no longer
 tracks is the same defect as a suite header stating a count against the wrong tag, and it went
-unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032) and to `0.5.2` on
-2026-08-31 (batch 040, which took `0.5.1` and `0.5.2` in one pass). Each move widened the distance
-rather than closing it — `0.5.0` brought a new component (`Stepper`), two breaking changes, and the
-largest single-release test delta this port has tracked; `0.5.2` left the surface whole and moved
-what remains into the _cases_. The size of it is in [`status.md`](./status.md), not here.
+unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0.5.2` on
+2026-08-31 (batch 040), and to `0.7.13` on 2026-11-11. Each move widened the distance rather than
+closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
+dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
+tracked. The first pass at the new pin ported `Timer` and `InfoTip`; `Drawer`, `ScrollableArea` and
+the `SnapPaging` subsystem remain. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
 (`CodeEditor`, `RichTextEditor`, `ThreeD`, `Sankey`) wrap React-only libraries with no drop-in

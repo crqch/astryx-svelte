@@ -1810,3 +1810,42 @@ asserts nothing the first does not.
 Ported once, per this file's own rule that upstream bugs are documented rather than replicated. The
 consequence is arithmetic: the case delta for this suite counts upstream's 136 declarations against
 ours, so it cannot reach zero while five of upstream's are copies.
+
+### `InfoTip` is missing the shared 44 px touch hit area
+
+- **units:** InfoTip
+- **kind:** unported
+- **retires:** when `useTouchHitArea` / `hitArea` are ported
+
+Upstream's InfoTip grows its button toward a 44 px target through the shared
+`utils/touchHitArea` module (1,517 lines including its `hitArea` measurements and
+`sharedMutationObserver` dependency). The port's trigger keeps its 2 px padding, so it is visually
+correct but its coarse-pointer target is smaller than upstream's. Two upstream AR1 cases are
+unported with it. The trigger still has an accessible name, a focus ring and the full pin
+interaction.
+
+### `InfoTip` pins do not close on an outside press
+
+- **units:** InfoTip
+- **kind:** unported
+- **retires:** when the tooltip's outside-press dismissal lands
+
+Upstream's `useTooltip` joined the shared layer dismissal stack at 0.7.x, so a pinned InfoTip closes
+on a press outside, on a scroll that starts outside, and when focus moves outside. This port's
+`use-tooltip.svelte.ts` still has only the touch-trigger's outside tap; a pinned help therefore
+stays open until Escape or a second press on the trigger. The upstream case `closes on a tap
+outside` is named in `info-tip.svelte.test.ts` and returns when the outside-press module does.
+
+### Theme compiler lags the 0.7.13 token contract
+
+- **units:** themes/*
+- **kind:** unported
+- **retires:** when the theme oracles are green against 0.7.13
+
+The theme sources are still the 0.5.2 ports. The shared compiler now emits data-attribute selectors
+and the 0.7.13 component text-colour rules, which moved the seven theme oracles from 953 to a
+larger matched set, but the 0.7.13 dynamic type aliases, motion-tempo vars, status-role vars,
+`adaptations`/`localTokens` inputs and per-theme value changes are not ported. Chocolate is the first
+theme source moved to the new token set; the rest remain. `port/status.md` does not measure theme
+CSS, so the oracles in `packages/themes/*/scripts/compare-upstream.mjs` are the only source of
+truth.
