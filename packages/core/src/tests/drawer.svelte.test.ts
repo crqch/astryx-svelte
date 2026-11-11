@@ -9,6 +9,7 @@ import { userEvent } from 'vitest/browser';
 import DrawerProbe from './fixtures/drawer-probe.svelte';
 import DrawerStackProbe from './fixtures/drawer-stack-probe.svelte';
 import DrawerSideFlipProbe from './fixtures/drawer-side-flip-probe.svelte';
+import DrawerNonModalProbe from './fixtures/drawer-nonmodal-probe.svelte';
 
 /**
  * The first slice of Astryx's `Drawer/Drawer.test.tsx` at the **0.7.13** pin,
@@ -690,5 +691,88 @@ describe('Drawer', () => {
 		expect(getComputedStyle(dialog).maxWidth).toBe('240px');
 		expect(getComputedStyle(dialog).position).toBe('fixed');
 		expect(dialog).toHaveClass('astryx-drawer');
+	});
+	it('leaves the manual popover and preserves close listeners after exit', async () => {
+		const screen = await render(DrawerNonModalProbe, { props: { show: true } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+		const handleClose = vi.fn();
+		dialog.addEventListener('close', handleClose);
+
+		await screen.rerender({ show: false });
+		await closeWithTransition(dialog);
+
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(false));
+		expect(handleClose).toHaveBeenCalledTimes(1);
+		expect(dialog).not.toHaveAttribute('open');
+	});
+
+	it('dispatches the synthetic close after focus restore so a close listener owns final focus', async () => {
+		const screen = await render(DrawerNonModalProbe);
+		const openTrigger = screen.getByTestId('open-row').element() as HTMLElement;
+		const latestRow = screen.getByTestId('latest-row').element() as HTMLElement;
+		openTrigger.focus();
+
+		await screen.rerender({ show: true });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+		const handleClose = vi.fn(() => latestRow.focus());
+		dialog.addEventListener('close', handleClose);
+
+		await screen.rerender({ show: false });
+		await closeWithTransition(dialog);
+
+		expect(handleClose).toHaveBeenCalledTimes(1);
+		expect(document.activeElement).toBe(latestRow);
+	});
+
+	it('dispatches exactly one close when an open non-modal drawer unmounts', async () => {
+		const screen = await render(DrawerNonModalProbe, { props: { show: true } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+		const handleClose = vi.fn();
+		dialog.addEventListener('close', handleClose);
+
+		screen.unmount();
+
+		expect(handleClose).toHaveBeenCalledTimes(1);
+	});
+
+	it('keeps sliding while a transitionend for another property arrives', async () => {
+		// A long transform keeps the browser's own transform transition from
+		// completing during the wait, so only the opaque event is under test.
+		const screen = await render(DrawerProbe, {
+			props: { sideStyle: 'transition-duration: 5s' }
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		screen.component.setOpen(false);
+		await tick();
+		dialog.dispatchEvent(
+			new TransitionEvent('transitionend', { propertyName: 'opacity', bubbles: true })
+		);
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(dialog.open).toBe(true);
+
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(dialog.open).toBe(false));
+	});
+
+	it('reaches the dialog element through an object ref', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(screen.component.getDialog()).toBe(dialog));
+	});
+
+	it('reaches the dialog element through a callback ref', async () => {
+		const seen: Array<HTMLElement | null> = [];
+		const screen = await render(DrawerProbe, {
+			props: {
+				onref: (node: HTMLDialogElement | null) => seen.push(node)
+			}
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(seen).toContain(dialog));
 	});
 });

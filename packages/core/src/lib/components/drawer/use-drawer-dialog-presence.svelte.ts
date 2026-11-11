@@ -42,6 +42,19 @@ function showDrawerHost(dialog: HTMLDialogElement, isModal: boolean): void {
 	}
 }
 
+function dispatchDialogClose(dialog: HTMLDialogElement): void {
+	const EventConstructor = dialog.ownerDocument.defaultView?.Event ?? Event;
+	dialog.dispatchEvent(new EventConstructor('close'));
+}
+
+/**
+ * Leaves the active native host. Returns whether the caller owes a synthetic
+ * `close` dispatch: the non-modal path used `dialog.close()` before popover
+ * hosts, and consumers observe its native `close` event. Popover dismissal has
+ * no equivalent event, so the public DOM contract is preserved explicitly —
+ * by the caller, after focus restore, matching the task-queued native event's
+ * ordering.
+ */
 function hideDrawerHost(dialog: HTMLDialogElement, isModal: boolean): boolean {
 	if (!isModal && typeof dialog.hidePopover === 'function') {
 		dialog.hidePopover();
@@ -92,12 +105,21 @@ function waitForDrawerExit(element: HTMLDialogElement, complete: () => void): ()
 		done = true;
 		if (timer != null) clearTimeout(timer);
 		element.removeEventListener('transitionend', handleTransitionEnd);
-		element.removeEventListener('transitioncancel', handleTransitionEnd);
 		complete();
 	};
 
 	const handleTransitionEnd = (event: TransitionEvent) => {
-		if (event.target === element && event.propertyName === 'transform') finish();
+		// Only a completed transition ends the exit. A real browser also fires
+		// `transitioncancel` when the opening transition is interrupted by the
+		// close, which must not count: the exit transition starts after it. The
+		// computed-duration backstop covers a genuinely canceled exit.
+		if (
+			event.type === 'transitionend' &&
+			event.target === element &&
+			event.propertyName === 'transform'
+		) {
+			finish();
+		}
 	};
 
 	element.addEventListener('transitionend', handleTransitionEnd);
@@ -109,7 +131,6 @@ function waitForDrawerExit(element: HTMLDialogElement, complete: () => void): ()
 		done = true;
 		if (timer != null) clearTimeout(timer);
 		element.removeEventListener('transitionend', handleTransitionEnd);
-		element.removeEventListener('transitioncancel', handleTransitionEnd);
 	};
 }
 
@@ -121,6 +142,10 @@ function waitForDrawerExit(element: HTMLDialogElement, complete: () => void): ()
  */
 export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): void {
 	let triggerElement: HTMLElement | null = null;
+	// Whether this hook last put the host in a top-layer state. The browser
+	// auto-hides a popover whose element leaves the document, so teardown cannot
+	// rely on `:popover-open` alone to know a synthetic close is owed.
+	let isHostShown = false;
 
 	// Host lifetime: a replaced node and an unmount both leave the host.
 	$effect(() => {
@@ -128,7 +153,12 @@ export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): v
 		const isModal = options.getIsModal();
 		if (dialog == null) return;
 		return () => {
-			if (isDrawerHostOpen(dialog, isModal)) hideDrawerHost(dialog, isModal);
+			if (isHostShown || isDrawerHostOpen(dialog, isModal)) {
+				// Teardown owes its synthetic popover close immediately, still
+				// exactly once.
+				if (hideDrawerHost(dialog, isModal)) dispatchDialogClose(dialog);
+				isHostShown = false;
+			}
 			triggerElement?.focus();
 			triggerElement = null;
 		};
@@ -145,6 +175,7 @@ export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): v
 			if (!isDrawerHostOpen(dialog, isModal)) {
 				triggerElement = document.activeElement as HTMLElement | null;
 				showDrawerHost(dialog, isModal);
+				isHostShown = true;
 				dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus();
 			}
 			return;
@@ -152,12 +183,17 @@ export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): v
 
 		if (!isDrawerHostOpen(dialog, isModal)) return;
 		return waitForDrawerExit(dialog, () => {
-			hideDrawerHost(dialog, isModal);
+			const owesCloseEvent = hideDrawerHost(dialog, isModal);
+			isHostShown = false;
 			setIsRendered(false);
 			// Return focus after leaving the native host: a modal dialog makes the
 			// rest of the document inert, so focusing earlier silently fails.
 			triggerElement?.focus();
 			triggerElement = null;
+			// Fire after the focus restore above, mirroring the task-queued native
+			// event: a consumer close listener that retargets focus gets the last
+			// word.
+			if (owesCloseEvent) dispatchDialogClose(dialog);
 		});
 	});
 }

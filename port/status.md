@@ -562,8 +562,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10729          |
-| Declared here              | 6675           |
-| **Short**                  | **4069**       |
+| Declared here              | 6681           |
+| **Short**                  | **4063**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -647,7 +647,6 @@ per connected group.
 | `SegmentedControl/SegmentedControl.test.tsx`                                                                                                                                             | 63       | 42   | 21    |
 | `CommandPalette/CommandPalette.test.tsx`                                                                                                                                                 | 39       | 19   | 20    |
 | `ButtonGroup/ButtonGroup.test.tsx`                                                                                                                                                       | 44       | 25   | 19    |
-| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 52   | 19    |
 | `Switch/Switch.test.tsx`                                                                                                                                                                 | 71       | 52   | 19    |
 | `Table/Table.test.tsx`                                                                                                                                                                   | 140      | 121  | 19    |
 | `ToggleButton/ToggleButton.test.tsx`                                                                                                                                                     | 45       | 26   | 19    |
@@ -666,6 +665,7 @@ per connected group.
 | `hooks/useTypeahead.test.tsx`                                                                                                                                                            | 30       | 16   | 14    |
 | `Center/Center.test.tsx`                                                                                                                                                                 | 26       | 13   | 13    |
 | `CommandPalette/CommandPaletteItem.test.tsx`                                                                                                                                             | 24       | 11   | 13    |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 58   | 13    |
 | `Layout/Layout.test.tsx`<br>`Layout/__tests__/edgeCompensation.test.tsx`                                                                                                                 | 47       | 34   | 13    |
 | `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 29       | 16   | 13    |
 | `Table/plugins/columnResize/useTableColumnResize.test.tsx`                                                                                                                               | 50       | 37   | 13    |

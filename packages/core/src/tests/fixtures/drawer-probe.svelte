@@ -21,6 +21,7 @@
 		xstyle?: import('$lib/internal/sx.js').StyleArg;
 		withFileInput?: boolean;
 		nativeOpen?: boolean;
+		onref?: (node: HTMLDialogElement | null) => void;
 	}
 </script>
 
@@ -47,11 +48,17 @@
 		experimental,
 		xstyle,
 		withFileInput = false,
-		nativeOpen = false
+		nativeOpen = false,
+		onref
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
 	let dialogRef = $state<HTMLDialogElement | null>(null);
+
+	// Svelte's counterpart to upstream's callback ref: observe the bound value.
+	$effect(() => {
+		onref?.(dialogRef);
+	});
 
 	export const setOpen = (value: boolean) => {
 		isOpen = value;
@@ -63,6 +70,7 @@
 <button data-testid="trigger" onclick={() => (isOpen = true)}>Open drawer</button>
 
 <Drawer
+	bind:ref={dialogRef}
 	{isOpen}
 	{side}
 	{hasScrim}
@@ -72,7 +80,7 @@
 	{padding}
 	{experimental}
 	{xstyle}
-	open={nativeOpen}
+	{...{ open: nativeOpen } as Record<string, unknown>}
 	onOpenChange={(open) => (isOpen = open)}
 	data-testid="drawer"
 	data-extra={dataExtra}
