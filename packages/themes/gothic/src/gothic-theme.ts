@@ -20,52 +20,59 @@
 
 import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
 
-/**
- * Gothic syntax palette — atmospheric tones drawn from the gothic
- * categorical palette: deep purples (cathedral), blood crimson (tags),
- * aged gold (numbers), forest moss (strings), midnight indigo (functions).
- *
- * Single values (no tuples) since this is a dark-only theme.
- */
+/** Gothic syntax palette — upstream 0.7.13's resolved values. */
 const gothicSyntax = defineSyntaxTheme({
 	name: 'astryx-gothic',
 	tokens: {
-		keyword: '#c39adb', // Cathedral plum
-		string: '#a3c987', // Forest moss
-		comment: '#6b7079', // Faded ink
-		number: '#dec074', // Aged gold
-		function: '#8aa1d8', // Midnight indigo
-		type: '#c39adb', // Cathedral plum
-		variable: '#E8F1F6', // Parchment
-		operator: '#96A0AB', // Mid neutral
-		constant: '#e6b85e', // Candlelight amber
-		tag: '#d97580', // Blood crimson
-		attribute: '#dec074', // Aged gold
-		property: '#7cc5b3', // Verdigris
-		punctuation: '#7a8290', // Mid neutral
-		background: '#101314'
+		keyword: '#c39adb',
+		string: '#a3c987',
+		comment: '#7e8791',
+		number: '#dec074',
+		function: '#8aa1d8',
+		type: '#c39adb',
+		variable: '#e8f1f6',
+		operator: '#96a0ab',
+		constant: '#e6b85e',
+		tag: '#d97580',
+		attribute: '#dec074',
+		property: '#7cc5b3',
+		punctuation: '#7e8791',
+		background: '#101314',
+		added: '#071607',
+		removed: '#220806',
+		'diff-header': 'transparent',
+		'added-marker': '#a3c987',
+		'removed-marker': '#d97580'
 	}
 });
 
+/**
+ * Gothic theme — ported from upstream 0.7.13. Colour and component
+ * values are literals so this package needs none of upstream's palette helpers;
+ * typography and motion stay as configs so the shared generator derives the
+ * same sizes, leadings and durations.
+ */
 export const gothicTheme = defineTheme({
 	name: 'gothic',
 
 	typography: {
-		// base 16 / ratio 1.25 — larger scale so the (optically small) blackletter
-		// display sizes read large enough to carry the theme.
-		scale: { base: 16, ratio: 1.25 },
+		scale: {
+			base: 16,
+			ratio: 1.25
+		},
 		body: {
 			family: 'Fustat',
 			fallbacks:
 				'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
 		},
-		// Headings (h1-h6) use Fustat to match the body — Manufacturing Consent
-		// is reserved for display sizes only (see component overrides below).
 		heading: {
 			family: 'Fustat',
 			fallbacks:
 				'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-			weights: { 3: 'bold', 4: 'bold' }
+			weights: {
+				'3': 'bold',
+				'4': 'bold'
+			}
 		},
 		code: {
 			family: 'JetBrains Mono',
@@ -73,167 +80,234 @@ export const gothicTheme = defineTheme({
 		}
 	},
 
-	// Slower, theatrical motion — gothic doesn't rush.
-	motion: { fast: 150, medium: 350, slow: 800, ratio: 0.75 },
-
+	motion: {
+		fast: 150,
+		medium: 350,
+		slow: 800,
+		ratio: 0.75
+	},
+	onDark: {
+		tokens: {
+			'color-scheme': 'dark',
+			'--color-text-primary': 'var(--color-on-dark)',
+			'--color-icon-primary': 'var(--color-on-dark)',
+			'--color-accent': 'var(--color-on-dark)',
+			'--color-text-accent': 'var(--color-accent)',
+			'--color-icon-accent': 'var(--color-accent)'
+		}
+	},
+	onLight: {
+		tokens: {
+			'color-scheme': 'light',
+			'--color-text-primary': 'var(--color-on-light)',
+			'--color-icon-primary': 'var(--color-on-light)',
+			'--color-accent': 'var(--color-on-light)',
+			'--color-text-accent': 'var(--color-accent)',
+			'--color-icon-accent': 'var(--color-accent)'
+		}
+	},
 	syntax: gothicSyntax,
-
 	tokens: {
-		// =========================================================================
-		// Colors — gothic dark palette (single values, dark-only)
-		// Core: #E8F1F6, #96A0AB, #495056, #24292D, #101314
-		// =========================================================================
-
-		// Core semantic
-		'--color-accent': '#E8F1F6',
-		'--color-accent-muted': '#E8F1F620',
-		'--color-neutral': '#E8F1F61A',
+		'--color-accent': '#e8f1f6',
+		'--color-accent-muted': '#e8f1f620',
+		'--color-neutral': '#e8f1f61a',
 		'--color-background-surface': '#101314',
 		'--color-background-body': '#101314',
-		'--color-overlay': '#101314CC',
-		'--color-overlay-hover': '#E8F1F60D',
-		'--color-overlay-pressed': '#E8F1F61A',
-		'--color-background-muted': '#24292D',
-
-		// Text
-		'--color-text-primary': '#E8F1F6',
-		'--color-text-secondary': '#96A0AB',
+		'--color-overlay': '#101314cc',
+		'--color-overlay-hover': '#e8f1f60d',
+		'--color-overlay-pressed': '#e8f1f61a',
+		'--color-background-muted': '#24292d',
+		'--color-text-primary': '#e8f1f6',
+		'--color-text-secondary': '#96a0ab',
 		'--color-text-disabled': '#495056',
-		'--color-text-accent': '#E8F1F6',
-		'--color-on-dark': '#E8F1F6',
+		'--color-text-accent': '#e8f1f6',
+		'--color-on-dark': '#e8f1f6',
 		'--color-on-light': '#101314',
 		'--color-on-accent': '#101314',
 		'--color-on-success': '#101314',
 		'--color-on-error': '#101314',
 		'--color-on-warning': '#101314',
-
-		// Icon
-		'--color-icon-accent': '#E8F1F6',
-		'--color-icon-primary': '#E8F1F6',
-		'--color-icon-secondary': '#96A0AB',
+		'--color-info': '#8aa1d8',
+		'--color-info-muted': '#a3b5d6',
+		'--color-on-info': '#101314',
+		'--color-text-info': '#a3b5d6',
+		'--color-text-success': '#b3c79a',
+		'--color-text-warning': '#d3c490',
+		'--color-text-error': '#c6a6a2',
+		'--color-on-info-muted': '#1f2c54',
+		'--color-on-success-muted': '#244023',
+		'--color-on-warning-muted': '#573f0b',
+		'--color-on-error-muted': '#4a2520',
+		'--color-icon-accent': '#e8f1f6',
+		'--color-icon-primary': '#e8f1f6',
+		'--color-icon-secondary': '#96a0ab',
 		'--color-icon-disabled': '#495056',
-
-		// Surface variants
-		'--color-background-card': '#1a1d20',
-		'--color-background-popover': '#24292D',
-		'--color-background-inverted': '#E8F1F6',
-
-		// Status / Sentiment — dusty pastels matching the categorical
-		// pattern. Used for status surfaces, destructive button bg, etc.
-		'--color-success': '#b3c79a', // sage moss
+		'--color-background-card': '#191d20',
+		'--color-background-popover': '#24292d',
+		'--color-background-inverted': '#e8f1f6',
+		'--color-success': '#b3c79a',
 		'--color-success-muted': '#b3c79a',
-		'--color-error': '#c6a6a2', // dusty rose
+		'--color-error': '#c6a6a2',
 		'--color-error-muted': '#c6a6a2',
-		'--color-warning': '#d3c490', // aged gold
+		'--color-warning': '#d3c490',
 		'--color-warning-muted': '#d3c490',
-
-		// Border
-		'--color-border': '#E8F1F61A',
+		'--color-border': '#e8f1f61a',
 		'--color-border-emphasized': '#495056',
-
-		// Effects
 		'--color-skeleton': '#495056',
-		'--color-shadow': '#0000004D',
-		'--color-tint-hover': 'white',
-
-		// =========================================================================
-		// Categorical — dusty pastel-on-dark pattern
-		// Hand-tuned dusty pastels (T75 with reduced chroma) — confident
-		// but never bright. Neutral is a dark slate with white text — the
-		// "no-color" variant earns its hierarchy by matching the page mood.
-		// =========================================================================
-
-		// Blue (periwinkle midnight)
+		'--color-shadow': '#0000004d',
+		'--color-tint-hover': '#ffffff',
 		'--color-background-blue': '#a3b5d6',
 		'--color-border-blue': '#8696b8',
 		'--color-icon-blue': '#2a3b6e',
 		'--color-text-blue': '#1f2c54',
-
-		// Cyan (cathedral mist)
 		'--color-background-cyan': '#a3c2cf',
 		'--color-border-cyan': '#86a4b1',
 		'--color-icon-cyan': '#2a5e75',
 		'--color-text-cyan': '#204858',
-
-		// Gray (dark slate — special: dark bg + light text)
-		'--color-background-gray': '#3d4248',
-		'--color-border-gray': '#5d646b',
-		'--color-icon-gray': '#E8F1F6',
-		'--color-text-gray': '#E8F1F6',
-
-		// Green (sage moss)
+		'--color-background-gray': '#3e454b',
+		'--color-border-gray': '#5e676e',
+		'--color-icon-gray': '#e8f1f6',
+		'--color-text-gray': '#e8f1f6',
 		'--color-background-green': '#b3c79a',
 		'--color-border-green': '#96a880',
 		'--color-icon-green': '#3a5e2c',
 		'--color-text-green': '#244023',
-
-		// Orange (warm tan)
 		'--color-background-orange': '#d3b89a',
 		'--color-border-orange': '#b6987d',
 		'--color-icon-orange': '#8a4818',
 		'--color-text-orange': '#6e3812',
-
-		// Pink (dusty rose)
 		'--color-background-pink': '#c89aab',
 		'--color-border-pink': '#aa7d8e',
 		'--color-icon-pink': '#8d2d4c',
-		'--color-text-pink': '#71223c',
-
-		// Purple (muted plum)
+		'--color-text-pink': '#5c182f',
 		'--color-background-purple': '#b29bc4',
 		'--color-border-purple': '#947da6',
 		'--color-icon-purple': '#5a2370',
 		'--color-text-purple': '#481b58',
-
-		// Red (dusty rose)
 		'--color-background-red': '#c6a6a2',
 		'--color-border-red': '#a48581',
 		'--color-icon-red': '#5e3a35',
 		'--color-text-red': '#4a2520',
-
-		// Teal (sage verdigris)
 		'--color-background-teal': '#a3c2b6',
 		'--color-border-teal': '#86a499',
 		'--color-icon-teal': '#1f5e52',
 		'--color-text-teal': '#174a40',
-
-		// Yellow (aged gold)
 		'--color-background-yellow': '#d3c490',
 		'--color-border-yellow': '#b6a775',
 		'--color-icon-yellow': '#876515',
-		'--color-text-yellow': '#6c5010',
-
-		// =========================================================================
-		// Radius — subtle rounding (original gothic)
-		//   --radius-none and --radius-full are always fixed and must never be
-		//   scaled by a theme (see defineTheme's radius config docs) — 0 and
-		//   9999px respectively, matching @astryxdesign/core's own defaults.
-		// =========================================================================
+		'--color-text-yellow': '#573f0b',
 		'--radius-none': '0px',
 		'--radius-inner': '0.25rem',
 		'--radius-element': '0.5rem',
 		'--radius-container': '0.75rem',
 		'--radius-page': '1.5rem',
 		'--radius-full': '9999px',
-
-		// =========================================================================
-		// Shadows — restrained, atmospheric
-		// =========================================================================
 		'--shadow-low': '0 2px 4px #00000033, 0 4px 8px #00000040',
 		'--shadow-med': '0 2px 4px #00000033, 0 4px 12px #00000040',
-		'--shadow-high': '0 4px 6px #00000040, 0 12px 24px #0000004D',
-		'--shadow-inset-hover': 'inset 0px 0px 0px 1px #96A0AB30',
-		'--shadow-inset-selected': 'inset 0px 0px 0px 2px #96A0AB50',
-		'--shadow-inset-success': 'inset 0px 0px 0px 1px #87b06a50',
-		'--shadow-inset-warning': 'inset 0px 0px 0px 1px #d6b56a50',
-		'--shadow-inset-error': 'inset 0px 0px 0px 1px #d4485150'
+		'--shadow-high': '0 4px 6px #00000040, 0 12px 24px #0000004d',
+		'--shadow-inset-hover': 'inset 0 0 0 1px #96a0ab30',
+		'--shadow-inset-selected': 'inset 0 0 0 2px #96a0ab50',
+		'--shadow-inset-success': 'inset 0 0 0 1px #869b7250',
+		'--shadow-inset-warning': 'inset 0 0 0 1px #d3c49050',
+		'--shadow-inset-error': 'inset 0 0 0 1px #c6a6a250'
 	},
-
 	components: {
+		heading: {
+			'level:1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-1-size)',
+				fontWeight: 'var(--text-heading-1-weight)',
+				lineHeight: 'var(--text-heading-1-leading)'
+			},
+			'level:2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-2-size)',
+				fontWeight: 'var(--text-heading-2-weight)',
+				lineHeight: 'var(--text-heading-2-leading)'
+			},
+			'level:3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-3-size)',
+				fontWeight: 'var(--text-heading-3-weight)',
+				lineHeight: 'var(--text-heading-3-leading)'
+			},
+			'level:4': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-4-size)',
+				fontWeight: 'var(--text-heading-4-weight)',
+				lineHeight: 'var(--text-heading-4-leading)'
+			},
+			'level:5': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-5-size)',
+				fontWeight: 'var(--text-heading-5-weight)',
+				lineHeight: 'var(--text-heading-5-leading)'
+			},
+			'level:6': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-6-size)',
+				fontWeight: 'var(--text-heading-6-weight)',
+				lineHeight: 'var(--text-heading-6-leading)'
+			},
+			'type:display-1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
+		text: {
+			'type:body': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-body-size)',
+				lineHeight: 'var(--text-body-leading)'
+			},
+			'type:large': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-large-size)',
+				lineHeight: 'var(--text-large-leading)'
+			},
+			'type:label': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-label-size)',
+				lineHeight: 'var(--text-label-leading)'
+			},
+			'type:code': {
+				fontFamily: 'var(--font-family-code)',
+				fontSize: 'var(--text-code-size)',
+				lineHeight: 'var(--text-code-leading)'
+			},
+			'type:supporting': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-supporting-size)',
+				lineHeight: 'var(--text-supporting-leading)'
+			},
+			'type:display-1': {
+				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
 		button: {
-			// Primary inherits default — light pill with dark text via
-			// --color-accent / --color-on-accent (matches the cream badge).
-			// Secondary uses the dark-slate "neutral" badge treatment.
 			'variant:secondary': {
 				backgroundColor: 'var(--color-background-gray)',
 				color: 'var(--color-text-gray)',
@@ -245,14 +319,39 @@ export const gothicTheme = defineTheme({
 					backgroundColor: 'var(--color-overlay-hover)'
 				}
 			},
-			// Destructive uses the dusty rose bg with dark warm-brown text
-			// (matches the red badge).
 			'variant:destructive': {
 				backgroundColor: 'var(--color-error)',
 				color: 'var(--color-text-red)'
 			}
 		},
-
+		selector: {
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'var(--color-background-gray)',
+					color: 'var(--color-text-gray)',
+					borderColor: 'transparent',
+					borderWidth: '0'
+				}
+			}
+		},
+		'multi-selector': {
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'var(--color-background-gray)',
+					color: 'var(--color-text-gray)',
+					borderColor: 'transparent',
+					borderWidth: '0'
+				}
+			}
+		},
+		'complex-selector': {
+			'variant:secondary': {
+				backgroundColor: 'var(--color-background-gray)',
+				color: 'var(--color-text-gray)',
+				borderColor: 'transparent',
+				borderWidth: '0'
+			}
+		},
 		badge: {
 			base: {
 				borderRadius: 'var(--radius-element)',
@@ -279,44 +378,32 @@ export const gothicTheme = defineTheme({
 				color: 'var(--color-text-red)'
 			}
 		},
-
 		banner: {
 			base: {
 				borderRadius: 'var(--radius-element)'
 			},
 			'status:info': {
-				backgroundColor: 'var(--color-background-blue)',
-				'--color-text-primary': 'var(--color-text-blue)',
-				'--color-text-secondary': 'var(--color-text-blue)',
-				'--color-accent': 'var(--color-text-blue)'
+				'--color-info-muted': 'var(--color-background-blue)',
+				'--color-on-info-muted': 'var(--color-text-blue)'
 			},
 			'status:success': {
-				backgroundColor: 'var(--color-background-green)',
-				'--color-text-primary': 'var(--color-text-green)',
-				'--color-text-secondary': 'var(--color-text-green)',
-				'--color-success': 'var(--color-text-green)'
+				'--color-success-muted': 'var(--color-background-green)',
+				'--color-on-success-muted': 'var(--color-text-green)'
 			},
 			'status:warning': {
-				backgroundColor: 'var(--color-background-yellow)',
-				'--color-text-primary': 'var(--color-text-yellow)',
-				'--color-text-secondary': 'var(--color-text-yellow)',
-				'--color-warning': 'var(--color-text-yellow)'
+				'--color-warning-muted': 'var(--color-background-yellow)',
+				'--color-on-warning-muted': 'var(--color-text-yellow)'
 			},
 			'status:error': {
-				backgroundColor: 'var(--color-background-red)',
-				'--color-text-primary': 'var(--color-text-red)',
-				'--color-text-secondary': 'var(--color-text-red)',
-				'--color-error': 'var(--color-text-red)'
+				'--color-error-muted': 'var(--color-background-red)',
+				'--color-on-error-muted': 'var(--color-text-red)'
 			}
 		},
-
 		card: {
 			base: {
 				padding: 'var(--spacing-3)',
 				borderRadius: 'var(--radius-container)'
 			},
-			// Categorical variants — flip --color-text-primary so child
-			// XDSText labels stay readable against the dusty pastel bg.
 			'variant:blue': {
 				'--color-text-primary': 'var(--color-text-blue)',
 				'--color-text-secondary': 'var(--color-text-blue)'
@@ -358,30 +445,14 @@ export const gothicTheme = defineTheme({
 				'--color-text-secondary': 'var(--color-text-yellow)'
 			}
 		},
-
 		section: {
 			base: {
 				padding: 'var(--spacing-3)'
 			}
 		},
-
 		field: {
 			base: {
 				borderRadius: 'var(--radius-element)'
-			}
-		},
-
-		// Display sizes use Manufacturing Consent — the signature gothic
-		// display font, reserved for hero/marketing-scale text only.
-		text: {
-			'type:display-1': {
-				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif'
-			},
-			'type:display-2': {
-				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif'
-			},
-			'type:display-3': {
-				fontFamily: '"Manufacturing Consent", "UnifrakturMaguntia", "Old English Text MT", serif'
 			}
 		}
 	}
