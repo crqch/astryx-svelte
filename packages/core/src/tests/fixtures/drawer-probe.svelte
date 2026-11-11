@@ -19,6 +19,8 @@
 		onclick?: (event: MouseEvent) => void;
 		experimental?: DrawerProps['experimental'];
 		xstyle?: import('$lib/internal/sx.js').StyleArg;
+		withFileInput?: boolean;
+		nativeOpen?: boolean;
 	}
 </script>
 
@@ -43,7 +45,9 @@
 		ariaDescribedby,
 		onclick,
 		experimental,
-		xstyle
+		xstyle,
+		withFileInput = false,
+		nativeOpen = false
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
@@ -68,6 +72,7 @@
 	{padding}
 	{experimental}
 	{xstyle}
+	open={nativeOpen}
 	onOpenChange={(open) => (isOpen = open)}
 	data-testid="drawer"
 	data-extra={dataExtra}
@@ -79,6 +84,9 @@
 >
 	{#if withHeader}
 		<DrawerHeader title="Details" onOpenChange={(open) => (isOpen = open)} />
+	{/if}
+	{#if withFileInput}
+		<input type="file" aria-label="Picture" />
 	{/if}
 	{#if withAutofocus}
 		<button data-autofocus data-testid="autofocus">Autofocus</button>

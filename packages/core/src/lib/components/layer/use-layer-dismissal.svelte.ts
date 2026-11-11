@@ -30,8 +30,10 @@ export type { LayerEscapeBehavior };
  * `registerLayer` read straight through `options()` and there is nothing to
  * refresh.
  *
- * **`useRef({})` becomes a plain object.** The token only has to be stable for
- * the layer's lifetime, and a `const` in the hook body is exactly that.
+ * **The token is a plain object, rotated per active cycle.** Upstream keeps it
+ * in a ref and replaces it whenever a layer goes inactive and active again, so
+ * a close/reopen cycle takes a fresh registration order and lands above the
+ * layers that stayed open. A plain `let` has exactly that lifetime here.
  *
  * What does NOT change: upstream's effect is keyed `[isRegistered, depth,
  * escapeBehavior]`, so those three go through `$derived` first. A derived only
@@ -131,8 +133,11 @@ export function useLayerDismissal(
 ): UseLayerDismissalReturn {
 	const readDepth = useLayerDepth();
 
-	// Identity for this layer's stack entry, stable across re-registration.
-	const token = {};
+	// Identity for this layer's stack entry: stable while one active cycle
+	// re-registers (depth or behavior changed), replaced on the next activation
+	// so a reopened layer moves above the layers that stayed open.
+	let token = {};
+	let wasRegistered = false;
 
 	const depth = $derived(readDepth());
 	const escapeBehavior = $derived(options().escapeBehavior ?? 'close');
@@ -140,7 +145,12 @@ export function useLayerDismissal(
 
 	$effect(() => {
 		if (!isRegistered) {
+			wasRegistered = false;
 			return;
+		}
+		if (!wasRegistered) {
+			token = {};
+			wasRegistered = true;
 		}
 		return registerLayer({
 			token,

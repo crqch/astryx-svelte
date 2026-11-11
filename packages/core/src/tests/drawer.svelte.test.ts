@@ -7,6 +7,8 @@ import { cssIn } from './forced-colors.js';
 import * as stylex from '@stylexjs/stylex';
 import { userEvent } from 'vitest/browser';
 import DrawerProbe from './fixtures/drawer-probe.svelte';
+import DrawerStackProbe from './fixtures/drawer-stack-probe.svelte';
+import DrawerSideFlipProbe from './fixtures/drawer-side-flip-probe.svelte';
 
 /**
  * The first slice of Astryx's `Drawer/Drawer.test.tsx` at the **0.7.13** pin,
@@ -481,5 +483,212 @@ describe('Drawer', () => {
 		const dialog = drawerEl(screen.container);
 		const style = dialog.getAttribute('style') ?? '';
 		expect(style).toContain('min(400px, calc(100dvw - 56px))');
+	});
+	describe('LIFO stacking', () => {
+		function dialogNamed(container: HTMLElement, name: string): HTMLDialogElement {
+			const match = [...container.querySelectorAll('dialog')].find(
+				(dialog) => dialog.getAttribute('aria-label') === name
+			);
+			if (!(match instanceof HTMLDialogElement)) throw new Error(`expected a ${name} drawer`);
+			return match;
+		}
+
+		it('closes only the last-opened drawer on Escape, regardless of event target', async () => {
+			const screen = await render(DrawerStackProbe);
+			const first = dialogNamed(screen.container, 'First');
+			const second = dialogNamed(screen.container, 'Second');
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(true));
+			await vi.waitFor(() => expect(second.matches(':popover-open')).toBe(true));
+
+			first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await closeWithTransition(second);
+
+			await vi.waitFor(() => expect(screen.component.getSecond()).toBe(false));
+			expect(screen.component.getFirst()).toBe(true);
+		});
+
+		it('keeps a closing top drawer on the stack until its exit completes', async () => {
+			const screen = await render(DrawerStackProbe);
+			const first = dialogNamed(screen.container, 'First');
+			const second = dialogNamed(screen.container, 'Second');
+			await vi.waitFor(() => expect(second.matches(':popover-open')).toBe(true));
+
+			second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			// Still top-layer present while it slides out: a second Escape must be
+			// consumed by the closing surface, not reach the sibling below.
+			first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			expect(screen.component.getFirst()).toBe(true);
+			expect(screen.component.getSecond()).toBe(false);
+
+			await closeWithTransition(second);
+			await vi.waitFor(() => expect(second.matches(':popover-open')).toBe(false));
+
+			first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await closeWithTransition(first);
+			await vi.waitFor(() => expect(screen.component.getFirst()).toBe(false));
+		});
+
+		it('moves a reopened sibling above a drawer that stayed open', async () => {
+			const screen = await render(DrawerStackProbe);
+			const first = dialogNamed(screen.container, 'First');
+			const second = dialogNamed(screen.container, 'Second');
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(true));
+
+			screen.component.closeFirst();
+			await closeWithTransition(first);
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(false));
+			expect(screen.component.getSecond()).toBe(true);
+
+			screen.component.reopenFirst();
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(true));
+
+			// Reopened last: the shared stack must route the press here even when
+			// it starts in the sibling below.
+			second.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await closeWithTransition(first);
+			await vi.waitFor(() => expect(screen.component.getFirst()).toBe(false));
+			expect(screen.component.getSecond()).toBe(true);
+		});
+
+		it('unregisters unmounted drawers so the remaining one becomes top', async () => {
+			const screen = await render(DrawerStackProbe);
+			const first = dialogNamed(screen.container, 'First');
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(true));
+
+			// Removing the sibling while it is open must leave the stack, not
+			// merely hide its host.
+			await screen.rerender({ showSecond: false });
+			await vi.waitFor(() =>
+				expect(screen.container.querySelector('dialog[aria-label="Second"]')).toBeNull()
+			);
+
+			first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await vi.waitFor(() => expect(screen.component.getFirst()).toBe(false));
+		});
+
+		it('consumes Escape for a required drawer so the one behind it stays open', async () => {
+			const screen = await render(DrawerStackProbe);
+			const first = dialogNamed(screen.container, 'First');
+			await vi.waitFor(() => expect(first.matches(':popover-open')).toBe(true));
+
+			// The sibling popover covers the page, so activate the button directly:
+			// upstream's `fireEvent.click` bypasses hit-testing the same way.
+			(screen.getByTestId('open-terms').element() as HTMLElement).click();
+			const terms = dialogNamed(screen.container, 'Accept terms');
+			await vi.waitFor(() => expect(terms.open).toBe(true));
+
+			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			await new Promise((resolve) => setTimeout(resolve, 20));
+			expect(screen.component.getInner()).toBe(true);
+			expect(screen.component.getFirst()).toBe(true);
+		});
+	});
+
+	it('slides out to the side it opened from, even if the prop flips', async () => {
+		const screen = await render(DrawerSideFlipProbe);
+		await userEvent.click(screen.getByTestId('open-start'));
+		const dialog = screen.container.querySelector('dialog') as HTMLDialogElement;
+		await vi.waitFor(() => expect(dialog.dataset.side).toBe('start'));
+
+		dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await vi.waitFor(() => expect(screen.component).toBeDefined());
+		// Mid-exit: the live prop is back to its default, the anchor is not.
+		expect(dialog.dataset.side).toBe('start');
+	});
+
+	it("'required' ignores Escape, the native cancel event, and a scrim click", async () => {
+		const screen = await render(DrawerProbe, {
+			props: { purpose: 'required', withHeader: false }
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		const cancel = new Event('cancel', { cancelable: true });
+		dialog.dispatchEvent(cancel);
+		await new Promise((resolve) => setTimeout(resolve, 30));
+		expect(cancel.defaultPrevented).toBe(true);
+		expect(dialog.open).toBe(true);
+		expect(screen.component.getOpen()).toBe(true);
+	});
+
+	it("'form' closes on Escape but ignores a scrim click", async () => {
+		const screen = await render(DrawerProbe, { props: { purpose: 'form' } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(dialog.open).toBe(true);
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(dialog.open).toBe(false));
+	});
+	it('stays open when a file picker inside it is dismissed', async () => {
+		const screen = await render(DrawerProbe, { props: { withFileInput: true } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		const input = screen.container.querySelector('input[type="file"]') as HTMLInputElement;
+		const fromPicker = new Event('cancel', { bubbles: true, cancelable: true });
+		input.dispatchEvent(fromPicker);
+		expect(fromPicker.defaultPrevented).toBe(false);
+		expect(screen.component.getOpen()).toBe(true);
+
+		// Its own close request still closes it.
+		dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(screen.component.getOpen()).toBe(false));
+	});
+
+	it('lets a consumer preventDefault opt out of built-in Escape handling', async () => {
+		const onkeydown = (event: KeyboardEvent) => event.preventDefault();
+		const screen = await render(DrawerProbe, { props: { onkeydown } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+		);
+		await new Promise((resolve) => setTimeout(resolve, 30));
+		expect(screen.component.getOpen()).toBe(true);
+		expect(dialog.open).toBe(true);
+	});
+
+	it('hands a consumer onKeyDown the Escape press ahead of the shared stack', async () => {
+		const order: string[] = [];
+		const onkeydown = (event: KeyboardEvent) => order.push(`consumer:${event.key}`);
+		const screen = await render(DrawerProbe, { props: { onkeydown } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+		);
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(screen.component.getOpen()).toBe(false));
+		expect(order).toEqual(['consumer:Escape']);
+	});
+
+	it('does not forward a native open prop to the dialog element', async () => {
+		const screen = await render(DrawerProbe, {
+			props: { initialOpen: false, nativeOpen: true }
+		});
+		const dialog = drawerEl(screen.container);
+		expect(dialog.open).toBe(false);
+		expect(dialog).not.toHaveAttribute('open');
+	});
+
+	it('merges a consumer xstyle after the Drawer styles so the override wins', async () => {
+		const overrides = stylex.create({ narrow: { maxWidth: '240px' } });
+		const screen = await render(DrawerProbe, { props: { xstyle: overrides.narrow } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		expect(getComputedStyle(dialog).maxWidth).toBe('240px');
+		expect(getComputedStyle(dialog).position).toBe('fixed');
+		expect(dialog).toHaveClass('astryx-drawer');
 	});
 });
