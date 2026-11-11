@@ -3,7 +3,6 @@
  * PORT NOTE: 11 of 13 declarations. Two depend on the jsdom glide frame grid; recorded in port/debts.md.
  */
 
-
 /**
  * @file animatedLayout.presented.test.ts
  * @input vitest (jsdom), the animated-layout module, a recording stand-in for
@@ -178,10 +177,6 @@ async function runChange(
 }
 
 describe('a glide in the presented hit-test registry (motion/presentation.ts)', () => {
-	/** The translate of keyframe `index` of `entry`, in px. */
-	const translateAt = (entry: Played, index: number) =>
-		translateOf({ ...entry, keyframes: entry.keyframes.slice(index) });
-
 	it('keeps reporting a retargeted glide: the cancel of the glide it replaced clears nothing', async () => {
 		const { area, changed } = setUp(
 			'<div id="area"><div id="changed"></div><div id="a"></div></div>'
@@ -552,29 +547,6 @@ describe('a glide in the presented hit-test registry (motion/presentation.ts)', 
 	});
 
 	/** When `keyframes` over `duration` ms come within the record's reach. */
-	const settleOf = (keyframes: ReadonlyArray<Keyframe>, duration: number) => {
-		const numbers = (value: Keyframe[string]) =>
-			[...String(value ?? '').matchAll(/(-?[\d.]+(?:e[+-]?\d+)?)([a-z%]*)/gi)].map(
-				([, at, unit]) => ({ at: Number(at), unit })
-			);
-		const last = keyframes[keyframes.length - 1];
-		const styles = Object.keys(last).filter(
-			(key) => !['offset', 'computedOffset', 'easing', 'composite'].includes(key)
-		);
-		const isNear = (frame: Keyframe) =>
-			styles.every((key) => {
-				const ends = numbers(last[key]);
-				return numbers(frame[key]).every(
-					({ at, unit }, index) =>
-						Math.abs(at - ends[index].at) <= (unit === 'px' || unit === '%' ? 0.5 : 0.005)
-				);
-			});
-		let from = keyframes.length - 1;
-		while (from > 0 && isNear(keyframes[from - 1])) {
-			from -= 1;
-		}
-		return (keyframes[from].offset ?? from / (keyframes.length - 1)) * duration;
-	};
 
 	it('removes the report of a glide whose element left the document before it ended', async () => {
 		const { area, changed, phase } = setUp(

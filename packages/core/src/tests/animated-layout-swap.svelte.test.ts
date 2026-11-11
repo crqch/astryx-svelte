@@ -3,7 +3,6 @@
  * PORT NOTE: 6 of 28 declarations. The rest need the jsdom copy-layout/rect stand-in and frame grid; recorded in port/debts.md.
  */
 
-
 /**
  * @file animatedLayout.swap.test.ts
  * @input vitest (jsdom), the animated-layout module, a recording stand-in for
@@ -22,8 +21,7 @@ import {
 	createAnimatedLayout,
 	holdLayoutSwap,
 	playLayoutFrames,
-	playLayoutSwap,
-	reportLayoutChange
+	playLayoutSwap
 } from '$lib/motion/animated-layout.js';
 
 interface Played {
@@ -111,11 +109,6 @@ function setup() {
 	return { handle, content, host };
 }
 
-const travel = (p: number): Keyframe => ({
-	opacity: 1 - p,
-	translate: `${-200 * p}px 0px`
-});
-
 describe('the in-place swap (spec:AST-105 FR8)', () => {
 	it("paints a copied canvas with its source's pixels", () => {
 		const drawImage = vi.fn();
@@ -162,37 +155,6 @@ describe('the in-place swap (spec:AST-105 FR8)', () => {
 	});
 
 	/** The copy renders at `scale` of its layout size, `extra` px taller. */
-	function stubCopyLayout(scale: number, extra = 0) {
-		const { handle, content, host } = setup();
-		vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
-			this: HTMLElement
-		) {
-			return parseFloat(this.style.width) || 0;
-		});
-		vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
-			this: HTMLElement
-		) {
-			return (parseFloat(this.style.height) || 0) + extra;
-		});
-		vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
-			this: HTMLElement
-		) {
-			if (this === content) {
-				return DOMRect.fromRect({ x: 100, y: 50, width: 400, height: 200 });
-			}
-			if (this.hasAttribute('inert')) {
-				return DOMRect.fromRect({
-					x: 10,
-					y: 10,
-					width: this.offsetWidth * scale,
-					height: this.offsetHeight * scale
-				});
-			}
-			return DOMRect.fromRect({ x: 0, y: 0, width: 0, height: 0 });
-		});
-		return { handle, content, host };
-	}
-
 	it('holds nothing under Reduce Motion with a fine pointer, without a handle, or outside the area', () => {
 		const { handle, content } = setup();
 		expect(holdLayoutSwap(null, content)).toBeNull();

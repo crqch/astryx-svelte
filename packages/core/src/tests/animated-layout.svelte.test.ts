@@ -3,7 +3,6 @@
  * PORT NOTE: 44 of 47 declarations. The other three read jsdom-only animation-frame values and real-browser layout rectangles; they are recorded in port/debts.md.
  */
 
-
 /**
  * @file animatedLayout.test.ts
  * @input vitest (jsdom), the animated-layout module, a recording stand-in for

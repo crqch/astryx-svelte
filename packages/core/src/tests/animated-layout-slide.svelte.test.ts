@@ -3,7 +3,6 @@
  * PORT NOTE: 9 of 13 declarations. The rest depend on jsdom slide-frame values; recorded in port/debts.md.
  */
 
-
 /**
  * @input `animatedLayout`'s block edge reveal and conceal, in jsdom with
  *   recorded animations and placed boxes.
@@ -125,9 +124,6 @@ function setUp({ isOpening, far = false }: { isOpening: boolean; far?: boolean }
 
 const motionsOn = (id: string) =>
 	played.filter((entry) => (entry.element as HTMLElement).id === id);
-
-const translates = (entry: Played | undefined) =>
-	(entry?.keyframes ?? []).map((frame) => String(frame.translate));
 
 describe('a block edge reveal slides its parts under a still clip (spec:AST-105 FR9)', () => {
 	it("makes each part's slide its glide, so a later change carries it, and forgets it when the motion ends", () => {

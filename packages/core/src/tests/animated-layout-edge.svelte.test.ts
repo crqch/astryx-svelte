@@ -3,7 +3,6 @@
  * PORT NOTE: 10 of 25 declarations. The rest compare per-frame clip values against a jsdom glide grid; recorded in port/debts.md.
  */
 
-
 /**
  * @file animatedLayout.edge.test.ts
  * @input vitest (jsdom), the animated-layout module, a recording stand-in for
