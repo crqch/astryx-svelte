@@ -68,6 +68,15 @@ export interface UsageDoc {
 	 * `routes/components/[name]/+page.svelte`.
 	 */
 	anatomy?: AnatomyElement[];
+	/**
+	 * Upstream 0.7.x accessibility contracts. The CLI's doctype contract has not
+	 * ported these fields yet, so the generated registry carries them but no
+	 * template renders them; see `docs/scripts/emit-core-docs.mjs`, which drops
+	 * them from core's emitted docs for the same reason.
+	 */
+	accessibility?: unknown[];
+	/** Upstream 0.7.x verified colour-accessibility coverage. Not rendered yet. */
+	accessibilityThemeCoverage?: unknown[];
 }
 
 export interface ThemingTarget {
@@ -113,6 +122,13 @@ export interface ThemingDoc {
 	targets?: ThemingTarget[];
 	vars?: ComponentVar[];
 	derived?: DerivedVar[];
+	/**
+	 * Upstream 0.7.x themeable icon slots (`defineTheme({componentIcons})`). The
+	 * CLI's doctype contract has not ported these yet, so the registry carries
+	 * them but no template renders them; see `emit-core-docs.mjs`, which drops
+	 * them from core's emitted docs for the same reason.
+	 */
+	componentIcons?: unknown[];
 }
 
 /**

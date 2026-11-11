@@ -10,7 +10,7 @@
 		 * The help the button reveals. Short, noninteractive text; for links or
 		 * buttons, use HoverCard.
 		 */
-		content: Snippet;
+		content: string | number | Snippet;
 		/**
 		 * Accessible name of the button.
 		 *
