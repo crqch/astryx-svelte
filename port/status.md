@@ -8,9 +8,9 @@
 
 |                           |                                                                          |
 | ------------------------- | ------------------------------------------------------------------------ |
-| Component dirs (ours)     | 103                                                                      |
+| Component dirs (ours)     | 104                                                                      |
 | Component dirs (upstream) | 109                                                                      |
-| Missing here              | Drawer, SnapPaging                                                       |
+| Missing here              | SnapPaging                                                               |
 | Not in upstream           | none                                                                     |
 | Theme packages            | 8 — butter, chocolate, gothic, liquid-glass, matcha, neutral, stone, y2k |
 | Upstream pin              | `@astryxdesign/core` 0.7.13                                              |
@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 275     | 10650          |
+| Ported here              | 277     | 10729          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **522** | **6275**       |
+| **Unported**             | **520** | **6196**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -42,7 +42,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `utils/pressFeedback.test.ts`                                      | 97    |
 | `Tokenizer/TokenizerBottomSheet.test.tsx`                          | 90    |
 | `BottomSheet/BottomSheetStacking.test.tsx`                         | 87    |
-| `Drawer/Drawer.test.tsx`                                           | 71    |
 | `gestures/__tests__/wheel.test.ts`                                 | 68    |
 | `theme/themeAdaptations.test.ts`                                   | 65    |
 | `List/__tests__/ListReorder.test.tsx`                              | 62    |
@@ -230,7 +229,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateInput/DateInput.calendarPresentation.test.tsx`                | 8     |
 | `DateInput/MonthScrollerSettle.test.tsx`                           | 8     |
 | `DateRangeInput/DateRangeInput.calendar.test.tsx`                  | 8     |
-| `Drawer/DrawerHeader.test.tsx`                                     | 8     |
 | `EmptyState/EmptyState.announce.test.tsx`                          | 8     |
 | `gestures/__tests__/TapGestureRecognizer.test.ts`                  | 8     |
 | `Layer/LayerProvider.test.tsx`                                     | 8     |
@@ -563,9 +561,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10650          |
-| Declared here              | 6615           |
-| **Short**                  | **4050**       |
+| Upstream, in ported suites | 10729          |
+| Declared here              | 6637           |
+| **Short**                  | **4107**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -576,7 +574,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (200)</summary>
+<details><summary>Suites short of upstream (201)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -597,6 +595,7 @@ per connected group.
 | `Item/Item.test.tsx`                                                                                                                                                                     | 105      | 45   | 60    |
 | `Markdown/parser.test.ts`                                                                                                                                                                | 166      | 107  | 59    |
 | `Chat/ChatComposerInput.test.tsx`                                                                                                                                                        | 109      | 51   | 58    |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 14   | 57    |
 | `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
 | `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 91       | 37   | 54    |
 | `Popover/Popover.test.tsx`                                                                                                                                                               | 73       | 23   | 50    |
@@ -800,7 +799,7 @@ substring-matching on both sides by design and is not counted.
 |             | Blocks |
 | ----------- | ------ |
 | Ported      | 658    |
-| **Pending** | **68** |
+| **Pending** | **76** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a

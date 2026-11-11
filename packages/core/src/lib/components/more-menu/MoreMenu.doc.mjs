@@ -142,7 +142,7 @@ export default {
 		},
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description:
 				"Position of the menu relative to the trigger. Logical: start/end resolve against the menu's own inherited direction (RTL mirrors).",
 			default: "'below'"

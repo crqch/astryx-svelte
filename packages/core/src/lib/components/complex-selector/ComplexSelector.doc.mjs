@@ -201,7 +201,7 @@ export default {
 		},
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description: 'Popup placement.',
 			default: "'below'"
 		},

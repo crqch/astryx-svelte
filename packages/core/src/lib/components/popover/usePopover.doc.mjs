@@ -68,7 +68,7 @@ export default {
 		},
 		{
 			name: 'role',
-			type: "'none' | 'dialog'",
+			type: "'dialog' | 'none'",
 			description:
 				'ARIA role on the content wrapper. Use "dialog" for genuine dialog content; use "none" for listbox/menu popups whose own content role should be exposed and whose trigger keeps DOM focus.',
 			default: "'dialog'"

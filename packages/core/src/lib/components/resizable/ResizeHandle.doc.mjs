@@ -61,7 +61,7 @@ export default {
 		},
 		{
 			name: 'pillPlacement',
-			type: "'auto' | 'end' | 'start' | 'center'",
+			type: "'end' | 'start' | 'auto' | 'center'",
 			description:
 				'Which side of the divider the pill sits on. auto = content side (derived from isReversed), flips when collapsed. start = left/top, end = right/bottom, center = centered on divider. It moves only the pill, which a drag can still take wherever it sits; the grab zone stays centred on the divider.',
 			default: "'auto'"

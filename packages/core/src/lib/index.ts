@@ -148,6 +148,8 @@ export { default as ContextMenuSubMenu } from './components/dropdown-menu/dropdo
 export { default as Dialog } from './components/dialog/dialog.svelte';
 export { default as DialogHeader } from './components/dialog/dialog-header.svelte';
 export { default as Divider } from './components/divider/divider.svelte';
+export { default as Drawer } from './components/drawer/drawer.svelte';
+export { default as DrawerHeader } from './components/drawer/drawer-header.svelte';
 export { default as DropdownMenu } from './components/dropdown-menu/dropdown-menu.svelte';
 export { default as DropdownMenuCheckboxItem } from './components/dropdown-menu/dropdown-menu-checkbox-item.svelte';
 export { default as DropdownMenuItem } from './components/dropdown-menu/dropdown-menu-item.svelte';
@@ -610,6 +612,8 @@ export type {
 } from './components/dialog/dialog.svelte';
 export type { DialogPosition } from './components/dialog/dialog.stylex.js';
 export type { DialogHeaderProps } from './components/dialog/dialog-header.svelte';
+export type { DrawerProps } from './components/drawer/drawer.svelte';
+export type { DrawerHeaderProps } from './components/drawer/drawer-header.svelte';
 export type { DividerProps } from './components/divider/divider.svelte';
 export type {
 	DropdownMenuProps,

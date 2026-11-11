@@ -126,7 +126,7 @@ export default {
 		},
 		{
 			name: 'side',
-			type: "'auto' | 'end' | 'start'",
+			type: "'end' | 'start' | 'auto'",
 			description:
 				'Which side the drawer slides from. Start is left in LTR, right in RTL. Auto picks a side based on the trigger position.',
 			default: "'auto'"

@@ -127,7 +127,7 @@ export default {
 		},
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description:
 				"Position placement relative to the trigger. Logical: start/end resolve against the popover's own inherited direction, so RTL contexts mirror automatically in pure CSS.",
 			default: "'below'"
@@ -177,7 +177,7 @@ export default {
 		},
 		{
 			name: 'role',
-			type: "'none' | 'dialog'",
+			type: "'dialog' | 'none'",
 			description:
 				'ARIA role for the popover wrapper. Use dialog for dialog-style popovers; use none when content provides its own role, like menu or listbox.',
 			default: "'dialog'"

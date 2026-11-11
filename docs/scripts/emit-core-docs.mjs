@@ -456,6 +456,8 @@ const UPSTREAM_EXAMPLES_NOT_PORTED = new Set([
 	'Card',
 	'CheckboxListItem',
 	'DialogHeader',
+	'Drawer',
+	'DrawerHeader',
 	'Field',
 	'InternationalizationProvider',
 	'Layout',
