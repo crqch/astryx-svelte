@@ -38,7 +38,8 @@ const styles = stylex.create({
 	},
 	animate: {
 		animationDirection: 'alternate',
-		animationDuration: durationVars['--duration-medium-max'],
+		// A busy loop reads the duration before a theme's tempo scales it.
+		animationDuration: `var(--_astryx-pre-tempo-duration-medium-max, ${durationVars['--duration-medium-max']})`,
 		animationIterationCount: 'infinite',
 		// No pulse under reduced motion; the static placeholder still reads as
 		// loading.

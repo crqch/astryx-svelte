@@ -527,22 +527,6 @@ function coreHasAugmentableInterface(interfaceName) {
 }
 
 /**
- * Resolve a rendered theme class token (the key without `astryx-`) to candidate
- * interface prefixes that may own its augmentable prop maps. Some tokens are
- * subtargets documented by a parent component (`avatar-status-dot` is
- * documented on Avatar), and some stable class tokens intentionally omit word
- * separators (`progressbar`, `statusdot`) while the public API keeps
- * `ProgressBar`/`StatusDot` casing. Component docs are the source of truth for
- * the target token → owning component relationship.
- *
- * The module half of upstream's `{moduleName, interfacePrefix}` pair is
- * constant here — this port publishes one entry — so only the prefix varies.
- *
- * @param {string} componentName
- * @returns {Promise<string[]>}
- */
-
-/**
  * Rendered legacy class names (`legacyNames`) mapped to the canonical target
  * class that emits them. Source-derived, so a renamed target keeps accepting
  * its documented old spelling without a hand-maintained table.
@@ -583,6 +567,22 @@ function legacyTargetAliases() {
 	walk(coreSrc);
 	return aliases;
 }
+
+/**
+ * Resolve a rendered theme class token (the key without `astryx-`) to candidate
+ * interface prefixes that may own its augmentable prop maps. Some tokens are
+ * subtargets documented by a parent component (`avatar-status-dot` is
+ * documented on Avatar), and some stable class tokens intentionally omit word
+ * separators (`progressbar`, `statusdot`) while the public API keeps
+ * `ProgressBar`/`StatusDot` casing. Component docs are the source of truth for
+ * the target token → owning component relationship.
+ *
+ * The module half of upstream's `{moduleName, interfacePrefix}` pair is
+ * constant here — this port publishes one entry — so only the prefix varies.
+ *
+ * @param {string} componentName
+ * @returns {Promise<string[]>}
+ */
 
 async function resolveAugmentationPrefixes(componentName) {
 	const fallback = [toPascalCase(componentName)];

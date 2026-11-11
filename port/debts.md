@@ -1462,22 +1462,6 @@ Reduce Motion. Upstream's version also defers the landing to the layout effect t
 `flushSync` so the fade-in starts after the month changes; reproducing that ordering in
 Svelte is its own change, not a call swap.
 
-### Theme motion knobs (`tempo`, `character`) are not ported
-
-- **units:** theme
-- **kind:** unported
-- **retires:** when `theme/themeMotion.ts` and `theme/motionKnobs.ts` land and
-  `resolveThemeValues`/`defineTheme` consume them
-
-Upstream 0.7.13's theme contract adds `motion: {tempo?, character?}`: `tempo` scales every
-`--duration-*` token (clamped 0.75–1.5), `character` selects `--ease-entrance` and
-`--ease-move`, and `resolveThemeMotion` returns the knobs and resolved durations/easings
-for the animator. This port has only `expandMotionScale`, which writes a fixed
-`--_astryx-motion-tempo: 1` and has no `--ease-entrance` / `--ease-move` generation, so a
-theme author cannot retune Astryx's own motion. The 43-case `theme/themeMotion.test.ts` is
-in `port/status.md`'s unported list. Component styles now reference the entrance/move
-tokens, which resolve to `--ease-standard`'s default until the knobs land.
-
 ### `Resizable` has no spring-back, close slide or rubber-band drawing
 
 - **units:** Resizable
@@ -2091,3 +2075,49 @@ and pressable arms are the component's own `data-astryx-pressable` mark and CSS
 `:active` overlay, not the delegated controller's `data-astryx-press` clock.
 The press still tracks, commits and cancels identically; only the release fade
 and the touch-paint arm are the CSS approximation.
+
+### The `utils` suites this batch could not port are blocked on modules the port does not have
+
+- **units:** utils/hitArea, utils/interactionModality, utils/boxHold, utils/calendarSystem, utils/calendarDateParser
+- **kind:** unported
+- **retires:** when each named module is ported
+
+`utils/hitArea.ts` (with `touchHitArea`'s live integration and the shared
+mutation observer's candidate set) is a thousand-line measuring module, not a
+transcription; `utils/interactionModality.ts` carries per-document shared state,
+a callback ref and a text-entry tracker behind a hook React implements and
+Svelte would need a probe for; `utils/boxHold.ts` also needs `pressClaim.ts`,
+which is absent; `utils/calendarSystem.ts` and `utils/calendarDateParser.ts`
+depend on calendar-formatting helpers this port's `plain-date.ts` does not
+carry, and the upstream calendar-system suite additionally takes its oracle
+from `temporal-polyfill`. Their suites are listed, unported, in
+`port/status.md`. Port the module first, then the suite; none has a small
+companion fix that would make it run now.
+
+### Two component suites are unported because their internals are not here
+
+- **units:** ToggleButton/ToggleButtonGroupTracking, Icon/componentIcons
+- **kind:** unported
+- **retires:** when the toggle group's press-group tracking and the component
+  icon registry are ported
+
+`ToggleButton/ToggleButtonGroupTracking.test.tsx` asserts `isPressGroupItem` and
+the shared `touchHitArea` layer on the group; neither module is present, and
+the suite drives the action-group tracker directly. `Icon/componentIcons.test.tsx`
+exercises `resolveComponentIcon`, `ComponentIcon` and
+`defineTheme({componentIcons})`; this port's `Icon` has the global icon registry
+but no component-icon slot map, resolver or theme option. Both remain listed,
+unported, in `port/status.md`.
+
+### `Selector/useCombobox.test.tsx`'s accessibility-pattern case is unported
+
+- **units:** Selector/useCombobox
+- **kind:** unported
+- **retires:** when `@astryxdesign/a11y-spec` is available to this repo
+
+The suite's two-row `it.each` under `the reusable Combobox contract` calls
+`expectAccessibilitySpec` and `COMBOBOX_PATTERN` from
+`@astryxdesign/a11y-spec`, which is not a dependency here. The case is named in
+`use-combobox.svelte.test.ts`'s header; the other declarations are ported. The
+package's absence is the only blocker — the field props it inspects are
+implemented.

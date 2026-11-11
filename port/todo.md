@@ -257,6 +257,23 @@ deviation, not a task.
 
 ### Tests
 
+### The class oracle is red against the 0.7.13 pin
+
+- [ ] **Re-baseline `compare-upstream-classes.mjs` against 0.7.13 and close the style drift it
+      exposes.** The oracle reports 246 mismatch/absent/compare-nothing lines on the current tree
+      (273 on `c91640b`, so this predates the batch that ported the home, themes, template and motion
+      work): the largest groups are `toast-viewport` (14), `item` (13), `selector` (12),
+      `native-date-field` (12), `lightbox` (10), `aspect-ratio` (10), `code-block` (9) and
+      `power-search` (8). Two clauses need separate treatment: `interaction-overlay` compares
+      upstream's delegated press-paint vars this port has not ported (recorded above), and
+      `bottom-sheet.stylex.js` "compared nothing" because the case points at a module that no longer
+      carries the styles it did. The gate's `test` stage stops here, so `test:parity` is the first
+      thing to make green after the test-delta and surface fronts.
+- [ ] **The CSS oracle is red behind it:** `test:css` reports 921 mismatches over 230 compiled
+      modules (1,709 classes shared with upstream), including declarations upstream no longer emits.
+      It cannot run until `test:parity` passes; re-baseline both against 0.7.13 in the same batch,
+      because a class fix and a declaration fix are the same style refresh.
+
 - [ ] Fold the two per-file `Intl.DateTimeFormat` locale stubs into the client project's `en-US`
       config pin now that it exists, so there's one mechanism instead of three
 - [ ] Continue porting upstream `.test.tsx` suites alongside each component, case for case — the

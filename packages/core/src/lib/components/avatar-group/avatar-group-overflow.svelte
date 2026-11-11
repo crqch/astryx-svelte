@@ -57,9 +57,13 @@
 			xstyle
 		)
 	);
+	// `count` is a plain number, and the documented shape for it is
+	// `total - visibleCount`, which goes negative whenever the list is shorter
+	// than the slice. Clamping keeps that from rendering "+-3".
+	const safeCount = $derived(Math.max(0, count));
 	// The `{count, number}` argument means `en` renders a grouping separator
 	// ("4,912 more"), which the raw template literal never did.
-	const label = $derived(t('@astryx.avatarGroup.overflow', { count }));
+	const label = $derived(t('@astryx.avatarGroup.overflow', { count: safeCount }));
 	// `size` and `shape` are the documented theming axes on this target
 	// (`AvatarGroup.doc.mjs` declares `visualProps: ['size', 'shape']`), so both
 	// have to reach `themeProps` — and both arrive through the group context,
@@ -69,7 +73,7 @@
 </script>
 
 {#snippet content()}
-	{#if children}{@render children()}{:else}+{count}{/if}
+	{#if children}{@render children()}{:else}+{safeCount}{/if}
 {/snippet}
 
 {#if onclick}
@@ -93,6 +97,7 @@
 	</button>
 {:else}
 	<span
+		role="img"
 		{...rest}
 		{...theme}
 		class={cx(theme.class, attrs.class, className)}

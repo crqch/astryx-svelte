@@ -1,5 +1,13 @@
 import { expandColorScale, type ColorScaleConfig } from './expand-color-scale.js';
-import { expandMotionScale, type MotionScaleConfig } from './expand-motion-scale.js';
+import type { MotionScaleConfig } from './expand-motion-scale.js';
+import {
+	expandThemeMotion,
+	MOTION_TEMPO_PROPERTY,
+	preTempoName,
+	type MotionCharacter,
+	type ThemeMotionConfig,
+	type ThemeMotionKnobs
+} from './theme-motion.js';
 import { expandRadiusScale, type RadiusScaleConfig } from './expand-radius-scale.js';
 import {
 	expandTypeScale,
@@ -99,6 +107,8 @@ export interface AdaptationCondition {
 /** The overrides an adaptation applies when its condition matches. */
 export interface AdaptationValue {
 	typography?: TypographyConfig;
+	/** Motion knobs or duration-scale fields, completed from the root motion axis. */
+	motion?: Partial<MotionScaleConfig> & ThemeMotionKnobs;
 	tokens?: TokenMap;
 	components?: ComponentOverrides;
 }
@@ -128,7 +138,36 @@ export interface ThemeConfig {
 	typography?: TypographyConfig;
 	/** Border-radius scale. Expanded to the `--radius-*` tokens. */
 	radius?: RadiusScaleConfig;
-	motion?: MotionScaleConfig;
+	/**
+	 * Motion configuration: two knobs (`spec:AST-108`), a motion scale, or both.
+	 *
+	 * - `tempo` (default 1, clamped to 0.75–1.5) scales every motion duration:
+	 *   the duration tokens and touch motion's springs.
+	 * - `character` (`'crisp'`, `'standard'` or `'expressive'`) sets the
+	 *   entrance and move curves; exits and fades never overshoot.
+	 *
+	 * Every theme follows each person's Reduce Motion setting; nothing loosens it.
+	 *
+	 * A motion scale computes duration min/max variants from base values and a
+	 * ratio (min = base × ratio, max = base / ratio); its durations win over
+	 * `tempo`, and explicit `tokens` overrides win over both. Finger tracking,
+	 * momentum, the keyboard, hover, the press's onset delay and tap flash, and
+	 * busy loops never follow the knobs; the press release fade follows `tempo`.
+	 *
+	 * @example
+	 * ```ts
+	 * motion: { tempo: 1.2, character: 'crisp' }
+	 *
+	 * // A motion scale, as before:
+	 * motion: { fast: 175, medium: 410, slow: 975, ratio: 0.75 }
+	 *
+	 * // Suggested starting points:
+	 * //   Snappy:    { fast: 100, medium: 250, ratio: 0.75 }
+	 * //   Default:   { fast: 175, medium: 410, slow: 975, ratio: 0.75 }
+	 * //   Cinematic: { fast: 200, medium: 500, slow: 1200, ratio: 0.7 }
+	 * ```
+	 */
+	motion?: ThemeMotionConfig;
 	/**
 	 * Color scale configuration. Generates color token overrides from a single
 	 * accent color using the HCT perceptual color model.
@@ -253,19 +292,16 @@ export interface DefinedTheme extends ThemeConfig {
 	readonly __onLight: ResolvedOnMedia;
 	/** Adaptation rules after their typography scales have been expanded. @internal */
 	readonly __adaptationRules: readonly ResolvedAdaptationRule[];
+	/**
+	 * Effective motion axis, inherited through `extends`, so a child can
+	 * complete a partial motion config field by field. @internal
+	 */
+	readonly __axes?: { readonly motion?: ThemeMotionConfig };
 }
 
 /** Compiles a `[light, dark]` pair into `light-dark()`; passes strings through. */
 export function resolveTokenValue(value: TokenValue): string {
 	return Array.isArray(value) ? `light-dark(${value[0]}, ${value[1]})` : (value as string);
-}
-
-function resolveTokenMap(tokens: TokenMap | undefined): Record<string, string> {
-	const out: Record<string, string> = {};
-	for (const [name, value] of Object.entries(tokens ?? {})) {
-		out[name] = resolveTokenValue(value);
-	}
-	return out;
 }
 
 /**
@@ -412,15 +448,210 @@ function adaptationQuery(
 	return parts.join(' and ');
 }
 
+/** The slow band's duration tokens. */
+const SLOW_BAND = ['--duration-slow-min', '--duration-slow', '--duration-slow-max'] as const;
+
+/**
+ * The base's tokens for the duration-scale fields a child leaves unset
+ * (`spec:AST-108` FR5, field by field): a child that sets no `slow` of its own
+ * regenerates only the fast and medium bands, so an inherited slow band stays
+ * as the base's tokens hold it, at the ratio it was made with; and a child
+ * that sets no `easing` keeps the base's `--ease-standard`, an explicit one
+ * included.
+ */
+function inheritedScaleTokens(
+	base: DefinedTheme,
+	baseMotion: ThemeMotionConfig,
+	own: ThemeMotionConfig
+): Record<string, TokenValue> | undefined {
+	const names = [
+		...('slow' in baseMotion && !('slow' in own) ? SLOW_BAND : []),
+		...('easing' in baseMotion && !('easing' in own) ? (['--ease-standard'] as const) : [])
+	];
+	if (names.length === 0) return undefined;
+	const tokens = base.resolvedTokens;
+	return Object.fromEntries(
+		names.flatMap((name) => (tokens[name] !== undefined ? [[name, tokens[name]]] : []))
+	);
+}
+
+/**
+ * Refuses a duration scale that is missing `fast`, `medium` or `ratio` after
+ * inheritance. The scale applies only when all three are present, so a partial
+ * one beside a knob (`{fast: 100, tempo: 1.2}`) would otherwise be dropped
+ * silently, though its fields win over `tempo` (`spec:AST-108` FR5).
+ */
+function assertCompleteMotionScale(motion: ThemeMotionConfig, themeName: string): void {
+	const scale = motion as Partial<MotionScaleConfig>;
+	const writesScale =
+		scale.fast !== undefined ||
+		scale.medium !== undefined ||
+		scale.ratio !== undefined ||
+		scale.slow !== undefined ||
+		scale.easing !== undefined;
+	if (
+		writesScale &&
+		(scale.fast === undefined || scale.medium === undefined || scale.ratio === undefined)
+	) {
+		throw new Error(
+			`defineTheme("${themeName}"): \`motion\` sets a duration scale field, so it must supply \`fast\`, \`medium\`, and \`ratio\` unless each missing field is inherited from \`extends\`.`
+		);
+	}
+}
+
+function assertFiniteNumber(value: unknown, path: string): asserts value is number {
+	if (typeof value !== 'number' || !Number.isFinite(value)) {
+		throw new Error(`${path} must be a finite number.`);
+	}
+}
+
+/**
+ * Complete an adaptation rule's partial motion config from the theme's
+ * effective root axis, as upstream's `completeMotion` does. A rule may not set
+ * `reducedMotion`: it is theme-wide.
+ */
+function completeMotion(
+	root: ThemeMotionConfig | undefined,
+	rule: Partial<MotionScaleConfig> & ThemeMotionKnobs,
+	path: string
+): ThemeMotionConfig {
+	if ((rule as { reducedMotion?: unknown }).reducedMotion !== undefined) {
+		throw new Error(
+			`${path}.reducedMotion is a theme-wide setting: set it on the theme's own ` +
+				'motion, not in an adaptation rule.'
+		);
+	}
+	const tempo = rule.tempo ?? root?.tempo;
+	const character = rule.character ?? root?.character;
+	const knobs: ThemeMotionKnobs = {
+		...(tempo !== undefined ? { tempo } : {}),
+		...(character !== undefined ? { character } : {})
+	};
+	if (knobs.tempo !== undefined) {
+		assertFiniteNumber(knobs.tempo, `${path}.tempo`);
+	}
+	const rootScale: Partial<MotionScaleConfig> = root != null && 'fast' in root ? root : {};
+	const writesScale =
+		rule.fast !== undefined ||
+		rule.medium !== undefined ||
+		rule.ratio !== undefined ||
+		rule.slow !== undefined ||
+		rule.easing !== undefined;
+	if (!writesScale && !('fast' in rootScale)) {
+		// Knobs only, over a root with no scale: the knobs generate the tokens.
+		return knobs;
+	}
+	const fast = rule.fast ?? rootScale.fast;
+	const medium = rule.medium ?? rootScale.medium;
+	const ratio = rule.ratio ?? rootScale.ratio;
+	if (fast === undefined || medium === undefined || ratio === undefined) {
+		throw new Error(
+			`${path} must supply \`fast\`, \`medium\`, and \`ratio\` unless each missing field exists on the effective root motion axis.`
+		);
+	}
+	assertFiniteNumber(fast, `${path}.fast`);
+	assertFiniteNumber(medium, `${path}.medium`);
+	assertFiniteNumber(ratio, `${path}.ratio`);
+	const slow = rule.slow ?? rootScale.slow;
+	if (slow !== undefined) {
+		assertFiniteNumber(slow, `${path}.slow`);
+	}
+	const easing = rule.easing ?? rootScale.easing;
+	return {
+		fast,
+		medium,
+		ratio,
+		...(slow !== undefined ? { slow } : {}),
+		...(easing !== undefined ? { easing } : {}),
+		...knobs
+	};
+}
+
+/** The default `--ease-standard`; mirrors the token stylesheet on the plain-Node path. */
+const DEFAULT_STANDARD_EASE = 'cubic-bezier(0.24, 1, 0.4, 1)';
+
+/**
+ * Apply a motion layer's tokens, then the copies busy loops read (FR4): a
+ * layer that writes durations writes their pre-tempo values, and a tempo of 1
+ * when it sets none, so its springs keep the pace of its durations inside a
+ * theme with a tempo.
+ */
+function assignMotionTokens(
+	target: Record<string, string>,
+	motion: ThemeMotionConfig | undefined
+): void {
+	if (motion == null) return;
+	const generated = expandThemeMotion(motion);
+	Object.assign(target, generated);
+	let writesDurations = false;
+	for (const [name, value] of Object.entries(generated)) {
+		const preTempo = preTempoName(name);
+		if (preTempo !== name) {
+			writesDurations = true;
+			if (!(preTempo in generated)) target[preTempo] = value;
+		}
+	}
+	if (writesDurations && !(MOTION_TEMPO_PROPERTY in generated)) {
+		target[MOTION_TEMPO_PROPERTY] = '1';
+	}
+}
+
+/**
+ * Apply explicit token overrides. An explicit duration beats tempo, so a busy
+ * loop reading the pre-tempo value reads it too (FR4).
+ */
+function assignExplicitTokens(target: Record<string, string>, tokens: TokenMap | undefined): void {
+	for (const [name, value] of Object.entries(tokens ?? {})) {
+		if (value === undefined) continue;
+		target[name] = resolveTokenValue(value);
+		const preTempo = preTempoName(name);
+		if (preTempo !== name && tokens?.[preTempo] === undefined) {
+			target[preTempo] = target[name];
+		}
+	}
+}
+
+/**
+ * At 'standard', `--ease-entrance` and `--ease-move` equal the resolved
+ * `--ease-standard` (FR2): the layer's own, else the one beneath it. A layer
+ * that sets them itself, or whose character, its own or the one it inherits,
+ * picks its own curve, keeps them.
+ */
+function applyStandardEase(
+	target: Record<string, string>,
+	ownTokens: TokenMap | undefined,
+	motion: ThemeMotionConfig | undefined,
+	inheritedCharacter: MotionCharacter | undefined,
+	standardBeneath: string | undefined
+): void {
+	const own = ownTokens ?? {};
+	const ownCharacter = motion != null && 'character' in motion ? motion.character : undefined;
+	const character = ownCharacter ?? inheritedCharacter;
+	if (
+		ownCharacter === 'standard' ||
+		(own['--ease-standard'] !== undefined && (character === undefined || character === 'standard'))
+	) {
+		const standard = target['--ease-standard'] ?? standardBeneath ?? DEFAULT_STANDARD_EASE;
+		for (const name of ['--ease-entrance', '--ease-move']) {
+			if (own[name] === undefined) target[name] = standard;
+		}
+	}
+}
+
 /**
  * Resolve one adaptation's value into the token map its media block carries.
- * Upstream re-expands the type scale and re-emits the font families, then
- * layers the rule's explicit tokens on top.
+ * Upstream re-expands the type scale and re-emits the font families, completes
+ * a partial motion config from the root axis, then layers the rule's explicit
+ * tokens on top.
  */
 function resolveAdaptation(
+	themeName: string,
 	rule: ThemeAdaptationRule,
+	index: number,
 	breakpoints: Record<AdaptationBreakpoint, number>,
-	baseTypography: TypographyConfig | undefined
+	baseTypography: TypographyConfig | undefined,
+	motionAxis: ThemeMotionConfig | undefined,
+	rootTokens: Record<string, string>
 ): ResolvedAdaptationRule {
 	// Only the fields the adaptation names change; its weights and families
 	// inherit the theme's root typography, as upstream's merge does.
@@ -430,14 +661,33 @@ function resolveAdaptation(
 		scale: rule.value.typography?.scale ?? baseTypography?.scale
 	};
 	const typeScale = typeScaleConfigFrom(typography);
+	const motion = rule.value.motion
+		? completeMotion(
+				motionAxis,
+				rule.value.motion,
+				`defineTheme("${themeName}").adaptations.rules[${index}].value.motion`
+			)
+		: undefined;
+	const tokens: Record<string, string> = {
+		...(typeScale ? expandTypeScale(typeScale) : {}),
+		...fontFamilyTokens(typography)
+	};
+	assignMotionTokens(tokens, motion);
+	assignExplicitTokens(tokens, rule.value.tokens);
+	// A rule without motion of its own keeps the theme's character, so its
+	// explicit --ease-standard leaves that character's curves alone; one at
+	// 'standard' matches the theme's --ease-standard.
+	applyStandardEase(
+		tokens,
+		rule.value.tokens,
+		motion,
+		motionAxis?.character,
+		rootTokens['--ease-standard']
+	);
 	return {
 		when: rule.when,
 		query: adaptationQuery(rule.when, breakpoints),
-		tokens: {
-			...(typeScale ? expandTypeScale(typeScale) : {}),
-			...fontFamilyTokens(typography),
-			...resolveTokenMap(rule.value.tokens)
-		}
+		tokens
 	};
 }
 
@@ -451,6 +701,29 @@ export function defineTheme(config: ThemeConfig): DefinedTheme {
 	const base = config.extends;
 	const typeScaleConfig = typeScaleConfigFrom(config.typography);
 
+	// Motion inherits field by field (`spec:AST-108` FR5): a duration-scale
+	// field or knob the child leaves unset keeps its base's value, so the
+	// child's motion tokens come from the merged configuration. They resolve
+	// base first, then generated: what the child generates replaces the base's
+	// tokens, its explicit ones included. A child's motion regenerates only what
+	// it sets: an inherited slow band and an inherited easing keep the base's
+	// tokens.
+	const baseMotion = base?.__axes?.motion ?? base?.motion;
+	const motion: ThemeMotionConfig | undefined =
+		config.motion != null && baseMotion != null
+			? { ...baseMotion, ...config.motion }
+			: config.motion;
+	if (motion != null) assertCompleteMotionScale(motion, config.name);
+	const inheritedScale =
+		config.motion != null && base != null && baseMotion != null
+			? inheritedScaleTokens(base, baseMotion, config.motion)
+			: undefined;
+	const effectiveTokens: TokenMap | undefined =
+		inheritedScale != null && Object.keys(inheritedScale).length > 0
+			? { ...inheritedScale, ...config.tokens }
+			: config.tokens;
+	const motionAxis = motion ?? baseMotion;
+
 	const resolvedTokens: Record<string, string> = {
 		...base?.resolvedTokens,
 		// Colour leads, as upstream's step order has it — its step 1, ahead of the
@@ -463,14 +736,15 @@ export function defineTheme(config: ThemeConfig): DefinedTheme {
 		// Radius sits between the type scale and motion, as upstream's step order
 		// has it — all three are expanders, so the order only matters against
 		// `config.tokens`, which wins over every one of them.
-		...(config.radius ? expandRadiusScale(config.radius) : {}),
-		...(config.motion ? expandMotionScale(config.motion) : {}),
-		// Upstream's step 1d, after the expanders and before the syntax fold.
-		...fontFamilyTokens(config.typography),
-		...syntaxTokenMap(config.syntax),
-		...resolveTokenMap(config.tokens),
-		...resolveTokenMap(config.localTokens)
+		...(config.radius ? expandRadiusScale(config.radius) : {})
 	};
+	assignMotionTokens(resolvedTokens, motion);
+	Object.assign(resolvedTokens, fontFamilyTokens(config.typography), syntaxTokenMap(config.syntax));
+	assignExplicitTokens(resolvedTokens, effectiveTokens);
+	assignExplicitTokens(resolvedTokens, config.localTokens);
+	// An explicit --ease-standard follows the character the theme inherits when
+	// it sets no motion of its own (FR2).
+	applyStandardEase(resolvedTokens, effectiveTokens, motion, baseMotion?.character, undefined);
 
 	// Public tokens whose canonical default references another public token.
 	// Upstream repeats an omitted alias at the theme root so a nested theme binds
@@ -596,14 +870,19 @@ export function defineTheme(config: ThemeConfig): DefinedTheme {
 		// surfaces still emits them.
 		__onDark: resolveOnMedia('dark', config.onDark),
 		__onLight: resolveOnMedia('light', config.onLight),
-		__adaptationRules: (config.adaptations?.rules ?? []).map((rule) =>
+		__axes: { motion: motionAxis },
+		__adaptationRules: (config.adaptations?.rules ?? []).map((rule, index) =>
 			resolveAdaptation(
+				config.name,
 				rule,
+				index,
 				{
 					...DEFAULT_WIDTH_BREAKPOINTS,
 					...config.adaptations?.widthBreakpoints
 				},
-				config.typography
+				config.typography,
+				motionAxis,
+				resolvedTokens
 			)
 		)
 	};

@@ -101,11 +101,12 @@ export {
 	type ResolvedOnMedia
 } from './on-media-tokens.js';
 
-// Upstream's four, exactly. `generateThemeCss` — this port's layered, headered
+// Upstream's five, exactly. `generateThemeCss` — this port's layered, headered
 // document, which the theme build scripts and the docs build consume — is
 // deliberately NOT here: upstream publishes no such function, and its callers
 // reach it by deep path into `dist/`, which the `exports` map does not expose.
 export {
+	generateAdaptationCSS,
 	generateOnMediaCSS,
 	generateThemeCSS,
 	generateThemeRules,
@@ -116,6 +117,7 @@ export { parseStyleKey } from './parse-style-key.js';
 
 export { expandMotionScale } from './expand-motion-scale.js';
 export type { MotionScaleConfig, MotionScaleTokens } from './expand-motion-scale.js';
+export type { MotionCharacter, ThemeMotionConfig, ThemeMotionKnobs } from './theme-motion.js';
 
 export { expandRadiusScale } from './expand-radius-scale.js';
 export type { RadiusScaleConfig, RadiusScaleTokens } from './expand-radius-scale.js';

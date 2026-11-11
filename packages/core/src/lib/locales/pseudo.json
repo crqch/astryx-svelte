@@ -773,8 +773,14 @@
   "@astryx.mobileNav.navigation": {
     "defaultMessage": "⟦Ñàṽíĝàţíóñ⟧"
   },
+  "@astryx.multiSelector.selectedCount": {
+    "defaultMessage": "⟦{count, plural, one {# selected} other {# selected}}⟧"
+  },
   "@astryx.multiSelector.clearAll": {
     "defaultMessage": "⟦Çłéàř àłł {label}⟧"
+  },
+  "@astryx.infoTip.label": {
+    "defaultMessage": "⟦Ṁóřé íñƒóřɱàţíóñ⟧"
   },
   "@astryx.input.statusButton.error": {
     "defaultMessage": "⟦Éřřóř ðéţàíłš⟧"

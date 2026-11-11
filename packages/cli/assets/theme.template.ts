@@ -170,12 +170,19 @@ export const myTheme = defineTheme({
 	radius: { base: 4, multiplier: 1 },
 
 	/**
-	 * Duration scale in ms. Each of fast/medium/slow also gets a -min and -max
-	 * sibling computed with `ratio` (min = base × ratio, max = base ÷ ratio), so
-	 * a component can pick a longer or shorter variant of the same tempo.
+	 * Motion configuration: two knobs, a duration scale, or both.
+	 *
+	 * - `tempo` (default 1, clamped to 0.75–1.5) scales every duration token and
+	 *   touch motion's springs.
+	 * - `character` ('crisp' | 'standard' | 'expressive') sets --ease-entrance
+	 *   and --ease-move; exits and fades keep --ease-exit.
+	 *
+	 * A duration scale computes each band's -min and -max siblings with `ratio`
+	 * (min = base × ratio, max = base ÷ ratio), so a component can pick a longer
+	 * or shorter variant of the same tempo. Its durations win over `tempo`;
+	 * explicit tokens win over both. `easing` overrides --ease-standard.
 	 *   Snappy {fast: 100, medium: 250} · Default {fast: 175, medium: 410, slow: 975}
 	 *   Cinematic {fast: 200, medium: 500, slow: 1200}
-	 * `easing` overrides --ease-standard.
 	 *
 	 * Reference: `astryx-svelte docs motion`.
 	 */
@@ -205,8 +212,8 @@ export const myTheme = defineTheme({
 	//   --border-width   hairline thickness shared by bordered surfaces
 	//   --radius-*       none · inner · element · container · page · chat · full
 	//   --shadow-*       low/med/high + inset-{hover,selected,success,warning,error}
-	//   --duration-*     {fast,medium,slow} × {-min, base, -max}
-	//   --ease-standard
+	//   --duration-*     {fast,medium,slow} × {-min, base, -max}, + exit
+	//   --ease-*         standard · entrance · move · exit
 	//   --font-family-*  body · heading · code
 	//   --font-size-*    4xs … 5xl
 	//   --font-weight-*  normal · medium · semibold · bold

@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 356     | 12234          |
+| Ported here              | 363     | 12386          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **441** | **4691**       |
+| **Unported**             | **434** | **4539**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -49,7 +49,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/remark.test.tsx`                                         | 51    |
 | `utils/hitArea.test.ts`                                            | 48    |
 | `keyboard/keyboardTarget.test.ts`                                  | 44    |
-| `theme/themeMotion.test.ts`                                        | 43    |
 | `DateInput/Wheel.test.tsx`                                         | 41    |
 | `hooks/menuPressGesture.test.ts`                                   | 39    |
 | `hooks/useAnnounce.modal.test.tsx`                                 | 38    |
@@ -85,10 +84,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Typeahead/BaseTypeahead.incremental.test.tsx`                     | 23    |
 | `animator/createAnimator.test.ts`                                  | 22    |
 | `Chat/ChatSendButton.test.tsx`                                     | 22    |
-| `Switch/switchTouch.test.ts`                                       | 22    |
 | `Markdown/plugins/sourceDecoration.test.tsx`                       | 21    |
 | `__tests__/BusyOwnerAnnouncement.test.tsx`                         | 20    |
-| `AvatarGroup/AvatarGroupOverflow.test.tsx`                         | 19    |
 | `Calendar/Calendar.calendarSystems.test.tsx`                       | 19    |
 | `DateInput/DateInputTouch.calendar.test.tsx`                       | 19    |
 | `dragToSnapPoints/createDragToSnapPoints.test.ts`                  | 19    |
@@ -96,7 +93,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/outsidePress.test.ts`                                       | 19    |
 | `Lightbox/useLightbox.test.tsx`                                    | 19    |
 | `Resizable/createResizableHandle.test.ts`                          | 19    |
-| `Selector/useCombobox.test.tsx`                                    | 19    |
 | `hooks/useClickableContainer.test.tsx`                             | 18    |
 | `motion/paging.test.ts`                                            | 18    |
 | `ToggleButton/ToggleButtonGroupTracking.test.tsx`                  | 18    |
@@ -104,8 +100,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `BottomSheet/BottomSheetCloseFocus.test.tsx`                       | 17    |
 | `Calendar/hooks/useCalendarNavigation.test.ts`                     | 17    |
 | `Markdown/plugins/semanticFence.test.tsx`                          | 17    |
-| `Table/TableHeaderCell.test.tsx`                                   | 17    |
-| `utils/timeFormat.test.ts`                                         | 17    |
 | `DateInput/wheelPhysics.test.ts`                                   | 16    |
 | `hooks/useScrollOverflow.test.tsx`                                 | 16    |
 | `Table/plugins/virtualization/useTableWindow.test.tsx`             | 16    |
@@ -115,7 +109,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/layerScopedContext.test.tsx`                                | 15    |
 | `Markdown/plugins/sourceLines.test.tsx`                            | 15    |
 | `TimeInput/NativeTimeInput.test.tsx`                               | 15    |
-| `utils/clickGuard.test.ts`                                         | 15    |
 | `i18n/useTranslator.test.tsx`                                      | 14    |
 | `Markdown/blockDirection.test.tsx`                                 | 14    |
 | `Markdown/indentedFences.test.tsx`                                 | 14    |
@@ -482,9 +475,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12234          |
-| Declared here              | 8180           |
-| **Short**                  | **4080**       |
+| Upstream, in ported suites | 12386          |
+| Declared here              | 8331           |
+| **Short**                  | **4081**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -495,7 +488,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (207)</summary>
+<details><summary>Suites short of upstream (208)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -696,6 +689,7 @@ per connected group.
 | `motion/animator.test.ts`                                                                                                                                                                | 266      | 265  | 1     |
 | `NavIcon/NavIcon.test.tsx`                                                                                                                                                               | 4        | 3    | 1     |
 | `PowerSearch/usePowerSearchConfig.test.ts`                                                                                                                                               | 52       | 51   | 1     |
+| `Selector/useCombobox.test.tsx`                                                                                                                                                          | 19       | 18   | 1     |
 | `Table/plugins/columnSettings/useTableColumnSettings.test.tsx`                                                                                                                           | 7        | 6    | 1     |
 | `Table/plugins/columnSettings/useTableColumnSettingsState.test.tsx`                                                                                                                      | 19       | 18   | 1     |
 | `Table/plugins/pagination/useTablePagination.test.tsx`                                                                                                                                   | 40       | 39   | 1     |
@@ -725,8 +719,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 675    |
-| **Pending** | **60** |
+| Ported      | 676    |
+| **Pending** | **59** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a
@@ -740,6 +734,6 @@ this port does not document are not counted as pending.
 | api-divergence        | 32      |
 | deliberate-divergence | 48      |
 | divergence            | 6       |
-| unported              | 20      |
+| unported              | 19      |
 | upstream-lag          | 11      |
-| **total**             | **117** |
+| **total**             | **116** |

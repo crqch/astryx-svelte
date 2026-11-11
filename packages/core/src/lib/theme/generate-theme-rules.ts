@@ -5,6 +5,7 @@ import { parseStyleKey } from './parse-style-key.js';
 import {
 	resolveTokenValue,
 	type DefinedTheme,
+	type ResolvedAdaptationRule,
 	type StyleOverrides,
 	type TokenMap,
 	type TokenValue
@@ -630,6 +631,32 @@ function proseResetRules(_theme: DefinedTheme): string[] {
 }
 
 /**
+ * One adaptation rule's `@media` block, at the indentation
+ * {@link generateThemeCss} has always emitted for it.
+ */
+function adaptationRuleBlock(adaptation: ResolvedAdaptationRule, scopeSelector: string): string {
+	const scopeRules = `:scope {\n${indent(declarations(adaptation.tokens))}\n}`;
+	return `@media ${adaptation.query} {\n  @scope (${scopeSelector}) to (${THEME_SCOPE_TO}) {\n${indent(scopeRules)}\n  }\n}`;
+}
+
+/**
+ * Generate CSS for a theme's ordered adaptation rules, as upstream's
+ * `generateAdaptationCSS` exposes it.
+ *
+ * Each authored rule stays a separate media block in declaration order. Blocks
+ * are never merged, reordered, or value-diffed: a later rule that deliberately
+ * writes a root value must remain present so it can override an earlier
+ * matching rule.
+ */
+export function generateAdaptationCSS(theme: DefinedTheme): ThemeCSSOutput {
+	const scopeSelector = `[${THEME_ATTR}="${theme.name}"]`;
+	const blocks = theme.__adaptationRules
+		.filter((adaptation) => adaptation.query && Object.keys(adaptation.tokens).length > 0)
+		.map((adaptation) => adaptationRuleBlock(adaptation, scopeSelector));
+	return { prose: '', component: blocks.join('\n\n') };
+}
+
+/**
  * A theme's rules split by the layer they belong in, as upstream's
  * `generateThemeRulesSplit` returns them.
  *
@@ -813,13 +840,10 @@ export function generateThemeCss(theme: DefinedTheme): string {
 	// their narrower conditions win by source order without a second layer.
 	for (const adaptation of theme.__adaptationRules) {
 		if (!adaptation.query || Object.keys(adaptation.tokens).length === 0) continue;
-		const scopeRules = `:scope {\n${indent(declarations(adaptation.tokens))}\n}`;
 		parts.push(
 			'',
 			`@layer ${THEME_LAYER} {`,
-			indent(
-				`@media ${adaptation.query} {\n  @scope (${scopeSelector}) to (${THEME_SCOPE_TO}) {\n${indent(scopeRules)}\n  }\n}`
-			),
+			indent(adaptationRuleBlock(adaptation, scopeSelector)),
 			'}'
 		);
 	}

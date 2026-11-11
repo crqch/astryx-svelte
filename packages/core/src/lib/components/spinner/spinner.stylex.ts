@@ -175,8 +175,10 @@ const styles = stylex.create({
 		// Slow the rotation dramatically under reduced motion rather than freezing
 		// it — a frozen spinner reads as broken. role="status" plus the "Loading"
 		// label still convey the busy state.
+		// A busy loop reads the duration before a theme's tempo scales it: tempo
+		// retunes transitions, never how fast work appears to be progressing.
 		animationDuration: {
-			default: durationVars['--duration-slow-min'],
+			default: `var(--_astryx-pre-tempo-duration-slow-min, ${durationVars['--duration-slow-min']})`,
 			'@media (prefers-reduced-motion: reduce)': '3s'
 		},
 		animationIterationCount: 'infinite',
