@@ -175,6 +175,7 @@
 	}));
 
 	const theme = $derived(themeProps('stepper', { orientation, indicatorPosition }));
+	const frameTheme = themeProps('stepper-frame');
 	const rootAttrs = $derived(stepperRootAttrs({ orientation, indicatorPosition }, xstyle));
 </script>
 
@@ -182,7 +183,7 @@
 	aria-label={label}
 	{...rest}
 	{...theme}
-	class={cx(theme.class, rootAttrs.class, className)}
+	class={cx(frameTheme.class, theme.class, rootAttrs.class, className)}
 	style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
 >
 	<!-- Each step renders its own progress bar segment; no child introspection

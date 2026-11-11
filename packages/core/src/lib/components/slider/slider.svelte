@@ -595,6 +595,7 @@
 	);
 	const rowAttrs = sliderRowAttrs();
 	const trackContainerAttrs = $derived(sliderTrackContainerAttrs(isHorizontal, isDisabled));
+	const controlTheme = $derived(themeProps('slider-control', { orientation }));
 	const trackTheme = $derived(themeProps('slider-track', { orientation }));
 	const trackAttrs = $derived(sliderTrackAttrs(isHorizontal));
 	const filledTrackAttrs = $derived(sliderFilledTrackAttrs(isHorizontal));
@@ -673,7 +674,11 @@
 	class={className}
 	style={styleProp}
 >
-	<div {...rowTheme} class={cx(rowTheme.class, rowAttrs.class)} style={rowAttrs.style}>
+	<div
+		{...controlTheme}
+		class={cx(controlTheme.class, rowTheme.class, rowAttrs.class)}
+		style={rowAttrs.style}
+	>
 		{#if htmlName != null}
 			<!--
 				Positional identity: index 0 is the start thumb, 1 the end. Disabled

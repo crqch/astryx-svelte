@@ -109,7 +109,12 @@ const styles = stylex.create({
 	// rotation through a single selector. The wrapper keeps only layout.
 	triggerIconRotation: {
 		transitionProperty: 'transform',
-		transitionDuration: durationVars['--duration-fast'],
+		// Under reduced motion the chevron turns at once: an in-place state
+		// change moves nothing (design:reduced-motion DR1–DR3).
+		transitionDuration: {
+			default: durationVars['--duration-fast'],
+			'@media (prefers-reduced-motion: reduce)': '0s'
+		},
 		transitionTimingFunction: easeVars['--ease-standard'],
 		transformOrigin: 'center'
 	},

@@ -585,7 +585,12 @@
 					{fileNames}
 				</div>
 			{:else}
-				<Icon icon="arrowUp" size="md" color="secondary" />
+				<Icon
+					icon="arrowUp"
+					size="md"
+					color="secondary"
+					{...themeProps('file-input-icon', { mode })}
+				/>
 				<span class={placeholderDropzoneAttrs.class} style={placeholderDropzoneAttrs.style}>
 					{isDragOver ? t('@astryx.fileInput.dropHint') : displayPlaceholder}
 				</span>
@@ -596,7 +601,12 @@
 			</span>
 			<Spinner size="sm" />
 		{:else}
-			<Icon icon="arrowUp" size="sm" color="secondary" />
+			<Icon
+				icon="arrowUp"
+				size="sm"
+				color="secondary"
+				{...themeProps('file-input-icon', { mode })}
+			/>
 			<span class={compactLabelAttrs.class} style={compactLabelAttrs.style}>
 				{fileNames ?? displayPlaceholder}
 			</span>

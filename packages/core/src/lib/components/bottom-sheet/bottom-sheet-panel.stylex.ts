@@ -75,16 +75,36 @@ const styles = stylex.create({
 		marginBlockEnd: `${-OVERSCROLL_PADDING}px`,
 		transform: {
 			default: 'translateY(0)',
-			'@starting-style': 'translateY(100%)'
+			'@starting-style': {
+				default: 'translateY(100%)',
+				'@media (prefers-reduced-motion: reduce)': 'translateY(0)'
+			}
 		},
-		opacity: 1,
+		opacity: {
+			default: 1,
+			'@starting-style': {
+				default: 1,
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 0
+			}
+		},
 		transitionProperty: 'transform, opacity',
-		transitionDuration: durationVars['--duration-medium'],
+		// Under reduced motion no transform runs. On a coarse primary pointer the
+		// entrance is an opacity cross-fade of at most 200 ms. A fine pointer gets
+		// the change at once (the 0.01s collapse).
+		transitionDuration: {
+			default: durationVars['--duration-medium'],
+			'@media (prefers-reduced-motion: reduce)': {
+				default: '0.01s',
+				'@media (pointer: coarse)': '0.01s, 200ms'
+			}
+		},
 		transitionTimingFunction: easeVars['--ease-standard'],
-		willChange: 'transform, opacity',
-		'@media (prefers-reduced-motion: reduce)': {
-			transitionDuration: '0.01s'
-		}
+		willChange: 'transform, opacity'
+	},
+	// A sheet present on page load opens where it rests (spec:AST-013 FR13):
+	// the collapse reduced motion uses, so the transition still ends.
+	sheetSettled: {
+		transitionDuration: '0.01s'
 	},
 	/**
 	 * The exit is its own motion, not the entrance played backwards.
@@ -105,8 +125,22 @@ const styles = stylex.create({
 	 * (neutral's medium is 300ms against 410ms).
 	 */
 	sheetClosing: {
-		transform: 'translateY(100%)',
-		transitionTimingFunction: 'cubic-bezier(0.3, 0, 0.6, 0.6)'
+		// Under reduced motion the exit does not travel. On a coarse pointer it
+		// fades out where it is, and on a fine one it ends at once.
+		transform: {
+			default: 'translateY(100%)',
+			'@media (prefers-reduced-motion: reduce)': 'translateY(0)'
+		},
+		opacity: {
+			default: null,
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 0
+		},
+		// A pointer presentation closes on the theme's exit curve. A touch
+		// presentation keeps its own curve, which the exit tokens do not change.
+		transitionTimingFunction: {
+			default: easeVars['--ease-exit'],
+			'@media (pointer: coarse)': 'cubic-bezier(0.3, 0, 0.6, 0.6)'
+		}
 	},
 	sheetFading: {
 		opacity: 0
@@ -191,6 +225,7 @@ export function bottomSheetPanelAttrs(
 	isClosing: boolean,
 	isFading: boolean,
 	isInactive: boolean,
+	isEntrySettled: boolean,
 	isHug: boolean,
 	hasBudget: boolean,
 	xstyle: StyleArg
@@ -203,6 +238,7 @@ export function bottomSheetPanelAttrs(
 		isClosing && styles.sheetClosing,
 		isFading && styles.sheetFading,
 		isInactive && styles.sheetInactive,
+		isEntrySettled && styles.sheetSettled,
 		xstyle
 	);
 }

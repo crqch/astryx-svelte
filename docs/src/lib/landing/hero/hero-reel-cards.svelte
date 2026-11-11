@@ -99,12 +99,18 @@
 		z-index: 0;
 	}
 
-	/* Blurred aurora glow — fixed, in the same 1200px box as the cards so blobs
-	   and cards stay aligned. Capped to 100vw to avoid horizontal scroll. Blob
-	   centres sit under the card clusters; colours come from --aurora-* per slide. */
+	/* Blurred aurora glow — in the same 1200px box as the cards so blobs and
+	   cards stay aligned; pinned at ≥1024px and scrolling away with the hero
+	   below that. Capped to 100vw to avoid horizontal scroll. Blob centres sit
+	   under the card clusters; colours come from --aurora-* per slide. */
 	.backdrop-glow {
-		position: fixed;
-		top: var(--_app-shell-header-height, 0px);
+		/* Desktop: fixed, part of the pin-and-cover effect alongside heroContent
+		   and the cards stage. Narrow: absolute within heroScope (position:
+		   relative), so it scrolls away with the hero instead of staying pinned
+		   for the whole page — a fixed glow below 1024px reached past the footer
+		   into the bottom-overscroll gap. */
+		position: absolute;
+		top: 0;
 		left: 50%;
 		transform: translateX(-50%);
 		width: min(1200px, 100vw);
@@ -134,5 +140,15 @@
 			);
 		/* Visible at all widths (behind the collage on narrow + overlap on desktop). */
 		display: block;
+	}
+
+	@media (min-width: 1024px) {
+		.backdrop-glow {
+			position: fixed;
+			/* heroScope already starts below the header (it is the sibling after
+			   navBackdrop in document flow), so the absolute case needs no offset;
+			   only the fixed case has to clear the header itself. */
+			top: var(--_app-shell-header-height, 0px);
+		}
 	}
 </style>

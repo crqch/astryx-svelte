@@ -7,6 +7,7 @@
 	import HeroContent from '$lib/landing/hero/hero-content.svelte';
 	import FeaturesShowcase from '$lib/landing/features-showcase.svelte';
 	import AboutShowcase from '$lib/landing/about-showcase.svelte';
+	import BlogShowcase from '$lib/landing/blog-showcase.svelte';
 	import DiscoverShowcase from '$lib/landing/discover-showcase.svelte';
 
 	/**
@@ -25,10 +26,9 @@
 	 * slide is dark, which flips the hero text and the nav to a light ink (set by
 	 * `HeroContent`, which is the component that can read the reel).
 	 *
-	 * **`BlogShowcase` is not ported.** Upstream renders it between
-	 * `AboutShowcase` and `DiscoverShowcase`, built on `blogRegistry` +
-	 * `BlogCard`/`BlogFeatureCard`. `/blog` is outside the v1 cut and the posts are
-	 * Meta's, so the section is omitted rather than filled (port/todo.md → Phase 5).
+	 * The four showcase sections are upstream's, in upstream's order: Features,
+	 * About, Blog and Discover. `BlogShowcase` reads the build-time blog registry,
+	 * so it counts this port's own posts rather than Meta's.
 	 */
 
 	// The layout's instance, not a new one — see `setColorModeContext`. Reading a
@@ -133,6 +133,7 @@
 	<section class="showcase-overlay" bind:this={showcase}>
 		<FeaturesShowcase />
 		<AboutShowcase />
+		<BlogShowcase />
 		<DiscoverShowcase />
 	</section>
 </div>

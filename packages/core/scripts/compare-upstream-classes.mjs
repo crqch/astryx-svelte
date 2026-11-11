@@ -599,7 +599,15 @@ const CASES = [
 		// and `above` translate on the block axis and are direction-neutral, so
 		// upstream leaves them alone and so do we.
 		file: 'src/lib/components/layer/layer-animations.stylex.js',
-		upstreamFile: 'Layer/layerAnimations.stylex.js'
+		upstreamFile: 'Layer/layerAnimations.stylex.js',
+		// The Reduce Motion fade's duration and curve come from
+		// `motion/reduced-motion.stylex.ts` (`defineConsts`), so this module's
+		// `animation-duration` and `fadeIn` keyframe are hashed from a
+		// `var(--<constKey>)` and cannot equal upstream's classes by name. The
+		// declarations are byte-identical once the const is substituted, which is
+		// what `constHashed` compares — the same mechanism the touch date surface
+		// uses.
+		constHashed: 'src/lib/motion/reduced-motion.stylex.js'
 	},
 	{
 		file: 'src/lib/components/nav-icon/nav-icon.stylex.js',
@@ -2689,6 +2697,12 @@ const CASES = [
 		// which is the merge working.
 		file: 'src/lib/components/selector/selector.stylex.js',
 		upstreamFile: 'Selector/Selector.js',
+		// The dropdown's Reduce Motion arms take their duration and curve from
+		// `motion/reduced-motion.stylex.ts` (`defineConsts`), so those two classes
+		// hash a `var(--<constKey>)` rather than upstream's literals. The emitted
+		// declarations agree once the const is substituted; `constHashed` compares
+		// them that way.
+		constHashed: 'src/lib/motion/reduced-motion.stylex.js',
 		inline: [
 			['styles.trigger'],
 			['styles.triggerLabel'],

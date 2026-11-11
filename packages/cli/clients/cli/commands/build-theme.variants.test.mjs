@@ -245,6 +245,10 @@ describe('theme build custom-variant augmentations', () => {
 				cwd: projectDir,
 				stdio: 'pipe'
 			});
+		} catch (error) {
+			console.error(String(error.stdout ?? ''));
+			console.error(String(error.stderr ?? ''));
+			throw error;
 		} finally {
 			fs.rmSync(projectDir, { recursive: true, force: true });
 		}

@@ -7,6 +7,7 @@ import {
 } from '../field/input-styles.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
+import { reducedMotionFadeConsts } from '../../motion/reduced-motion.stylex.js';
 import {
 	borderVars,
 	colorVars,
@@ -173,7 +174,20 @@ const styles = stylex.create({
 		paddingBlock: spacingVars['--spacing-1'],
 		paddingInline: spacingVars['--spacing-1'],
 		opacity: 1,
-		transition: `opacity ${durationVars['--duration-fast']}`
+		// Under Reduce Motion the list appears at once on a fine pointer, and
+		// takes the shared cross-fade on a coarse one.
+		transitionProperty: 'opacity',
+		transitionDuration: {
+			default: durationVars['--duration-fast'],
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+				reducedMotionFadeConsts.duration,
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': '0s'
+		},
+		transitionTimingFunction: {
+			default: 'ease',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+				reducedMotionFadeConsts.easing
+		}
 	},
 	dropdownInput: {
 		// The input trigger's text inset includes its border. Mirror that extra
@@ -187,7 +201,8 @@ const styles = stylex.create({
 	},
 	dropdownHidden: {
 		opacity: 0,
-		transition: 'none'
+		// A longhand: the shorthand would lose to the list's longhands.
+		transitionProperty: 'none'
 	},
 
 	// Popover container (for anchor positioning)

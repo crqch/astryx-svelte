@@ -53,10 +53,20 @@ function isTable(path: string): boolean {
 	);
 }
 
-/** The component a file belongs to (a PascalCase top-level directory), or null. */
+/**
+ * The component a file belongs to, or null for shared code.
+ *
+ * Upstream's layout puts every component in a PascalCase top-level directory
+ * (`SegmentedControl/…`). This port nests them under `components/<kebab-name>/`
+ * instead, so both shapes name a component; the test's made-up packages keep
+ * using the upstream shape.
+ */
 function componentOf(path: string): string | null {
-	const top = path.split('/')[0] ?? '';
-	return path.includes('/') && /^[A-Z]/.test(top) ? top : null;
+	const [top, second] = path.split('/');
+	if (top === 'components') {
+		return second != null ? `components/${second}` : null;
+	}
+	return path.includes('/') && /^[A-Z]/.test(top ?? '') ? top : null;
 }
 
 interface Edge {

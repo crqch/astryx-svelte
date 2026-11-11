@@ -26,7 +26,12 @@
 </script>
 
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
+	import {
+		playReducedMotionDip,
+		reducedMotionFade,
+		type ReducedMotionDip
+	} from '../../motion/reduced-motion.js';
 	import { useScrollSettle } from './use-scroll-settle.svelte.js';
 	import { useOwnScrollGesture } from './use-own-scroll-gesture.svelte.js';
 	import { usePointerDragScroll } from './use-pointer-drag-scroll.svelte.js';
@@ -91,13 +96,66 @@
 		return first instanceof HTMLElement && first.offsetHeight > 0 ? first.offsetHeight : 0;
 	}
 
+	// The Reduced Motion dip a smooth landing is playing, and the landing it
+	// will apply at the dip's middle. Under Reduce Motion the wheel's own
+	// scroll lands without travel: it dips on a touch screen, and lands at once
+	// on any other pointer (design:reduced-motion DR2–DR3).
+	let pendingFade: { top: number } | null = null;
+	let dip: ReducedMotionDip | null = null;
+
 	function scrollToIndex(index: number, behavior: ScrollBehavior): void {
 		const size = itemBlockSize();
-		if (scroller == null || size === 0) {
+		const node = scroller;
+		if (node == null || size === 0) {
 			return;
 		}
-		scroller.scrollTo({ top: index * size, behavior });
+		const top = index * size;
+		// Under Reduce Motion the wheel's own scroll lands without travel. It
+		// dips on a touch screen or for a touch drag's release. Otherwise it
+		// lands at once.
+		const fadeTiming = behavior === 'smooth' ? reducedMotionFade(node) : null;
+		const pending = pendingFade;
+		// A change that lands now replaces a pending landing. Its dip goes on
+		// and fades back in.
+		if (fadeTiming == null) {
+			pendingFade = null;
+			node.scrollTo({ top, behavior });
+			return;
+		}
+		if (fadeTiming.duration === 0 || typeof node.animate !== 'function') {
+			pendingFade = null;
+			node.scrollTo({ top, behavior: 'auto' });
+			return;
+		}
+		if (pending != null) {
+			// The dip is still fading out: its rows land here instead.
+			pending.top = top;
+			return;
+		}
+		// A step during the last dip's fade-in starts the new dip at the
+		// column's current opacity, not at full opacity. A leaving element fades
+		// out from where it is.
+		const shown = Number.parseFloat(getComputedStyle(node).opacity);
+		dip?.cancel();
+		const landing = { top };
+		pendingFade = landing;
+		dip = playReducedMotionDip(
+			node,
+			fadeTiming,
+			() => {
+				if (pendingFade === landing) {
+					pendingFade = null;
+					node.scrollTo({ top: landing.top, behavior: 'auto' });
+				}
+			},
+			Number.isFinite(shown) ? shown : 1
+		);
 	}
+
+	onDestroy(() => {
+		dip?.cancel();
+		dip = null;
+	});
 
 	// Commit on rest. A disabled row is bounced back to the committed one
 	// rather than silently keeping a value the wheel is not showing.

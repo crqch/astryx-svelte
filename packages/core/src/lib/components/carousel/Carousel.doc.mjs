@@ -146,7 +146,7 @@ export default {
 		},
 		{
 			name: 'hasSnap',
-			type: 'boolean',
+			type: 'boolean | SnapPaging',
 			description:
 				"Snap each child to the start edge. hasSnap uses native CSS scroll snap. hasSnap={useSnapPaging()} adds iOS paging under a finger and on a trackpad swipe, on the same stops: a flick moves one view, or one item with useSnapPaging({pages: 'item'}). Only that value loads the paging code.",
 			default: 'false'

@@ -547,7 +547,8 @@
 				<div
 					role="group"
 					aria-label={t('@astryx.dateRangeInput.presetDateRanges')}
-					class={sidebarAttrs.class}
+					{...themeProps('date-range-input-presets')}
+					class={cx(themeProps('date-range-input-presets').class, sidebarAttrs.class)}
 					style={sidebarAttrs.style}
 				>
 					{#each presets as preset (preset.label)}
@@ -555,6 +556,7 @@
 						{@const isActive = isRangeEqual(value, presetRange)}
 						{@const isPresetDisabled = !isRangeWithinSpan(presetRange)}
 						{@const presetAttrs = dateRangeInputPresetButtonAttrs(isActive, isPresetDisabled)}
+						{@const presetTheme = themeProps('date-range-input-preset')}
 						<!--
 							These presets are independent action buttons navigated by Tab,
 							not a single-tab-stop listbox — so they are a labeled group of
@@ -567,7 +569,7 @@
 							aria-current={isActive ? 'true' : undefined}
 							disabled={isPresetDisabled}
 							onclick={() => handlePresetClick(preset)}
-							class={presetAttrs.class}
+							class={cx(presetTheme.class, presetAttrs.class)}
 							style={presetAttrs.style}
 						>
 							{preset.label}

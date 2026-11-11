@@ -35,11 +35,12 @@ what React renders. That is parity, not a leak.
 - **retires:** when a second blog post lands without a `coverImage`
 
 Upstream's generative default cover (210 lines, deterministic from post `type` + `slug`) is the
-one piece of the blog surface this port skipped. It is not exercised today — the only post is a
-release post, so `release-cover-art.svelte` (ported) is what renders — but the gap is real the
-moment a `guide` or `perspective` post lands without artwork. `blog-card.svelte` falls through
-to the muted field rather than collapsing, so the failure is a blank cover and not a broken
-grid. Port it before the second post, or the second post needs a `coverImage`
+one piece of the blog surface this port skipped. It is not exercised today — every current post is
+a release post, so `release-cover-art.svelte` (ported) is what renders — but the gap is real the
+moment a `guide` or `perspective` post lands without artwork. `blog-card.svelte` and
+`blog-feature-card.svelte` fall through to the muted field rather than collapsing, so the failure
+is a blank cover and not a broken grid. Port it before the next non-release post, or that post
+needs a `coverImage`
 
 ### The docs top nav sizes its end-content icons at 16px; upstream's are 20px
 
@@ -54,24 +55,6 @@ GitHub mark. **The bug this replaced was non-uniformity**, which was real: searc
 hamburger were 16px while the mode toggle and GitHub mark were 20px, so two glyphs sat visibly
 larger than the two beside them. Equalising was the fix; 16 rather than 20 is the divergence.
 `shell/top-nav.svelte` names it at the snippet
-
-### Page templates carry three unported dependencies, handled two different ways
-
-- **units:** table-page-chart, table-page-heatmap-status, table-page-shoe-store-heatmap, dashboard, dashboard-portfolio, theme-showcase
-- **kind:** unported
-- **retires:** when `@astryxdesign/charts` and `@astryxdesign/lab` are ported
-
-The split is
-principled, not accidental. `table-page-chart`, `table-page-heatmap-status` and
-`table-page-shoe-store-heatmap` import `Chart`/`ChartAxis`/`ChartGrid`/`ChartHeatmapGL` from
-`@astryxdesign/charts` and `@astryxdesign/lab`, both **first-party Astryx packages this port
-will eventually have** (recorded above as "never started"). Their chart blocks are transcribed
-in place as commented Svelte, data left live, to be uncommented when the packages land. The two
-dashboards and `theme-showcase` instead use **`recharts`** and **`lucide-react`** — third-party
-React libraries that will never gain an `@astryx-svelte` counterpart, so there is nothing to
-wait for; those charts are hand-drawn as inline SVG driven by upstream's own recharts props,
-element-by-element mapping in each file header. Neither arm invents placeholder content, and
-neither leaves an import that would break the docs glob-build or a user's scaffolded project
 
 ### `/templates/blank` 404s, where upstream would bounce
 
@@ -879,9 +862,9 @@ Its other two translations are this port's standing shapes: options arrive as a 
 upstream's `renderTooltip()` is a `<TooltipLayer>` component, because a Svelte hook cannot
 return markup
 
-### The docs example blocks substitute built-in icons for upstream's Heroicons
+### The docs example blocks and two landing previews substitute built-in icons for upstream's Heroicons
 
-- **units:** docs (examples)
+- **units:** docs (examples; landing/blog-showcase, landing/hero/hero-floating-cards)
 - **kind:** deliberate-divergence
 - **retires:** with the `@lucide/svelte` icon registry (Phase 3)
 
@@ -893,6 +876,10 @@ person glyph use a built-in and say so in a header comment. `EmptyState` (`searc
 `BottomSheetSnapPoints`' turn-by-turn list is the widest of them — six Heroicons over
 twelve steps collapse onto four built-ins. Retires with the `@lucide/svelte` icon registry
 (Phase 3)
+
+Two landing previews make the same substitution: `BlogShowcase`'s "View all posts" uses
+`chevronRight` for lucide's `ArrowRight`, and `HeroFloatingCards` uses `upload` for the chat
+composer's lucide `Plus`. Both say so at the snippet and retire the same way.
 
 ### A handful of docs example blocks needed type-level adjustments upstream's TS config does not force
 
@@ -1419,6 +1406,183 @@ more readability than the space costs correctness. **Where it would stop being i
 container**, and there the space is real and visible; a component in that shape should close the tags
 up. Surfaced by the `getByText` sweep in batch 037, which reads `textContent` and is the first thing
 in this port able to see it at all
+
+### `AboutShowcase` keeps this port's own heading block instead of upstream's Meta claims
+
+- **units:** docs (landing/about-showcase.svelte)
+- **kind:** deliberate-divergence
+- **retires:** never, unless this port decides to reproduce Meta's adoption copy
+
+Upstream's heading block reads "Astryx powers over 13,000 apps" over "Astryx has grown inside
+Meta over the last eight years, shaped by the engineers, designers, and product teams who depend on
+it every day." That is Meta making an institutional claim about its own system's adoption and
+history. This port is unofficial and not affiliated with Meta, so printing it would assert those
+numbers and that history in this project's voice — the same call `site-footer.svelte` already made
+for Meta's social and legal blocks.
+
+The replacement names what a _port_ can state about itself ("A faithful port, checked by machine")
+and shows four coverage figures read from the generated registries, so none of them can go stale.
+The section's composition is upstream's exactly — the same 1fr/2fr editorial grid, the same three
+columns with their verbatim titles, body copy, shapes and CTA labels — and only the heading cell
+differs. Two CTAs are repointed for the same reason: upstream's `/changelog` does not exist here,
+so "See what's new" opens this repository's releases, and "Learn how to contribute" opens the
+repository rather than Meta's community page.
+
+### Popover's touch presentation is not ported: it opens and closes without its grow/shrink
+
+- **units:** Popover
+- **kind:** unported
+- **retires:** when `Popover/popoverSurfaceMotion.ts`, `Popover/popoverSurfaceFrame.ts`,
+  `Popover/usePopoverSurfaceMotion.ts` and `privateAttributes/popoverExit.stylex.ts`
+  (the exit copy) are ported
+
+Under a finger upstream's Popover grows out of its source and shrinks back into it
+(`popoverSurfaceMotion.ts`), scaling about the point where the surface meets the source
+on the compositor, with the layer runtime's input hold taking touches while it grows and
+a `placePopoverExitCopy` copy playing the dismissal after the browser hides the element.
+This port's Popover renders the same surface, pointer entrance (`layerAnimations`) and
+dismissal, but no touch growth or shrink: the surface appears and disappears through the
+pointer presentation's CSS entrance only. `--duration-medium-min` / `--ease-entrance` and
+`--duration-exit` / `--ease-exit` are read nowhere in the component, where upstream's
+`POPOVER_ENTRANCE_TOKENS` / `POPOVER_EXIT_TOKENS` name them. The 31-case
+`Popover/PopoverPresentation.test.tsx` suite is likewise unported, and its count is in
+`port/status.md`.
+
+### `MonthScroller` lands a month change with travel under Reduce Motion
+
+- **units:** DateInput
+- **kind:** divergence
+- **retires:** when the dip path in `DateInput/MonthScroller.tsx` is ported
+
+`Wheel` and the wheel strips now use `playReducedMotionDip` / `reducedMotionFade`
+(`DateInput/Wheel.tsx`'s path), so under Reduce Motion a wheel's smooth landing becomes an
+opacity dip on a coarse pointer and lands at once on a fine one. `MonthScroller` still
+calls `scrollTo({behavior: 'smooth'})` on the same pointer, so a month swipe travels under
+Reduce Motion. Upstream's version also defers the landing to the layout effect through
+`flushSync` so the fade-in starts after the month changes; reproducing that ordering in
+Svelte is its own change, not a call swap.
+
+### Theme motion knobs (`tempo`, `character`) are not ported
+
+- **units:** theme
+- **kind:** unported
+- **retires:** when `theme/themeMotion.ts` and `theme/motionKnobs.ts` land and
+  `resolveThemeValues`/`defineTheme` consume them
+
+Upstream 0.7.13's theme contract adds `motion: {tempo?, character?}`: `tempo` scales every
+`--duration-*` token (clamped 0.75–1.5), `character` selects `--ease-entrance` and
+`--ease-move`, and `resolveThemeMotion` returns the knobs and resolved durations/easings
+for the animator. This port has only `expandMotionScale`, which writes a fixed
+`--_astryx-motion-tempo: 1` and has no `--ease-entrance` / `--ease-move` generation, so a
+theme author cannot retune Astryx's own motion. The 43-case `theme/themeMotion.test.ts` is
+in `port/status.md`'s unported list. Component styles now reference the entrance/move
+tokens, which resolve to `--ease-standard`'s default until the knobs land.
+
+### `Resizable` has no spring-back, close slide or rubber-band drawing
+
+- **units:** Resizable
+- **kind:** unported
+- **retires:** when `Resizable/createResizable.ts`'s motion is ported
+
+Upstream's pane keeps the finger on a rubber band, springs a drawn handle back
+(`drawing.springBack(resolveMotion(element, springs.settle))`), and slides the next pane
+into the freed space on release; under Reduce Motion it clears the drawing and closes at
+once. This port's `use-resizable.svelte.ts` drives the same collapse and size state but
+none of that motion: there is no `springBack`, no `slideNextOnRelease` and no
+`prefers-reduced-motion` branch in it. The 97-case `Resizable/useResizable.test.ts` is
+likewise unported.
+
+### BottomSheet cross-fades a touch dismissal only on a coarse pointer
+
+- **units:** BottomSheet
+- **kind:** divergence
+- **retires:** when the gesture hook exposes `isDismissedByTouchDrag`
+
+Upstream's `isCrossFade` is `isCoarseCrossFade || (isReducedMotion && isDismissedByTouchDrag)`,
+so a touch swipe that dismisses the sheet under Reduce Motion cross-fades in place on a
+**fine** pointer too, through `sheetClosingCrossFade`'s `0.01s, 200ms` duration.
+`use-sheet-gestures.svelte.ts` does not expose which drag dismissed the sheet, so this port
+applies the coarse-pointer cross-fade only. A fine-pointer touch dismissal falls to
+`sheetClosing`'s reduced-motion arms (travel collapsed, opacity 0 on a coarse pointer only),
+which is the immediate close upstream gives a non-touch dismissal.
+
+### A keyframe that reads a `defineConsts` value has a different StyleX name than upstream's dist
+
+- **units:** motion
+- **kind:** divergence
+- **retires:** when the StyleX build hashes a resolved `defineConsts` member inside
+  `stylex.keyframes` exactly as upstream's two-pass build does
+
+`layerAnimations`' Reduce Motion `fadeIn` and the `Dialog`/`TopNavMegaMenu` 200 ms arms
+emit byte-identical CSS to upstream's `astryx.css` (same `@keyframes` body, same
+`animation-duration`, same media keys), but `fadeIn`'s keyframe _name_ differs
+(`x1qrgnk4-B` here, `x12p7u8f-B` upstream). StyleX hashes the keyframe body with the
+constant still a `var(--x…)` reference in this single-pass build, while upstream's
+published dist has the constant already a plain object and its body hashed as the literal
+curve. `compare-upstream-classes.mjs` diffs `animationName`, so
+`layer-animations`' four keys report this name only; the stylesheet content is the same.
+The other keyframes (`enterBelow`, `enterAbove`, `enterEnd`, `enterStart`, both RTL
+variants, `rotation`) all match, because they use theme vars rather than a `defineConsts`
+member.
+
+### `ProgressBar`'s fill still animates `width`, not the compositor transform
+
+- **units:** ProgressBar
+- **kind:** divergence
+- **retires:** when `ProgressBar/ProgressBarTouch` and the 0.7.13 fill rules land
+
+Upstream's determinate fill is a full-width element translated by
+`--_progress-bar-fill`, so a value change animates `transform` on the compositor; under
+`forced-colors` it falls back to `width`, under a finger it takes the
+`progress.fillTrackMs` role, and under Reduce Motion both pointer keys collapse the
+duration to `0s`. This port moves `width` directly with `--duration-medium` and
+`--ease-standard` and has no reduced-motion arm, so a new value travels under Reduce
+Motion and the change is a layout animation. Replacing it needs the touch layer that
+writes `--_progress-bar-fill`, `--_progress-bar-min`, `--_progress-bar-flip`,
+`--_progress-bar-move` and `--_progress-bar-curve`, and the empty/forced-colors rules;
+half of that would regress the zero and high-contrast states, so the whole presentation
+belongs in one change.
+
+### `Item`'s swipe panels are not ported, so a row has no swipe motion
+
+- **units:** Item
+- **kind:** unported
+- **retires:** when `Item/ItemSwipeLayer.tsx` and `useSwipeAction` are ported
+
+Upstream's swipe panels transition `transform` and `width` as a drag uncovers the verbs
+and as a row springs back or commits, and respect Reduce Motion through
+`useMediaQuery('(prefers-reduced-motion: reduce)')`. This port has no swipe layer at
+all: the documented `swipeActions`/`swipeBehavior` props render nothing. The suites
+`ItemSwipeLayer.test.tsx` and its gesture companions are in `port/status.md`.
+
+### `ChatComposer`'s shadow/border transition runs where upstream's has no duration
+
+- **units:** ChatComposer
+- **kind:** divergence
+- **retires:** when upstream gives the transition a duration, or when this port
+  matches its dead transition deliberately
+
+Upstream's `body` declares `transitionProperty: 'box-shadow, border-color'` and a timing
+function but no `transitionDuration`, so with the CSS default of `0s` the shadow and
+border change at once. This port writes the same two properties through the `transition`
+shorthand with `--duration-fast` and `--ease-standard`, so a theme elevation change
+fades. The motion is this port's, not upstream's; keeping it means a theme switch
+animates where upstream snaps. It is recorded rather than silently kept.
+
+### Stepper's compact summary row is not ported
+
+- **units:** Stepper
+- **kind:** unported
+- **retires:** when `Stepper` renders `horizontalOptions.collapsedVariant`'s compact row
+
+Upstream's horizontal Stepper collapses below `horizontalOptions.minimumStepWidth`
+and renders one of three compact treatments under the track: a label with
+Previous/Next controls, the label alone, or a bare progress track. This port
+renders the full labelled track at every width: `collapsedVariant`,
+`minimumStepWidth` and the summary row are documented (`Stepper.doc.mjs`'s
+`astryx-stepper-summary` target) but unimplemented. The CLI's documented-target
+check exempts `stepper-summary` until it lands, and that exemption retires
+itself when the target becomes real.
 
 ## Retired
 

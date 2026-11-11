@@ -66,9 +66,23 @@ const styles = stylex.create({
 			inset: 0,
 			borderRadius: 'inherit',
 			pointerEvents: 'none',
-			transitionProperty: 'background-color',
-			transitionDuration: durationVars['--duration-fast'],
-			transitionTimingFunction: easeVars['--ease-standard'],
+			transitionProperty: {
+				default: 'background-color',
+				// Under reduced motion a colour changes at once. Only opacity may
+				// still fade on a touch screen.
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 'opacity'
+			},
+			transitionDuration: {
+				default: durationVars['--duration-fast'],
+				// Under reduced motion a fine pointer gets no transition. A touch
+				// screen's fade keeps the exit tokens, within 200 ms.
+				'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': '0s',
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': `min(${durationVars['--duration-exit']}, 200ms)`
+			},
+			transitionTimingFunction: {
+				default: easeVars['--ease-standard'],
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': easeVars['--ease-exit']
+			},
 			backgroundColor: 'transparent'
 		},
 		':active::after': {

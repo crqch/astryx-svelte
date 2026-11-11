@@ -163,15 +163,18 @@ const drawerStyles = stylex.create({
 	items: {
 		display: 'grid',
 		gridTemplateRows: '0fr',
-		transitionProperty: 'grid-template-rows',
-		transitionDuration: durationVars['--duration-medium'],
+		overflow: 'hidden',
+		transitionProperty: 'grid-template-rows, overflow',
+		transitionBehavior: 'allow-discrete',
+		transitionDuration: `${durationVars['--duration-medium']}, 0s`,
 		transitionTimingFunction: easeVars['--ease-standard']
 	},
 	itemsExpanded: {
-		gridTemplateRows: '1fr'
+		gridTemplateRows: '1fr',
+		overflow: 'visible',
+		transitionDelay: `0s, ${durationVars['--duration-medium']}`
 	},
 	itemsInner: {
-		overflow: 'hidden',
 		minHeight: 0
 	},
 	item: {

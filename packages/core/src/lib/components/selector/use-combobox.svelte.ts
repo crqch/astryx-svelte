@@ -81,6 +81,48 @@ interface UseComboboxResult {
 	onItemSelect: (item: SelectorOptionData) => void;
 	/** Move the highlight to a hovered option. */
 	onItemMouseEnter: (item: SelectorOptionData, index: number) => void;
+	/**
+	 * Combobox semantics for a single-line field the caller renders itself.
+	 * Upstream's `getFieldProps`, translated to Svelte's lowercase event
+	 * attributes.
+	 */
+	getFieldProps: (handlers?: ComboboxFieldHandlers) => ComboboxFieldProps;
+	/** Listbox semantics for the caller's list container. */
+	getListboxProps: () => ComboboxListboxProps;
+	/** Option semantics for the row at `index`. */
+	getOptionProps: (index: number) => ComboboxOptionProps;
+}
+
+/** The caller's own handlers for its field, run after the hook's. */
+interface ComboboxFieldHandlers {
+	onKeyDown?: (event: KeyboardEvent) => void;
+}
+
+/** Spread onto the caller's field. */
+interface ComboboxFieldProps {
+	role: 'combobox';
+	'aria-autocomplete': 'list';
+	'aria-expanded': boolean;
+	'aria-controls'?: string;
+	'aria-activedescendant'?: string;
+	onkeydown: (event: KeyboardEvent) => void;
+}
+
+/** Spread onto the caller's listbox, which the caller names. */
+interface ComboboxListboxProps {
+	id: string;
+	role: 'listbox';
+	onmousedown: (event: MouseEvent) => void;
+}
+
+/** Spread onto the caller's option at one index. */
+interface ComboboxOptionProps {
+	id: string;
+	role: 'option';
+	'aria-selected': boolean;
+	'aria-disabled'?: true;
+	onmousemove: () => void;
+	onclick: () => void;
 }
 
 /**
@@ -275,6 +317,59 @@ export function useCombobox(options: () => UseComboboxOptions): UseComboboxResul
 		}
 	}
 
+	function getFieldProps(handlers: ComboboxFieldHandlers = {}): ComboboxFieldProps {
+		const listboxId = options().listboxId;
+		const isListboxShown = options().isOpen && options().selectableItems.length > 0;
+		const activeDescendant =
+			isListboxShown && highlightedIndex >= 0 && highlightedIndex < options().selectableItems.length
+				? getItemId(highlightedIndex)
+				: undefined;
+
+		return {
+			role: 'combobox',
+			'aria-autocomplete': 'list',
+			'aria-expanded': isListboxShown,
+			'aria-controls': isListboxShown ? listboxId : undefined,
+			'aria-activedescendant': activeDescendant,
+			onkeydown: (event: KeyboardEvent) => {
+				onKeyDown(event);
+				if (!event.defaultPrevented) {
+					handlers.onKeyDown?.(event);
+				}
+			}
+		};
+	}
+
+	function getListboxProps(): ComboboxListboxProps {
+		return {
+			id: options().listboxId,
+			role: 'listbox',
+			// A press anywhere in the list keeps focus in the field.
+			onmousedown: (event: MouseEvent) => event.preventDefault()
+		};
+	}
+
+	function getOptionProps(index: number): ComboboxOptionProps {
+		const item = options().selectableItems[index];
+		const isOptionDisabled = item?.disabled === true;
+		return {
+			id: getItemId(index),
+			role: 'option',
+			'aria-selected': index === highlightedIndex,
+			...(isOptionDisabled ? { 'aria-disabled': true as const } : {}),
+			onmousemove: () => {
+				if (item != null && !isOptionDisabled) {
+					onItemMouseEnter(item, index);
+				}
+			},
+			onclick: () => {
+				if (item != null) {
+					selectItem(item);
+				}
+			}
+		};
+	}
+
 	return {
 		get highlightedIndex() {
 			return highlightedIndex;
@@ -286,6 +381,9 @@ export function useCombobox(options: () => UseComboboxOptions): UseComboboxResul
 		onTriggerClick,
 		onKeyDown,
 		onItemSelect: selectItem,
-		onItemMouseEnter
+		onItemMouseEnter,
+		getFieldProps,
+		getListboxProps,
+		getOptionProps
 	};
 }

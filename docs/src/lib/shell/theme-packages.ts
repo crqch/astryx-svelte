@@ -60,10 +60,15 @@ function rank(slug: string): number {
 export interface ThemeListing extends ThemePackage {
 	theme: DefinedTheme;
 	/**
-	 * How many of the theme's own token declarations carry a `[light, dark]`
-	 * pair. **Zero means the theme is single-mode** — `gothic` is dark-only, and
-	 * upstream emits no `html[data-theme=…]` block for it at all. Read off the
-	 * object rather than tabulated, so it cannot go stale.
+	 * How many of the theme's own token declarations resolve differently in light
+	 * and dark. **Zero means the theme is single-mode** — `gothic` is dark-only, and
+	 * upstream emits no `html[data-theme=…]` block for it at all.
+	 *
+	 * Both declaration shapes this port's packages use count: a `[light, dark]`
+	 * tuple (Neutral and Liquid Glass) and a `light-dark(…)` string (five of the
+	 * other six). Counting tuples alone read every `light-dark()` theme as
+	 * single-mode, which disabled Butter's and Matcha's preview toggle. Read off
+	 * the object rather than tabulated, so it cannot go stale.
 	 */
 	lightDarkPairs: number;
 	/** Token declarations the theme sets, of core's 184-name vocabulary. */
@@ -93,7 +98,10 @@ export const THEME_LISTINGS: ThemeListing[] = themeRegistry
 		return {
 			...entry,
 			theme,
-			lightDarkPairs: tokens.filter((value) => Array.isArray(value)).length,
+			lightDarkPairs: tokens.filter(
+				(value) =>
+					Array.isArray(value) || (typeof value === 'string' && value.includes('light-dark('))
+			).length,
 			tokenCount: tokens.length,
 			componentCount: Object.keys(theme.components ?? {}).length
 		};

@@ -282,6 +282,8 @@
 
 	// Theme data attributes reflect progress + optional semantic status.
 	const stepTheme = $derived(themeProps('step', { progress, status: status ?? undefined }));
+	const labelTheme = themeProps('step-label');
+	const descriptionTheme = themeProps('step-description');
 	const indicatorTheme = $derived(
 		themeProps('step-indicator', { progress, status: status ?? undefined })
 	);
@@ -438,7 +440,9 @@
 
 <!-- The label, its hidden status text, the optional affordance and end content. -->
 {#snippet labelLine()}
-	<span class={labelAttrs.class} style={labelAttrs.style}>{label}</span>
+	<span {...labelTheme} class={cx(labelTheme.class, labelAttrs.class)} style={labelAttrs.style}
+		>{label}</span
+	>
 	{#if statusText != null && statusText !== ''}
 		<VisuallyHidden>{statusText}</VisuallyHidden>
 	{/if}
@@ -463,7 +467,11 @@
 {#snippet descriptionNode()}
 	{#if description != null && description !== ''}
 		<div class={descriptionRowAttrs.class} style={descriptionRowAttrs.style}>
-			<span class={descriptionAttrs.class} style={descriptionAttrs.style}>{description}</span>
+			<span
+				{...descriptionTheme}
+				class={cx(descriptionTheme.class, descriptionAttrs.class)}
+				style={descriptionAttrs.style}>{description}</span
+			>
 		</div>
 	{/if}
 {/snippet}
@@ -505,7 +513,11 @@
 
 {#snippet otDescriptionNode()}
 	{#if description != null && description !== ''}
-		<span class={descriptionAttrs.class} style={descriptionAttrs.style}>{description}</span>
+		<span
+			{...descriptionTheme}
+			class={cx(descriptionTheme.class, descriptionAttrs.class)}
+			style={descriptionAttrs.style}>{description}</span
+		>
 	{/if}
 {/snippet}
 

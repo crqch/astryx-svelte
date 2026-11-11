@@ -225,6 +225,9 @@ export const myTheme = defineTheme({
 		'--shadow-low': '0 1px 2px light-dark(#0000001A, #00000066)'
 	},
 
+	// localTokens: { '--color-accent-muted': 'var(--color-accent)' }, theme-scoped tokens your own CSS reads, which are not core token names,
+	// adaptations: { rules: [{ when: { width: 600 }, tokens: { '--spacing-6': '12px' } }] }, responsive token overrides scoped to a width,
+
 	// ───────────────────────────────────────────────────────────────────────
 	// components — per-component CSS, emitted inside
 	// `@scope ([data-astryx-theme="my-theme"])`, so it only touches your theme.

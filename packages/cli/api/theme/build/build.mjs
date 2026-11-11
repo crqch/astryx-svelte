@@ -417,6 +417,8 @@ async function getKnownValues(componentName) {
  * @type {Map<string, string> | undefined}
  */
 let _barrelExports;
+/** @type {Map<string, string> | undefined} */
+let _legacyTargetAliases;
 
 /**
  * @returns {Map<string, string>} exported name → absolute path of the module it
@@ -539,11 +541,63 @@ function coreHasAugmentableInterface(interfaceName) {
  * @param {string} componentName
  * @returns {Promise<string[]>}
  */
+
+/**
+ * Rendered legacy class names (`legacyNames`) mapped to the canonical target
+ * class that emits them. Source-derived, so a renamed target keeps accepting
+ * its documented old spelling without a hand-maintained table.
+ *
+ * @returns {Map<string, string>}
+ */
+function legacyTargetAliases() {
+	if (_legacyTargetAliases) return _legacyTargetAliases;
+	/** @type {Map<string, string>} */
+	const aliases = new Map();
+	_legacyTargetAliases = aliases;
+	const coreRoot = resolveCoreRoot();
+	if (!coreRoot) return aliases;
+	const coreSrc = path.join(coreRoot, 'src', 'lib');
+	if (!fs.existsSync(coreSrc)) return aliases;
+	/** @param {string} dir */
+	const walk = (dir) => {
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			const full = path.join(dir, entry.name);
+			if (entry.isDirectory()) {
+				if (entry.name === 'node_modules' || entry.name === '__tests__') continue;
+				walk(full);
+				continue;
+			}
+			if (!entry.name.endsWith('.svelte') && !entry.name.endsWith('.ts')) continue;
+			if (entry.name.endsWith('.test.ts')) continue;
+			const text = fs.readFileSync(full, 'utf-8');
+			const re = /themeProps\(\s*'([^']+)'[\s\S]{0,400}?legacyNames:\s*\[([^\]]*)\]/g;
+			let match;
+			while ((match = re.exec(text)) !== null) {
+				const canonical = match[1];
+				for (const legacy of match[2].matchAll(/'([^']+)'/g)) {
+					aliases.set(legacy[1], canonical);
+				}
+			}
+		}
+	};
+	walk(coreSrc);
+	return aliases;
+}
+
 async function resolveAugmentationPrefixes(componentName) {
 	const fallback = [toPascalCase(componentName)];
 	const index = await getThemeTargetIndex();
-	const entry = index?.[componentName];
-	if (!entry) return fallback;
+	// A theme may key an override by a target's emitted legacy class
+	// (`progressbar`, `statusdot`) — the name upstream's docs use. The target
+	// index is keyed by the canonical class (`progress-bar`), so resolve the
+	// legacy spelling to its canonical entry before falling back to a bare
+	// PascalCase guess that cannot find `ProgressBarVariantMap`.
+	const canonical = legacyTargetAliases().get(componentName);
+	const entry = index?.[componentName] ?? (canonical ? index?.[canonical] : undefined);
+	if (!entry) {
+		if (canonical) return [...new Set([toPascalCase(canonical), ...fallback])];
+		return fallback;
+	}
 
 	// Try the exact rendered token first for documented subtargets such as
 	// avatar-status-dot → AvatarStatusDotVariantMap, then the owning public

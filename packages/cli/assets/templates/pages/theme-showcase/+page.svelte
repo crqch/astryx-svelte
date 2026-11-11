@@ -48,6 +48,8 @@
 	they are snippets.
 -->
 <script lang="ts" module>
+	import type { Snippet } from 'svelte';
+
 	/** Categorical badge variants usable for showcase product/inventory tags. */
 	export type ShowcaseBadgeVariant =
 		| 'blue'
@@ -81,6 +83,19 @@
 		selected: boolean;
 	}
 
+	/**
+	 * One inventory filter descriptor. Module-scoped because the `filterSelector`
+	 * snippet is rendered from the module's `render`, where an interface declared
+	 * in the instance script is not in scope under svelte2tsx's declaration output
+	 * (it typechecks as a standalone component).
+	 */
+	export interface FilterSpec {
+		label: string;
+		placeholder: string;
+		startIcon: Snippet;
+		options: string[];
+	}
+
 	export interface ThemeShowcaseProps {
 		/** Product card images keyed by slot (watch/headphones/backpack/…). */
 		images?: Record<string, string>;
@@ -92,7 +107,6 @@
 </script>
 
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import {
 		AspectRatio,
 		Badge,
@@ -518,13 +532,6 @@
 
 	// The three inventory filter selectors. `OverflowList` takes `items` + an
 	// `item` snippet here, so upstream's three children become descriptors.
-	interface FilterSpec {
-		label: string;
-		placeholder: string;
-		startIcon: Snippet;
-		options: string[];
-	}
-
 	const INVENTORY_FILTERS = $derived.by<FilterSpec[]>(() => [
 		{
 			label: 'Categories',

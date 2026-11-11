@@ -14,59 +14,46 @@
 
 import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
 
-/**
- * Input status border overrides (per-component, per-status). All 9 input
- * components share inputStatusBorderStyles in core, which read
- * --color-{success,warning,error} (T30 light / T80 dark = saturated text
- * tone). Stone redefines those vars inside each input's status scope to
- * T60 light / T70 dark so the border (and the matching status icon) reads
- * as a softer hue rim, in line with the gentle T90 status message bubble.
- */
-const INPUT_STATUS_VARS = {
-	'status:success': {
-		'--color-success': 'light-dark(#7f977e, #99b298)' // Green T60 / T70
-	},
-	'status:warning': {
-		'--color-warning': 'light-dark(#9f8f68, #bbaa81)' // Yellow T60 / T70
-	},
-	'status:error': {
-		'--color-error': 'light-dark(#a58b86, #c0a5a1)' // Red T60 / T70
-	}
-} as const;
-
-/**
- * Stone syntax palette — light values snap to T40 / T45 stops on the
- * stone categorical ramps (per audit drawer); dark values stay at T70.
- *
- * `string` and `property` both land on Teal T40 — intentional; the audit
- * unified them since green and teal are visually adjacent at T40 and
- * the stone neutral palette doesn't carry a distinct green stop.
- */
+/** Stone syntax palette — upstream 0.7.13's resolved values. */
 const stoneSyntax = defineSyntaxTheme({
-	name: 'xds-stone',
+	name: 'astryx-stone',
 	tokens: {
-		keyword: ['#645a72', '#b2a7c1'], // Purple T40 / T70
-		string: ['#4e6357', '#9bb19a'], // Teal T40 / Green T70
-		comment: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-		number: ['#755752', '#bea792'], // Red T40 / Orange T70
-		function: ['#506072', '#99adc6'], // Blue T40 / T70
-		type: ['#645a72', '#b2a7c1'], // Purple T40 / T70
-		variable: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-		operator: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-		constant: ['#755752', '#bea792'], // Red T40 / Orange T70
-		tag: ['#775751', '#c7a39d'], // Red T40 / T70
-		attribute: ['#79693f', '#b6aa90'], // Yellow T45 / T70
-		property: ['#4e6357', '#94b2a0'], // Teal T40 / T70
-		punctuation: ['#5e5e5e', '#ababb0'], // Stone Neutral T40 / T70
-		background: ['#f3f3f5', '#171719']
+		keyword: 'light-dark(#635a70, #b0a5c0)',
+		string: 'light-dark(#40675c, #90ba8a)',
+		comment: 'light-dark(#5f5f64, #ababb3)',
+		number: 'light-dark(#745752, #c9a382)',
+		function: 'light-dark(#516074, #9aadc7)',
+		type: 'light-dark(#635a70, #b0a5c0)',
+		variable: 'light-dark(#5f5f64, #ababb3)',
+		operator: 'light-dark(#5f5f64, #ababb3)',
+		constant: 'light-dark(#745752, #c9a382)',
+		tag: 'light-dark(#745752, #c6a29c)',
+		attribute: 'light-dark(#736419, #c2af6e)',
+		property: 'light-dark(#40675c, #94b3a9)',
+		punctuation: 'light-dark(#5f5f64, #ababb3)',
+		background: 'light-dark(#f0f0f7, #101018)',
+		added: 'light-dark(#d2eccf40, #b3d0af33)',
+		removed: 'light-dark(#fbdad440, #e0bdb833)',
+		'diff-header': 'transparent',
+		'added-marker': 'light-dark(#354f31, #d5e9d2)',
+		'removed-marker': 'light-dark(#603c37, #f7dbd7)'
 	}
 });
 
+/**
+ * Stone theme — ported from upstream 0.7.13. Colour and component
+ * values are literals so this package needs none of upstream's palette helpers;
+ * typography and motion stay as configs so the shared generator derives the
+ * same sizes, leadings and durations.
+ */
 export const stoneTheme = defineTheme({
 	name: 'stone',
 
 	typography: {
-		scale: { base: 14, ratio: 1.25 },
+		scale: {
+			base: 14,
+			ratio: 1.25
+		},
 		body: {
 			family: 'Figtree',
 			fallbacks:
@@ -76,7 +63,10 @@ export const stoneTheme = defineTheme({
 			family: 'Montserrat',
 			fallbacks:
 				'"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-			weights: { 3: 'bold', 4: 'bold' }
+			weights: {
+				'3': 'bold',
+				'4': 'bold'
+			}
 		},
 		code: {
 			family: 'JetBrains Mono',
@@ -84,171 +74,250 @@ export const stoneTheme = defineTheme({
 		}
 	},
 
-	motion: { fast: 125, medium: 300, slow: 700, ratio: 0.75 },
-
+	motion: {
+		fast: 125,
+		medium: 300,
+		slow: 700,
+		ratio: 0.75
+	},
+	adaptations: {
+		rules: [
+			{
+				when: {
+					pointer: 'coarse',
+					width: {
+						below: 'lg'
+					}
+				},
+				value: {
+					typography: {
+						scale: {
+							base: 16,
+							ratio: 1.2225
+						}
+					}
+				}
+			}
+		]
+	},
+	onDark: {
+		tokens: {
+			'color-scheme': 'dark',
+			'--color-text-primary': 'var(--color-on-dark)',
+			'--color-icon-primary': 'var(--color-on-dark)',
+			'--color-accent': 'var(--color-on-dark)'
+		}
+	},
+	onLight: {
+		tokens: {
+			'color-scheme': 'light',
+			'--color-text-primary': 'var(--color-on-light)',
+			'--color-icon-primary': 'var(--color-on-light)',
+			'--color-accent': 'var(--color-on-light)'
+		}
+	},
 	syntax: stoneSyntax,
-
 	tokens: {
-		// =========================================================================
-		// Colors — warm stone palette
-		// Core: #28282A, #84848B, #D8D8DB, #f3f3f5, #FFFFFF
-		// =========================================================================
-
-		// Core semantic — all neutrals H=291
-		// Stone 900 T=16 C=1.4, Stone 500 T=55 C=4, Stone 300 T=86 C=1.6, Stone 100 T=96 C=1
-		'--color-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-		'--color-accent-muted': ['#25252a14', '#f3f3f520'], // light: Stone Neutral T15 · 8% / dark: T96 · 12.5%
-		'--color-neutral': ['#25252a0f', '#f3f3f51a'], // light: Stone Neutral T15 · 6% / dark: T96 · 10%
-		'--color-background-surface': ['#ffffff', '#1b1b1f'], // dark: Stone Neutral T10
-		'--color-background-body': ['#f3f3f5', '#111015'], // dark: Stone Neutral T5
-		'--color-overlay': ['#25252a80', '#28282acc'], // light: Stone Neutral T15 · 50% / dark: 80%
-		'--color-overlay-hover': ['#25252a0d', '#f3f3f50d'], // light: Stone Neutral T15 · 5% / dark: T96 · 5%
-		'--color-overlay-pressed': ['#25252a1a', '#f3f3f51a'], // light: Stone Neutral T15 · 10% / dark: T96 · 10%
-		'--color-background-muted': ['#e2e2e8', '#3b3b3f'], // light: Stone Neutral T90
-
-		// Text — H=291
-		'--color-text-primary': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-		// T40/T70 keeps normal secondary text above AA on every stone surface,
-		// including the muted and tinted fills that components pair it with.
-		'--color-text-secondary': ['#5e5e63', '#ababb0'], // Stone Neutral T40 / T70
-		'--color-text-disabled': ['#d7d7da', '#5e5e61'], // T86 C=1.6 / T40 C=2
-		'--color-text-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-		'--color-on-dark': '#FFFFFF',
-		'--color-on-light': ['#25252a', '#28282a'], // light: Stone Neutral T15
-		'--color-on-accent': ['#ffffff', '#25252a'], // dark: Stone Neutral T15
-		// Text on top of matching status surface (badge fill, banner content).
-		'--color-on-success': ['#374c36', '#d0e9ce'], // Green T30 / T90
-		'--color-on-error': ['#58413e', '#f9dcd7'], // Red T30 / T90
-		'--color-on-warning': ['#524622', '#f4e1b7'], // Yellow T30 / T90
-
-		// Icon — H=291
-		'--color-icon-accent': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-		'--color-icon-primary': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-		'--color-icon-secondary': ['#83838a', '#9d9da3'], // T55 C=4 / T65 C=3
-		'--color-icon-disabled': ['#d7d7da', '#5e5e61'], // T86 C=1.6 / T40 C=2
-
-		// Surface variants — H=291
-		'--color-background-card': ['#FFFFFF', '#242325'], // T14
-		'--color-background-popover': ['#ffffff', '#25252a'], // dark: Stone Neutral T15
-		'--color-background-inverted': ['#25252a', '#f3f3f5'], // light: Stone Neutral T15
-
-		// Status / Sentiment — T50 from palette for icons/borders (visible color)
-		'--color-success': ['#374c36', '#b4cdb2'], // Green T30 / T80
-		'--color-success-muted': ['#d0e9ce', '#b4cdb2'], // Green T90 / T80
-		'--color-error': ['#58413e', '#dcc0bc'], // Red T30 / T80
-		'--color-error-muted': ['#f9dcd7', '#dcc0bc'], // Red T90 / T80
-		'--color-warning': ['#524622', '#d7c59c'], // Yellow T30 / T80
-		'--color-warning-muted': ['#f4e1b7', '#d7c59c'], // Yellow T90 / T80
-
-		// Border — H=291
-		'--color-border': ['#e2e2e8', '#f3f3f51a'], // light: Stone Neutral T90 / dark: T96 · 10%
-		'--color-border-emphasized': ['#83838a', '#5e5e61'], // T55 C=4 / T40 C=2
-
-		// Effects — H=291
-		'--color-skeleton': ['#d4d4da', '#5e5e64'], // T85 / T40 from H=291 C=3
-		'--color-shadow': ['#25252a1a', '#0000004d'], // light: Stone Neutral T15 · 10% / dark: 30%
-		'--color-tint-hover': ['black', 'white'],
-
-		// Typography override
-		'--text-supporting-size': '12px',
-
-		// Categorical hues
-		//   Light: T90 solid bg + T30 text (pastel surface, dark text)
-		//   Dark:  T35 solid bg + T90 text — snaps to canonical palette stops
-		//          per theming-infra.mdc §7. T90 dark text is the SAME hex as
-		//          the light-mode bg pastel — clean palette symmetry, ~6–9:1
-		//          contrast on the T35 surface across all hues (passes AA Body).
-		// Borders: light T85 / dark T25 — one step inward from surface in both
-		//          modes, matching the light-mode T90/T85 spacing.
-
-		// Categorical — Blue H=265 C=10
-		'--color-background-blue': ['#d7e4f5', '#485362'], // light T90 / dark T35
-		'--color-border-blue': ['#c9d6e7', '#313c4a'], // light T85 / dark T25
-		'--color-icon-blue': ['#3c4856', '#d7e4f5'], // light T30 / dark T90
-		'--color-text-blue': ['#3c4856', '#d7e4f5'],
-
-		// Categorical — Cyan H=190 C=10
-		'--color-background-cyan': ['#cce8e5', '#3e5755'],
-		'--color-border-cyan': ['#bedad7', '#28403e'],
-		'--color-icon-cyan': ['#334b49', '#cce8e5'],
-		'--color-text-cyan': ['#334b49', '#cce8e5'],
-
-		// Categorical — Gray (pure neutral, C=0). Same T35/T25/T90 pattern from
-		// the neutral H=291 C=3 ramp.
-		'--color-background-gray': ['#e2e2e8', '#525257'], // light: Stone Neutral T90
-		'--color-border-gray': ['#d4d4da', '#3b3b3f'], // light: Stone Neutral T85
-		'--color-icon-gray': ['#46464b', '#e2e2e8'], // light: Stone Neutral T30
-		'--color-text-gray': ['#46464b', '#e2e2e8'], // light: Stone Neutral T30
-
-		// Categorical — Green H=142 C=17
-		'--color-background-green': ['#d0e9ce', '#425841'],
-		'--color-border-green': ['#c2dbc0', '#2b402b'],
-		'--color-icon-green': ['#374c36', '#d0e9ce'],
-		'--color-text-green': ['#374c36', '#d0e9ce'],
-
-		// Categorical — Orange H=70 C=22
-		'--color-background-orange': ['#ffdcbb', '#684d32'],
-		'--color-border-orange': ['#f1ceae', '#4f361c'],
-		'--color-icon-orange': ['#5b4227', '#ffdcbb'],
-		'--color-text-orange': ['#5b4227', '#ffdcbb'],
-
-		// Categorical — Pink H=340 C=9
-		'--color-background-pink': ['#f0dde8', '#5e4e57'],
-		'--color-border-pink': ['#e2cfda', '#463740'],
-		'--color-icon-pink': ['#52424c', '#f0dde8'],
-		'--color-text-pink': ['#52424c', '#f0dde8'],
-
-		// Categorical — Purple H=307 C=11
-		'--color-background-purple': ['#e8dff3', '#564f60'],
-		'--color-border-purple': ['#d9d1e5', '#3f3949'],
-		'--color-icon-purple': ['#4b4454', '#e8dff3'],
-		'--color-text-purple': ['#4b4454', '#e8dff3'],
-
-		// Categorical — Red H=33 C=11
-		'--color-background-red': ['#f9dcd7', '#644d49'],
-		'--color-border-red': ['#ebcec9', '#4c3633'],
-		'--color-icon-red': ['#58413e', '#f9dcd7'],
-		'--color-text-red': ['#58413e', '#f9dcd7'],
-
-		// Categorical — Teal H=158 C=9
-		'--color-background-teal': ['#d4e7dc', '#46564d'],
-		'--color-border-teal': ['#c6d9ce', '#303f36'],
-		'--color-icon-teal': ['#3b4a41', '#d4e7dc'],
-		'--color-text-teal': ['#3b4a41', '#d4e7dc'],
-
-		// Categorical — Yellow H=90 C=23
-		'--color-background-yellow': ['#f4e1b7', '#5e512d'],
-		'--color-border-yellow': ['#e5d3a9', '#463a18'],
-		'--color-icon-yellow': ['#524622', '#f4e1b7'],
-		'--color-text-yellow': ['#524622', '#f4e1b7'],
-
-		// =========================================================================
-		// Radius — clean and subtle
-		//   --radius-none and --radius-full are always fixed and must never be
-		//   scaled by a theme (see defineTheme's radius config docs) — 0 and
-		//   9999px respectively, matching @astryxdesign/core's own defaults.
-		// =========================================================================
+		'--color-accent': 'light-dark(#25252a, #f0f0f9)',
+		'--color-accent-muted': 'light-dark(#25252a14, #f0f0f920)',
+		'--color-neutral': 'light-dark(#25252a0f, #f0f0f91a)',
+		'--color-background-surface': 'light-dark(#ffffff, #1b1b21)',
+		'--color-background-body': 'light-dark(#f0f0f7, #101018)',
+		'--color-overlay': 'light-dark(#25252a80, #25252acc)',
+		'--color-overlay-hover': 'light-dark(#25252a0d, #f0f0f90d)',
+		'--color-overlay-pressed': 'light-dark(#25252a1a, #f0f0f91a)',
+		'--color-background-muted': 'light-dark(#e2e2e8, #3a3a42)',
+		'--color-text-primary': 'light-dark(#25252a, #f0f0f9)',
+		'--color-text-secondary': 'light-dark(#5f5f64, #ababb3)',
+		'--color-text-disabled': 'light-dark(#d4d3dd, #5e5e64)',
+		'--color-text-accent': 'light-dark(#25252a, #f0f0f9)',
+		'--color-on-dark': '#ffffff',
+		'--color-on-light': 'light-dark(#25252a, #25252a)',
+		'--color-on-accent': 'light-dark(#ffffff, #25252a)',
+		'--color-on-success': 'light-dark(#ffffff, #1b1b21)',
+		'--color-on-error': 'light-dark(#ffffff, #1b1b21)',
+		'--color-on-warning': 'light-dark(#ffffff, #1b1b21)',
+		'--color-info': 'light-dark(#516074, #9aadc7)',
+		'--color-info-muted': 'light-dark(#d3e4fc, #2c3c52)',
+		'--color-on-info': 'light-dark(#ffffff, #25252a)',
+		'--color-text-info': 'light-dark(#344861, #d5e4f8)',
+		'--color-text-success': 'light-dark(#354f31, #d5e9d2)',
+		'--color-text-warning': 'light-dark(#524818, #f1e1b9)',
+		'--color-text-error': 'light-dark(#603c37, #f7dbd7)',
+		'--color-on-info-muted': 'light-dark(#344861, #d5e4f8)',
+		'--color-on-success-muted': 'light-dark(#354f31, #2f412c)',
+		'--color-on-warning-muted': 'light-dark(#524818, #433b1b)',
+		'--color-on-error-muted': 'light-dark(#603c37, #50332e)',
+		'--color-icon-accent': 'light-dark(#25252a, #f0f0f9)',
+		'--color-icon-primary': 'light-dark(#25252a, #f0f0f9)',
+		'--color-icon-secondary': 'light-dark(#848489, #9d9ea5)',
+		'--color-icon-disabled': 'light-dark(#d4d3dd, #5e5e64)',
+		'--color-background-card': 'light-dark(#ffffff, #25252a)',
+		'--color-background-popover': 'light-dark(#ffffff, #302f36)',
+		'--color-background-inverted': 'light-dark(#25252a, #f0f0f9)',
+		'--color-success': 'light-dark(#354f31, #b3d0af)',
+		'--color-success-muted': 'light-dark(#d2eccf, #b3d0af)',
+		'--color-error': 'light-dark(#603c37, #e0bdb8)',
+		'--color-error-muted': 'light-dark(#fbdad4, #e0bdb8)',
+		'--color-warning': 'light-dark(#524818, #d9c794)',
+		'--color-warning-muted': 'light-dark(#f4e1b7, #d9c794)',
+		'--color-border': 'light-dark(#e2e2e8, #f0f0f91a)',
+		'--color-border-emphasized': 'light-dark(#848489, #5e5e64)',
+		'--color-skeleton': 'light-dark(#d4d3dd, #5e5e64)',
+		'--color-shadow': 'light-dark(#25252a1a, #0000004d)',
+		'--color-tint-hover': 'light-dark(#000000, #ffffff)',
+		'--color-background-blue': 'light-dark(#d3e4fc, #445469)',
+		'--color-border-blue': 'light-dark(#c2d6f1, #2c3c52)',
+		'--color-icon-blue': 'light-dark(#344861, #d5e4f8)',
+		'--color-text-blue': 'light-dark(#344861, #d5e4f8)',
+		'--color-background-cyan': 'light-dark(#cbe9f0, #345761)',
+		'--color-border-cyan': 'light-dark(#badbe4, #234048)',
+		'--color-icon-cyan': 'light-dark(#264d57, #cfe8ee)',
+		'--color-text-cyan': 'light-dark(#264d57, #cfe8ee)',
+		'--color-background-gray': 'light-dark(#e2e2e8, #525159)',
+		'--color-border-gray': 'light-dark(#d4d3dd, #3a3a42)',
+		'--color-icon-gray': 'light-dark(#46464e, #e2e2e8)',
+		'--color-text-gray': 'light-dark(#46464e, #e2e2e8)',
+		'--color-background-green': 'light-dark(#d2eccf, #3e5d38)',
+		'--color-border-green': 'light-dark(#bfdfbb, #2f412c)',
+		'--color-icon-green': 'light-dark(#354f31, #d5e9d2)',
+		'--color-text-green': 'light-dark(#354f31, #d5e9d2)',
+		'--color-background-orange': 'light-dark(#ffdcbb, #684c34)',
+		'--color-border-orange': 'light-dark(#f2cdaa, #4e3522)',
+		'--color-icon-orange': 'light-dark(#5e3f27, #ffdcbb)',
+		'--color-text-orange': 'light-dark(#5e3f27, #ffdcbb)',
+		'--color-background-pink': 'light-dark(#f5d9ea, #624a59)',
+		'--color-border-pink': 'light-dark(#e9cadc, #4b3242)',
+		'--color-icon-pink': 'light-dark(#5a3c4f, #f2dbe8)',
+		'--color-text-pink': 'light-dark(#5a3c4f, #f2dbe8)',
+		'--color-background-purple': 'light-dark(#e7def5, #574e64)',
+		'--color-border-purple': 'light-dark(#d9cfea, #3f374c)',
+		'--color-icon-purple': 'light-dark(#4c405b, #e6def3)',
+		'--color-text-purple': 'light-dark(#4c405b, #e6def3)',
+		'--color-background-red': 'light-dark(#fbdad4, #684a45)',
+		'--color-border-red': 'light-dark(#f0cac4, #50332e)',
+		'--color-icon-red': 'light-dark(#603c37, #f7dbd7)',
+		'--color-text-red': 'light-dark(#603c37, #f7dbd7)',
+		'--color-background-teal': 'light-dark(#d4e8e1, #3a5b50)',
+		'--color-border-teal': 'light-dark(#c3dbd2, #274239)',
+		'--color-icon-teal': 'light-dark(#2c4f44, #d6e7e1)',
+		'--color-text-teal': 'light-dark(#2c4f44, #d6e7e1)',
+		'--color-background-yellow': 'light-dark(#f4e1b7, #615620)',
+		'--color-border-yellow': 'light-dark(#e7d3a4, #433b1b)',
+		'--color-icon-yellow': 'light-dark(#524818, #f1e1b9)',
+		'--color-text-yellow': 'light-dark(#524818, #f1e1b9)',
 		'--radius-none': '0px',
 		'--radius-inner': '0.25rem',
 		'--radius-element': '0.5rem',
 		'--radius-container': '0.75rem',
 		'--radius-page': '1.5rem',
 		'--radius-full': '9999px',
-
-		// =========================================================================
-		// Shadows
-		// =========================================================================
-		'--shadow-low': '0 2px 4px #28282A0D, 0 4px 8px #28282A1A',
-		'--shadow-med': '0 2px 4px #28282A0D, 0 4px 12px #28282A1A',
-		'--shadow-high': '0 4px 6px #28282A1A, 0 12px 24px #28282A26',
-		'--shadow-inset-hover': 'inset 0px 0px 0px 2px #28282A30',
-		'--shadow-inset-selected': 'inset 0px 0px 0px 2px #28282A50',
-		'--shadow-inset-success': 'inset 0px 0px 0px 2px #83838a30',
-		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #83838a30',
-		'--shadow-inset-error': 'inset 0px 0px 0px 2px #83838a30'
+		'--shadow-low': '0 2px 4px #25252a0d, 0 4px 8px #25252a1a',
+		'--shadow-med': '0 2px 4px #25252a0d, 0 4px 12px #25252a1a',
+		'--shadow-high': '0 4px 6px #25252a1a, 0 12px 24px #25252a26',
+		'--shadow-inset-hover': 'inset 0 0 0 2px #25252a30',
+		'--shadow-inset-selected': 'inset 0 0 0 2px #25252a50',
+		'--shadow-inset-success': 'inset 0 0 0 2px #84848930',
+		'--shadow-inset-warning': 'inset 0 0 0 2px #84848930',
+		'--shadow-inset-error': 'inset 0 0 0 2px #84848930',
+		'--text-supporting-size': '0.75rem'
 	},
-
 	components: {
+		heading: {
+			'level:1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-1-size)',
+				fontWeight: 'var(--text-heading-1-weight)',
+				lineHeight: 'var(--text-heading-1-leading)'
+			},
+			'level:2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-2-size)',
+				fontWeight: 'var(--text-heading-2-weight)',
+				lineHeight: 'var(--text-heading-2-leading)'
+			},
+			'level:3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-3-size)',
+				fontWeight: 'var(--text-heading-3-weight)',
+				lineHeight: 'var(--text-heading-3-leading)'
+			},
+			'level:4': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-4-size)',
+				fontWeight: 'var(--text-heading-4-weight)',
+				lineHeight: 'var(--text-heading-4-leading)'
+			},
+			'level:5': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-5-size)',
+				fontWeight: 'var(--text-heading-5-weight)',
+				lineHeight: 'var(--text-heading-5-leading)'
+			},
+			'level:6': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-6-size)',
+				fontWeight: 'var(--text-heading-6-weight)',
+				lineHeight: 'var(--text-heading-6-leading)'
+			},
+			'type:display-1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
+		text: {
+			'type:body': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-body-size)',
+				lineHeight: 'var(--text-body-leading)'
+			},
+			'type:large': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-large-size)',
+				lineHeight: 'var(--text-large-leading)'
+			},
+			'type:label': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-label-size)',
+				lineHeight: 'var(--text-label-leading)'
+			},
+			'type:code': {
+				fontFamily: 'var(--font-family-code)',
+				fontSize: 'var(--text-code-size)',
+				lineHeight: 'var(--text-code-leading)'
+			},
+			'type:supporting': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-supporting-size)',
+				lineHeight: 'var(--text-supporting-leading)'
+			},
+			'type:display-1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
 		button: {
 			base: {
 				borderRadius: 'var(--radius-full)'
@@ -267,8 +336,6 @@ export const stoneTheme = defineTheme({
 				color: 'var(--color-text-red)'
 			}
 		},
-
-		// Semantic variants point at categorical hue tokens — single source of truth.
 		badge: {
 			'variant:info': {
 				backgroundColor: 'var(--color-background-blue)',
@@ -291,106 +358,240 @@ export const stoneTheme = defineTheme({
 				color: 'var(--color-text-red)'
 			}
 		},
-
-		// StyleX paints the banner surface from @layer priority4 (above
-		// @layer astryx-theme), so a direct backgroundColor override loses the
-		// cascade. Redefine the muted token instead so StyleX's var() resolves
-		// to the categorical bg in our scope.
 		banner: {
 			'status:info': {
-				'--color-accent-muted': 'var(--color-background-blue)',
-				'--color-text-primary': 'var(--color-text-blue)',
-				'--color-text-secondary': 'var(--color-text-blue)',
-				'--color-accent': 'var(--color-text-blue)'
+				'--color-info-muted': 'var(--color-background-blue)',
+				'--color-on-info-muted': 'var(--color-text-blue)'
 			},
 			'status:success': {
 				'--color-success-muted': 'var(--color-background-green)',
-				'--color-text-primary': 'var(--color-text-green)',
-				'--color-text-secondary': 'var(--color-text-green)',
-				'--color-success': 'var(--color-text-green)'
+				'--color-on-success-muted': 'var(--color-text-green)'
 			},
 			'status:warning': {
 				'--color-warning-muted': 'var(--color-background-yellow)',
-				'--color-text-primary': 'var(--color-text-yellow)',
-				'--color-text-secondary': 'var(--color-text-yellow)',
-				'--color-warning': 'var(--color-text-yellow)'
+				'--color-on-warning-muted': 'var(--color-text-yellow)'
 			},
 			'status:error': {
 				'--color-error-muted': 'var(--color-background-red)',
-				'--color-text-primary': 'var(--color-text-red)',
-				'--color-text-secondary': 'var(--color-text-red)',
-				'--color-error': 'var(--color-text-red)'
+				'--color-on-error-muted': 'var(--color-text-red)'
 			}
 		},
-
-		// Fill: light = T90 (same hex as banner/badge surface — fill reads as
-		// the same color family as the matching status surface). Dark = T70.
-		// Hexes from the preview Tonal Palettes ramp. accent (default) +
-		// indeterminate both route to blue for the in-progress / loading look.
-		'progressbar-fill': {
+		'progress-bar-fill': {
 			'variant:accent': {
-				backgroundColor: 'light-dark(#d7e4f5, #a0acbc)' // Blue T90 / T70
+				backgroundColor: 'light-dark(#d3e4fc, #9aadc7)'
 			},
 			'variant:success': {
-				backgroundColor: 'light-dark(#d0e9ce, #9ab298)' // Green T90 / T70
+				backgroundColor: 'light-dark(#d2eccf, #90ba8a)'
 			},
 			'variant:warning': {
-				backgroundColor: 'light-dark(#f4e1b7, #bbaa82)' // Yellow T90 / T70
+				backgroundColor: 'light-dark(#f4e1b7, #c2af6e)'
 			},
 			'variant:error': {
-				backgroundColor: 'light-dark(#f9dcd7, #c0a5a0)' // Red T90 / T70
+				backgroundColor: 'light-dark(#fbdad4, #c6a29c)'
 			}
 		},
-
-		// Track default --color-background-muted reads near-body in stone;
-		// redirect to --color-skeleton so the channel stays visible.
-		'progressbar-track': {
+		'progress-bar-mark': {
+			'placement:fill+variant:accent': {
+				backgroundColor: 'var(--color-on-light)'
+			},
+			'placement:fill+variant:success': {
+				backgroundColor: 'var(--color-on-light)'
+			},
+			'placement:fill+variant:warning': {
+				backgroundColor: 'var(--color-on-light)'
+			},
+			'placement:fill+variant:error': {
+				backgroundColor: 'var(--color-on-light)'
+			}
+		},
+		'progress-bar-track': {
 			base: {
 				backgroundColor: 'var(--color-skeleton)'
 			}
 		},
-
-		// Switch off-state track reads --color-background-gray by default.
-		// Redefine it inside the switch scope to --color-skeleton, matching
-		// the ProgressBar track. The on-state reads --color-accent (unaffected);
-		// disabled-off also picks up --color-skeleton for consistency.
 		switch: {
 			base: {
 				'--color-background-gray': 'var(--color-skeleton)'
 			}
 		},
-
-		// FieldStatus surface matches badge — see badge override above.
 		'field-status': {
 			'type:success': {
-				backgroundColor: 'var(--color-background-green)'
+				backgroundColor: 'var(--color-background-green)',
+				color: 'var(--color-text-green)'
 			},
 			'type:warning': {
-				backgroundColor: 'var(--color-background-yellow)'
+				backgroundColor: 'var(--color-background-yellow)',
+				color: 'var(--color-text-yellow)'
 			},
 			'type:error': {
-				backgroundColor: 'var(--color-background-red)'
+				backgroundColor: 'var(--color-background-red)',
+				color: 'var(--color-text-red)'
 			}
 		},
-
-		// Input status borders + icons across all 9 input components share the
-		// same softer T60/T70 redirection. See INPUT_STATUS_VARS above.
-		'text-input': INPUT_STATUS_VARS,
-		textarea: INPUT_STATUS_VARS,
-		'number-input': INPUT_STATUS_VARS,
-		'date-input': INPUT_STATUS_VARS,
-		'time-input': INPUT_STATUS_VARS,
-		selector: INPUT_STATUS_VARS,
-		'multi-selector': INPUT_STATUS_VARS,
-		typeahead: INPUT_STATUS_VARS,
-		tokenizer: INPUT_STATUS_VARS,
-
+		'text-input': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		'text-area': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		'number-input': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		'date-input': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		'time-input': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		selector: {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			},
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'transparent',
+					borderWidth: '1.5px',
+					borderStyle: 'solid',
+					borderColor: 'var(--color-border-emphasized)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'var(--color-neutral)'
+				}
+			}
+		},
+		'multi-selector': {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			},
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'transparent',
+					borderWidth: '1.5px',
+					borderStyle: 'solid',
+					borderColor: 'var(--color-border-emphasized)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'var(--color-neutral)'
+				}
+			}
+		},
+		'complex-selector': {
+			'variant:secondary': {
+				backgroundColor: 'transparent',
+				borderWidth: '1.5px',
+				borderStyle: 'solid',
+				borderColor: 'var(--color-border-emphasized)',
+				':hover:not(:has(> :is(:disabled, [aria-disabled="true"])))': {
+					backgroundColor: 'var(--color-neutral)'
+				}
+			}
+		},
+		typeahead: {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
+		tokenizer: {
+			'status:success': {
+				'--color-border-success': 'light-dark(#609757, #90ba8a)',
+				'--color-icon-success': 'light-dark(#609757, #90ba8a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#a08c36, #c2af6e)',
+				'--color-icon-warning': 'light-dark(#a08c36, #c2af6e)'
+			},
+			'status:error': {
+				'--color-border-error': 'light-dark(#a98984, #c6a29c)',
+				'--color-icon-error': 'light-dark(#a98984, #c6a29c)'
+			}
+		},
 		card: {
 			base: {
 				padding: 'var(--spacing-3)'
 			}
 		},
-
 		section: {
 			base: {
 				padding: 'var(--spacing-3)'

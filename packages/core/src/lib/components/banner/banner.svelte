@@ -215,12 +215,14 @@
 	const isCard = $derived(container === 'card');
 
 	const rootAttrs = $derived(bannerRootAttrs(elevation, container === 'card', xstyle));
+	const frameTheme = themeProps('banner-frame');
 	const headerTheme = $derived(themeProps('banner', { container, status }));
 	const headerAttrs = $derived(bannerHeaderAttrs(status, isSingleLine, isCard, showContent));
 	const iconTheme = $derived(themeProps('banner-icon', { status }));
 	const iconWrapperAttrs = bannerIconWrapperAttrs();
 	const headerContentAttrs = $derived(bannerHeaderContentAttrs(endContent != null));
 	const titleAttrs = bannerTitleAttrs();
+	const descriptionTheme = themeProps('banner-description');
 	const descriptionAttrs = bannerDescriptionAttrs();
 	const endAreaAttrs = bannerEndAreaAttrs();
 	const contentTheme = $derived(themeProps('banner-content', { container, status }));
@@ -297,7 +299,7 @@
 		{role}
 		onfocusincapture={handleFocusInCapture}
 		onpointerdowncapture={handlePointerDownCapture}
-		class={cx(rootAttrs.class, className)}
+		class={cx(frameTheme.class, rootAttrs.class, className)}
 		style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
 	>
 		<!-- Header: colored status background — primary theme target ('banner') -->
@@ -344,7 +346,11 @@
 					{#if typeof title === 'function'}{@render title()}{:else}{title}{/if}
 				</div>
 				{#if hasDescription}
-					<div class={descriptionAttrs.class} style={descriptionAttrs.style}>
+					<div
+						{...descriptionTheme}
+						class={cx(descriptionTheme.class, descriptionAttrs.class)}
+						style={descriptionAttrs.style}
+					>
 						{#if typeof description === 'function'}{@render description()}{:else}{description}{/if}
 					</div>
 				{/if}

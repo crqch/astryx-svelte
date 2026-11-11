@@ -140,9 +140,11 @@ them.
    match for.
 
    On the examples: batch 038 ported the `Stepper` and `Step` blocks, and every icon they reach for
-   already resolves, so they opened no new demo debt. What is left are the blocks for
-   `ComplexSelector`, `ChatDictation`, `AvatarGroup`, `ChatMessageBubble`, `Dialog` and `Selector`.
-   These are ports, not authored demos — the source is
+   already resolves, so they opened no new demo debt. The `ComplexSelector`, `ChatDictation`,
+   `AvatarGroup`, `ChatMessageBubble`, `Dialog` and `SelectorOptionDescriptions` blocks are now
+   ported. What remains are `SelectorBottomSheet` and `useComboboxHookUsage`, both blocked on
+   unimplemented component APIs recorded under Open work → Missing implementation (`presentation`
+   and the `useCombobox` helper props). These are ports, not authored demos — the source is
    `@astryxdesign/cli`'s `assets/templates/blocks/components/<Name>/`, resolved by `exampleFor` in
    the block's `.doc.mjs`, so the parity rule applies to them exactly as it does to a component.
 
@@ -192,6 +194,20 @@ because the thing it types is. None was recorded before; none is a surface-polic
       `selectable-card.stylex.ts` carries a comment asserting it can. `CustomTextTypes` is absent and
       `TextType` is `BuiltinTextType | (string & {})`, which accepts any string where upstream
       accepts only registered ones
+- [ ] **`Selector`/`MultiSelector`'s `presentation` is documented and unimplemented.**
+      Upstream's `useSelectorPresentation` hook (`Selector/useSelectorPresentation.ts`) drives
+      `'popover' | 'bottom-sheet' | 'adaptive'`; this port renders the popover only, so the prop in
+      both `.doc.mjs` files is the emitter's fallback, not a declaration. The
+      `SelectorBottomSheet` example block stays unported until it lands
+- [ ] **`useCombobox` publishes a narrower result than upstream's.** Upstream hands back
+      `getFieldProps()`, `getListboxProps()` and `getOptionProps()`, which the `useCombobox — Assign
+      To Field` block spreads onto `TextInput`/`Item`; ours publishes only the event handlers and
+      `getItemId`, so that block cannot be transcribed until the helper props land
+- [ ] **`ComplexSelector` is missing upstream's field-styling seam.**
+      `containerXstyle`/`containerClassName`/`containerStyle` and
+      `controlXstyle`/`controlClassName`/`controlStyle` are documented in `ComplexSelector.doc.mjs`
+      and implemented upstream through `useFieldInputStyling`; our component has neither the props
+      nor the hook. The ported example blocks use `width` as the closest available equivalent
 
 ### Core / build
 
@@ -231,17 +247,6 @@ deviation, not a task.
 
 ### Docs site
 
-- [ ] `ThemesPreview`, the Themes bento tile — a scaled-down live `ThemeShowcaseStore` beside a
-      rail of theme swatches. Needs the `theme-showcase` page template, which has landed
-- [ ] `TemplatesPreview`, the Templates bento tile — needs `TemplateThumbnail` and several page
-      templates rendered live and scaled into the tile
-- [ ] Restore the landing bento to upstream's three columns once both tiles above exist (col 1
-      heading + Themes, col 2 Components + CLI, col 3 Templates)
-- [ ] `BlogShowcase`, the remaining landing section, on `blogRegistry` +
-      `BlogCard`/`BlogFeatureCard` — lower priority than the tiles, since it needs post content
-- [ ] `AboutShowcase`'s heading block is intentionally not upstream's copy (Meta's "13,000 apps"
-      institutional claim doesn't fit an unofficial port). Confirm this still reads as the right
-      call, or fold it into `debts.md` as a settled divergence
 - [ ] `/docs/core`, `/docs/cli`, `/changelog` — no longer blocked on a component (`Markdown` +
       `parseOutlineFromMarkdown` landed); needs a package registry in the generator, a ported
       `PackageStubPage`, and a route branch that doesn't 404

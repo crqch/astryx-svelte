@@ -246,7 +246,7 @@ describe('themeBuild() — component override validation', () => {
         name: 'states',
         tokens: {'--color-bg': '#0a0a0a'},
         components: {
-          radio: {
+          'radio-indicator': {
             checked: {borderColor: 'var(--color-accent)'},
             'checked+disabled': {opacity: '0.5'},
           },
@@ -278,14 +278,14 @@ describe('themeBuild() — component override validation', () => {
 			`export default {
         name: 'bogus',
         tokens: {'--color-bg': '#0a0a0a'},
-        components: {radio: {'notAProp:x': {opacity: '0.5'}}},
+        components: {'radio-indicator': {'notAProp:x': {opacity: '0.5'}}},
       };\n`
 		);
 
 		const result = await themeBuild('bogus.mjs', {}, { cwd: tmpDir });
 
 		expect(result?.data.warnings).toEqual([
-			expect.stringContaining('Unknown prop "notAProp" on component "radio"')
+			expect.stringContaining('Unknown prop "notAProp" on component "radio-indicator"')
 		]);
 		// The hint lists the known set, and `checked` can only have reached it
 		// through `target.states`: the `astryx-radio` target declares

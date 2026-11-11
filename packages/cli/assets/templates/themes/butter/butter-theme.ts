@@ -25,32 +25,46 @@
 
 import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
 
-/** Butter syntax palette — T25 / T80 of each color's ramp. */
+/** Butter syntax palette — upstream 0.7.13's resolved values. */
 const butterSyntax = defineSyntaxTheme({
-	name: 'xds-butter',
+	name: 'astryx-butter',
 	tokens: {
-		keyword: ['#52237b', '#ddb9f6'], // Purple
-		string: ['#004800', '#a5d29d'], // Green
-		comment: ['#605f52', '#adac9e'],
-		number: ['#622e00', '#f2bd81'], // Orange
-		function: ['#203a6c', '#bdc5eb'], // Blue
-		type: ['#52237b', '#ddb9f6'], // Purple
-		variable: ['#605f52', '#adac9e'],
-		operator: ['#605f52', '#adac9e'],
-		constant: ['#622e00', '#f2bd81'],
-		tag: ['#6d211c', '#f4b8ae'], // Red
-		attribute: ['#413e00', '#d6c957'], // Yellow
-		property: ['#00482d', '#94d3bb'], // Teal
-		punctuation: ['#605f52', '#adac9e'],
-		background: ['#FDFBE4', '#131107']
+		keyword: 'light-dark(#52237b, #ddb9f6)',
+		string: 'light-dark(#004a05, #a8d4a6)',
+		comment: 'light-dark(#605f52, #adac9e)',
+		number: 'light-dark(#622e00, #f2bd81)',
+		function: 'light-dark(#203a6c, #bdc5eb)',
+		type: 'light-dark(#52237b, #ddb9f6)',
+		variable: 'light-dark(#605f52, #adac9e)',
+		operator: 'light-dark(#605f52, #adac9e)',
+		constant: 'light-dark(#622e00, #f2bd81)',
+		tag: 'light-dark(#6f1400, #ffb09b)',
+		attribute: 'light-dark(#443c00, #bcae4e)',
+		property: 'light-dark(#00482d, #94d3bb)',
+		punctuation: 'light-dark(#605f52, #adac9e)',
+		background: 'light-dark(#fdfbe4, #131107)',
+		added: 'color-mix(in srgb, var(--color-success-muted) 25%, transparent)',
+		removed: 'color-mix(in srgb, var(--color-error-muted) 25%, transparent)',
+		'diff-header': 'transparent',
+		'added-marker': 'var(--color-syntax-punctuation)',
+		'removed-marker': 'var(--color-syntax-punctuation)'
 	}
 });
 
+/**
+ * Butter theme — ported from upstream 0.7.13. Colour and component
+ * values are literals so this package needs none of upstream's palette helpers;
+ * typography and motion stay as configs so the shared generator derives the
+ * same sizes, leadings and durations.
+ */
 export const butterTheme = defineTheme({
 	name: 'butter',
 
 	typography: {
-		scale: { base: 14, ratio: 1.25 },
+		scale: {
+			base: 14,
+			ratio: 1.25
+		},
 		body: {
 			family: 'Outfit',
 			fallbacks:
@@ -60,7 +74,10 @@ export const butterTheme = defineTheme({
 			family: 'Outfit',
 			fallbacks:
 				'-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-			weights: { 3: 'bold', 4: 'bold' }
+			weights: {
+				'3': 'bold',
+				'4': 'bold'
+			}
 		},
 		code: {
 			family: 'JetBrains Mono',
@@ -68,188 +85,265 @@ export const butterTheme = defineTheme({
 		}
 	},
 
-	motion: { fast: 125, medium: 300, slow: 700, ratio: 0.75 },
-
+	motion: {
+		fast: 125,
+		medium: 300,
+		slow: 700,
+		ratio: 0.75
+	},
+	adaptations: {
+		rules: [
+			{
+				when: {
+					pointer: 'coarse',
+					width: {
+						below: 'lg'
+					}
+				},
+				value: {
+					typography: {
+						scale: {
+							base: 16,
+							ratio: 1.2225
+						}
+					}
+				}
+			}
+		]
+	},
+	onDark: {
+		tokens: {
+			'color-scheme': 'dark',
+			'--color-text-primary': 'var(--color-on-dark)',
+			'--color-icon-primary': 'var(--color-on-dark)',
+			'--color-accent': 'var(--color-on-dark)'
+		}
+	},
+	onLight: {
+		tokens: {
+			'color-scheme': 'light',
+			'--color-text-primary': 'var(--color-on-light)',
+			'--color-icon-primary': 'var(--color-on-light)',
+			'--color-accent': 'var(--color-on-light)'
+		}
+	},
 	syntax: butterSyntax,
-
 	tokens: {
-		// =========================================================================
-		// Core semantic — accent is the exact brand #225BFF
-		// =========================================================================
-		'--color-accent': ['#225BFF', '#FDEE8C'],
-		'--color-accent-muted': ['#225BFF33', '#FDEE8C40'],
-		'--color-neutral': ['#1d1c110F', '#f3f2e21A'],
-		'--color-background-surface': ['#FFFFFF', '#2E2117'],
-		'--color-background-body': ['#FDFBE4', '#261A13'],
-		'--color-overlay': ['#1d1c1180', '#261A13cc'],
-		'--color-overlay-hover': ['#1d1c110D', '#f3f2e20D'],
-		'--color-overlay-pressed': ['#1d1c111A', '#f3f2e21A'],
-		'--color-background-muted': ['#f3f2e2', '#3A2A1F'],
-
-		// Text — warm neutral
-		'--color-text-primary': ['#1d1c11', '#f3f2e2'],
-		'--color-text-secondary': ['#605f52', '#adac9e'],
-		'--color-text-disabled': ['#adac9e', '#605f52'],
-		'--color-text-accent': ['#225BFF', '#FDEE8C'],
+		'--color-accent': 'light-dark(#225bff, #fdee8c)',
+		'--color-accent-muted': 'light-dark(#225bff33, #fdee8c40)',
+		'--color-neutral': 'light-dark(#1d1c110f, #f3f2e21a)',
+		'--color-background-surface': 'light-dark(#ffffff, #2e2117)',
+		'--color-background-body': 'light-dark(#fdfbe4, #261a13)',
+		'--color-overlay': 'light-dark(#1d1c1180, #261a13cc)',
+		'--color-overlay-hover': 'light-dark(#1d1c110d, #f3f2e20d)',
+		'--color-overlay-pressed': 'light-dark(#1d1c111a, #f3f2e21a)',
+		'--color-background-muted': 'light-dark(#f3f2e2, #3a2a1f)',
+		'--color-text-primary': 'light-dark(#1d1c11, #f3f2e2)',
+		'--color-text-secondary': 'light-dark(#605f52, #adac9e)',
+		'--color-text-disabled': 'light-dark(#adac9e, #605f52)',
+		'--color-text-accent': 'light-dark(#225bff, #fdee8c)',
 		'--color-on-dark': '#ffffff',
 		'--color-on-light': '#1d1c11',
-		'--color-on-accent': ['#ffffff', '#1d1c11'],
-		// T95 of each ramp for use on the vivid semantic surfaces.
-		'--color-on-success': ['#ccff88', '#0b2e00'],
-		'--color-on-error': ['#ffe3de', '#600000'],
-		'--color-on-warning': ['#ffeec3', '#3b2200'],
-
-		// Icon
-		'--color-icon-accent': ['#225BFF', '#FDEE8C'],
-		'--color-icon-primary': ['#1d1c11', '#f3f2e2'],
-		'--color-icon-secondary': ['#605f52', '#adac9e'],
-		'--color-icon-disabled': ['#adac9e', '#605f52'],
-
-		// Surface variants
-		'--color-background-card': ['#FFFFFF', '#3A2A1F'],
-		'--color-background-popover': ['#FFFFFF', '#3A2A1F'],
-		'--color-background-inverted': ['#1d1c11', '#FDFBE4'],
-
-		// Status semantics — T25 light / T80 dark from each status palette.
-		'--color-error': ['#771210', '#ffb4a6'],
-		'--color-error-muted': ['#77121033', '#ffb4a640'],
-		'--color-warning': ['#543700', '#f7be00'],
-		'--color-warning-muted': ['#54370033', '#f7be0040'],
-		'--color-success': ['#004700', '#99d94b'],
-		'--color-success-muted': ['#00470033', '#99d94b40'],
-
-		// Border — softer taupe card outline (emphasized) in light mode.
-		'--color-border': ['#e5e3d4', '#f3f2e21A'],
-		'--color-border-emphasized': ['#C7C4B2', '#939184'],
-
-		// Effects
-		'--color-skeleton': ['#e5e3d4', '#49473b'],
-		'--color-shadow': ['#1d1c111A', '#0000004D'],
-		'--color-tint-hover': ['black', 'white'],
-
-		// Typography override
-		'--text-supporting-size': '12px',
-
-		// Element sizes — slightly taller defaults so the new input padding
-		// (--spacing-2 block) has room to breathe.
+		'--color-on-accent': 'light-dark(#ffffff, #1d1c11)',
+		'--color-on-success': 'light-dark(#b6e3b4, #013004)',
+		'--color-on-error': 'light-dark(#ffece7, #4c0700)',
+		'--color-on-warning': 'light-dark(#fff7c0, #2c2600)',
+		'--color-info': 'light-dark(#225bff, #81a9ff)',
+		'--color-info-muted': 'var(--color-background-blue)',
+		'--color-text-info': 'light-dark(#225bff, #81a9ff)',
+		'--color-text-success': 'light-dark(#004a05, #a8d4a6)',
+		'--color-text-warning': 'light-dark(#443c00, #eedf75)',
+		'--color-text-error': 'light-dark(#6f1400, #ffb09b)',
+		'--color-on-info-muted': 'var(--color-text-blue)',
+		'--color-on-success-muted': 'light-dark(#004a05, #a8d4a6)',
+		'--color-on-warning-muted': 'light-dark(#443c00, #eedf75)',
+		'--color-on-error-muted': 'light-dark(#6f1400, #ffd9cf)',
+		'--color-icon-accent': 'light-dark(#225bff, #fdee8c)',
+		'--color-icon-primary': 'light-dark(#1d1c11, #f3f2e2)',
+		'--color-icon-secondary': 'light-dark(#605f52, #adac9e)',
+		'--color-icon-disabled': 'light-dark(#adac9e, #605f52)',
+		'--color-background-card': 'light-dark(#ffffff, #3a2a1f)',
+		'--color-background-popover': 'light-dark(#ffffff, #3a2a1f)',
+		'--color-background-inverted': 'light-dark(#1d1c11, #fdfbe4)',
+		'--color-error': 'light-dark(#821b00, #ffc5b5)',
+		'--color-error-muted': 'light-dark(#821b0033, #ffc5b540)',
+		'--color-warning': 'light-dark(#514700, #cdbe59)',
+		'--color-warning-muted': 'light-dark(#51470033, #cdbe5940)',
+		'--color-success': 'light-dark(#004a05, #83bc82)',
+		'--color-success-muted': 'light-dark(#004a0533, #83bc8240)',
+		'--color-border': 'light-dark(#e5e3d4, #f3f2e21a)',
+		'--color-border-emphasized': 'light-dark(#c7c4b2, #939184)',
+		'--color-skeleton': 'light-dark(#e5e3d4, #49473b)',
+		'--color-shadow': 'light-dark(#1d1c111a, #0000004d)',
+		'--color-tint-hover': 'light-dark(#000000, #ffffff)',
 		'--size-element-sm': '32px',
 		'--size-element-md': '40px',
 		'--size-element-lg': '48px',
-
-		// =========================================================================
-		// Categorical — same values in light and dark mode (curated dark mode
-		// keeps the same pastel backgrounds + dark text as light mode).
-		// =========================================================================
-
-		// Blue
-		'--color-background-blue': ['#dbe1ff', '#dbe1ff'],
-		'--color-border-blue': ['#bdc5eb', '#bdc5eb'],
-		'--color-icon-blue': ['#203a6c', '#203a6c'],
-		'--color-text-blue': ['#203a6c', '#203a6c'],
-
-		// Cyan
-		'--color-background-cyan': ['#a9eff0', '#a9eff0'],
-		'--color-border-cyan': ['#8dd2d3', '#8dd2d3'],
-		'--color-icon-cyan': ['#004649', '#004649'],
-		'--color-text-cyan': ['#004649', '#004649'],
-
-		// Gray (uses the neutral palette)
-		'--color-background-gray': ['#f0edd4', '#f0edd4'],
-		'--color-border-gray': ['#d6d3b8', '#d6d3b8'],
-		'--color-icon-gray': ['#4a4732', '#4a4732'],
-		'--color-text-gray': ['#4a4732', '#4a4732'],
-
-		// Green
-		'--color-background-green': ['#c1efb8', '#c1efb8'],
-		'--color-border-green': ['#a5d29d', '#a5d29d'],
-		'--color-icon-green': ['#004800', '#004800'],
-		'--color-text-green': ['#004800', '#004800'],
-
-		// Orange
-		'--color-background-orange': ['#ffdcb6', '#ffdcb6'],
-		'--color-border-orange': ['#f2bd81', '#f2bd81'],
-		'--color-icon-orange': ['#622e00', '#622e00'],
-		'--color-text-orange': ['#622e00', '#622e00'],
-
-		// Pink
-		'--color-background-pink': ['#ffd5fb', '#ffd5fb'],
-		'--color-border-pink': ['#f0b3e8', '#f0b3e8'],
-		'--color-icon-pink': ['#6c0a68', '#6c0a68'],
-		'--color-text-pink': ['#6c0a68', '#6c0a68'],
-
-		// Purple
-		'--color-background-purple': ['#f2daff', '#f2daff'],
-		'--color-border-purple': ['#ddb9f6', '#ddb9f6'],
-		'--color-icon-purple': ['#52237b', '#52237b'],
-		'--color-text-purple': ['#52237b', '#52237b'],
-
-		// Red
-		'--color-background-red': ['#ffdad3', '#ffdad3'],
-		'--color-border-red': ['#f4b8ae', '#f4b8ae'],
-		'--color-icon-red': ['#6d211c', '#6d211c'],
-		'--color-text-red': ['#6d211c', '#6d211c'],
-
-		// Teal
-		'--color-background-teal': ['#b0f0d7', '#b0f0d7'],
-		'--color-border-teal': ['#94d3bb', '#94d3bb'],
-		'--color-icon-teal': ['#00482d', '#00482d'],
-		'--color-text-teal': ['#00482d', '#00482d'],
-
-		// Yellow
-		'--color-background-yellow': ['#feee7b', '#feee7b'],
-		'--color-border-yellow': ['#d6c957', '#d6c957'],
-		'--color-icon-yellow': ['#413e00', '#413e00'],
-		'--color-text-yellow': ['#413e00', '#413e00'],
-
-		// =========================================================================
-		// Radius
-		//   --radius-element drives buttons, badges, inputs — 8px per design
-		//   --radius-container drives cards, banners, popovers — 12px per design
-		//   --radius-none and --radius-full are always fixed and must never be
-		//   scaled by a theme (see defineTheme's radius config docs) — 0 and
-		//   9999px respectively, matching @astryxdesign/core's own defaults.
-		// =========================================================================
+		'--color-background-blue': 'light-dark(#dbe1ff, #dbe1ff)',
+		'--color-border-blue': 'light-dark(#bdc5eb, #bdc5eb)',
+		'--color-icon-blue': 'light-dark(#203a6c, #203a6c)',
+		'--color-text-blue': 'light-dark(#203a6c, #203a6c)',
+		'--color-background-cyan': 'light-dark(#a9eff0, #a9eff0)',
+		'--color-border-cyan': 'light-dark(#8dd2d3, #8dd2d3)',
+		'--color-icon-cyan': 'light-dark(#004649, #004649)',
+		'--color-text-cyan': 'light-dark(#004649, #004649)',
+		'--color-background-gray': 'light-dark(#f0edd4, #f0edd4)',
+		'--color-border-gray': 'light-dark(#d6d3b8, #d6d3b8)',
+		'--color-icon-gray': 'light-dark(#4a4732, #4a4732)',
+		'--color-text-gray': 'light-dark(#4a4732, #4a4732)',
+		'--color-background-green': 'light-dark(#caeec8, #cdedcc)',
+		'--color-border-green': 'light-dark(#a2d7a0, #a8d4a6)',
+		'--color-icon-green': 'light-dark(#004a05, #063c0a)',
+		'--color-text-green': 'light-dark(#004a05, #063c0a)',
+		'--color-background-orange': 'light-dark(#ffdcb6, #ffdcb6)',
+		'--color-border-orange': 'light-dark(#f2bd81, #f2bd81)',
+		'--color-icon-orange': 'light-dark(#622e00, #622e00)',
+		'--color-text-orange': 'light-dark(#622e00, #622e00)',
+		'--color-background-pink': 'light-dark(#ffd5fb, #ffd5fb)',
+		'--color-border-pink': 'light-dark(#f0b3e8, #f0b3e8)',
+		'--color-icon-pink': 'light-dark(#6c0a68, #6c0a68)',
+		'--color-text-pink': 'light-dark(#6c0a68, #6c0a68)',
+		'--color-background-purple': 'light-dark(#f2daff, #f2daff)',
+		'--color-border-purple': 'light-dark(#ddb9f6, #ddb9f6)',
+		'--color-icon-purple': 'light-dark(#52237b, #52237b)',
+		'--color-text-purple': 'light-dark(#52237b, #52237b)',
+		'--color-background-red': 'light-dark(#ffd9cf, #ffd9cf)',
+		'--color-border-red': 'light-dark(#ffb09b, #ffb09b)',
+		'--color-icon-red': 'light-dark(#6f1400, #6f1400)',
+		'--color-text-red': 'light-dark(#6f1400, #6f1400)',
+		'--color-background-teal': 'light-dark(#b0f0d7, #b0f0d7)',
+		'--color-border-teal': 'light-dark(#94d3bb, #94d3bb)',
+		'--color-icon-teal': 'light-dark(#00482d, #00482d)',
+		'--color-text-teal': 'light-dark(#00482d, #00482d)',
+		'--color-background-yellow': 'light-dark(#f0df72, #eedf75)',
+		'--color-border-yellow': 'light-dark(#bfae35, #bcae4e)',
+		'--color-icon-yellow': 'light-dark(#443c00, #443c00)',
+		'--color-text-yellow': 'light-dark(#443c00, #443c00)',
 		'--radius-none': '0px',
 		'--radius-inner': '0.375rem',
-		'--radius-element': '0.5rem', // 8px
-		'--radius-container': '0.75rem', // 12px
+		'--radius-element': '0.5rem',
+		'--radius-container': '0.75rem',
 		'--radius-page': '1.5rem',
 		'--radius-full': '9999px',
-
-		// =========================================================================
-		// Shadows — warm neutral tint
-		// =========================================================================
-		'--shadow-low': '0 2px 4px #1d1c110D, 0 4px 8px #1d1c111A',
-		'--shadow-med': '0 2px 4px #1d1c110D, 0 4px 12px #1d1c111A',
-		'--shadow-high': '0 4px 6px #1d1c111A, 0 12px 24px #1d1c1126',
+		'--shadow-low': '0 2px 4px #1d1c110d, 0 4px 8px #1d1c111a',
+		'--shadow-med': '0 2px 4px #1d1c110d, 0 4px 12px #1d1c111a',
+		'--shadow-high': '0 4px 6px #1d1c111a, 0 12px 24px #1d1c1126',
 		'--shadow-inset-hover': 'inset 0px 0px 0px 2px #79786a30',
 		'--shadow-inset-selected': 'inset 0px 0px 0px 2px #79786a50',
-		'--shadow-inset-success': 'inset 0px 0px 0px 2px #00470030',
-		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #54370030',
-		'--shadow-inset-error': 'inset 0px 0px 0px 2px #77121030'
+		'--shadow-inset-success': 'inset 0px 0px 0px 2px #004a0530',
+		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #51470030',
+		'--shadow-inset-error': 'inset 0px 0px 0px 2px #821b0030',
+		'--color-on-info': 'light-dark(#FFFFFF, #1D1C11)',
+		'--text-supporting-size': '0.75rem'
 	},
-
 	components: {
-		// TopNav uses Butter's blue accent: the heading and the selected item are
-		// the full brand blue; unselected items (default + hover) use a lighter
-		// blue. Dark mode keeps the theme's butter-yellow accent.
+		heading: {
+			'level:1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-1-size)',
+				fontWeight: 'var(--text-heading-1-weight)',
+				lineHeight: 'var(--text-heading-1-leading)'
+			},
+			'level:2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-2-size)',
+				fontWeight: 'var(--text-heading-2-weight)',
+				lineHeight: 'var(--text-heading-2-leading)'
+			},
+			'level:3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-3-size)',
+				fontWeight: 'var(--text-heading-3-weight)',
+				lineHeight: 'var(--text-heading-3-leading)'
+			},
+			'level:4': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-4-size)',
+				fontWeight: 'var(--text-heading-4-weight)',
+				lineHeight: 'var(--text-heading-4-leading)'
+			},
+			'level:5': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-5-size)',
+				fontWeight: 'var(--text-heading-5-weight)',
+				lineHeight: 'var(--text-heading-5-leading)'
+			},
+			'level:6': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-6-size)',
+				fontWeight: 'var(--text-heading-6-weight)',
+				lineHeight: 'var(--text-heading-6-leading)'
+			},
+			'type:display-1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
+		text: {
+			'type:body': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-body-size)',
+				lineHeight: 'var(--text-body-leading)'
+			},
+			'type:large': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-large-size)',
+				lineHeight: 'var(--text-large-leading)'
+			},
+			'type:label': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-label-size)',
+				lineHeight: 'var(--text-label-leading)'
+			},
+			'type:code': {
+				fontFamily: 'var(--font-family-code)',
+				fontSize: 'var(--text-code-size)',
+				lineHeight: 'var(--text-code-leading)'
+			},
+			'type:supporting': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-supporting-size)',
+				lineHeight: 'var(--text-supporting-leading)'
+			},
+			'type:display-1': {
+				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
 		'top-nav-heading': {
-			// The heading text is an inner span that reads --color-text-primary, so
-			// redirect that token (not just `color`) to the brand blue so the text
-			// itself turns blue, not only the container.
 			base: {
-				color: 'light-dark(#225BFF, #FDEE8C)',
-				'--color-text-primary': 'light-dark(#225BFF, #FDEE8C)'
+				color: 'light-dark(#225bff, #fdee8c)',
+				'--color-text-primary': 'light-dark(#225bff, #fdee8c)'
 			}
 		},
 		'top-nav-item': {
 			base: {
-				color: 'light-dark(#6E92FF, #FDEE8CCC)'
+				color: 'light-dark(#225bff, #fdee8ccc)'
 			},
-			// Selected item: full brand blue, no pill background — rely on weight +
-			// color for emphasis. Hover/active keep the neutral overlay.
 			selected: {
-				color: 'light-dark(#225BFF, #FDEE8C)',
+				color: 'light-dark(#194ce8, #fdee8c)',
 				backgroundColor: 'transparent',
 				':hover': {
 					backgroundColor: 'var(--color-overlay-hover)'
@@ -260,98 +354,72 @@ export const butterTheme = defineTheme({
 			}
 		},
 		button: {
-			// Radius intentionally not pinned, so buttons keep core's
-			// `var(--_button-radius, --radius-element)`: standalone buttons stay 8px,
-			// while the chat composer (which sets --_button-radius) rounds them fully.
 			base: {
-				paddingBlock: 'var(--spacing-3)',
 				paddingInline: 'var(--spacing-4)'
 			},
-			// Secondary: blue outline + label in light, butter yellow in dark.
 			'variant:secondary': {
 				backgroundColor: 'transparent',
 				borderWidth: '1.5px',
 				borderStyle: 'solid',
-				borderColor: 'light-dark(#225BFF, #FDEE8C)',
-				color: 'light-dark(#225BFF, #FDEE8C)',
+				borderColor: 'light-dark(#225bff, #fdee8c)',
+				color: 'light-dark(#225bff, #fdee8c)',
 				':hover': {
-					backgroundColor: 'light-dark(#225BFF14, #FDEE8C14)'
+					backgroundColor: 'light-dark(#225bff14, #fdee8c14)'
 				}
 			},
-			// Ghost: same accent color as secondary, no background.
 			'variant:ghost': {
-				color: 'light-dark(#225BFF, #FDEE8C)'
+				color: 'light-dark(#225bff, #fdee8c)'
 			},
 			'variant:destructive': {
-				backgroundColor: 'light-dark(#ffdad3, #f4b8ae)',
-				color: 'light-dark(#550000, #6d211c)'
+				backgroundColor: 'light-dark(#ffd9cf, #ffb09b)',
+				color: 'light-dark(#3b0200, #6f1400)'
 			}
 		},
-
 		badge: {
-			// Match astryx/daily badge sizing: 30px tall with 12px horizontal pad.
-			// Use explicit values because butter inherits the standard spacing
-			// scale (where --spacing-3 = 12px), unlike astryx which redefines it.
 			base: {
 				height: '30px',
 				paddingBlock: '0',
 				paddingInline: 'var(--spacing-3)'
 			},
-			// Vivid semantic badges — pinned to the brand colors from the spec.
-			// Info uses the Blue palette source (NOT the brand accent #225BFF).
 			'variant:info': {
-				backgroundColor: '#4883fd',
-				color: '#ffffff'
+				backgroundColor: '#4d82ff',
+				color: '#1d1c11'
 			},
 			'variant:neutral': {
-				backgroundColor: '#ffee7b',
-				color: '#225BFF'
+				backgroundColor: '#fdee8c',
+				color: '#194ce8'
 			},
 			'variant:success': {
-				backgroundColor: '#91D143',
+				backgroundColor: '#7bbf7a',
 				color: '#1d1c11'
 			},
 			'variant:warning': {
-				backgroundColor: '#ffc502',
+				backgroundColor: '#dfcf5b',
 				color: '#1d1c11'
 			},
 			'variant:error': {
-				backgroundColor: '#fc473b',
-				color: '#ffffff'
+				backgroundColor: '#e56241',
+				color: '#1d1c11'
 			}
 		},
-
-		// Banner backgrounds match the semantic badge fills.
-		// Banner status colors — override the muted tokens locally so the
-		// header (which reads --color-*-muted via StyleX) renders vivid fills
-		// matching the badge palette. Scoped to the banner root, doesn't leak.
 		banner: {
 			'status:info': {
-				'--color-accent-muted': '#4883fd',
-				'--color-text-primary': '#ffffff',
-				'--color-text-secondary': '#ffffff',
-				'--color-accent': '#ffffff'
+				'--color-info-muted': '#4d82ff',
+				'--color-on-info-muted': '#1d1c11'
 			},
 			'status:success': {
-				'--color-success-muted': '#91D143',
-				'--color-text-primary': '#1d1c11',
-				'--color-text-secondary': '#1d1c11',
-				'--color-success': '#1d1c11'
+				'--color-success-muted': '#7bbf7a',
+				'--color-on-success-muted': '#1d1c11'
 			},
 			'status:warning': {
-				'--color-warning-muted': '#ffc502',
-				'--color-text-primary': '#1d1c11',
-				'--color-text-secondary': '#1d1c11',
-				'--color-warning': '#1d1c11'
+				'--color-warning-muted': '#dfcf5b',
+				'--color-on-warning-muted': '#1d1c11'
 			},
 			'status:error': {
-				'--color-error-muted': '#fc473b',
-				'--color-text-primary': '#ffffff',
-				'--color-text-secondary': '#ffffff',
-				'--color-error': '#ffffff'
+				'--color-error-muted': '#e56241',
+				'--color-on-error-muted': '#1d1c11'
 			}
 		},
-
 		card: {
 			base: {
 				borderRadius: 'var(--radius-container)',
@@ -418,73 +486,78 @@ export const butterTheme = defineTheme({
 				'--color-text-secondary': '#605f52'
 			}
 		},
-
 		section: {
 			base: {
 				padding: 'var(--spacing-4)'
 			}
 		},
-
-		// Progress bar — white track in light, warm brown in dark. Vivid
-		// semantic fills match the banner colors (Success / Warning / Error).
-		'progressbar-track': {
+		'progress-bar-track': {
 			base: {
 				backgroundColor: 'light-dark(#e5e3d4, #725538)'
 			}
 		},
-		'progressbar-fill': {
+		'progress-bar-fill': {
 			'variant:success': {
-				backgroundColor: '#91D143'
+				backgroundColor: '#7bbf7a'
 			},
 			'variant:warning': {
-				backgroundColor: '#ffc502'
+				backgroundColor: '#dfcf5b'
 			},
 			'variant:error': {
-				backgroundColor: '#fc473b'
+				backgroundColor: '#e56241'
 			}
 		},
-
-		// Field status bubble — match the corresponding banner colors so the
-		// helper text below an input reads as the same "this is a warning /
-		// error / success" surface as the standalone banner.
 		'field-status': {
 			'type:success': {
-				backgroundColor: '#91D143',
+				backgroundColor: '#7bbf7a',
 				color: '#1d1c11'
 			},
 			'type:warning': {
-				backgroundColor: '#ffc502',
+				backgroundColor: '#dfcf5b',
 				color: '#1d1c11'
 			},
 			'type:error': {
-				backgroundColor: '#fc473b',
-				color: '#ffffff'
+				backgroundColor: '#e56241',
+				color: '#1d1c11'
 			}
 		},
-
-		// Inputs — softer border than default, more vertical breathing room.
-		// Status modifiers also remap the semantic tokens locally so the
-		// status icon + border read as the same vivid hue as the banner
-		// (icons inherit from --color-{success,warning,error}).
 		'text-input': {
 			base: {
 				paddingBlock: 'var(--spacing-2)',
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
-		textarea: {
+		'text-area': {
 			base: {
 				paddingBlock: 'var(--spacing-2)',
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
 		'number-input': {
 			base: {
@@ -492,9 +565,18 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
 		'date-input': {
 			base: {
@@ -502,9 +584,18 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
 		'time-input': {
 			base: {
@@ -512,9 +603,18 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
 		selector: {
 			base: {
@@ -522,9 +622,30 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			},
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'transparent',
+					borderWidth: '1.5px',
+					borderStyle: 'solid',
+					borderColor: 'light-dark(#225bff, #fdee8c)',
+					color: 'light-dark(#225bff, #fdee8c)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'light-dark(#225bff14, #fdee8c14)'
+				}
+			}
 		},
 		'multi-selector': {
 			base: {
@@ -532,9 +653,42 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			},
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'transparent',
+					borderWidth: '1.5px',
+					borderStyle: 'solid',
+					borderColor: 'light-dark(#225bff, #fdee8c)',
+					color: 'light-dark(#225bff, #fdee8c)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'light-dark(#225bff14, #fdee8c14)'
+				}
+			}
+		},
+		'complex-selector': {
+			'variant:secondary': {
+				backgroundColor: 'transparent',
+				borderWidth: '1.5px',
+				borderStyle: 'solid',
+				borderColor: 'light-dark(#225bff, #fdee8c)',
+				color: 'light-dark(#225bff, #fdee8c)',
+				':hover:not(:has(> :is(:disabled, [aria-disabled="true"])))': {
+					backgroundColor: 'light-dark(#225bff14, #fdee8c14)'
+				}
+			}
 		},
 		typeahead: {
 			base: {
@@ -542,9 +696,18 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
+			},
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
+			},
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
+			}
 		},
 		tokenizer: {
 			base: {
@@ -552,25 +715,17 @@ export const butterTheme = defineTheme({
 				paddingInline: 'var(--spacing-3)',
 				borderColor: 'var(--color-border)'
 			},
-			'status:success': { '--color-success': '#91D143' },
-			'status:warning': { '--color-warning': '#ffc502' },
-			'status:error': { '--color-error': '#fc473b' }
-		},
-
-		// Display sizes use Sarina — the signature buttery display
-		// cursive, reserved for hero/marketing-scale text only.
-		// Headings (h1–h6) and body still use Outfit (configured above
-		// under typography.heading / typography.body). Same pattern
-		// Gothic uses for its Manufacturing Consent display family.
-		text: {
-			'type:display-1': {
-				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive'
+			'status:success': {
+				'--color-border-success': 'light-dark(#4a984a, #7bbf7a)',
+				'--color-icon-success': 'light-dark(#4a984a, #7bbf7a)'
 			},
-			'type:display-2': {
-				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive'
+			'status:warning': {
+				'--color-border-warning': 'light-dark(#958500, #dfcf5b)',
+				'--color-icon-warning': 'light-dark(#958500, #dfcf5b)'
 			},
-			'type:display-3': {
-				fontFamily: 'Sarina, "Brush Script MT", "Snell Roundhand", cursive'
+			'status:error': {
+				'--color-border-error': '#e56241',
+				'--color-icon-error': '#e56241'
 			}
 		}
 	}

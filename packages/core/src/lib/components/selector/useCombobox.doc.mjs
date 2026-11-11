@@ -143,19 +143,19 @@ export default {
 		},
 		{
 			name: 'getFieldProps',
-			type: '(props?: {onKeyDown?(event: KeyboardEvent): void}) => object',
+			type: '(handlers?: ComboboxFieldHandlers) => ComboboxFieldProps',
 			description:
 				'Props for a single-line `input` you render: `role="combobox"`, `aria-expanded`, `aria-autocomplete="list"`, `aria-controls` only while the listbox renders (`isOpen` with at least one option), `aria-activedescendant` only while an option is active, and the field’s key handler. Pass your own `onKeyDown` here rather than beside the spread: it runs after the hook’s handler unless that handler claimed the key, and it may be typed for its element.'
 		},
 		{
 			name: 'getListboxProps',
-			type: '() => object',
+			type: '() => ComboboxListboxProps',
 			description:
 				'Props for the listbox you render, anywhere in the document, including the page’s flow: its `id` and `role`, and a press handler that keeps focus in the field. Render it while `isOpen` and there are options, and name it with `aria-label` or `aria-labelledby`.'
 		},
 		{
 			name: 'getOptionProps',
-			type: '(index: number) => object',
+			type: '(index: number) => ComboboxOptionProps',
 			description:
 				'Props for the option at `index`: its `id`, `role`, `aria-selected` (true on the active option), `aria-disabled` on a disabled one, a pointer move that makes it active without moving focus, and a press that picks it.'
 		}

@@ -2,17 +2,30 @@
 // and dist/index.d.ts. The work lives in `packages/themes/shared`, which every
 // theme package calls the same way; see that file for the why.
 //
-// This package does one thing afterwards that no other theme package does: it
-// appends a `@media (prefers-reduced-transparency: reduce)` block. See
-// `reducedTransparencyTokens` in the theme source for what it does and why it
-// lives here rather than in the theme definition.
+// This package does three things afterwards that no other theme package does:
+//
+// 1. appends a `@media (prefers-reduced-transparency: reduce)` block, which
+//    flattens every glass surface and every translucent surface token;
+// 2. appends a `@media (prefers-reduced-motion: reduce)` block, which zeroes
+//    the state transitions the theme adds (core already handles its own);
+// 3. appends the squircle radius compensation described below.
+//
+// (1) and (2) are media-query seams `defineTheme` does not have; adding one to
+// core would mean editing a file ported from upstream for a feature upstream
+// does not have. Both are derived from the theme object through `derived.mjs`,
+// which `check-theme.mjs` reads too, so the emitted blocks cannot drift from
+// what the oracle checks.
 
 import { appendFile, readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildThemePackage } from '../../shared/build-theme-package.mjs';
-import { parseStyleKey } from '../../../core/dist/theme/parse-style-key.js';
-import { liquidGlassTheme, reducedTransparencyTokens } from '../src/liquid-glass-theme.ts';
+import {
+	liquidGlassTheme,
+	reducedTransparencyComponents,
+	reducedTransparencyTokens
+} from '../src/liquid-glass-theme.ts';
+import { glassSelectors, selectorFor, transitionSelectors } from './derived.mjs';
 
 const packageDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -37,30 +50,32 @@ await buildThemePackage({
 	// republish as data.
 });
 
-/**
- * Every selector that carries a `backdrop-filter`, derived from the theme object
- * rather than listed by hand — a glass surface added above is switched off here
- * automatically, and one removed stops being named here. `parseStyleKey` is the
- * same function `generateThemeRules` used to build the selector in the first
- * place, so `button`'s `variant:secondary` comes out as `.astryx-button.secondary`
- * and not as the whole component.
- */
-function glassSelectors(theme) {
-	const selectors = [];
-	for (const [component, styleKeys] of Object.entries(theme.components ?? {})) {
-		for (const [styleKey, styles] of Object.entries(styleKeys)) {
-			if ('backdropFilter' in styles) {
-				selectors.push(`.astryx-${component}${parseStyleKey(styleKey)}`);
-			}
-		}
-	}
-	return selectors;
+/** `backgroundColor` → `background-color`, as the theme compiler does it. */
+function toCssProperty(name) {
+	if (name.startsWith('--')) return name;
+	return name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 }
+
+// -----------------------------------------------------------------------------
+// Reduced transparency
+// -----------------------------------------------------------------------------
 
 const selectors = glassSelectors(liquidGlassTheme);
 const tokens = Object.entries(reducedTransparencyTokens)
 	.map(([name, value]) => `\t\t\t\t${name}: ${value};`)
 	.join('\n');
+
+// Component overrides that carry a literal fill the token block cannot reach —
+// the secondary Button's translucent capsule being the one this theme has.
+const componentRules = [];
+for (const [component, styleKeys] of Object.entries(reducedTransparencyComponents)) {
+	for (const [styleKey, styles] of Object.entries(styleKeys)) {
+		const declarations = Object.entries(styles)
+			.map(([property, value]) => `\t\t\t\t${toCssProperty(property)}: ${value};`)
+			.join('\n');
+		componentRules.push(`\t\t\t${selectorFor(component, styleKey)} {\n${declarations}\n\t\t\t}`);
+	}
+}
 
 // A second `@layer astryx-theme` block appended after the first, which is the
 // shape `generateThemeCss` already uses for its on-media rules. Same layer and
@@ -78,12 +93,39 @@ ${selectors.map((s) => `\t\t\t${s}`).join(',\n')} {
 				backdrop-filter: none;
 				-webkit-backdrop-filter: none;
 			}
+${componentRules.length > 0 ? `\n${componentRules.join('\n\n')}` : ''}
 		}
 	}
 }
 `;
 
 await appendFile(join(packageDir, 'dist', 'theme.css'), reducedTransparency, 'utf8');
+
+// -----------------------------------------------------------------------------
+// Reduced motion
+//
+// Core zeroes the transitions it authors, with a `prefers-reduced-motion` branch
+// on each one. The transitions this theme adds are authored here instead, so
+// they need the branch here too — and it is derived from the same override map
+// that emitted them. In the theme layer, so it wins over the component rules
+// above without `!important`.
+// -----------------------------------------------------------------------------
+
+const motionSelectors = transitionSelectors(liquidGlassTheme);
+
+const reducedMotion = `
+@layer astryx-theme {
+	@media (prefers-reduced-motion: reduce) {
+		@scope ([data-astryx-theme="${liquidGlassTheme.name}"]) to ([data-astryx-theme]) {
+${motionSelectors.map((s) => `\t\t\t${s}`).join(',\n')} {
+				transition-duration: 0s;
+			}
+		}
+	}
+}
+`;
+
+await appendFile(join(packageDir, 'dist', 'theme.css'), reducedMotion, 'utf8');
 
 /**
  * Squircle radius compensation.
@@ -150,7 +192,10 @@ await appendFile(join(packageDir, 'dist', 'theme.css'), squircleBlock, 'utf8');
 
 const css = await readFile(join(packageDir, 'dist', 'theme.css'), 'utf8');
 console.log(
-	`liquid-glass: + reduced-transparency (${selectors.length} selectors) ` +
+	`liquid-glass: + reduced-transparency (${selectors.length} glass selectors, ` +
+		`${Object.keys(reducedTransparencyTokens).length} tokens, ` +
+		`${componentRules.length} component rules) ` +
+		`+ reduced-motion (${motionSelectors.length} selectors) ` +
 		`+ squircle compensation ×${SQUIRCLE_COMPENSATION} (${compensated.length} rules), ` +
 		`theme.css now ${(Buffer.byteLength(css) / 1024).toFixed(1)} KB`
 );

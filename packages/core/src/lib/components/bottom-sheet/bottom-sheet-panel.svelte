@@ -133,6 +133,7 @@
 	const isRetained = $derived(panelState.kind === 'retained');
 	const isInactive = $derived(isRetained || panelState.kind === 'exiting');
 	const isClosing = $derived(panelState.kind === 'exiting');
+	const isEntrySettled = $derived(panelState.kind === 'open' && !panelState.entering);
 	const isFading = $derived(
 		isRetained && panelState.kind === 'retained' && panelState.motion === 'fading'
 	);
@@ -385,6 +386,7 @@
 			isClosing,
 			isFading,
 			isInactive,
+			isEntrySettled,
 			height === 'hug',
 			height !== 'hug',
 			xstyle

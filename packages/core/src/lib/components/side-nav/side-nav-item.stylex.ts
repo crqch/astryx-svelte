@@ -76,18 +76,33 @@ const styles = stylex.create({
 	childrenCollapsible: {
 		display: 'grid',
 		gridTemplateRows: '1fr',
-		transitionProperty: 'grid-template-rows',
+		// The group clips its rows only for the 0fr collapse animation. Nested
+		// rows sit flush with the group, so a permanent clip would cut off their
+		// focus ring, which paints outside the row. The expanded group therefore
+		// stops clipping once it has finished opening: `overflow` is discrete, so
+		// it rides the same transition with `allow-discrete` and a delay equal to
+		// the open duration, holding `hidden` until the rows' height has settled.
+		// Collapsing flips back to `hidden` at once (no delay on the collapsed
+		// state), so nothing spills while the group closes.
+		overflow: 'visible',
+		transitionProperty: 'grid-template-rows, overflow',
+		transitionBehavior: 'allow-discrete',
 		transitionDuration: {
-			default: durationVars['--duration-medium'],
-			'@media (prefers-reduced-motion: reduce)': '0s'
+			default: `${durationVars['--duration-medium']}, 0s`,
+			'@media (prefers-reduced-motion: reduce)': '0s, 0s'
+		},
+		transitionDelay: {
+			default: `0s, ${durationVars['--duration-medium']}`,
+			'@media (prefers-reduced-motion: reduce)': '0s, 0s'
 		},
 		transitionTimingFunction: easeVars['--ease-standard']
 	},
 	childrenCollapsed: {
-		gridTemplateRows: '0fr'
+		gridTemplateRows: '0fr',
+		overflow: 'hidden',
+		transitionDelay: '0s, 0s'
 	},
 	childrenInner: {
-		overflow: 'hidden',
 		minHeight: 0,
 		paddingInlineStart: spacingVars['--spacing-6']
 	},

@@ -1,4 +1,6 @@
 import { readThemeTokens } from '../motion/theme-timing.js';
+import { reducedMotionFadeConsts } from '../motion/reduced-motion.stylex.js';
+import { parseMotionRoleValue } from '../motion/roles.js';
 import { PRESS_FADE_MS } from './press-gesture.js';
 
 /**
@@ -19,5 +21,6 @@ export function pressFadeMs(element: Element): number {
 	const reduced =
 		typeof window.matchMedia === 'function' &&
 		window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-	return reduced ? Math.min(exit, 200) : exit;
+	const bound = parseMotionRoleValue('duration', reducedMotionFadeConsts.duration);
+	return reduced && bound != null ? Math.min(exit, bound) : exit;
 }

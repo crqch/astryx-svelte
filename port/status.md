@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 353     | 12214          |
+| Ported here              | 356     | 12234          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **444** | **4711**       |
+| **Unported**             | **441** | **4691**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -119,7 +119,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `i18n/useTranslator.test.tsx`                                      | 14    |
 | `Markdown/blockDirection.test.tsx`                                 | 14    |
 | `Markdown/indentedFences.test.tsx`                                 | 14    |
-| `motion/reducedMotion.test.ts`                                     | 14    |
 | `PowerSearch/PowerSearchToken.test.tsx`                            | 14    |
 | `Resizable/createResizable.test.ts`                                | 14    |
 | `SideNav/SideNav.slotPresence.test.tsx`                            | 14    |
@@ -281,7 +280,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `MobileNav/MobileNavRootScrollClaim.test.tsx`                      | 5     |
 | `motion/uikit/gestures.test.ts`                                    | 5     |
 | `privateAttributes/press.test.ts`                                  | 5     |
-| `privateAttributes/reducedMotion.test.tsx`                         | 5     |
 | `ProgressBar/__tests__/ProgressBar.a11y.test.tsx`                  | 5     |
 | `Resizable/__tests__/ResizeHandle.a11y.test.tsx`                   | 5     |
 | `Resizable/separatorAttributes.test.ts`                            | 5     |
@@ -459,7 +457,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Lightbox/LightboxZoomResize.test.tsx`                             | 1     |
 | `List/__tests__/ListReorderLayout.test.tsx`                        | 1     |
 | `Markdown/fenceInfo.test.tsx`                                      | 1     |
-| `motion/reducedMotionValues.test.ts`                               | 1     |
 | `NumberInput/NumberInput.fr10.test.tsx`                            | 1     |
 | `reset.until-found.test.ts`                                        | 1     |
 | `Resizable/createResizable.server.test.tsx`                        | 1     |
@@ -485,8 +482,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12214          |
-| Declared here              | 8160           |
+| Upstream, in ported suites | 12234          |
+| Declared here              | 8180           |
 | **Short**                  | **4080**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
@@ -728,8 +725,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 666    |
-| **Pending** | **69** |
+| Ported      | 675    |
+| **Pending** | **60** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a
@@ -741,8 +738,8 @@ this port does not document are not counted as pending.
 | Kind                  | Count   |
 | --------------------- | ------- |
 | api-divergence        | 32      |
-| deliberate-divergence | 47      |
-| divergence            | 1       |
-| unported              | 16      |
+| deliberate-divergence | 48      |
+| divergence            | 6       |
+| unported              | 20      |
 | upstream-lag          | 11      |
-| **total**             | **107** |
+| **total**             | **117** |

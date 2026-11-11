@@ -35,6 +35,7 @@
 	import Heading from '../heading/heading.svelte';
 	import Text from '../text/text.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { themeProps } from '../../internal/theme-props.js';
 	import { useDialogContext } from './dialog-context.svelte.js';
 	import {
 		dialogHeaderContainerAttrs,
@@ -88,6 +89,10 @@
 	});
 
 	const container = dialogHeaderContainerAttrs();
+	const containerTheme = themeProps('dialog-header');
+	const startTheme = themeProps('dialog-header-start-content');
+	const titleTheme = themeProps('dialog-header-title-block');
+	const endTheme = themeProps('dialog-header-end-content');
 	const titleWrapper = dialogHeaderTitleWrapperAttrs();
 	const startActions = dialogHeaderActionsAttrs(false);
 	const endActions = $derived(dialogHeaderActionsAttrs(onOpenChange != null));
@@ -100,11 +105,25 @@
 	style={styleProp}
 	{...rest as LayoutHeaderProps}
 >
-	<div class={container.class} style={container.style}>
+	<div
+		{...containerTheme}
+		class={[containerTheme.class, container.class].join(' ')}
+		style={container.style}
+	>
 		{#if startContent}
-			<div class={startActions.class} style={startActions.style}>{@render startContent()}</div>
+			<div
+				{...startTheme}
+				class={[startTheme.class, startActions.class].join(' ')}
+				style={startActions.style}
+			>
+				{@render startContent()}
+			</div>
 		{/if}
-		<div class={titleWrapper.class} style={titleWrapper.style}>
+		<div
+			{...titleTheme}
+			class={[titleTheme.class, titleWrapper.class].join(' ')}
+			style={titleWrapper.style}
+		>
 			<Heading id={titleId} level={2} tabindex={-1} xstyle={titleFocusableStyle} {...titleAttach}
 				>{title}</Heading
 			>
@@ -113,7 +132,11 @@
 			{/if}
 		</div>
 		{#if endContent || onOpenChange}
-			<div class={endActions.class} style={endActions.style}>
+			<div
+				{...endTheme}
+				class={[endTheme.class, endActions.class].join(' ')}
+				style={endActions.style}
+			>
 				{#if endContent}{@render endContent()}{/if}
 				{#if onOpenChange}
 					<Button
@@ -123,7 +146,11 @@
 						isIconOnly
 						onclick={() => onOpenChange?.(false)}
 					>
-						{#snippet icon()}<Icon icon="close" color="inherit" />{/snippet}
+						{#snippet icon()}<Icon
+								icon="close"
+								color="inherit"
+								{...themeProps('dialog-header-close-icon')}
+							/>{/snippet}
 					</Button>
 				{/if}
 			</div>

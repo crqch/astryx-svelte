@@ -61,9 +61,27 @@
 		renderWidth?: number;
 		/** The tile's box. Upstream's landing tiles are taller than the gallery's. */
 		aspectRatio?: string;
+		/**
+		 * Corner radius on the tile itself. Pass `'0'` when a rounded parent
+		 * already clips it, so a second, mismatched radius does not nest inside —
+		 * upstream's `TemplateThumbnail` takes the same prop for the same reason.
+		 */
+		borderRadius?: string;
+		/**
+		 * Tile backdrop. Blocks render on the muted surface; a *page* template
+		 * renders content-only and transparent, so upstream backs it with the app
+		 * surface instead.
+		 */
+		background?: string;
 	}
 
-	const { load, renderWidth, aspectRatio = '16 / 10' }: Props = $props();
+	const {
+		load,
+		renderWidth,
+		aspectRatio = '16 / 10',
+		borderRadius = 'var(--radius-container)',
+		background = 'var(--color-background-muted)'
+	}: Props = $props();
 
 	/** Upstream's `FIXED_SCALE`, used when no explicit `renderWidth` is given. */
 	const SCALE = 0.5;
@@ -108,7 +126,12 @@
 	}
 </script>
 
-<div class="thumb" inert style="aspect-ratio: {aspectRatio};" {@attach observeTile}>
+<div
+	class="thumb"
+	inert
+	style="aspect-ratio: {aspectRatio}; border-radius: {borderRadius}; background-color: {background};"
+	{@attach observeTile}
+>
 	{#if load && tileWidth > 0 && isVisible}
 		<div
 			class="thumb-scaler"
@@ -142,8 +165,6 @@
 		position: relative;
 		width: 100%;
 		overflow: hidden;
-		background-color: var(--color-background-muted);
-		border-radius: var(--radius-container);
 		content-visibility: auto;
 		contain-intrinsic-size: auto 300px 187px;
 	}

@@ -38,6 +38,34 @@
  * published accessible teal; it is kept rather than hand-tuned, since a
  * categorical text token is a label rather than body copy.
  *
+ * The accessible stops are *text* stops, and a solid surface that carries a
+ * label is not text on the page — it is text on the fill. `--color-on-success`,
+ * `--color-on-error` and `--color-on-warning` are therefore **mode pairs**, not
+ * one value: the bright dark-mode stops (#30db5b, #ff6961, #ffd426) need dark
+ * ink where their light-mode counterparts take white. A single white
+ * `--color-on-success` measured 1.8:1 on the dark fill, which is where the
+ * semantic `Badge` and `Step` number read.
+ *
+ * ## States
+ *
+ * Every state colour is a token pair, so the hover / pressed / selected /
+ * disabled / focus stops flip with the mode rather than against it:
+ *
+ * - **hover / pressed** — `--color-overlay-hover` / `--color-overlay-pressed`,
+ *   the neutral washes core's shared interaction overlay stacks over the base
+ *   fill. Low-alpha black in light mode, low-alpha white in dark.
+ * - **selected** — `--color-accent-muted`, at the same alpha as the categorical
+ *   fills (`systemFill` @ 15% light / 18% dark) so a selected row matches the
+ *   accent hue's own badge instead of being a fainter one.
+ * - **disabled** — alpha text/icon ramps plus the components' own 0.5 opacity,
+ *   which reads correctly over every translucent surface.
+ * - **focus** — `--focus-outline-color` is left at its `var(--color-accent)`
+ *   default, so the platform ring is systemBlue in both modes.
+ *
+ * State *changes* are transitioned by the component overrides further down,
+ * with `--duration-fast` and the macOS `--ease-standard` curve, and zeroed under
+ * `prefers-reduced-motion` by `scripts/build-theme.mjs`.
+ *
  * ## Cost
  *
  * `backdrop-filter` forces a compositing layer and re-filters on every paint
@@ -136,6 +164,39 @@ function squircle(borderRadius: string): Record<string, string> {
 }
 
 /**
+ * The state transition every interactive surface in this theme shares.
+ *
+ * Core declares this on *some* components and not others: `Button`,
+ * `SegmentedControlItem`, `Switch`, `Link` and the inputs already transition
+ * their own state colours, but the menu rows (`DropdownMenuItem`,
+ * `TypeaheadItem`, `CommandPaletteItem`, `TabMenuItem`, `NavHeadingMenuItem`,
+ * `SelectorOption`) and the nav/tree rows only paint a background, so their
+ * hover / selected / disabled states snap. Applying the same declaration from
+ * the theme layer is also the only way to fix it without touching core, which
+ * this package does not own.
+ *
+ * `background-image` is listed because core's shared interaction overlay is a
+ * stacked gradient, and while two gradients do not interpolate, including the
+ * property keeps the theme from *narrowing* a component's own transition.
+ * `transform` is listed for the same reason and is the one that matters:
+ * `Button`'s press scale transitions `transform`, so a theme rule that named
+ * only the colour properties would replace that list and make the press snap.
+ * No layout property is listed: animating width/height/padding on a hover would
+ * run layout every frame, which is the jank this is meant to avoid.
+ *
+ * The duration is the motion token rather than a literal, so retuning `motion`
+ * retunes every state change; `scripts/build-theme.mjs` appends the
+ * `prefers-reduced-motion: reduce` block that zeroes it, derived from the same
+ * overrides rather than kept as a second list.
+ */
+const STATE_TRANSITION = {
+	transitionProperty:
+		'background-color, background-image, border-color, color, box-shadow, opacity, transform',
+	transitionDuration: 'var(--duration-fast)',
+	transitionTimingFunction: 'var(--ease-standard)'
+};
+
+/**
  * One surface's glass declarations.
  *
  * The prefixed property is written in its final CSS form rather than as
@@ -166,7 +227,7 @@ function glass(material: Material, borderRadius?: string): Record<string, string
  * the editor the platform ships.
  */
 const liquidGlassSyntax = defineSyntaxTheme({
-	name: 'xds-liquid-glass',
+	name: 'astryx-liquid-glass',
 	tokens: {
 		keyword: ['#ad3da4', '#ff7ab2'],
 		string: ['#d12f1b', '#ff8170'],
@@ -214,7 +275,37 @@ export const reducedTransparencyTokens: Record<string, string> = {
 	'--color-background-card': 'light-dark(#ffffff, #2c2c2e)',
 	'--color-background-popover': 'light-dark(#f7f7fa, #3a3a3c)',
 	'--color-background-muted': 'light-dark(#e8e8ed, #3a3a3c)',
-	'--color-neutral': 'light-dark(#e8e8ed, #3a3a3c)'
+	'--color-neutral': 'light-dark(#e8e8ed, #3a3a3c)',
+	// The inverted pair is the Toast's surface (and its error variant), which is
+	// also a glass surface — 90% is *visibly* translucent over a bright page, so
+	// it goes fully opaque with the rest rather than staying a near-miss.
+	'--color-background-inverted': 'light-dark(#1d1d1f, #f5f5f7)',
+	'--color-background-error-inverted': 'light-dark(#d70015, #ff6961)'
+};
+
+/**
+ * The component overrides that make Reduce Transparency complete.
+ *
+ * `reducedTransparencyTokens` can only reach values that come *from* a token.
+ * The secondary Button's fill is a literal in its component override — it has
+ * to be, because there is no "control fill" token — so the token block left it
+ * at `#ffffff8f` / `#ffffff1f` while every other surface went opaque. Unblurred
+ * but still see-through is worse than either end of the preference: the button
+ * keeps showing the page through it, which is the one thing the setting exists
+ * to stop. `scripts/build-theme.mjs` emits these for the same block, so the
+ * rule and the token list cannot drift apart.
+ */
+export const reducedTransparencyComponents: Record<
+	string,
+	Record<string, Record<string, string>>
+> = {
+	button: {
+		'variant:secondary': {
+			// macOS flattens a vibrancy control to its control background, not to
+			// the window surface: white in light mode, a raised grey in dark.
+			backgroundColor: 'light-dark(#ffffff, #3a3a3c)'
+		}
+	}
 };
 
 export const liquidGlassTheme = defineTheme({
@@ -324,8 +415,14 @@ export const liquidGlassTheme = defineTheme({
 		// Accent — systemBlue, the macOS default. `--color-text-accent` steps to
 		// the link blue, which is darker in light mode for the same reason
 		// Apple's is: systemBlue on white is 3.6:1 and fails as body text.
+		//
+		// `--color-accent-muted` is the accent's *fill* stop, so it shares the
+		// categorical fills' alpha ladder (vivid @ 15% light / 18% dark). At the
+		// first pass's 12% it was weaker than an info Badge of the same hue, which
+		// made a selected row read as a fainter state than a coloured label and
+		// left the light-mode pair inconsistent with its own dark side.
 		'--color-accent': ['#007aff', '#0a84ff'],
-		'--color-accent-muted': ['#007aff1f', '#0a84ff2e'],
+		'--color-accent-muted': ['#007aff26', '#0a84ff2e'],
 		'--color-text-accent': ['#0066cc', '#409cff'],
 		'--color-icon-accent': ['#007aff', '#0a84ff'],
 		'--color-neutral': ['#7676801f', '#7676803d'],
@@ -343,13 +440,15 @@ export const liquidGlassTheme = defineTheme({
 		'--color-on-dark': '#ffffff',
 		'--color-on-light': '#1d1d1f',
 		'--color-on-accent': '#ffffff',
-		'--color-on-success': '#ffffff',
-		'--color-on-error': '#ffffff',
-		'--color-on-warning': '#1d1d1f',
+		'--color-on-success': ['#ffffff', '#1d1d1f'],
+		'--color-on-error': ['#ffffff', '#1d1d1f'],
+		'--color-on-warning': ['#ffffff', '#1d1d1f'],
 
-		// Icon
+		// Icon — same alpha ramp as the text tokens. A secondary glyph sits beside
+		// secondary copy, so a 65%-vs-60% split read as two different greys on the
+		// same row; the icon pair now matches the text pair stop for stop.
 		'--color-icon-primary': ['#1d1d1f', '#f5f5f7'],
-		'--color-icon-secondary': ['#3c3c43a6', '#ebebf5a6'],
+		'--color-icon-secondary': ['#3c3c4399', '#ebebf599'],
 		'--color-icon-disabled': ['#3c3c434d', '#ebebf54d'],
 
 		// ====================================================================
@@ -357,6 +456,12 @@ export const liquidGlassTheme = defineTheme({
 		// text and icon — Apple ships both, and the pairing is the point: the
 		// vivid stop is unreadable as text and the accessible stop is muddy as a
 		// fill.
+		//
+		// The solid stops below are the accessible ones, because they are also
+		// what `FieldStatus`, the input status borders and a destructive Button's
+		// label read. Their `--color-on-*` partners are declared as mode pairs
+		// next to the text ramp above; the light-mode accessible stops take white,
+		// the bright dark-mode stops take ink.
 		// ====================================================================
 		'--color-success': ['#248a3d', '#30db5b'],
 		'--color-error': ['#d70015', '#ff6961'],
@@ -534,51 +639,57 @@ export const liquidGlassTheme = defineTheme({
 		// capsule; these are the controls that are free-standing.
 		// ================================================================
 		button: {
-			base: squircle(FULL),
+			base: {
+				...squircle(FULL),
+				...STATE_TRANSITION
+			},
 			// The glass capsule button — the signature control of the whole
 			// design language, and the one place the material is worth paying
 			// for on something small. All three properties are set rather than
 			// two, so the result does not depend on what the variant's default
 			// fill happened to be.
+			//
+			// `border-color` alone was dead CSS before this pass: `Button`'s base
+			// sets `border-width: 0; border-style: none`, so the hairline rim this
+			// theme meant to draw never rendered. The width and style are set here,
+			// inside the fixed control height, which is what makes the colour mean
+			// something again.
 			'variant:secondary': {
 				backgroundColor: ['#ffffff8f', '#ffffff1f'],
+				borderWidth: '1px',
+				borderStyle: 'solid',
 				borderColor: ['#3c3c4326', '#ffffff2e'],
 				...glass('thin')
 			}
 		},
 
+		// The semantic variants (`info` / `success` / `warning` / `error`) are
+		// deliberately **not** re-pointed at the tinted hue tokens. Doing that made
+		// each semantic badge identical to its categorical twin — `info` and
+		// `blue`, `success` and `green`, `error` and `red`, `warning` and `yellow`
+		// all resolved to the same background and text pair, so two different
+		// states rendered as one. Core's solids stay, and the `--color-on-*` pairs
+		// above make them legible in both modes. The tinted treatment remains
+		// where it belongs: the categorical variants, whose hue *is* the label.
 		badge: {
 			base: {
 				...squircle(FULL),
 				fontWeight: 'var(--font-weight-medium)'
-			},
-			// Tinted fill + accessible text, which is how macOS draws every
-			// coloured label. Sourced from the hue tokens so retuning a hue moves
-			// its badge with it.
-			'variant:info': {
-				backgroundColor: 'var(--color-background-blue)',
-				color: 'var(--color-text-blue)'
-			},
-			'variant:neutral': {
-				backgroundColor: 'var(--color-background-gray)',
-				color: 'var(--color-text-gray)'
-			},
-			'variant:success': {
-				backgroundColor: 'var(--color-background-green)',
-				color: 'var(--color-text-green)'
-			},
-			'variant:warning': {
-				backgroundColor: 'var(--color-background-yellow)',
-				color: 'var(--color-text-yellow)'
-			},
-			'variant:error': {
-				backgroundColor: 'var(--color-background-red)',
-				color: 'var(--color-text-red)'
 			}
 		},
 
 		'toggle-button': { base: squircle(FULL) },
-		token: { base: squircle(FULL) },
+		// An interactive Token is a chip: it paints its hover/pressed state from
+		// the shared overlay, and core's own transition there only names
+		// `background-image`. The shared state transition covers the colour and
+		// shadow halves as well, so a chip's state change matches every other
+		// control's.
+		token: {
+			base: {
+				...squircle(FULL),
+				...STATE_TRANSITION
+			}
+		},
 		kbd: { base: squircle('var(--radius-inner)') },
 		field: { base: squircle('var(--radius-element)') },
 		// No `chat` entry, though the derived-var registry has one: nothing
@@ -590,8 +701,19 @@ export const liquidGlassTheme = defineTheme({
 		// A segmented control is a capsule holding capsules, which is the one
 		// concentric pair that needs no arithmetic — two capsules are concentric
 		// at any size. The 2px inset is macOS's.
+		//
+		// The selected segment's fill is `--color-background-surface`, so the
+		// theme's translucent window-chrome value made the "raised" pill
+		// see-through over the track — in dark mode it read as the track showing
+		// through a grey smudge rather than as an opaque selected face. The
+		// control supplies the opaque control-background pair locally, the same
+		// scoped-token trick core's own neutral theme uses for the switch track.
 		'segmented-control': {
-			base: { ...glass('thin', FULL), padding: '2px' }
+			base: {
+				...glass('thin', FULL),
+				padding: '2px',
+				'--color-background-surface': ['#ffffff', '#636366']
+			}
 		},
 		'segmented-control-item': { base: squircle(FULL) },
 
@@ -622,29 +744,57 @@ export const liquidGlassTheme = defineTheme({
 		// the edge of the menu it sits in.
 		// ================================================================
 		'dropdown-menu-item': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 		'typeahead-item': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 		'command-palette-item': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 		'tab-menu-item': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 		'nav-heading-menu-item': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 		'selector-option': {
-			base: concentric('var(--radius-container)', 'var(--glass-menu-inset)')
+			base: {
+				...concentric('var(--radius-container)', 'var(--glass-menu-inset)'),
+				...STATE_TRANSITION
+			}
 		},
 
 		// Sidebar rows are the other floating-highlight case, but they sit in a
 		// panel rather than a small rounded menu, so there is no container radius
 		// to be concentric with — macOS just gives them their own soft rounding.
-		'side-nav-item': { base: squircle('var(--radius-element)') },
-		'tree-list-item': { base: squircle('var(--radius-element)') },
+		'side-nav-item': {
+			base: {
+				...squircle('var(--radius-element)'),
+				...STATE_TRANSITION
+			}
+		},
+		'tree-list-item': {
+			base: {
+				...squircle('var(--radius-element)'),
+				...STATE_TRANSITION
+			}
+		},
 
 		// ================================================================
 		// Sheets, chrome and anything that covers the window — the thick
@@ -676,8 +826,19 @@ export const liquidGlassTheme = defineTheme({
 		// ================================================================
 		// 16px — one step under the window margin, which is the relationship
 		// macOS keeps between a box inside a window and the window itself.
+		//
+		// The state transition is here for the two interactive card components:
+		// `SelectableCard` transitions its selection ring from this same element
+		// and `ClickableCard` animates its overlay, but neither carries a
+		// reduced-motion branch, and a plain `Card` never transitioned its own
+		// surface at all. This makes the disabled dim, the selection ring and a
+		// mode flip all move together.
 		card: {
-			base: { ...glass('thin', 'var(--radius-container)'), padding: 'var(--spacing-4)' }
+			base: {
+				...glass('thin', 'var(--radius-container)'),
+				padding: 'var(--spacing-4)',
+				...STATE_TRANSITION
+			}
 		},
 		section: { base: { padding: 'var(--spacing-4)' } },
 		banner: { base: squircle('var(--radius-container)') },
@@ -687,6 +848,34 @@ export const liquidGlassTheme = defineTheme({
 		// size; systemFill is the value macOS actually uses here.
 		switch: {
 			base: { '--color-background-gray': ['#78788033', '#7878805c'] }
+		},
+
+		// The thumb is a control fill, not a window surface. It inherited
+		// `--color-background-surface`, which this theme makes translucent — so
+		// the knob took 28% of whatever it sat on, and on the accent-filled track
+		// that meant a blue-tinted (light) or navy-grey (dark) knob instead of
+		// white. macOS's switch knob is opaque white in both appearances.
+		'switch-thumb': {
+			base: { backgroundColor: '#ffffff' }
+		},
+
+		// The same problem in the number badge: a completed/in-progress Step
+		// draws its digit in `--color-background-surface` over the accent fill,
+		// which a translucent surface turns into a blue-tinted digit — and in dark
+		// mode a dark one on systemBlue. The digit is white-on-accent, so the
+		// badge itself supplies an opaque white locally. Targeted at the indicator
+		// rather than the Step root so an input or nested surface inside a Step's
+		// custom content keeps the theme's real surface token.
+		'step-indicator': {
+			base: { '--color-background-surface': '#ffffff' }
+		},
+
+		// A Tooltip inverts: its surface is `--color-text-primary` and its text is
+		// `--color-background-surface`. With this theme's translucent surface the
+		// label came out at ~72% alpha — grey text on a black tooltip — so the
+		// inverted pair is stated explicitly instead of borrowed.
+		tooltip: {
+			base: { color: ['#ffffff', '#1d1d1f'] }
 		},
 
 		// ================================================================

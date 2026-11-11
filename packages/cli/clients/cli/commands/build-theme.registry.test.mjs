@@ -146,12 +146,27 @@ describe('theme-build documented target validation', () => {
 	// list is self-retiring in both directions: an entry whose target stops being
 	// orphaned fails the run (below), and an orphan with no entry fails too.
 	//
-	// It is EMPTY, and the way the last two went is the point. Both were
-	// `date-time-input-time-listbox` / `-time-option`, added when `timeOptionInterval`
-	// (#4837) was unported. Porting that feature made the literals real, and this
-	// check failed on the stale entries rather than letting them sit — which is
-	// exactly the behaviour that stops a deferral outliving its reason.
-	const UNPORTED_FEATURE_TARGETS = new Map([]);
+	// It held two entries once — `date-time-input-time-listbox` / `-time-option`,
+	// added when `timeOptionInterval` (#4837) was unported — and porting that
+	// feature made the literals real; this check then failed on the stale entries
+	// rather than letting them sit, which is exactly the behaviour that stops a
+	// deferral outliving its reason. The three entries now are the same shape:
+	// Item's swipe panels/actions (the whole swipe layer is absent) and Stepper's
+	// compact summary row (the collapsed renderer is absent).
+	const UNPORTED_FEATURE_TARGETS = new Map([
+		[
+			'item-swipe-panel',
+			'Item swipe panels are not ported — ItemSwipeLayer/useSwipeAction are absent (port/debts.md)'
+		],
+		[
+			'item-swipe-action',
+			'Item swipe actions are not ported — ItemSwipeLayer/useSwipeAction are absent (port/debts.md)'
+		],
+		[
+			'stepper-summary',
+			'Stepper compact-summary row is not ported — horizontalOptions.collapsedVariant has no renderer yet'
+		]
+	]);
 
 	it('every documented theming target is backed by a real themeProps literal', () => {
 		// Guards against a component whose doc target className and rendered
@@ -203,7 +218,7 @@ describe('theme build emits a live TextInput selector (#4109)', () => {
 		expect(result.stderr).not.toContain('Unknown component');
 		expect(css).toContain('.astryx-side-nav-item');
 		expect(css).toContain('.astryx-banner-content');
-		expect(css).toContain('.astryx-avatar-status-dot.ghost');
+		expect(css).toContain('.astryx-avatar-status-dot[data-variant="ghost"]');
 	});
 
 	it('emits .astryx-text-input (the rendered class), not the dead .astryx-textinput', async () => {
