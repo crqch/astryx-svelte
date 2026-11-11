@@ -1773,7 +1773,7 @@ describe('MultiSelector indicator (chevron) icon theme target', () => {
 		expect(css).toContain('.astryx-multi-selector-indicator-icon {');
 		expect(css).toContain('width: 14px');
 		expect(css).toContain('height: 14px');
-		expect(css).toContain('.astryx-multi-selector-indicator-icon.expanded');
+		expect(css).toContain('.astryx-multi-selector-indicator-icon[data-state="expanded"]');
 		expect(css).toContain('color: var(--color-icon-primary)');
 	});
 });
@@ -2068,7 +2068,7 @@ describe('MultiSelector disabled state theme target', () => {
 			}
 		});
 		const css = generateThemeCss(theme);
-		expect(css).toContain('.astryx-multi-selector.disabled');
+		expect(css).toContain('.astryx-multi-selector[data-disabled="disabled"]');
 		expect(css).toContain('opacity: 0.4');
 	});
 });
@@ -2184,9 +2184,9 @@ describe('MultiSelector dropdown option theme target', () => {
 		});
 		const css = generateThemeCss(theme);
 		expect(css).toContain('.astryx-multi-selector-option {');
-		expect(css).toContain('.astryx-multi-selector-option.selected');
-		expect(css).toContain('.astryx-multi-selector-option.select-all');
-		expect(css).toContain('.astryx-multi-selector-option.lg');
+		expect(css).toContain('.astryx-multi-selector-option[data-selected="selected"]');
+		expect(css).toContain('.astryx-multi-selector-option[data-select-all="select-all"]');
+		expect(css).toContain('.astryx-multi-selector-option[data-size="lg"]');
 	});
 });
 
@@ -2204,7 +2204,7 @@ describe('MultiSelector popup theme target', () => {
 
 		const popup = screen.container.querySelector('.astryx-multi-selector-popup') as HTMLElement;
 		expect(popup).not.toBeNull();
-		expect(popup).toHaveClass('astryx-popover-surface');
+		expect(popup).not.toHaveClass('astryx-popover-surface');
 		// The scrolling list is a descendant, not the target itself.
 		expect(popup.querySelector('[role="listbox"]')).not.toBeNull();
 		expect(popup.getAttribute('role')).toBeNull();

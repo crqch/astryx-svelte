@@ -562,8 +562,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10729          |
-| Declared here              | 6681           |
-| **Short**                  | **4063**       |
+| Declared here              | 6694           |
+| **Short**                  | **4050**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -574,7 +574,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (201)</summary>
+<details><summary>Suites short of upstream (200)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -665,7 +665,6 @@ per connected group.
 | `hooks/useTypeahead.test.tsx`                                                                                                                                                            | 30       | 16   | 14    |
 | `Center/Center.test.tsx`                                                                                                                                                                 | 26       | 13   | 13    |
 | `CommandPalette/CommandPaletteItem.test.tsx`                                                                                                                                             | 24       | 11   | 13    |
-| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 58   | 13    |
 | `Layout/Layout.test.tsx`<br>`Layout/__tests__/edgeCompensation.test.tsx`                                                                                                                 | 47       | 34   | 13    |
 | `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 29       | 16   | 13    |
 | `Table/plugins/columnResize/useTableColumnResize.test.tsx`                                                                                                                               | 50       | 37   | 13    |
@@ -786,7 +785,7 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 0     | 0     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 7     | 1     |
 | `getByText` with a string, no `exact`                         | 1     | 1     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string

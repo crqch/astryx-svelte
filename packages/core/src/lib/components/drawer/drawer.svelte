@@ -61,6 +61,7 @@
 	import { overlayPaddingReset } from '../../internal/padding.stylex.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
 	import { useFocusTrap } from '../../hooks/use-focus-trap.svelte.js';
+	import LayerContentBoundary from '../layer/layer-content-boundary.svelte';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
 	import { layerStructureReset } from '../layer/layer-structure-reset.stylex.js';
@@ -244,5 +245,9 @@
 	{@attach bindRef}
 	{@attach bindRef}
 >
-	<LayerDepthProvider>{@render contentArea()}</LayerDepthProvider>
+	<LayerDepthProvider>
+		<LayerContentBoundary>
+			{@render contentArea()}
+		</LayerContentBoundary>
+	</LayerDepthProvider>
 </dialog>

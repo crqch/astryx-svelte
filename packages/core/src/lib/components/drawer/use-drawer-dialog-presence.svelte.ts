@@ -159,8 +159,26 @@ export function useDrawerDialogPresence(options: DrawerDialogPresenceOptions): v
 				if (hideDrawerHost(dialog, isModal)) dispatchDialogClose(dialog);
 				isHostShown = false;
 			}
-			triggerElement?.focus();
+			const opener = triggerElement;
 			triggerElement = null;
+			// Removing an open surface loses focus rather than closing it, so the
+			// browser returns nothing. Repair it only when focus really was lost —
+			// see `prepareFocusReturnOnRemoval` upstream. The microtask also lets a
+			// remount that keeps the element connected stand down.
+			queueMicrotask(() => {
+				if (dialog.isConnected) return;
+				const doc = dialog.ownerDocument;
+				const active = doc.activeElement;
+				if (
+					active != null &&
+					active !== doc.body &&
+					active !== doc.documentElement &&
+					!dialog.contains(active)
+				) {
+					return;
+				}
+				if (opener?.isConnected) opener.focus();
+			});
 		};
 	});
 

@@ -512,7 +512,9 @@ describe('Banner', () => {
 			const screen = await render(Banner, {
 				props: { status, title: `${status} banner` }
 			});
-			const glyph = screen.container.querySelector(`.astryx-icon.astryx-banner-icon.${status}`);
+			const glyph = screen.container.querySelector(
+				`.astryx-icon.astryx-banner-icon[data-status="${status}"]`
+			);
 			expect(glyph).not.toBeNull();
 			expect(glyph).toHaveAttribute('data-status', status);
 			// Exactly one element carries the target — the layout wrapper no
@@ -523,12 +525,12 @@ describe('Banner', () => {
 	});
 
 	it('keeps the color variant on the theme-target element (regression pin for #4166)', async () => {
-		// Pre-fix, '.astryx-banner-icon.info' matched the layout wrapper while
+		// Pre-fix, '.astryx-banner-icon[data-status="info"]' matched the layout wrapper while
 		// the color variant (data-color="accent") sat on an inner span that a
 		// theme override could never reach. Target and paint now share one
 		// element.
 		const screen = await render(Banner, { props: { status: 'info', title: 'Info' } });
-		const target = screen.container.querySelector('.astryx-banner-icon.info');
+		const target = screen.container.querySelector('.astryx-banner-icon[data-status="info"]');
 		expect(target).toHaveAttribute('data-color', 'accent');
 	});
 

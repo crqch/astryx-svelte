@@ -269,7 +269,11 @@ const CROSS_COMPONENT_VARS: Record<string, string[]> = {
 	toolbar: ['--_tab-indicator-bottom'],
 	// The destructive item variant recolors the Item it renders; Item owns,
 	// documents and reads both slots.
-	'dropdown-menu': ['--_item-label-color', '--_item-description-color']
+	'dropdown-menu': ['--_item-label-color', '--_item-description-color'],
+	// The layer content boundary stops structural channels that ancestors set:
+	// Stepper's connector gap and Text's overflow-wrap. Both are owned and
+	// documented by the component that sets them, as upstream's registry lists.
+	layer: ['--step-connector-gap', '--_astryx-text-overflow-wrap']
 };
 
 /**

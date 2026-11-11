@@ -1,5 +1,5 @@
 import type { Attachment } from 'svelte/attachments';
-import { FOCUSABLE_SELECTOR } from '../internal/focusable-selector.js';
+import { collapseRadioGroups, FOCUSABLE_SELECTOR } from '../internal/focusable-selector.js';
 import { useLayerDismissal } from '../components/layer/use-layer-dismissal.svelte.js';
 
 /**
@@ -357,7 +357,13 @@ export function useFocusTrap(options: () => UseFocusTrapOptions): UseFocusTrapRe
 				// Mark that keyboard navigation is happening
 				isKeyboardNavigation = true;
 
-				const focusable = getFocusableElements(container);
+				// A named native radio group is one Tab stop: the focused radio, else
+				// the checked one. The browser skips the rest, so the trap must too or
+				// its boundary lands on a radio Tab never reaches.
+				const focusable = collapseRadioGroups(
+					getFocusableElements(container),
+					document.activeElement
+				);
 				if (focusable.length === 0) {
 					// There is nowhere to advance to. Keep focus on the current
 					// programmatic target (for example a dialog panel with tabindex=-1)

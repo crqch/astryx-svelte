@@ -20,6 +20,7 @@
 		experimental?: DrawerProps['experimental'];
 		xstyle?: import('$lib/internal/sx.js').StyleArg;
 		withFileInput?: boolean;
+		withActions?: boolean;
 		nativeOpen?: boolean;
 		onref?: (node: HTMLDialogElement | null) => void;
 	}
@@ -48,6 +49,7 @@
 		experimental,
 		xstyle,
 		withFileInput = false,
+		withActions = false,
 		nativeOpen = false,
 		onref
 	}: DrawerProbeProps = $props();
@@ -92,6 +94,10 @@
 >
 	{#if withHeader}
 		<DrawerHeader title="Details" onOpenChange={(open) => (isOpen = open)} />
+	{/if}
+	{#if withActions}
+		<button type="button" data-testid="first-action">First action</button>
+		<button type="button" data-testid="last-action">Last action</button>
 	{/if}
 	{#if withFileInput}
 		<input type="file" aria-label="Picture" />

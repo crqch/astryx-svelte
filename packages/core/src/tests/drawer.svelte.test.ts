@@ -10,6 +10,10 @@ import DrawerProbe from './fixtures/drawer-probe.svelte';
 import DrawerStackProbe from './fixtures/drawer-stack-probe.svelte';
 import DrawerSideFlipProbe from './fixtures/drawer-side-flip-probe.svelte';
 import DrawerNonModalProbe from './fixtures/drawer-nonmodal-probe.svelte';
+import DrawerInspectorProbe from './fixtures/drawer-inspector-probe.svelte';
+import DrawerGroupProbe from './fixtures/drawer-group-probe.svelte';
+import DrawerRadiosProbe from './fixtures/drawer-radios-probe.svelte';
+import DrawerTooltipProbe from './fixtures/drawer-tooltip-probe.svelte';
 
 /**
  * The first slice of Astryx's `Drawer/Drawer.test.tsx` at the **0.7.13** pin,
@@ -21,6 +25,15 @@ import DrawerNonModalProbe from './fixtures/drawer-nonmodal-probe.svelte';
  * per-frame clip/hold behavior, pointer-hold entrance timing, sibling layer
  * ordering, and the touch-entrance specs — are the next slice.
  */
+
+async function waitForTestId(container: HTMLElement, testId: string): Promise<HTMLElement> {
+	let found: Element | null = null;
+	await vi.waitFor(() => {
+		found = container.querySelector(`[data-testid="${testId}"]`);
+		expect(found).not.toBeNull();
+	});
+	return found as unknown as HTMLElement;
+}
 
 function drawerEl(container: HTMLElement): HTMLDialogElement {
 	const el = container.querySelector('[data-testid="drawer"]');
@@ -774,5 +787,213 @@ describe('Drawer', () => {
 		});
 		const dialog = drawerEl(screen.container);
 		await vi.waitFor(() => expect(seen).toContain(dialog));
+	});
+	it('traps Tab focus inside a modal drawer', async () => {
+		const screen = await render(DrawerProbe, {
+			props: { withActions: true, withHeader: false }
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		const first = screen.getByTestId('first-action').element() as HTMLElement;
+		const last = screen.getByTestId('last-action').element() as HTMLElement;
+
+		last.focus();
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+		);
+		await vi.waitFor(() => expect(document.activeElement).toBe(first));
+	});
+
+	it('wraps Tab from the checked radio of a group that ends the drawer', async () => {
+		const screen = await render(DrawerRadiosProbe, { props: { radios: 'end' } });
+		const medium = screen.getByRole('radio', { name: 'Medium' }).element() as HTMLElement;
+		const first = screen.getByTestId('first').element() as HTMLElement;
+
+		medium.focus();
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+		);
+		await vi.waitFor(() => expect(document.activeElement).toBe(first));
+		first.focus();
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true })
+		);
+		await vi.waitFor(() => expect(document.activeElement).toBe(medium));
+	});
+
+	it('wraps Shift+Tab from the checked radio of a group that starts the drawer', async () => {
+		const screen = await render(DrawerRadiosProbe, { props: { radios: 'start' } });
+		const medium = screen.getByRole('radio', { name: 'Medium' }).element() as HTMLElement;
+		const last = screen.getByTestId('last').element() as HTMLElement;
+
+		medium.focus();
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true })
+		);
+		await vi.waitFor(() => expect(document.activeElement).toBe(last));
+		last.focus();
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+		);
+		await vi.waitFor(() => expect(document.activeElement).toBe(medium));
+	});
+
+	it('ends ancestor group membership while explicit and inner-group state hold', async () => {
+		const screen = await render(DrawerGroupProbe);
+		const outer = screen.getByRole('button', { name: 'Outer member' }).element();
+		const independent = screen
+			.getByRole('button', { name: 'Independent' })
+			.element() as HTMLElement;
+		const explicit = screen.getByRole('button', { name: 'Explicit disabled' }).element();
+		const inner = screen.getByRole('button', { name: 'Inner member' }).element();
+
+		// RESTATED: this port's Button renders the native `disabled` attribute
+		// for a group-disabled member, where 0.7.13 uses `aria-disabled` alone.
+		// The boundary contract is the same: membership stops at the drawer.
+		expect(outer).toHaveAttribute('disabled');
+		expect(independent).not.toHaveAttribute('disabled');
+		independent.click();
+		expect(explicit).toHaveAttribute('disabled');
+		expect(inner).toHaveAttribute('disabled');
+	});
+
+	it('lets a focused control open its tooltip after the show, with no error', async () => {
+		const errors: unknown[] = [];
+		const onError = (event: ErrorEvent) => {
+			errors.push(event.error ?? event.message);
+			event.preventDefault();
+		};
+		window.addEventListener('error', onError);
+		// Upstream stubs the same match: the trigger's focus path only opens for
+		// keyboard focus, and this harness's programmatic focus is not reliable
+		// about reporting `:focus-visible` after unrelated tests.
+		const nativeMatches = Element.prototype.matches;
+		const matchesSpy = vi.spyOn(Element.prototype, 'matches').mockImplementation(function (
+			this: Element,
+			selector: string
+		) {
+			if (selector === ':focus-visible') return true;
+			return nativeMatches.call(this, selector);
+		});
+		try {
+			const screen = await render(DrawerTooltipProbe);
+			await screen.rerender({ show: true });
+			const trigger = screen.getByRole('button', { name: 'Close' }).element() as HTMLElement;
+			await vi.waitFor(() => expect(trigger.isConnected).toBe(true));
+			// Keyboard modality makes the programmatic focus match `:focus-visible`,
+			// which is the trigger the tooltip's focus path requires.
+			document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+			trigger.focus();
+			trigger.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+			const layer = screen.container.querySelector('[role="tooltip"]');
+			if (!(layer instanceof HTMLElement)) throw new Error('expected a tooltip layer');
+			await vi.waitFor(() => expect(layer.matches(':popover-open')).toBe(true));
+			expect(errors).toEqual([]);
+		} finally {
+			matchesSpy.mockRestore();
+			window.removeEventListener('error', onError);
+		}
+	});
+
+	for (const hasScrim of [false, true]) {
+		for (const unmountWith of ['save', 'view'] as const) {
+			it(`returns focus to the opener (${hasScrim ? 'modal' : 'non-modal'}, ${unmountWith})`, async () => {
+				const screen = await render(DrawerInspectorProbe, {
+					props: { unmountWith, hasScrim }
+				});
+				const edit = screen.getByTestId('edit').element() as HTMLElement;
+				edit.focus();
+				edit.click();
+				await tick();
+				const save = await waitForTestId(screen.container, 'save');
+				save.focus();
+
+				save.click();
+				await vi.waitFor(() =>
+					expect(screen.container.querySelector('[data-testid="save"]')).toBeNull()
+				);
+				await vi.waitFor(() => expect(document.activeElement).toBe(edit));
+			});
+		}
+	}
+
+	it('leaves focus where the user moved it before the unmount', async () => {
+		const screen = await render(DrawerInspectorProbe, {
+			props: { unmountWith: 'save', hasScrim: false }
+		});
+		const edit = screen.getByTestId('edit').element() as HTMLElement;
+		edit.focus();
+		edit.click();
+		await tick();
+		const save = await waitForTestId(screen.container, 'save');
+		const elsewhere = screen.getByTestId('elsewhere').element() as HTMLElement;
+		elsewhere.focus();
+
+		save.click();
+		await vi.waitFor(() =>
+			expect(screen.container.querySelector('[data-testid="save"]')).toBeNull()
+		);
+		expect(document.activeElement).toBe(elsewhere);
+	});
+
+	it('a remount that keeps the drawer mounted leaves focus inside the open drawer', async () => {
+		// Svelte has no StrictMode double effect replay; the repair's
+		// connected-surface guard is the same contract, so this case renders the
+		// inspector, moves focus inside, and asserts the drawer keeps it.
+		const screen = await render(DrawerInspectorProbe, {
+			props: { unmountWith: 'save', hasScrim: false }
+		});
+		const edit = screen.getByTestId('edit').element() as HTMLElement;
+		edit.focus();
+		edit.click();
+		await tick();
+		const save = await waitForTestId(screen.container, 'save');
+		save.focus();
+		await Promise.resolve();
+		expect(document.activeElement).toBe(save);
+	});
+	it('renders children when open', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		expect(screen.getByTestId('drawer-content').element()).toHaveTextContent('Drawer content');
+	});
+
+	it('applies the accessible label', async () => {
+		const screen = await render(DrawerProbe, { props: { label: 'Host details' } });
+		expect(drawerEl(screen.container)).toHaveAttribute('aria-label', 'Host details');
+	});
+
+	it('calls onOpenChange(false) on Escape keydown', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+		);
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(screen.component.getOpen()).toBe(false));
+	});
+
+	it('calls onOpenChange(false) when the ::backdrop (dialog element itself) is clicked', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(screen.component.getOpen()).toBe(false));
+	});
+
+	it('closes as soon as the slide-out transition ends', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		screen.component.setOpen(false);
+		await tick();
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(dialog.open).toBe(false));
 	});
 });
