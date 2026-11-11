@@ -27,7 +27,7 @@
 	<Button label="32rem" onclick={() => openAtWidth('32rem')} />
 	<Button label="50%" onclick={() => openAtWidth('50%')} />
 </HStack>
-<Drawer bind:isOpen onOpenChange={(open) => (isOpen = open)} label="Width budget" {width}>
+<Drawer {isOpen} onOpenChange={(open) => (isOpen = open)} label="Width budget" {width}>
 	<Layout>
 		{#snippet header()}
 			<DrawerHeader title="Width budget" onOpenChange={(open) => (isOpen = open)} />

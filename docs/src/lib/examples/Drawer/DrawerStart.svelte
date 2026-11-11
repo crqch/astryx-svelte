@@ -9,7 +9,7 @@
 </script>
 
 <Button label="Open start drawer" onclick={() => (isOpen = true)} />
-<Drawer bind:isOpen onOpenChange={(open) => (isOpen = open)} label="Navigation" side="start">
+<Drawer {isOpen} onOpenChange={(open) => (isOpen = open)} label="Navigation" side="start">
 	<Layout>
 		{#snippet header()}
 			<DrawerHeader title="Navigation" onOpenChange={(open) => (isOpen = open)} />

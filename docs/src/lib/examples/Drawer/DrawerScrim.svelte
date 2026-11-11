@@ -21,7 +21,7 @@
 	<Button label="Open modal drawer" onclick={() => (openModal = true)} />
 	<Button label="Open non-modal drawer" onclick={() => (openPanel = true)} />
 </HStack>
-<Drawer bind:isOpen={openModal} onOpenChange={(open) => (openModal = open)} label="Edit details">
+<Drawer isOpen={openModal} onOpenChange={(open) => (openModal = open)} label="Edit details">
 	<Layout>
 		{#snippet header()}
 			<DrawerHeader title="Edit details" onOpenChange={(open) => (openModal = open)} />
@@ -34,7 +34,7 @@
 	</Layout>
 </Drawer>
 <Drawer
-	bind:isOpen={openPanel}
+	isOpen={openPanel}
 	onOpenChange={(open) => (openPanel = open)}
 	label="Inspector"
 	hasScrim={false}

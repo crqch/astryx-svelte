@@ -21,7 +21,7 @@
 </script>
 
 <Button label="Edit host" onclick={() => (isOpen = true)} />
-<Drawer bind:isOpen onOpenChange={(open) => (isOpen = open)} label="Edit host" purpose="form">
+<Drawer {isOpen} onOpenChange={(open) => (isOpen = open)} label="Edit host" purpose="form">
 	<Layout>
 		{#snippet header()}
 			<DrawerHeader title="Edit host" onOpenChange={(open) => (isOpen = open)} />

@@ -17,7 +17,7 @@
 </script>
 
 <Button label="Open host details" onclick={() => (isOpen = true)} />
-<Drawer bind:isOpen onOpenChange={(open) => (isOpen = open)} label="web-prod-04" width={360}>
+<Drawer {isOpen} onOpenChange={(open) => (isOpen = open)} label="web-prod-04" width={360}>
 	<Layout>
 		{#snippet header()}
 			<DrawerHeader
