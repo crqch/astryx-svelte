@@ -64,11 +64,13 @@ const styles = stylex.create({
 			'@media (forced-colors: active)': 'HighlightText'
 		},
 		fontWeight: fontWeightVars['--font-weight-semibold'],
+		// The selected face is the moving lens; the item itself paints only under
+		// forced colors, where the lens is hidden.
 		backgroundColor: {
-			default: colorVars['--color-background-surface'],
+			default: 'transparent',
 			'@media (forced-colors: active)': 'Highlight'
 		},
-		boxShadow: shadowVars['--shadow-low']
+		boxShadow: 'none'
 	},
 	disabled: {
 		cursor: 'default',

@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 349     | 12121          |
+| Ported here              | 350     | 12173          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **448** | **4804**       |
+| **Unported**             | **447** | **4752**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -45,7 +45,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateInput/PickerWheel.test.tsx`                                   | 61    |
 | `keyboard/keyboardHeight.test.ts`                                  | 56    |
 | `hooks/useMenuPress.test.tsx`                                      | 55    |
-| `SegmentedControl/useSegmentedSelectionMotion.test.ts`             | 52    |
 | `BottomSheet/BottomSheetReplace.test.tsx`                          | 51    |
 | `Markdown/remark.test.tsx`                                         | 51    |
 | `utils/hitArea.test.ts`                                            | 48    |
@@ -489,9 +488,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12121          |
-| Declared here              | 8035           |
-| **Short**                  | **4101**       |
+| Upstream, in ported suites | 12173          |
+| Declared here              | 8039           |
+| **Short**                  | **4149**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -502,7 +501,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (208)</summary>
+<details><summary>Suites short of upstream (209)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -526,6 +525,7 @@ per connected group.
 | `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
 | `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 91       | 37   | 54    |
 | `Popover/Popover.test.tsx`                                                                                                                                                               | 73       | 23   | 50    |
+| `SegmentedControl/useSegmentedSelectionMotion.test.ts`                                                                                                                                   | 52       | 4    | 48    |
 | `Stepper/Stepper.test.tsx`                                                                                                                                                               | 96       | 48   | 48    |
 | `Tokenizer/Tokenizer.test.tsx`                                                                                                                                                           | 108      | 61   | 47    |
 | `Dialog/Dialog.test.tsx`                                                                                                                                                                 | 85       | 40   | 45    |
