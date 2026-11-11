@@ -10,6 +10,7 @@
 		chaining?: ScrollOverscroll;
 		keyboardOwner?: 'viewport' | 'contentOrViewport';
 		stickyContainment?: ScrollStickyContainment;
+		style?: string;
 	}
 </script>
 
@@ -20,7 +21,8 @@
 		axis = 'inline',
 		chaining = 'allow',
 		keyboardOwner = 'viewport',
-		stickyContainment
+		stickyContainment,
+		style = 'background-color: red'
 	}: ScrollableAreaProbeProps = $props();
 
 	const hook = useScrollableArea(() => ({
@@ -37,7 +39,7 @@
 	export const getState = () => hook.state;
 </script>
 
-<div data-testid="viewport" {...hook.getViewportProps({ style: 'background-color: red' })}>
+<div data-testid="viewport" {...hook.getViewportProps({ style })}>
 	<div data-testid="content" {...hook.getContentProps()}>
 		<span data-testid="descendant">Content</span>
 	</div>

@@ -564,8 +564,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10650          |
-| Declared here              | 6591           |
-| **Short**                  | **4074**       |
+| Declared here              | 6594           |
+| **Short**                  | **4071**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -611,12 +611,12 @@ per connected group.
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
-| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 7    | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
 | `CheckboxList/CheckboxList.test.tsx`                                                                                                                                                     | 88       | 51   | 37    |
 | `ComplexSelector/ComplexSelector.test.tsx`                                                                                                                                               | 49       | 12   | 37    |
+| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 10   | 37    |
 | `Table/plugins/rowExpansion/useTableRowExpansion.test.tsx`                                                                                                                               | 50       | 13   | 37    |
 | `utils/plainDate.test.ts`                                                                                                                                                                | 124      | 87   | 37    |
 | `Chat/ChatMessage.test.tsx`<br>`Chat/ChatMessageBubble.test.tsx`<br>`Chat/ChatMessageList.test.tsx`<br>`Chat/ChatMessageMetadata.test.tsx`<br>`Chat/ChatSystemMessage.test.tsx`          | 79       | 43   | 36    |

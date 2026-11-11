@@ -50,6 +50,76 @@ async function flushFrames(): Promise<void> {
 }
 
 describe('useScrollableArea', () => {
+	it('contains only effective physical axes', async () => {
+		const screen = await render(ScrollableAreaProbe, {
+			props: { axis: 'both', chaining: 'contain' }
+		});
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		setGeometry(viewport, {
+			clientWidth: 100,
+			clientHeight: 100,
+			scrollWidth: 180,
+			scrollHeight: 100,
+			scrollLeft: 0,
+			scrollTop: 0
+		});
+		viewport.style.overflowX = 'auto';
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"inline":{"isScrollable":true'
+			)
+		);
+
+		expect(viewport.style.overscrollBehaviorX).toBe('contain');
+		expect(viewport.style.overscrollBehaviorY).toBe('auto');
+	});
+
+	it('preserves caller overscroll behavior on axes outside the requested intent', async () => {
+		const screen = await render(ScrollableAreaProbe, {
+			props: {
+				axis: 'inline',
+				chaining: 'contain',
+				style: 'overscroll-behavior-y: none'
+			}
+		});
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+
+		// The hook owns only the requested inline axis; the caller's block-axis
+		// chaining declaration survives. Neither axis overflows yet, so the
+		// owned inline declaration is `auto`.
+		expect(viewport.style.overscrollBehaviorX).toBe('auto');
+		expect(viewport.style.overscrollBehaviorY).toBe('none');
+	});
+
+	it('normalizes RTL inline offsets to logical edges', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		viewport.dir = 'rtl';
+		setGeometry(viewport, {
+			clientWidth: 100,
+			clientHeight: 100,
+			scrollWidth: 300,
+			scrollHeight: 100,
+			scrollLeft: 0,
+			scrollTop: 0
+		});
+		viewport.style.overflowX = 'auto';
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"inline":{"isScrollable":true'
+			)
+		);
+		expect(screen.getByTestId('state').element()).toHaveTextContent('"atStart":true');
+
+		viewport.scrollLeft = -200;
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent('"atEnd":true')
+		);
+	});
+
 	it('starts inactive and fitting without creating a tab stop', async () => {
 		const screen = await render(ScrollableAreaProbe);
 		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
