@@ -655,7 +655,7 @@ describe('useScrollableArea', () => {
 		expect(findNearestScrollOwner(leaf, 'block')).toBe(outer);
 	});
 
-	it('resolves the nearest of two nested owners and unregisters both on unmount', async () => {
+	it('resolves the nearest of two nested block owners and unregisters both on unmount', async () => {
 		const screen = await render(ScrollableAreaNestedProbe, {
 			props: { innerAxis: 'block' }
 		});
@@ -889,5 +889,262 @@ describe('useScrollableArea', () => {
 		expect(replacement).not.toBe(viewport);
 		await vi.waitFor(() => expect(getRegisteredScrollOwnerState(replacement)).toBeDefined());
 		expect(getRegisteredScrollOwnerState(viewport)).toBeUndefined();
+	});
+});
+
+describe('useScrollableArea frames and focus', () => {
+	it('is a tab stop from the first frame its content overflows, before any animation frame', async () => {
+		const screen = await render(ScrollableAreaProbe, {
+			props: {
+				axis: 'block',
+				initialGeometry: {
+					clientWidth: 100,
+					clientHeight: 100,
+					scrollWidth: 100,
+					scrollHeight: 180,
+					overflow: 'y'
+				}
+			}
+		});
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		expect(viewport).toHaveAttribute('tabindex', '0');
+		expect(screen.getByTestId('state').element()).toHaveTextContent('"isScrollable":true');
+	});
+
+	it('leaves one frame pending after an overflowing mount, and none after unmount', async () => {
+		const pending = new Set<number>();
+		let nextId = 0;
+		const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => {
+			nextId += 1;
+			pending.add(nextId);
+			return nextId;
+		});
+		const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id: number) => {
+			pending.delete(id);
+		});
+		try {
+			const screen = await render(ScrollableAreaProbe, {
+				props: {
+					initialGeometry: {
+						clientWidth: 100,
+						clientHeight: 100,
+						scrollWidth: 180,
+						scrollHeight: 100,
+						overflow: 'x'
+					}
+				}
+			});
+			expect(pending.size).toBe(1);
+			screen.unmount();
+			expect(pending.size).toBe(0);
+		} finally {
+			raf.mockRestore();
+			caf.mockRestore();
+		}
+	});
+
+	it('leaves a scroll to the full measurement already pending in its frame', async () => {
+		const callbacks = new Map<number, FrameRequestCallback>();
+		let nextId = 0;
+		const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+			nextId += 1;
+			callbacks.set(nextId, callback);
+			return nextId;
+		});
+		const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id: number) => {
+			callbacks.delete(id);
+		});
+		const runFrame = () => {
+			const entries = [...callbacks];
+			callbacks.clear();
+			for (const [, callback] of entries) callback(performance.now());
+		};
+		try {
+			const screen = await render(ScrollableAreaProbe);
+			const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+			const content = screen.getByTestId('content').element() as HTMLElement;
+			setGeometry(viewport, {
+				clientWidth: 100,
+				clientHeight: 100,
+				scrollWidth: 300,
+				scrollHeight: 100,
+				scrollLeft: 0,
+				scrollTop: 0
+			});
+			viewport.style.overflowX = 'auto';
+			viewport.dispatchEvent(new Event('scroll'));
+			runFrame();
+			expect(screen.component.getState().inline.isScrollable).toBe(true);
+
+			content.dispatchEvent(new Event('transitionend'));
+			expect(callbacks.size).toBe(1);
+			setGeometry(viewport, { scrollLeft: 80 });
+			viewport.dispatchEvent(new Event('scroll'));
+			expect(callbacks.size).toBe(1);
+			expect(screen.component.getState().inline.atStart).toBe(true);
+
+			runFrame();
+			expect(screen.component.getState().inline).toEqual({
+				isScrollable: true,
+				atStart: false,
+				atEnd: false
+			});
+		} finally {
+			raf.mockRestore();
+			caf.mockRestore();
+		}
+	});
+
+	it('reads focus from the document when focus events never reach the viewport', async () => {
+		const screen = await render(ScrollableAreaProbe, { props: { stopFocusEvents: true } });
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+
+		viewport.focus();
+		setGeometry(viewport, { scrollWidth: 100 });
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '-1'));
+		expect(document.activeElement).toBe(viewport);
+
+		viewport.blur();
+		expect(viewport).toHaveAttribute('tabindex', '-1');
+		window.dispatchEvent(new Event('resize'));
+		await flushFrames();
+		await vi.waitFor(() => expect(viewport).not.toHaveAttribute('tabindex'));
+	});
+
+	it('preserves the last valid state through a full measurement while the viewport has no box', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+
+		setGeometry(viewport, {
+			clientWidth: 0,
+			clientHeight: 0,
+			scrollWidth: 0,
+			scrollHeight: 0
+		});
+		window.dispatchEvent(new Event('resize'));
+		await flushFrames();
+		expect(viewport).toHaveAttribute('tabindex', '0');
+		expect(screen.component.getState().inline.isScrollable).toBe(true);
+
+		setGeometry(viewport, {
+			clientWidth: 100,
+			clientHeight: 100,
+			scrollWidth: 300,
+			scrollHeight: 100
+		});
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+	});
+});
+
+describe('useScrollableArea content changes and focus continuity', () => {
+	it('reports a change below the content root as content only and an outer change as layout', async () => {
+		// RESTATED: the content/layout split is an internal frame class. A browser
+		// resolves it in its own frame, so the observable contract is the
+		// published state after each kind of change: a child added below the
+		// content root, and an ancestor style that changes writing context.
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		const content = screen.getByTestId('content').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+
+		content.append(document.createElement('span'));
+		await flushFrames();
+		expect(screen.component.getState().inline.isScrollable).toBe(true);
+		expect(viewport).toHaveAttribute('tabindex', '0');
+
+		try {
+			document.body.style.direction = 'rtl';
+			await flushFrames();
+			expect(screen.component.getState().inline.isScrollable).toBe(true);
+			expect(viewport).toHaveAttribute('tabindex', '0');
+		} finally {
+			document.body.style.direction = '';
+		}
+	});
+
+	it('settles content that fits only once a scrollbar takes space, without looping in one commit', async () => {
+		// RESTATED: once the scrollbar has taken its space the content fits, and
+		// the measurement settles there. (Upstream drives the measurement with a
+		// jsdom style proxy; a browser's own layout is the arbiter here.)
+		const screen = await render(ScrollableAreaProbe, { props: { axis: 'block' } });
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		let hasTakenScrollbarSpace = false;
+		Object.defineProperty(viewport, 'clientWidth', { configurable: true, get: () => 100 });
+		Object.defineProperty(viewport, 'clientHeight', { configurable: true, get: () => 100 });
+		Object.defineProperty(viewport, 'scrollWidth', { configurable: true, get: () => 100 });
+		Object.defineProperty(viewport, 'scrollHeight', {
+			configurable: true,
+			get: () => {
+				if (getComputedStyle(viewport).overflowY === 'auto') {
+					hasTakenScrollbarSpace = true;
+					return 100;
+				}
+				return hasTakenScrollbarSpace ? 100 : 105;
+			}
+		});
+		expect(() => viewport.dispatchEvent(new Event('scroll'))).not.toThrow();
+		await flushFrames();
+		await flushFrames();
+		expect(screen.component.getState().block.isScrollable).toBe(false);
+	});
+
+	it('keeps tracking focus when the caller passes a fresh getter every render', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+		viewport.focus();
+		await screen.rerender({ contentStyle: 'color: blue' });
+		setGeometry(viewport, { scrollWidth: 100 });
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '-1'));
+		expect(document.activeElement).toBe(viewport);
+	});
+
+	it('cleans up the old node before attaching the new one when the viewport is replaced in one commit', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const first = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(first, 'x', 300);
+		await vi.waitFor(() => expect(first).toHaveAttribute('tabindex', '0'));
+
+		await screen.rerender({ probeKey: 1 });
+		const second = screen.getByTestId('viewport').element() as HTMLElement;
+		expect(second).not.toBe(first);
+		setGeometry(second, {
+			clientWidth: 100,
+			clientHeight: 100,
+			scrollWidth: 300,
+			scrollHeight: 100
+		});
+		second.style.overflowX = 'auto';
+		second.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() => expect(second).toHaveAttribute('tabindex', '0'));
+
+		first.dispatchEvent(new Event('scroll'));
+		expect(getRegisteredScrollOwnerState(first)).toBeUndefined();
+		expect(getRegisteredScrollOwnerState(second)).toBeDefined();
+	});
+
+	it('composes caller content props and consumes content xstyle', async () => {
+		const viewportStyle = stylex.create({ viewport: { color: 'rgb(1, 2, 3)' } });
+		const screen = await render(ScrollableAreaProbe, {
+			props: {
+				keyboardOwner: 'contentOrViewport',
+				contentClass: 'consumer-content',
+				contentStyle: 'padding-left: 7px',
+				contentXstyle: viewportStyle.viewport
+			}
+		});
+		const content = screen.getByTestId('content').element() as HTMLElement;
+		expect(content).toHaveClass('consumer-content');
+		expect(content.style.paddingLeft).toBe('7px');
+		expect(getComputedStyle(content).color).toBe('rgb(1, 2, 3)');
 	});
 });

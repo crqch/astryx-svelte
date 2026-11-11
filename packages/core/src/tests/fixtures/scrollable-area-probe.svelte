@@ -16,6 +16,14 @@
 		contentClass?: string;
 		contentXstyle?: import('$lib/internal/sx.js').StyleArg;
 		children?: Snippet;
+		stopFocusEvents?: boolean;
+		probeKey?: number;
+		initialGeometry?: Partial<
+			Pick<
+				HTMLElement,
+				'clientWidth' | 'clientHeight' | 'scrollWidth' | 'scrollHeight' | 'scrollLeft' | 'scrollTop'
+			>
+		> & { overflow?: 'x' | 'y' };
 	}
 </script>
 
@@ -31,7 +39,10 @@
 		contentStyle,
 		contentClass,
 		contentXstyle,
-		children
+		children,
+		stopFocusEvents = false,
+		initialGeometry,
+		probeKey = 0
 	}: ScrollableAreaProbeProps = $props();
 
 	const hook = useScrollableArea(() => ({
@@ -45,19 +56,46 @@
 		stickyContainment
 	}));
 
+	// Geometry set before the hook's attachment runs, so its first measure sees
+	// the content already overflowing (as a loaded-data mount does).
+	const applyInitialGeometry = (node: HTMLElement) => {
+		if (initialGeometry == null) return;
+		const { overflow, ...values } = initialGeometry;
+		for (const [key, value] of Object.entries(values)) {
+			Object.defineProperty(node, key, { configurable: true, value, writable: true });
+		}
+		if (overflow === 'x') node.style.overflowX = 'auto';
+		if (overflow === 'y') node.style.overflowY = 'auto';
+	};
+
 	export const getState = () => hook.state;
 </script>
 
-<div data-testid="viewport" {...hook.getViewportProps({ style })}>
-	<div
-		data-testid="content"
-		{...hook.getContentProps({ style: contentStyle, class: contentClass, xstyle: contentXstyle })}
-	>
-		{#if children}
-			{@render children()}
-		{:else}
-			<span data-testid="descendant">Content</span>
-		{/if}
+{#snippet area()}
+	<div data-testid="viewport" {@attach applyInitialGeometry} {...hook.getViewportProps({ style })}>
+		<div
+			data-testid="content"
+			{...hook.getContentProps({ style: contentStyle, class: contentClass, xstyle: contentXstyle })}
+		>
+			{#if children}
+				{@render children()}
+			{:else}
+				<span data-testid="descendant">Content</span>
+			{/if}
+		</div>
 	</div>
-</div>
+{/snippet}
+
+{#key probeKey}
+	{#if stopFocusEvents}
+		<div
+			onfocuscapture={(event: FocusEvent) => event.stopPropagation()}
+			onblurcapture={(event: FocusEvent) => event.stopPropagation()}
+		>
+			{@render area()}
+		</div>
+	{:else}
+		{@render area()}
+	{/if}
+{/key}
 <output data-testid="state">{JSON.stringify(hook.state)}</output>
