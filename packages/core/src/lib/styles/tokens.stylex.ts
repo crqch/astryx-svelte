@@ -271,7 +271,9 @@ export const durationDefaults = {
 	'--duration-medium-max': '550ms',
 	'--duration-slow-min': '730ms',
 	'--duration-slow': '975ms',
-	'--duration-slow-max': '1300ms'
+	'--duration-slow-max': '1300ms',
+	// The exit duration aliases the fast band; a theme may override either.
+	'--duration-exit': 'var(--duration-fast)'
 } as const;
 
 export const durationVars = stylex.defineVars(durationDefaults);
@@ -283,7 +285,12 @@ export type DurationVarName = keyof typeof durationDefaults;
 // =============================================================================
 
 export const easeDefaults = {
-	'--ease-standard': 'cubic-bezier(0.24, 1, 0.4, 1)'
+	'--ease-standard': 'cubic-bezier(0.24, 1, 0.4, 1)',
+	// Entrances and moves: equal to the standard curve until a theme picks a
+	// character that separates them (0.7.13).
+	'--ease-entrance': 'cubic-bezier(0.24, 1, 0.4, 1)',
+	'--ease-move': 'cubic-bezier(0.24, 1, 0.4, 1)',
+	'--ease-exit': 'cubic-bezier(0.3, 0, 0.6, 0.6)'
 } as const;
 
 export const easeVars = stylex.defineVars(easeDefaults);

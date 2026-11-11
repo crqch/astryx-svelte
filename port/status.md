@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 304     | 11216          |
+| Ported here              | 307     | 11274          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **493** | **5709**       |
+| **Unported**             | **490** | **5651**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -65,7 +65,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateInput/DateInput.calendar.test.tsx`                            | 36    |
 | `utils/calendarSystem.test.ts`                                     | 36    |
 | `hooks/useActionGroupTracking.test.tsx`                            | 35    |
-| `utils/pressGesture.test.ts`                                       | 35    |
 | `Tooltip/useTooltip.test.tsx`                                      | 33    |
 | `Layer/useLayerKeyboardClearance.test.tsx`                         | 32    |
 | `theme/dynamicType.test.ts`                                        | 32    |
@@ -170,7 +169,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `keyboard/keyboardChromium.test.ts`                                | 12    |
 | `Layer/settledBox.test.ts`                                         | 12    |
 | `MobileNav/MobileNavFocus.test.tsx`                                | 12    |
-| `motion/uikit/uikit.test.ts`                                       | 12    |
 | `theme/tokenValueCompat.test.ts`                                   | 12    |
 | `AlertDialog/useImperativeAlertDialog.test.tsx`                    | 11    |
 | `CodeBlock/languages.test.ts`                                      | 11    |
@@ -182,7 +180,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/gestureCounter.test.ts`                                     | 11    |
 | `Layout/__tests__/nestedPadding.test.tsx`                          | 11    |
 | `Markdown/Markdown.fr23.perf.test.ts`                              | 11    |
-| `motion/themeTiming.test.ts`                                       | 11    |
 | `PowerSearch/PowerSearchTokenNaming.test.tsx`                      | 11    |
 | `Tooltip/useTooltip.showHide.test.tsx`                             | 11    |
 | `BottomSheet/BottomSheetEdgeTint.test.tsx`                         | 10    |
@@ -534,8 +531,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11216          |
-| Declared here              | 7183           |
+| Upstream, in ported suites | 11274          |
+| Declared here              | 7241           |
 | **Short**                  | **4048**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
