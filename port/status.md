@@ -8,9 +8,9 @@
 
 |                           |                                                                          |
 | ------------------------- | ------------------------------------------------------------------------ |
-| Component dirs (ours)     | 102                                                                      |
+| Component dirs (ours)     | 103                                                                      |
 | Component dirs (upstream) | 109                                                                      |
-| Missing here              | Drawer, ScrollableArea, SnapPaging                                       |
+| Missing here              | Drawer, SnapPaging                                                       |
 | Not in upstream           | none                                                                     |
 | Theme packages            | 8 — butter, chocolate, gothic, liquid-glass, matcha, neutral, stone, y2k |
 | Upstream pin              | `@astryxdesign/core` 0.7.13                                              |
@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 273     | 10590          |
+| Ported here              | 275     | 10650          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **524** | **6335**       |
+| **Unported**             | **522** | **6275**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -53,7 +53,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `BottomSheet/BottomSheetReplace.test.tsx`                          | 51    |
 | `Markdown/remark.test.tsx`                                         | 51    |
 | `utils/hitArea.test.ts`                                            | 48    |
-| `hooks/useScrollableArea.test.tsx`                                 | 47    |
 | `motion/animatedLayout.test.ts`                                    | 47    |
 | `keyboard/keyboardTarget.test.ts`                                  | 44    |
 | `theme/themeMotion.test.ts`                                        | 43    |
@@ -163,7 +162,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `motion/animatedLayout.slide.test.ts`                              | 13    |
 | `motion/roles.test.ts`                                             | 13    |
 | `PowerSearch/PowerSearchDateZone.test.tsx`                         | 13    |
-| `ScrollableArea/ScrollableArea.test.tsx`                           | 13    |
 | `TimeInput/TimeWheels.test.tsx`                                    | 13    |
 | `utils/touchHitArea.test.tsx`                                      | 13    |
 | `utils/touchPresentation.test.ts`                                  | 13    |
@@ -565,9 +563,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10590          |
-| Declared here              | 6566           |
-| **Short**                  | **4039**       |
+| Upstream, in ported suites | 10650          |
+| Declared here              | 6591           |
+| **Short**                  | **4074**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -613,6 +611,7 @@ per connected group.
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
+| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 7    | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
@@ -723,7 +722,6 @@ per connected group.
 | `Table/plugins/sortable/useTableSortable.test.tsx`                                                                                                                                       | 45       | 40   | 5     |
 | `Thumbnail/Thumbnail.test.tsx`                                                                                                                                                           | 29       | 24   | 5     |
 | `Timestamp/tooltipEntries.test.ts`                                                                                                                                                       | 50       | 45   | 5     |
-| `utils/sharedResizeObserver.test.ts`                                                                                                                                                     | 11       | 6    | 5     |
 | `Chat/ChatComposerDrawer.test.tsx`                                                                                                                                                       | 7        | 3    | 4     |
 | `Chat/ChatTokenizedText.test.tsx`                                                                                                                                                        | 14       | 10   | 4     |
 | `FieldStatus/FieldStatus.test.tsx`                                                                                                                                                       | 37       | 33   | 4     |
@@ -801,8 +799,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 652    |
-| **Pending** | **67** |
+| Ported      | 658    |
+| **Pending** | **68** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a

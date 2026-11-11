@@ -242,6 +242,7 @@ export { default as RadioList } from './components/radio-list/radio-list.svelte'
 export { default as RadioListItem } from './components/radio-list/radio-list-item.svelte';
 export { default as ResizeHandle } from './components/resizable/resize-handle.svelte';
 export { default as Section } from './components/section/section.svelte';
+export { default as ScrollableArea } from './components/scrollable-area/scrollable-area.svelte';
 export { default as SegmentedControl } from './components/segmented-control/segmented-control.svelte';
 export { default as SegmentedControlItem } from './components/segmented-control/segmented-control-item.svelte';
 export { default as SelectableCard } from './components/selectable-card/selectable-card.svelte';
@@ -310,6 +311,7 @@ export type { ThemeMode } from './theme/types.js';
 // and so names no return type anywhere in the package. Ours wraps the value in a
 // getter object for reactivity, which is a port artifact — the interface stays
 // module-public and off both barrels rather than inventing published surface.
+export { useScrollableArea } from './hooks/use-scrollable-area.svelte.js';
 export { useTheme, useThemeName } from './theme/use-theme.svelte.js';
 export type { UseThemeReturn } from './theme/use-theme.svelte.js';
 export { default as Thumbnail } from './components/thumbnail/thumbnail.svelte';
@@ -821,6 +823,21 @@ export {
 } from './components/radio-list/radio-list-context.svelte.js';
 export type { ResizeHandleProps } from './components/resizable/resize-handle.svelte';
 export type { SectionProps } from './components/section/section.svelte';
+export type {
+	ScrollableAreaProps,
+	ScrollableAreaStickyContainment
+} from './components/scrollable-area/scrollable-area.svelte';
+export type {
+	ScrollAxis,
+	ScrollAxisState,
+	ScrollKeyboardAccess,
+	ScrollOverscroll,
+	ScrollStickyContainment,
+	ScrollableAreaState,
+	ScrollableElementProps,
+	UseScrollableAreaOptions,
+	UseScrollableAreaResult
+} from './hooks/use-scrollable-area.svelte.js';
 export type { SegmentedControlProps } from './components/segmented-control/segmented-control.svelte';
 export type { SegmentedControlItemProps } from './components/segmented-control/segmented-control-item.svelte';
 export type {
