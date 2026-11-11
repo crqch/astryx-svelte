@@ -49,6 +49,12 @@
 		segmentedControlContainerAttrs,
 		segmentedControlLensAttrs
 	} from './segmented-control.stylex.js';
+	import {
+		liftTargetAt,
+		measureLiftArea,
+		measureSegments,
+		segmentTargetAt
+	} from './use-segmented-touch-tracking.js';
 
 	/**
 	 * Segmented button group for single selection (radiogroup semantics). Items
@@ -296,9 +302,18 @@
 		// The drop commits the segment under the pointer, so a fast drag that
 		// never reached the hysteresis still lands where it was let go.
 		if (!isCancelled) {
-			const dropped = segmentAtPointer(event);
-			const next = dropped?.dataset.value;
-			if (next != null && next !== value) onChange(next);
+			const container = containerEl;
+			if (container != null) {
+				const spans = measureSegments(container);
+				const dropped = liftTargetAt(
+					event.clientX,
+					event.clientY,
+					measureLiftArea(container, spans),
+					spans
+				);
+				const next = dropped?.dataset.value;
+				if (next != null && next !== value) onChange(next);
+			}
 		}
 		suppressClick = !isCancelled;
 		isDragging = false;

@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 350     | 12173          |
+| Ported here              | 351     | 12181          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **447** | **4752**       |
+| **Unported**             | **446** | **4744**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -200,7 +200,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `MultiSelector/MultiSelector.fr10.test.tsx`                        | 8     |
 | `RadioList/__tests__/RadioGroup.a11y.test.tsx`                     | 8     |
 | `Resizable/resizableSlot.test.tsx`                                 | 8     |
-| `SegmentedControl/useSegmentedTouchTracking.test.ts`               | 8     |
 | `Selector/Selector.highlightFollowsValue.test.tsx`                 | 8     |
 | `Selector/Selector.openHighlight.test.tsx`                         | 8     |
 | `Table/TableRowContext.test.tsx`                                   | 8     |
@@ -488,8 +487,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12173          |
-| Declared here              | 8039           |
+| Upstream, in ported suites | 12181          |
+| Declared here              | 8047           |
 | **Short**                  | **4149**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |

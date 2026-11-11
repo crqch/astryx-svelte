@@ -1921,6 +1921,7 @@ commit are implemented and covered by `segmented-control-motion.svelte.test.ts`.
 The motion itself is a CSS transition over `transform`/`width`/`height` (the
 theme's fast duration and standard curve, zero under Reduce Motion), not
 upstream's spring/animator engine with its reduced-motion cross-fade, per-frame
-face frames and copied-surface paint. `useSegmentedTouchTracking`'s Pan
-recognizer and action-group tracker are likewise replaced by pointer handlers
-with a four-pixel slop and `touch-action: pan-y`.
+face frames and copied-surface paint. `useSegmentedTouchTracking`'s
+segment/lift resolution is ported and green (8/8); its Pan recognizer and
+action-group press tracker are replaced by the container's pointer handlers
+with a four-pixel slop, `liftTargetAt` on release and `touch-action: pan-y`.
