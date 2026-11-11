@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 332     | 11783          |
+| Ported here              | 339     | 11912          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **465** | **5142**       |
+| **Unported**             | **458** | **5013**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -40,7 +40,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `utils/pressFeedback.test.ts`                                      | 97    |
 | `Tokenizer/TokenizerBottomSheet.test.tsx`                          | 90    |
 | `BottomSheet/BottomSheetStacking.test.tsx`                         | 87    |
-| `gestures/__tests__/wheel.test.ts`                                 | 68    |
 | `theme/themeAdaptations.test.ts`                                   | 65    |
 | `List/__tests__/ListReorder.test.tsx`                              | 62    |
 | `DateInput/PickerWheel.test.tsx`                                   | 61    |
@@ -118,8 +117,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `hooks/useScrollOverflow.test.tsx`                                 | 16    |
 | `Table/plugins/virtualization/useTableWindow.test.tsx`             | 16    |
 | `Calendar/hooks/calendarHooks.calendarSystems.test.tsx`            | 15    |
-| `gestures/__tests__/browserNegotiation.test.ts`                    | 15    |
-| `gestures/__tests__/createPanGesture.test.tsx`                     | 15    |
 | `gestures/__tests__/useFingerScroll.test.tsx`                      | 15    |
 | `i18n/__tests__/calendarSystem.test.tsx`                           | 15    |
 | `Icon/componentIcons.test.tsx`                                     | 15    |
@@ -156,7 +153,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Chat/useChatPasteAsToken.test.ts`                                 | 12    |
 | `CheckboxList/CheckboxList.required.test.tsx`                      | 12    |
 | `DateTimeInput/DateTimeInput.fr10.test.tsx`                        | 12    |
-| `gestures/__tests__/presentedHitTesting.test.ts`                   | 12    |
 | `keyboard/keyboardChromium.test.ts`                                | 12    |
 | `Layer/settledBox.test.ts`                                         | 12    |
 | `MobileNav/MobileNavFocus.test.tsx`                                | 12    |
@@ -164,7 +160,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `AlertDialog/useImperativeAlertDialog.test.tsx`                    | 11    |
 | `CodeBlock/languages.test.ts`                                      | 11    |
 | `DateTimeInput/DateTimeInput.calendar.test.tsx`                    | 11    |
-| `gestures/__tests__/haptics.test.ts`                               | 11    |
 | `hooks/useDragToSnapPoints.test.tsx`                               | 11    |
 | `Indicator/touchTarget.test.tsx`                                   | 11    |
 | `Layer/gestureCounter.test.ts`                                     | 11    |
@@ -245,7 +240,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `CheckboxInput/__tests__/Checkbox.a11y.test.tsx`                   | 6     |
 | `CodeBlock/CodeBlock.startLineNumber.test.tsx`                     | 6     |
 | `DropdownMenu/DropdownMenuForcedColors.test.tsx`                   | 6     |
-| `gestures/__tests__/importGraph.test.ts`                           | 6     |
 | `hooks/useAnnounceRenderedText.test.tsx`                           | 6     |
 | `internal/useDismissSearchOnTouchDrag.test.tsx`                    | 6     |
 | `keyboard/keyboardModel.test.ts`                                   | 6     |
@@ -415,7 +409,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `dragToSnapPoints/publicSurface.test.ts`                           | 2     |
 | `DropdownMenu/DropdownMenuLazySheet.test.tsx`                      | 2     |
 | `Field/PanelSearchInput.secondDocument.test.tsx`                   | 2     |
-| `gestures/__tests__/passiveByDefault.test.tsx`                     | 2     |
 | `gestures/__tests__/presentedGlide.test.ts`                        | 2     |
 | `gestures/__tests__/wheelEnd.harness.test.ts`                      | 2     |
 | `hooks/actionGroupTracker.exports.test.ts`                         | 2     |
@@ -506,9 +499,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11783          |
-| Declared here              | 7737           |
-| **Short**                  | **4061**       |
+| Upstream, in ported suites | 11912          |
+| Declared here              | 7873           |
+| **Short**                  | **4054**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -611,7 +604,6 @@ per connected group.
 | `CommandPalette/CommandPaletteItem.test.tsx`                                                                                                                                             | 24       | 11   | 13    |
 | `Layout/Layout.test.tsx`<br>`Layout/__tests__/edgeCompensation.test.tsx`                                                                                                                 | 47       | 34   | 13    |
 | `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 29       | 16   | 13    |
-| `SnapPaging/SnapPaging.test.tsx`                                                                                                                                                         | 23       | 10   | 13    |
 | `Table/plugins/columnResize/useTableColumnResize.test.tsx`                                                                                                                               | 50       | 37   | 13    |
 | `theme/Theme.test.tsx`                                                                                                                                                                   | 24       | 11   | 13    |
 | `TimeInput/TimeInput.test.tsx`                                                                                                                                                           | 57       | 44   | 13    |
@@ -650,6 +642,7 @@ per connected group.
 | `theme/onMediaTokens.test.ts`                                                                                                                                                            | 29       | 22   | 7     |
 | `Badge/Badge.test.tsx`                                                                                                                                                                   | 14       | 8    | 6     |
 | `CodeBlock/tokenizer.test.ts`                                                                                                                                                            | 18       | 12   | 6     |
+| `gestures/__tests__/createPanGesture.test.tsx`                                                                                                                                           | 15       | 9    | 6     |
 | `hooks/useAnnounce.test.tsx`                                                                                                                                                             | 15       | 9    | 6     |
 | `InputGroup/InputGroup.test.tsx`                                                                                                                                                         | 24       | 18   | 6     |
 | `Layer/layerDismissalFamilies.test.tsx`                                                                                                                                                  | 17       | 11   | 6     |

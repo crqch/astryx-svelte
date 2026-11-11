@@ -82,11 +82,12 @@ Already available in this port (useful foundations, none of them the pager):
 - **Step 3 (pager):** `createPager` (`lib/pager.ts`), `motion/paging.ts`,
   `snapPagingValue.ts` and a Svelte `useSnapPaging` are ported. The value's stop
   arithmetic, held-row geometry and attach/move relay are covered (11 cases).
-- **Step 4 (Carousel):** `hasSnap` now accepts `true | SnapPaging`, attaches
-  the paging to the scroller, and routes edge presses, wheel and `scrollTo`
-  through `moveSnapPaging`/`moveHeldSnapPaging`. The Carousel-facing half of
-  `SnapPaging.test.tsx` (12 cases: value stability, single attach, held edges
-  and focus hand-back) still needs its own browser suite.
+- **Step 4 (Carousel):** landed. `hasSnap` accepts `true | SnapPaging`, attaches
+  once with the first value, and routes edge presses, wheel and `scrollTo`
+  through `moveSnapPaging`/`moveHeldSnapPaging`. The nav buttons follow a held
+  row through `overflow.followShown`, and focus moves to the scroll area when a
+  held edge disables the button in use. All 23 `SnapPaging.test.tsx`
+  declarations are ported.
 
 The component surface is no longer missing a directory: `snap-paging` exists
 and is exported from the package root.

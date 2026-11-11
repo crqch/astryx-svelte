@@ -185,6 +185,18 @@
 	const overflow = useScrollOverflow();
 	// The paging value, when `hasSnap` carries one. `true` keeps native snap.
 	const snapPaging = $derived(isSnapPaging(hasSnap) ? hasSnap : null);
+	// The value Carousel attaches. It attaches once, with the first value; a
+	// new value on a later render does not restart a settle or attach again.
+	// Dropping back to plain `hasSnap` detaches, and a later value attaches.
+	let attachedPaging = $state<SnapPaging | null>(null);
+	$effect(() => {
+		const value = snapPaging;
+		if (value != null) {
+			if (attachedPaging == null) attachedPaging = value;
+		} else if (attachedPaging != null) {
+			attachedPaging = null;
+		}
+	});
 	// A call of the carousel's own into the paging: a detach or a scroll call.
 	// A held row reported during one is not something a finger did.
 	let runningOwnCalls = 0;
@@ -201,11 +213,11 @@
 	// element is replaced.
 	$effect(() => {
 		const element = scrollEl;
-		const value = snapPaging;
+		const value = attachedPaging;
 		if (element == null || value == null) {
 			return;
 		}
-		const detach = attachSnapPaging(value, element);
+		const detach = attachSnapPaging(value, element, (held) => overflow.followShown(held));
 		return () => ownCall(detach);
 	});
 
@@ -425,6 +437,22 @@
 	const canScrollStart = $derived(hasLoop && overflow.hasOverflow ? true : overflow.overflowStart);
 	const canScrollEnd = $derived(hasLoop && overflow.hasOverflow ? true : overflow.overflowEnd);
 
+	// The nav button the person is on. A button disables under them when the
+	// row reaches its edge — from a held row's report too — so focus moves to
+	// the scroll area, which stays reachable, exactly when that transition
+	// happens and only once.
+	let focusedNav = $state<'start' | 'end' | null>(null);
+	$effect(() => {
+		const side = focusedNav;
+		if (side === 'start' && !canScrollStart) {
+			focusedNav = null;
+			scrollEl?.focus();
+		} else if (side === 'end' && !canScrollEnd) {
+			focusedNav = null;
+			scrollEl?.focus();
+		}
+	});
+
 	const fade = $derived(
 		hasEdgeFade
 			? (hasLoop && overflow.hasOverflow) || (overflow.overflowStart && overflow.overflowEnd)
@@ -538,6 +566,10 @@
 					size="sm"
 					isIconOnly
 					isDisabled={!canScrollStart}
+					onfocus={() => (focusedNav = 'start')}
+					onblur={() => {
+						if (focusedNav === 'start') focusedNav = null;
+					}}
 					onclick={() => scrollBy(-1)}
 					xstyle={carouselButtonRadiusOverride}
 				/>
@@ -550,6 +582,10 @@
 					size="sm"
 					isIconOnly
 					isDisabled={!canScrollEnd}
+					onfocus={() => (focusedNav = 'end')}
+					onblur={() => {
+						if (focusedNav === 'end') focusedNav = null;
+					}}
 					onclick={() => scrollBy(1)}
 					xstyle={carouselButtonRadiusOverride}
 				/>
