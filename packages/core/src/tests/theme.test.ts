@@ -40,7 +40,18 @@ describe('expandMotionScale', () => {
 			'--duration-medium-max': '400ms',
 			'--duration-slow-min': '525ms',
 			'--duration-slow': '700ms',
-			'--duration-slow-max': '935ms'
+			'--duration-slow-max': '935ms',
+			// The pre-tempo snapshot and the default tempo, emitted since 0.7.13.
+			'--_astryx-pre-tempo-duration-fast-min': '95ms',
+			'--_astryx-pre-tempo-duration-fast': '125ms',
+			'--_astryx-pre-tempo-duration-fast-max': '165ms',
+			'--_astryx-pre-tempo-duration-medium-min': '225ms',
+			'--_astryx-pre-tempo-duration-medium': '300ms',
+			'--_astryx-pre-tempo-duration-medium-max': '400ms',
+			'--_astryx-pre-tempo-duration-slow-min': '525ms',
+			'--_astryx-pre-tempo-duration-slow': '700ms',
+			'--_astryx-pre-tempo-duration-slow-max': '935ms',
+			'--_astryx-motion-tempo': '1'
 		});
 	});
 });
@@ -231,8 +242,8 @@ describe('defineTheme extends', () => {
 			extends: base,
 			typography: { scale: { base: 16, ratio: 1.25 } }
 		});
-		expect(child.resolvedTokens['--font-size-base']).not.toBe(
-			base.resolvedTokens['--font-size-base']
+		expect(child.resolvedTokens['--_scaled-font-size-base']).not.toBe(
+			base.resolvedTokens['--_scaled-font-size-base']
 		);
 	});
 });

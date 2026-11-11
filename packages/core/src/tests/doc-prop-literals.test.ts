@@ -145,6 +145,7 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	'Switch.status',
 	'TabMenu.options',
 	'Text.hasTruncateTooltip',
+	'Theme.theme',
 	'TextArea.status',
 	'TextInput.status',
 	'TimeInput.status',

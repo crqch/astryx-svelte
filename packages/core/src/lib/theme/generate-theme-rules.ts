@@ -26,7 +26,22 @@ import {
 const THEME_ATTR = dataAttr('theme');
 const THEME_SCOPE_TO = `[${THEME_ATTR}]`;
 const THEME_LAYER = `${NAMESPACE}-theme`;
-const BASE_LAYER = `${NAMESPACE}-base`;
+
+/**
+ * The touch press model (`utils/interaction-overlay.stylex.ts`, press
+ * feedback). A mouse keeps `:active`; under a coarse primary pointer the press
+ * controller marks a believed press with `data-astryx-press`, and a finger
+ * paints the press from that attribute instead of `:active`, which would
+ * paint on touch-down and outlive a scroll.
+ */
+const COARSE_POINTER_QUERY = '(pointer: coarse)';
+const ACTIVE_PSEUDO = /:active(?![^-\w])/g;
+const PRESS_ON = `[${dataAttr('press')}="on"]`;
+const PRESSABLE = `[${dataAttr('pressable')}]`;
+const PRESS_BELIEVED_SELECTOR =
+	`:is(${PRESS_ON}, ` +
+	`${PRESS_ON} :where(:not(${PRESSABLE}, ${PRESS_ON} ${PRESSABLE} *)), ` +
+	`:where(:not(${PRESSABLE})):has(${PRESS_ON}))`;
 
 /** `[data-astryx-media="dark"]` — what `<MediaTheme>` writes. */
 function mediaSelector(surface: 'dark' | 'light'): string {
@@ -389,7 +404,7 @@ function componentRules(theme: DefinedTheme): string[] {
 			for (const [pseudo, styleBlock] of pseudos) {
 				const block = pseudoDeclarations(styleBlock);
 				if (Object.keys(block).length === 0) continue;
-				rules.push(`${selector}${guardHoverPseudo(pseudo)} {\n${indent(declarations(block))}\n}`);
+				rules.push(...pseudoRules(selector, pseudo, declarations(block)));
 			}
 		}
 	}
@@ -397,6 +412,24 @@ function componentRules(theme: DefinedTheme): string[] {
 	rules.push(...sizeOverrideRules(theme));
 
 	return rules;
+}
+
+/**
+ * The rules for one themed pseudo-class override. A themed `:active` follows
+ * the press model: the `:active` rule applies only off a coarse pointer, and
+ * under one the press attribute takes its place.
+ */
+function pseudoRules(baseSelector: string, pseudo: string, declarations: string): string[] {
+	if (!ACTIVE_PSEUDO.test(pseudo)) {
+		ACTIVE_PSEUDO.lastIndex = 0;
+		return [`${baseSelector}${guardHoverPseudo(pseudo)} {\n${indent(declarations)}\n}`];
+	}
+	ACTIVE_PSEUDO.lastIndex = 0;
+	const pressed = pseudo.replace(ACTIVE_PSEUDO, PRESS_BELIEVED_SELECTOR);
+	return [
+		`@media not all and ${COARSE_POINTER_QUERY} {\n${indent(`${baseSelector}${guardHoverPseudo(pseudo)} {\n${indent(declarations)}\n}`)}\n}`,
+		`@media ${COARSE_POINTER_QUERY} {\n${indent(`${baseSelector}${pressed} {\n${indent(declarations)}\n}`)}\n}`
+	];
 }
 
 /**
@@ -532,14 +565,13 @@ export function generateOnMediaCSS(theme: DefinedTheme): string {
  * one colour token got no `@layer reset` at all, so its bare `<p>` kept the
  * ambient theme's typography *and* its text colour.
  */
-function proseResetRules(theme: DefinedTheme): string[] {
-	const tokens = theme.resolvedTokens;
-
+function proseResetRules(_theme: DefinedTheme): string[] {
 	/**
-	 * A token's literal value, or a `var()` reference to it when this theme does
-	 * not set it. Upstream's `val`.
+	 * A `var()` reference to the semantic token. The reset always references the
+	 * role token rather than its resolved value, so a later theme or a
+	 * reader-scaled font size flows into bare HTML too.
 	 */
-	const val = (key: string) => tokens[key] || `var(${key})`;
+	const val = (key: string) => `var(${key})`;
 
 	/** The three semantic tokens for a role. */
 	const role = (name: string) => ({
@@ -638,6 +670,11 @@ export function generateThemeRulesSplit(theme: DefinedTheme): ThemeRulesSplit {
 	if (Object.keys(scopeTokens).length > 0) {
 		component.push(`:scope {\n${indent(declarations(scopeTokens))}\n}`);
 	}
+	if (theme.resolvedTokens['--font-family-body'] != null) {
+		// Text inherits the theme's body face; the reset only reaches bare HTML,
+		// so the scope restates it for component content.
+		component.push(':scope {\n\tfont-family: var(--font-family-body);\n}');
+	}
 
 	component.push(...componentRules(theme));
 
@@ -726,6 +763,16 @@ export function generateThemeCSS(theme: DefinedTheme): ThemeCSSOutput {
 	const proseCss = prose.length > 0 ? scope(prose) : '';
 	let componentCss = component.length > 0 ? scope(component) : '';
 
+	// Responsive adaptations follow the root block in the same layer, so their
+	// narrower conditions win by source order.
+	for (const adaptation of theme.__adaptationRules) {
+		if (!adaptation.query || Object.keys(adaptation.tokens).length === 0) continue;
+		const adaptationCss = `@media ${adaptation.query} {\n${scope([
+			`:scope {\n${indent(declarations(adaptation.tokens))}\n}`
+		])}\n}`;
+		componentCss = componentCss ? `${componentCss}\n\n${adaptationCss}` : adaptationCss;
+	}
+
 	// A separate block rather than another rule inside the first, matching
 	// upstream: the on-media scope is unbounded so it can reach
 	// `[data-astryx-media]` elements, which the bounded scope above cannot.
@@ -760,15 +807,22 @@ export function generateThemeCss(theme: DefinedTheme): string {
 		parts.push('@layer reset {', indent(proseScoped), '}', '');
 	}
 
-	// The data-token defaults are theme-independent and go in `@layer
-	// astryx-base`, below the theme's own overrides. After the reset block and
-	// before the theme block, as upstream's build orders it: a layer's position
-	// is fixed by where it is *first declared*, so emitting this anywhere else
-	// would invert `reset < astryx-base < astryx-theme` for a consumer who
-	// imports this stylesheet on its own.
-	parts.push(`@layer ${BASE_LAYER} {`, indent(generateDataTokenDefaultsCSS()), '}', '');
-
 	parts.push(`@layer ${THEME_LAYER} {`, indent(scoped), '}');
+
+	// Responsive adaptations follow the root block, inside the same layer, so
+	// their narrower conditions win by source order without a second layer.
+	for (const adaptation of theme.__adaptationRules) {
+		if (!adaptation.query || Object.keys(adaptation.tokens).length === 0) continue;
+		const scopeRules = `:scope {\n${indent(declarations(adaptation.tokens))}\n}`;
+		parts.push(
+			'',
+			`@layer ${THEME_LAYER} {`,
+			indent(
+				`@media ${adaptation.query} {\n  @scope (${scopeSelector}) to (${THEME_SCOPE_TO}) {\n${indent(scopeRules)}\n  }\n}`
+			),
+			'}'
+		);
+	}
 
 	// A second layer block rather than another rule inside the first, matching
 	// upstream: the on-media scope is generated separately and appended.

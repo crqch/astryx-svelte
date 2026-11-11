@@ -52,6 +52,16 @@ export function expandMotionScale(config: MotionScaleConfig): MotionScaleTokens 
 		tokens['--duration-slow-max'] = `${roundMs(slow / ratio)}ms`;
 	}
 
+	// The pre-tempo snapshot, which the runtime multiplies by
+	// `--_astryx-motion-tempo`; at the default tempo the two are equal and the
+	// generated stylesheet is the same either way.
+	for (const [name, value] of Object.entries(tokens)) {
+		if (name.startsWith('--duration-')) {
+			tokens[name.replace('--duration-', '--_astryx-pre-tempo-duration-')] = value;
+		}
+	}
+	tokens['--_astryx-motion-tempo'] = '1';
+
 	if (easing) {
 		tokens['--ease-standard'] = easing;
 	}

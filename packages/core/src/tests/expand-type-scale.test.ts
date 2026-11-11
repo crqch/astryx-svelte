@@ -53,29 +53,32 @@ describe('expandTypeScale', () => {
 				'--font-size-5xl'
 			];
 			for (const name of sizeTokens) {
-				expect(tokens[name]).toBeDefined();
-				expect(tokens[name]).toMatch(/rem$/);
+				// The public token is a reference; its reader-scaled counterpart holds
+				// the rem value, as 0.7.13's Dynamic Type pass emits it.
+				expect(tokens[name]).toBe(`var(${name.replace('--font-size-', '--_scaled-font-size-')})`);
+				expect(tokens[name.replace('--font-size-', '--_scaled-font-size-')]).toMatch(/rem/);
 			}
 		});
 
 		it('anchors --font-size-base to the base size', () => {
-			expect(tokens['--font-size-base']).toBe('0.875rem'); // 14/16
+			expect(tokens['--font-size-base']).toBe('var(--_scaled-font-size-base)');
+			expect(tokens['--_scaled-font-size-base']).toContain('0.875rem'); // 14/16
 		});
 
 		it('computes geometric progression for sub-scale tokens', () => {
-			expect(tokens['--font-size-4xs']).toBe('0.375rem'); // 6/16
-			expect(tokens['--font-size-3xs']).toBe('0.4375rem'); // 7/16
-			expect(tokens['--font-size-2xs']).toBe('0.5rem'); // 8/16
+			expect(tokens['--_scaled-font-size-4xs']).toContain('0.375rem'); // 6/16
+			expect(tokens['--_scaled-font-size-3xs']).toContain('0.4375rem'); // 7/16
+			expect(tokens['--_scaled-font-size-2xs']).toContain('0.5rem'); // 8/16
 		});
 
 		it('computes geometric progression', () => {
-			expect(tokens['--font-size-xs']).toBe('0.625rem'); // 10/16
-			expect(tokens['--font-size-sm']).toBe('0.75rem'); // 12/16
-			expect(tokens['--font-size-lg']).toBe('1.0625rem'); // 17/16
-			expect(tokens['--font-size-xl']).toBe('1.25rem'); // 20/16
-			expect(tokens['--font-size-2xl']).toBe('1.5rem'); // 24/16
-			expect(tokens['--font-size-3xl']).toBe('1.8125rem'); // 29/16
-			expect(tokens['--font-size-4xl']).toBe('2.1875rem'); // 35/16
+			expect(tokens['--_scaled-font-size-xs']).toContain('0.625rem'); // 10/16
+			expect(tokens['--_scaled-font-size-sm']).toContain('0.75rem'); // 12/16
+			expect(tokens['--_scaled-font-size-lg']).toContain('1.0625rem'); // 17/16
+			expect(tokens['--_scaled-font-size-xl']).toContain('1.25rem'); // 20/16
+			expect(tokens['--_scaled-font-size-2xl']).toContain('1.5rem'); // 24/16
+			expect(tokens['--_scaled-font-size-3xl']).toContain('1.8125rem'); // 29/16
+			expect(tokens['--_scaled-font-size-4xl']).toContain('2.1875rem'); // 35/16
 		});
 	});
 
@@ -183,8 +186,8 @@ describe('expandTypeScale', () => {
 	describe('total token count', () => {
 		const tokens = expandTypeScale({ base: 14, ratio: 1.2 });
 
-		it('generates 54 tokens (12 size + 42 semantic)', () => {
-			expect(Object.keys(tokens)).toHaveLength(54);
+		it('generates 66 tokens (12 scaled + 12 references + 42 semantic)', () => {
+			expect(Object.keys(tokens)).toHaveLength(66);
 		});
 	});
 
@@ -213,14 +216,14 @@ describe('expandTypeScale', () => {
 	describe('alternate scales', () => {
 		it('dense scale (base=12, ratio=1.125)', () => {
 			const tokens = expandTypeScale({ base: 12, ratio: 1.125 });
-			expect(tokens['--font-size-base']).toBe('0.75rem'); // 12/16
+			expect(tokens['--_scaled-font-size-base']).toContain('0.75rem'); // 12/16
 			expect(tokens['--text-heading-4-size']).toBe('var(--font-size-base)');
 		});
 
 		it('airy scale (base=16, ratio=1.25)', () => {
 			const tokens = expandTypeScale({ base: 16, ratio: 1.25 });
-			expect(tokens['--font-size-base']).toBe('1rem'); // 16/16
-			expect(tokens['--font-size-lg']).toBe('1.25rem'); // 20/16
+			expect(tokens['--_scaled-font-size-base']).toContain('1rem'); // 16/16
+			expect(tokens['--_scaled-font-size-lg']).toContain('1.25rem'); // 20/16
 			expect(tokens['--text-heading-1-size']).toBe('var(--font-size-2xl)');
 		});
 

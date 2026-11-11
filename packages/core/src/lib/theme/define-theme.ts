@@ -82,6 +82,47 @@ export type ComponentOverrides = Record<string, Record<string, StyleOverrides>>;
  *   guard is packages/cli/scripts/check-theme-template.test.mjs)
  * - /packages/cli/assets/docs/theme.doc.mjs (`astryx-svelte docs theme`)
  */
+/** Breakpoint names accepted by an adaptation's `when.width`. */
+export type AdaptationBreakpoint = 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+
+/** One condition under which an adaptation's value applies. */
+export interface AdaptationCondition {
+	/** Pointer accuracy the device must report. */
+	pointer?: 'coarse' | 'fine';
+	/** Viewport width bound. */
+	width?: {
+		below?: AdaptationBreakpoint;
+		above?: AdaptationBreakpoint;
+	};
+}
+
+/** The overrides an adaptation applies when its condition matches. */
+export interface AdaptationValue {
+	typography?: TypographyConfig;
+	tokens?: TokenMap;
+	components?: ComponentOverrides;
+}
+
+/** One adaptation rule: a media condition and the theme value it applies. */
+export interface ThemeAdaptationRule {
+	when: AdaptationCondition;
+	value: AdaptationValue;
+}
+
+/** A theme's responsive adaptations, ported from upstream's `adaptations`. */
+export interface ThemeAdaptationsConfig {
+	/** Custom width breakpoints, in px. Defaults to the shared scale. */
+	widthBreakpoints?: Partial<Record<AdaptationBreakpoint, number>>;
+	rules?: ThemeAdaptationRule[];
+}
+
+/** A resolved adaptation rule, as the stylesheet generator consumes it. @internal */
+export interface ResolvedAdaptationRule {
+	when: AdaptationCondition;
+	query: string;
+	tokens: Record<string, string>;
+}
+
 export interface ThemeConfig {
 	name: string;
 	typography?: TypographyConfig;
@@ -148,6 +189,18 @@ export interface ThemeConfig {
 	 */
 	extends?: DefinedTheme;
 	tokens?: TokenMap;
+	/**
+	 * Tokens scoped to this theme's own namespace, emitted beside `tokens` at
+	 * the theme root. Upstream's `localTokens`.
+	 */
+	localTokens?: TokenMap;
+	/**
+	 * Responsive overrides. A rule's `when` compiles to a media query and its
+	 * `value.typography` re-expands the type scale inside it; this is how a
+	 * mobile reader gets the larger type floor without changing the desktop
+	 * scale.
+	 */
+	adaptations?: ThemeAdaptationsConfig;
 	components?: ComponentOverrides;
 	/**
 	 * Icon registry — semantic icon names mapped to snippets, scoped to this
@@ -198,6 +251,8 @@ export interface DefinedTheme extends ThemeConfig {
 	readonly __onDark: ResolvedOnMedia;
 	/** As `__onDark`, for the light surface. @internal */
 	readonly __onLight: ResolvedOnMedia;
+	/** Adaptation rules after their typography scales have been expanded. @internal */
+	readonly __adaptationRules: readonly ResolvedAdaptationRule[];
 }
 
 /** Compiles a `[light, dark]` pair into `light-dark()`; passes strings through. */
@@ -337,6 +392,55 @@ function fontFamilyTokens(typo: TypographyConfig | undefined): Record<string, st
 	return tokens;
 }
 
+const DEFAULT_WIDTH_BREAKPOINTS: Record<AdaptationBreakpoint, number> = {
+	sm: 640,
+	md: 768,
+	lg: 1024,
+	xl: 1280,
+	'2xl': 1536
+};
+
+/** Compile an adaptation condition into the media query upstream emits. */
+function adaptationQuery(
+	when: AdaptationCondition,
+	breakpoints: Record<AdaptationBreakpoint, number>
+): string {
+	const parts: string[] = [];
+	if (when.width?.below != null) parts.push(`(width < ${breakpoints[when.width.below]}px)`);
+	if (when.width?.above != null) parts.push(`(width > ${breakpoints[when.width.above]}px)`);
+	if (when.pointer != null) parts.push(`(pointer: ${when.pointer})`);
+	return parts.join(' and ');
+}
+
+/**
+ * Resolve one adaptation's value into the token map its media block carries.
+ * Upstream re-expands the type scale and re-emits the font families, then
+ * layers the rule's explicit tokens on top.
+ */
+function resolveAdaptation(
+	rule: ThemeAdaptationRule,
+	breakpoints: Record<AdaptationBreakpoint, number>,
+	baseTypography: TypographyConfig | undefined
+): ResolvedAdaptationRule {
+	// Only the fields the adaptation names change; its weights and families
+	// inherit the theme's root typography, as upstream's merge does.
+	const typography: TypographyConfig = {
+		...baseTypography,
+		...rule.value.typography,
+		scale: rule.value.typography?.scale ?? baseTypography?.scale
+	};
+	const typeScale = typeScaleConfigFrom(typography);
+	return {
+		when: rule.when,
+		query: adaptationQuery(rule.when, breakpoints),
+		tokens: {
+			...(typeScale ? expandTypeScale(typeScale) : {}),
+			...fontFamilyTokens(typography),
+			...resolveTokenMap(rule.value.tokens)
+		}
+	};
+}
+
 export function defineTheme(config: ThemeConfig): DefinedTheme {
 	// Step 0, as upstream numbers it: pre-seed from the base theme so everything
 	// below overwrites it. `base.resolvedTokens` and not `base.tokens` — upstream
@@ -364,20 +468,99 @@ export function defineTheme(config: ThemeConfig): DefinedTheme {
 		// Upstream's step 1d, after the expanders and before the syntax fold.
 		...fontFamilyTokens(config.typography),
 		...syntaxTokenMap(config.syntax),
-		...resolveTokenMap(config.tokens)
+		...resolveTokenMap(config.tokens),
+		...resolveTokenMap(config.localTokens)
 	};
 
+	// Public tokens whose canonical default references another public token.
+	// Upstream repeats an omitted alias at the theme root so a nested theme binds
+	// it locally without changing authored-token metadata. Processing in order
+	// lets the icon and border aliases see the text roles created just above.
+	const REFERENCE_DEFAULTS: ReadonlyArray<readonly [string, string]> = [
+		['--color-text-info', '--color-text-blue'],
+		['--color-text-success', '--color-text-green'],
+		['--color-text-warning', '--color-text-yellow'],
+		['--color-text-error', '--color-text-red'],
+		['--color-on-info-muted', '--color-text-blue'],
+		['--color-on-success-muted', '--color-text-green'],
+		['--color-on-warning-muted', '--color-text-yellow'],
+		['--color-on-error-muted', '--color-text-red'],
+		['--color-icon-info', '--color-text-info'],
+		['--color-icon-success', '--color-text-success'],
+		['--color-icon-warning', '--color-text-warning'],
+		['--color-icon-error', '--color-text-error'],
+		['--color-border-info', '--color-text-info'],
+		['--color-border-success', '--color-text-success'],
+		['--color-border-warning', '--color-text-warning'],
+		['--color-border-error', '--color-text-error'],
+		['--duration-exit', '--duration-fast']
+	];
+	for (const [role, source] of REFERENCE_DEFAULTS) {
+		if (resolvedTokens[role] === undefined && resolvedTokens[source] !== undefined) {
+			resolvedTokens[role] = `var(${source})`;
+		}
+	}
+
+	// A semantic size the theme pins to a raw length follows the reader's
+	// Dynamic Type setting, exactly as a generated scale step does. Upstream's
+	// readerTextSizeEntries rewrites these at build time.
+	const textSizeStyles: Record<string, string> = {
+		body: 'body',
+		label: 'body',
+		code: 'body',
+		large: 'title3',
+		supporting: 'footnote',
+		'display-1': 'large-title',
+		'display-2': 'large-title',
+		'display-3': 'title1'
+	};
+	for (const [name, value] of Object.entries(resolvedTokens)) {
+		const match = /^--text-([a-z0-9-]+)-size$/.exec(name);
+		if (match == null || value.startsWith('var(') || !/^[\d.]+(?:rem|px)$/.test(value)) continue;
+		const style = textSizeStyles[match[1]];
+		if (style != null) {
+			resolvedTokens[name] = `calc(${value} * var(--_dynamic-type-${style}, 1))`;
+		}
+	}
+
 	// Generated component bindings first, so a theme's own `components` entry for
-	// the same style key still wins — upstream's precedence. Colours are
-	// unconditional; the type-scale bindings need a scale to reference.
+	// the same style key still wins — upstream's precedence. A component only
+	// receives the generated colour rules when the theme actually touches it:
+	// upstream emits Link's rules only when the theme styles Link.
 	const generated: Record<
 		string,
 		Record<string, Record<string, string>>
 	> = generateTextColorComponents();
+	const authored = (name: string) =>
+		config.components?.[name] != null || base?.components?.[name] != null;
+	for (const name of Object.keys(generated)) {
+		const keep =
+			name === 'heading' || name === 'text'
+				? typeScaleConfig != null || authored(name)
+				: authored(name);
+		if (!keep) delete generated[name];
+	}
 	if (typeScaleConfig) {
 		for (const [name, styles] of Object.entries(generateTypeScaleComponents(typeScaleConfig))) {
 			generated[name] = { ...generated[name], ...styles };
 		}
+	}
+	// A Heading override anywhere in the stack gets the public `weight` choices
+	// re-emitted, even when the theme brings its own Heading rules rather than a
+	// type scale: the component's ordinary weight class sits below the theme
+	// layer, so without these the prop cannot beat a type or level default.
+	if (config.components?.heading != null || base?.components?.heading != null) {
+		generated.heading = {
+			...Object.fromEntries(
+				Object.entries({
+					normal: 'var(--font-weight-normal)',
+					medium: 'var(--font-weight-medium)',
+					semibold: 'var(--font-weight-semibold)',
+					bold: 'var(--font-weight-bold)'
+				}).map(([name, value]) => [`weight:${name}`, { fontWeight: value }])
+			),
+			...generated.heading
+		};
 	}
 
 	let components = deepMergeComponents(generated, config.components);
@@ -412,7 +595,17 @@ export function defineTheme(config: ThemeConfig): DefinedTheme {
 		// `<MediaTheme>` work at all, so a theme that says nothing about media
 		// surfaces still emits them.
 		__onDark: resolveOnMedia('dark', config.onDark),
-		__onLight: resolveOnMedia('light', config.onLight)
+		__onLight: resolveOnMedia('light', config.onLight),
+		__adaptationRules: (config.adaptations?.rules ?? []).map((rule) =>
+			resolveAdaptation(
+				rule,
+				{
+					...DEFAULT_WIDTH_BREAKPOINTS,
+					...config.adaptations?.widthBreakpoints
+				},
+				config.typography
+			)
+		)
 	};
 
 	// Defining a theme registers it, so a name-keyed lookup (`getIcon(name,

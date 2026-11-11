@@ -106,9 +106,12 @@ describe('generateThemeRules', () => {
 	it('includes :scope token block with type scale tokens', () => {
 		const scopeRule = rules.find((r) => r.includes(':scope'));
 		expect(scopeRule).toBeDefined();
-		// Raw size tokens are rem values
-		expect(scopeRule).toContain('--font-size-base: 0.875rem');
-		expect(scopeRule).toContain('--font-size-2xl: 1.5rem');
+		// The public size tokens are references; their reader-scaled counterparts
+		// hold the rem values, as the 0.7.13 Dynamic Type pass emits them.
+		expect(scopeRule).toContain('--font-size-base: var(--_scaled-font-size-base)');
+		expect(scopeRule).toContain('--_scaled-font-size-base: min(calc(0.875rem');
+		expect(scopeRule).toContain('--font-size-2xl: var(--_scaled-font-size-2xl)');
+		expect(scopeRule).toContain('--_scaled-font-size-2xl: min(calc(1.5rem');
 		// Semantic tokens are var() refs
 		expect(scopeRule).toContain('--text-heading-1-size: var(--font-size-2xl)');
 		expect(scopeRule).toContain('--text-heading-4-size: var(--font-size-base)');
@@ -133,9 +136,11 @@ describe('generateThemeRules', () => {
 			'--font-size-4xl'
 		];
 		for (const token of rawSizeTokens) {
-			const match = scopeRule.match(new RegExp(`${token}: ([^;]+)`));
+			const scaled = token.replace('--font-size-', '--_scaled-font-size-');
+			const match = scopeRule.match(new RegExp(`${scaled}: ([^;]+)`));
 			expect(match).not.toBeNull();
-			expect(match![1]).toMatch(/rem$/);
+			expect(match![1]).toMatch(/rem/);
+			expect(scopeRule).toContain(`${token}: var(${scaled})`);
 		}
 	});
 
@@ -251,9 +256,11 @@ describe('generateThemeRules', () => {
 			(r) => r.trimStart().startsWith(':where(h1)') || r.includes(':where(h1)')
 		);
 		expect(h1Rule).toBeDefined();
-		// Prose rules use val() helper which resolves to the token value (now a var ref)
-		expect(h1Rule).toContain('var(--font-size-2xl)');
-		expect(h1Rule).toContain('var(--font-weight-semibold)');
+		// The reset references the semantic role tokens, so the theme's scale and a
+		// reader-scaled size both flow into bare HTML.
+		expect(h1Rule).toContain('font-size: var(--text-heading-1-size)');
+		expect(h1Rule).toContain('font-weight: var(--text-heading-1-weight)');
+		expect(h1Rule).toContain('line-height: var(--text-heading-1-leading)');
 		// Prose defaults intentionally carry NO block margins: reset.css zeroes
 		// raw element margins and the Markdown/Heading components own their spacing
 		// via StyleX (@layer astryx-base). Emitting margins here would re-introduce
@@ -267,7 +274,7 @@ describe('generateThemeRules', () => {
 			(r) => r.trimStart().startsWith(':where(p)') || r.includes(':where(p)')
 		);
 		expect(pRule).toBeDefined();
-		expect(pRule).toContain('var(--font-size-base)');
+		expect(pRule).toContain('font-size: var(--text-body-size)');
 		expect(pRule).toContain('font-family: var(--font-family-body)');
 		expect(pRule).toContain('var(--color-text-primary)');
 		// No margins on the prose paragraph default (see heading rule note).
@@ -382,7 +389,7 @@ describe('generateThemeRules with weight overrides', () => {
 			(r) => r.trimStart().startsWith(':where(h3)') || r.includes(':where(h3)')
 		);
 		expect(h3Rule).toBeDefined();
-		expect(h3Rule).toContain('var(--font-weight-bold)');
+		expect(h3Rule).toContain('font-weight: var(--text-heading-3-weight)');
 	});
 });
 

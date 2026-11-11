@@ -58,7 +58,8 @@ export function useSyntaxTheme(): UseSyntaxThemeReturn | null {
 	const tokens = $derived.by(() => {
 		const resolved: Partial<Record<SyntaxThemeTokenKey, string>> = {};
 		for (const key of ALL_SYNTAX_KEYS) {
-			resolved[key] = resolveSyntaxTokenForMode(ctx().theme.__inputTokens[key], mode);
+			const value = ctx().theme.__inputTokens[key];
+			if (value !== undefined) resolved[key] = resolveSyntaxTokenForMode(value, mode);
 		}
 		return resolved as Record<SyntaxThemeTokenKey, string>;
 	});

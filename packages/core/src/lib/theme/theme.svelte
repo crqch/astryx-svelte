@@ -36,26 +36,13 @@
 	 */
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const injectedThemes = new Map<string, { styles: HTMLStyleElement[]; count: number }>();
-
-	/**
-	 * How many injected themes are relying on the `--color-data-*` defaults.
-	 *
-	 * The defaults are one document-wide `:root` block shared by every theme, not
-	 * a per-theme stylesheet, so they get their own count: injected once, and
-	 * removed only when the last theme holding a reference goes away. Tearing
-	 * them down with whichever `<Theme>` happened to inject them would strip the
-	 * palette from the themes still mounted. Upstream's `Theme.tsx` keeps exactly
-	 * this counter beside its `injectedThemes` set.
-	 */
-	let dataTokenDefaultsRefCount = 0;
-	let dataTokenDefaultsStyle: HTMLStyleElement | null = null;
 </script>
 
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { NAMESPACE, dataAttr } from '../internal/naming.js';
 	import { warnOnce } from '../utils/dev-warning.js';
-	import { generateDataTokenDefaultsCSS, generateThemeCSS } from './generate-theme-rules.js';
+	import { generateThemeCSS } from './generate-theme-rules.js';
 	import { isNestedTheme, markThemeNested, setThemeContext } from './theme-context.js';
 	import { registerTheme } from './theme-registry.js';
 	import { themeWrapperAttrs } from './theme.stylex.js';
@@ -179,23 +166,17 @@
 		const themeKey = `astryx-theme-${theme.name}`;
 
 		/**
-		 * Drops one hold on this theme's stylesheets, and the last one out also
-		 * drops the theme's hold on the shared `--color-data-*` block.
+		 * Drops one hold on this theme's stylesheets.
 		 *
 		 * Shared by both branches below rather than written into each, because
 		 * the `<Theme>` that injected the tags need not be the one that unmounts
-		 * last: a joiner's cleanup can be the one that empties the count, and it
-		 * has to release the base block when it is.
+		 * last.
 		 */
 		const release = (entry: { styles: HTMLStyleElement[]; count: number }): void => {
 			entry.count -= 1;
 			if (entry.count > 0) return;
 			for (const style of entry.styles) style.remove();
 			injectedThemes.delete(themeKey);
-			if (--dataTokenDefaultsRefCount === 0) {
-				dataTokenDefaultsStyle?.remove();
-				dataTokenDefaultsStyle = null;
-			}
 		};
 
 		// Already injected by another `<Theme>` on this theme: join its count and
@@ -236,20 +217,6 @@
 			document.head.appendChild(style);
 			return style;
 		};
-
-		// The `--color-data-*` defaults, in `@layer astryx-base` where StyleX puts
-		// the core token defaults, so a theme's own data token outranks them by
-		// layer rather than by specificity. One document-wide `:root` block shared
-		// by every theme, so it carries no theme name and no `id` marker and is
-		// counted separately — see `dataTokenDefaultsRefCount`. Appended, never
-		// prepended, so it cannot declare `astryx-base` ahead of `reset`; a
-		// consumer that loaded `base.css` has the order pinned there regardless.
-		if (dataTokenDefaultsRefCount++ === 0) {
-			dataTokenDefaultsStyle = document.createElement('style');
-			dataTokenDefaultsStyle.setAttribute(dataAttr('theme-base'), '');
-			dataTokenDefaultsStyle.textContent = `@layer ${NAMESPACE}-base {\n${generateDataTokenDefaultsCSS()}\n}`;
-			document.head.appendChild(dataTokenDefaultsStyle);
-		}
 
 		const styles: HTMLStyleElement[] = [];
 		// Prose first, so the reset layer is declared before the theme layer.
