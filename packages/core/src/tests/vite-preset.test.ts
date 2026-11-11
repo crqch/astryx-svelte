@@ -27,7 +27,8 @@ function configOf(plugins: unknown) {
 	}>;
 	const seam = flat.find((p) => p?.name === 'astryx-svelte:keep-stylex-on-the-transform-path');
 	return seam?.config?.() as
-		{ optimizeDeps?: { exclude?: string[] }; ssr?: { noExternal?: string[] } } | undefined;
+		| { optimizeDeps?: { exclude?: string[] }; ssr?: { noExternal?: string[] } }
+		| undefined;
 }
 
 describe('astryx() vite preset', () => {

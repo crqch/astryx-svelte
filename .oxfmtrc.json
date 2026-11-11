@@ -1,0 +1,28 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"useTabs": true,
+	"singleQuote": true,
+	"trailingComma": "none",
+	"printWidth": 100,
+	"svelte": true,
+	"ignorePatterns": [
+		"node_modules/**",
+		"reference/**",
+		"port/ledger/**",
+		"port/design/**",
+		"port/research/**",
+		"**/.svelte-kit/**",
+		"**/.vercel/**",
+		"**/dist/**",
+		"/build/**",
+		"/docs/build/**",
+		"/packages/*/build/**",
+		"docs/static/**",
+		"docs/src/lib/generated/*.js",
+		"docs/src/lib/generated/*.css",
+		"packages/cli/assets/docs/**",
+		"packages/cli/assets/templates/**",
+		"packages/core/src/lib/locales/**",
+		"**/.astryx-*/**"
+	]
+}

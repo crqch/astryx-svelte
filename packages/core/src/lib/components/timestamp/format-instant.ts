@@ -32,7 +32,8 @@ import type { TimestampFormat } from './timestamp-format.js';
  * phrase names no instant, so a zone could not change what it says.
  */
 export type InstantFormat =
-	Exclude<TimestampFormat, 'relative' | 'relative_short' | 'auto'> | 'full';
+	| Exclude<TimestampFormat, 'relative' | 'relative_short' | 'auto'>
+	| 'full';
 
 export interface FormatInstantOptions {
 	/**

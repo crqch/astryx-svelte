@@ -487,12 +487,7 @@ if (existsSync(path.join(root, 'packages/core/dist/index.d.ts'))) {
 const gates = [];
 if (full) {
 	gates.push(
-		runStage('Class oracle', 'bun', [
-			'run',
-			'--filter',
-			'@astryx-svelte/core',
-			'test:parity'
-		]),
+		runStage('Class oracle', 'bun', ['run', '--filter', '@astryx-svelte/core', 'test:parity']),
 		runStage('CSS oracle', 'bun', ['run', '--filter', '@astryx-svelte/core', 'test:css']),
 		runStage('Theme oracles', 'bun', ['run', '--filter', '@astryx-svelte/theme-*', 'test']),
 		runStage('Test collection', 'bunx', ['vitest', 'list', '--reporter=json'], {
@@ -666,7 +661,7 @@ if (examples) {
 } else {
 	push(
 		'Not derivable in this run: the count comes from the docs generator, which reads core’s',
-		'built `dist/`. Run `bun run --filter '*' build` first.',
+		"built `dist/`. Run `bun run --filter '*' build` first.",
 		''
 	);
 }

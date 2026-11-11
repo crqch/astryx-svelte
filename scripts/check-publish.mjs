@@ -80,9 +80,7 @@ for (const pkgDir of publishablePackages()) {
 
 	// npm always packs a README if one exists and never warns when none does, so
 	// the failure mode is a published package whose npm page is empty.
-	const hasReadme = fs
-		.readdirSync(pkgDir)
-		.some((name) => /^readme(\.md|\.markdown)?$/i.test(name));
+	const hasReadme = fs.readdirSync(pkgDir).some((name) => /^readme(\.md|\.markdown)?$/i.test(name));
 	if (!hasReadme) problems.push('error: no README.md — npm would render an empty package page');
 
 	if (problems.length === 0) {

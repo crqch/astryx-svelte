@@ -31,7 +31,13 @@ import type { DialogPurpose } from '../dialog/dialog.svelte';
  * - `hidden` — mounted but not shown
  */
 export type BottomSheetSwitcherPhase =
-	'entering' | 'active' | 'covered' | 'aligning' | 'fading' | 'exiting' | 'hidden';
+	| 'entering'
+	| 'active'
+	| 'covered'
+	| 'aligning'
+	| 'fading'
+	| 'exiting'
+	| 'hidden';
 
 /** Reported by a sheet when one of its choreographed transitions finishes. */
 export interface BottomSheetSwitcherTransitionEvent {

@@ -1,6 +1,9 @@
 <script lang="ts" module>
 	export type SelectableScenario =
-		'checkbox' | 'radioGroup' | 'radioItemWithoutGroup' | 'radioCloseOnSelect';
+		| 'checkbox'
+		| 'radioGroup'
+		| 'radioItemWithoutGroup'
+		| 'radioCloseOnSelect';
 </script>
 
 <script lang="ts">

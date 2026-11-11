@@ -45,7 +45,17 @@ export type BuiltinTextType =
 export type TextType = BuiltinTextType | (string & {});
 
 export type TextSize =
-	'4xs' | '3xs' | '2xs' | 'xsm' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
+	| '4xs'
+	| '3xs'
+	| '2xs'
+	| 'xsm'
+	| 'sm'
+	| 'base'
+	| 'lg'
+	| 'xl'
+	| '2xl'
+	| '3xl'
+	| '4xl';
 
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
 
@@ -85,7 +95,12 @@ export interface TextColorMap {
  * styles (see {@link resolveStyleColor}).
  */
 export type BuiltinTextColor =
-	'primary' | 'secondary' | 'disabled' | 'placeholder' | 'accent' | 'inherit';
+	| 'primary'
+	| 'secondary'
+	| 'disabled'
+	| 'placeholder'
+	| 'accent'
+	| 'inherit';
 
 /** Text colour. Extensible via {@link TextColorMap}. */
 export type TextColor = keyof TextColorMap;

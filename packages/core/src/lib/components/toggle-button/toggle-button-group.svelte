@@ -34,7 +34,8 @@
 	}
 
 	export type ToggleButtonGroupProps =
-		ToggleButtonGroupSingleProps | ToggleButtonGroupMultipleProps;
+		| ToggleButtonGroupSingleProps
+		| ToggleButtonGroupMultipleProps;
 </script>
 
 <script lang="ts">

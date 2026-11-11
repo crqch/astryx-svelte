@@ -21,7 +21,9 @@ interface NumberInputValidationOptions {
 }
 
 export type NumberInputCommitDecision =
-	{ type: 'commit'; value: number; didClamp: boolean } | { type: 'clear' } | { type: 'revert' };
+	| { type: 'commit'; value: number; didClamp: boolean }
+	| { type: 'clear' }
+	| { type: 'revert' };
 
 function parseNumericInput(
 	input: string,

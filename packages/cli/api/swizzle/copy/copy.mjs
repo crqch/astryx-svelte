@@ -253,8 +253,8 @@ function publicSurface(ownerRoot, ownerPackage) {
 					? value
 					: /** @type {any} */ (
 							value?.svelte ??
-								/** @type {any} */ (value)?.import ??
-								/** @type {any} */ (value)?.default
+							/** @type {any} */ (value)?.import ??
+							/** @type {any} */ (value)?.default
 						);
 			if (typeof target !== 'string') continue;
 			const srcRel = target.replace(/^\.\/dist\//, '');

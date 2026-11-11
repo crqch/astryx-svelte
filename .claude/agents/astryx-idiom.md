@@ -138,7 +138,7 @@ and a flow active on mount that rendered a closed dialog. `$effect.pre` is for a
 effect that **writes** before paint. **Sweep every one of them, and do not accept a
 green suite as evidence** — the audit that ran after those six were fixed found two
 more, and both were invisible to 146 passing cases because the assertions check that
-`transition: none` is *present*, which is true whichever phase the reflow sat in.
+`transition: none` is _present_, which is true whichever phase the reflow sat in.
 
 **`useId` faked.** `$props.id()` is the only correct counterpart, and the compiler
 permits it only at the top level of a component. A `.svelte.ts` must therefore take `id`
@@ -187,7 +187,7 @@ seed out of a helper and inline — which is what makes it match upstream — is
 surfaces the warnings, so a correct translation looks noisier than the incorrect one it
 replaced (`Calendar`'s focus-date seed, batch 033).
 
-**A `useMemo` translated to a bare closure.** Where upstream's memo is *contract* rather than
+**A `useMemo` translated to a bare closure.** Where upstream's memo is _contract_ rather than
 optimisation — `useCollator`'s collator exists to be reused across every comparison of a sort —
 `() => new Thing(...)` constructs one per call and is simply not the same hook. It has to be a
 `$derived` read through the returned getter. Testing it needs care in a way that is easy to get

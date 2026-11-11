@@ -240,7 +240,8 @@
 		};
 
 	export type SelectorProps<T extends SelectorOptionType = SelectorOptionType> =
-		SelectorPropsNonClearable<T> | SelectorPropsClearable<T>;
+		| SelectorPropsNonClearable<T>
+		| SelectorPropsClearable<T>;
 
 	/**
 	 * One match predicate, used by the flat filter (count + keyboard nav) and the
