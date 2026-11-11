@@ -27,7 +27,7 @@ dist
 # exactly the reason `/build` above is: unanchored, `reference/` matches a
 # directory of that name at ANY depth, and the CLI has one — the `reference`
 # doctype at `packages/cli/authoring/doctypes/reference/`, upstream's own path.
-# Three source files were silently untracked by it, `pnpm -r check` passed
+# Three source files were silently untracked by it, the gate passed
 # locally because they were on disk, and CI failed on every run with 22 errors
 # in files no diff had touched.
 /reference/

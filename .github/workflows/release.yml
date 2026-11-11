@@ -35,8 +35,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          # Writes an .npmrc that reads NODE_AUTH_TOKEN. pnpm honours npm's
-          # config hierarchy, so `pnpm publish` picks the credential up from it.
+          # Writes an .npmrc that reads NODE_AUTH_TOKEN. Bun honours npm's
+          # config hierarchy, so `bun publish` picks the credential up from it.
           #
           # NPM_TOKEN must be an **Automation** token (classic) or a **Granular
           # Access Token** with write access to the @astryx-svelte scope. A
@@ -66,7 +66,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # Browser binaries live in ~/.cache/ms-playwright, not node_modules, so
-      # `pnpm install` does not fetch them and the client test project cannot
+      # `bun install` does not fetch them and the client test project cannot
       # launch without this.
       - name: Install the browser the client test project needs
         run: bunx playwright install --with-deps chromium
@@ -90,10 +90,10 @@ jobs:
       - name: Verify every package is fit to publish
         run: bun scripts/check-publish.mjs --version "${{ steps.version.outputs.value }}"
 
-      # `--no-git-checks` because a tag build is a detached HEAD, which pnpm
-      # otherwise refuses as "not on the publish branch". `workspace:^` in the
-      # theme manifests is rewritten to a real range by pnpm at pack time; npm
-      # would publish the protocol literally, which is why this must be pnpm.
+      # `scripts/publish.mjs` walks the workspace and runs `bun publish` in
+      # each public package, because Bun has no recursive publish. Bun rewrites
+      # `workspace:^` to a real range at pack time; publishing the manifests
+      # with a tool that does not would ship the protocol literally.
       #
       # **No `--provenance`, because this repository is private.** npm signs the
       # statement and publishes it to the Sigstore transparency log first, then

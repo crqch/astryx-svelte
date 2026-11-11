@@ -38,14 +38,14 @@
 // have to be built by the TypeScript compiler, and keeping `typescript` out of
 // the CLI's runtime dependencies is a hard constraint.
 //
-// Run it with `pnpm -F docs emit-core-docs`. It is deliberately **not** wired
-// into `pnpm -F docs generate` or any `build`: a build that writes into another
-// workspace package's source tree is not hermetic, and `pnpm -r build` orders
+// Run it with `bun run --filter docs emit-core-docs`. It is deliberately **not** wired
+// into `bun run --filter docs generate` or any `build`: a build that writes into another
+// workspace package's source tree is not hermetic, and `bun run --filter '*' build` orders
 // docs after core, so the files would land a step too late to be packed.
 //
 // `--check` is the same run as an assertion — it writes nothing and fails on a
 // doc that is missing, stale or orphaned. That is docs' `test` script, so
-// `pnpm -r test` fails if the committed files stop matching what this emitter
+// `bun run --filter '*' test` fails if the committed files stop matching what this emitter
 // produces, rather than the emitted output being trusted because it was correct
 // once.
 
@@ -563,7 +563,7 @@ export async function emitCoreDocs({ check = false, quiet = false } = {}) {
 				`[emit-core-docs] ${problems.length} file(s) out of date:\n` +
 					problems.map((p) => `    ${p}`).join('\n') +
 					changed.map(([file, contents]) => diffFor(file, contents)).join('') +
-					`\n  Run \`pnpm -F docs emit-core-docs\` and commit the result.`
+					`\n  Run \`bun run --filter docs emit-core-docs\` and commit the result.`
 			);
 		}
 		log(`  checked     ${planned.size} doc(s), all current`);

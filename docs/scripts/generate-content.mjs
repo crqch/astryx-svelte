@@ -102,7 +102,7 @@ function findDocModules(dir, accept = (name) => name.endsWith('.doc.mjs')) {
  * at 0.3.0). When it does, the old path resolves to nothing, every downstream
  * count silently becomes zero, and the generator writes **empty registries over
  * real ones** while exiting 0 — which is what happened on the 0.3.0 bump, and
- * `pnpm -r build` reported success throughout because it runs this script.
+ * `bun run --filter '*' build` reported success throughout because it runs this script.
  *
  * So a root that does not exist, or exists and yields no modules, throws. The
  * pipeline must fail *closed*: a wrong path is a diagnosable error, never a
@@ -1350,7 +1350,7 @@ async function buildDocsRegistry() {
  *
  * **Drafts follow `NODE_ENV`, as upstream's do** — included in dev, excluded
  * from production output. That is the one line worth reading twice, because it
- * means `pnpm dev` and `pnpm build` legitimately disagree about the post count,
+ * means `bun run dev` and `bun run build` legitimately disagree about the post count,
  * and a `draft: true` post that renders locally is *supposed* to vanish from the
  * deploy.
  *
@@ -1734,7 +1734,7 @@ export async function reconcile({ quiet = false } = {}) {
 
 	if (!fs.existsSync(path.join(CORE_DIST, 'index.d.ts'))) {
 		throw new Error(
-			`packages/core/dist is missing. Run \`pnpm -F @astryx-svelte/core build\` first — ` +
+			`packages/core/dist is missing. Run \`bun run --filter @astryx-svelte/core build\` first — ` +
 				`the docs generator reads the published export surface from it.`
 		);
 	}
@@ -1754,10 +1754,10 @@ export async function reconcile({ quiet = false } = {}) {
 	assertNoUpstreamSpecifiers(entries);
 
 	// Deliberately `console.warn`, not `log`. `quiet` exists to keep the progress
-	// lines out of `pnpm dev:docs` and `pnpm -F docs build`, which regenerate on
+	// lines out of `bun run dev` and `bun run --filter docs build`, which regenerate on
 	// every `.doc.mjs` change — but `vite-plugin-content.mjs` passes it on *both*
 	// paths, so the drift report was suppressed in exactly the two runs a person
-	// is watching, and printed only on a direct `pnpm -F docs generate`. A drift
+	// is watching, and printed only on a direct `bun run --filter docs generate`. A drift
 	// report is a warning about the output's fidelity, not a progress line;
 	// it survives `quiet` and is short enough that being seen costs nothing.
 	if (drift.length > 0) {

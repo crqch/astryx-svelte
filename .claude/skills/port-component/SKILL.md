@@ -42,7 +42,7 @@ Run the **`astryx-oracle`** agent to wire the new `.stylex.ts` into
 mode, group renames, or the published-`dist`-lags-source case). It may edit the oracle, not the
 styles — a mismatch is a report, and the styles are what get fixed.
 
-Verify with `pnpm -F @astryx-svelte/core test:parity`.
+Verify with `bun run --filter @astryx-svelte/core test:parity`.
 
 ## 4. Idiom
 
@@ -58,13 +58,13 @@ Run the **`astryx-test-parity`** agent to port upstream's `.test.tsx` suite case
 
 ## 6. Close out
 
-- `pnpm verify --fast` — every stage clean. (`close-batch` runs the full `pnpm verify` gate once the
+- `bun run verify --fast` — every stage clean. (`close-batch` runs the full `bun run verify` gate once the
   whole batch is done.)
 - Re-run **`astryx-parity`** to catch drift between the spec and what actually got written, in both
   directions. Anything the port has that upstream doesn't is a defect to remove.
 - Update `port/todo.md`'s Next/Open work for what changed, add this batch's `port/ledger/` entry for
   how it was built, and record any deliberate deviation in `port/debts.md` with a machine-readable
-  head. Never hand-write a count — `pnpm verify` regenerates `port/status.md`.
+  head. Never hand-write a count — `bun run verify` regenerates `port/status.md`.
 - Add the example blocks under `docs/src/lib/examples/<Name>/`, showing **upstream's documented
   API only**, not invented usage. That is the port's one demo surface — `packages/core` has no
   demo routes; they were retired once the docs site covered every component.

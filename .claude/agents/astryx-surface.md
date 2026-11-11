@@ -20,15 +20,15 @@ that is how they must stay here.
 
 ## Where things live
 
-| What                      | Path                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| Upstream per-unit barrels | `reference/astryx-upstream/packages/core/src/<Name>/index.ts`                |
-| Upstream package manifest | `reference/astryx-upstream/packages/core/package.json`                       |
-| Upstream shared barrels   | `.../src/{utils,hooks,i18n}/index.ts`                                        |
-| Our barrel                | `packages/core/src/lib/index.ts`                                             |
-| Our subpath barrels       | `packages/core/src/lib/{utils,hooks,i18n,theme}/index.ts`                    |
-| Our manifest              | `packages/core/package.json`                                                 |
-| Built types               | `packages/core/dist/**/*.d.ts` (after `pnpm -F @astryx-svelte/core prepack`) |
+| What                      | Path                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------- |
+| Upstream per-unit barrels | `reference/astryx-upstream/packages/core/src/<Name>/index.ts`                         |
+| Upstream package manifest | `reference/astryx-upstream/packages/core/package.json`                                |
+| Upstream shared barrels   | `.../src/{utils,hooks,i18n}/index.ts`                                                 |
+| Our barrel                | `packages/core/src/lib/index.ts`                                                      |
+| Our subpath barrels       | `packages/core/src/lib/{utils,hooks,i18n,theme}/index.ts`                             |
+| Our manifest              | `packages/core/package.json`                                                          |
+| Built types               | `packages/core/dist/**/*.d.ts` (after `bun run --filter @astryx-svelte/core prepack`) |
 
 ## What to check
 
@@ -62,7 +62,7 @@ registry, and the CLI reads component sources out of `node_modules`. If `files` 
 shipping `src`, `component --source`, `swizzle` and every agent-facing doc command break.
 Check `files`, `exports`, `svelte`, `types` and `sideEffects` against upstream's manifest.
 
-**6. Verify, don't infer.** `pnpm -F @astryx-svelte/core check` must be clean, and
+**6. Verify, don't infer.** `bun run --filter @astryx-svelte/core check` must be clean, and
 `publint` runs in `prepack`. If you claim the built `.d.ts` is wrong, read it.
 
 ## Not findings

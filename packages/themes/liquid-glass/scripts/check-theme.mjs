@@ -86,7 +86,7 @@ if (knownComponents.size === 0) {
 }
 
 const css = await readFile(join(packageDir, 'dist', 'theme.css'), 'utf8').catch(() => {
-	fail('dist/theme.css does not exist — run `pnpm build` in this package first.');
+	fail('dist/theme.css does not exist — run `bun run build` in this package first.');
 	return '';
 });
 

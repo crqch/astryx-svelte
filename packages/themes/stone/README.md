@@ -11,7 +11,7 @@ Meta's open source design system. Unofficial, and not affiliated with Meta.
 npm install @astryx-svelte/core @astryx-svelte/theme-stone
 ```
 
-`@stylexjs/stylex` is a peer dependency and npm and pnpm install it for you. It is required at
+`@stylexjs/stylex` is a peer dependency and npm and bun install it for you. It is required at
 runtime — the components reach `stylex.props()` through `sx()` — so add it explicitly if your
 package manager does not resolve peers automatically.
 

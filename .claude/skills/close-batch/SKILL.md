@@ -33,7 +33,7 @@ call site. None of the four would have been found by re-reading the diff of what
 ## 2. The gate
 
 ```sh
-pnpm verify
+bun run verify
 ```
 
 Every stage must pass. If `status drift` fails, commit the regenerated `port/status.md`.

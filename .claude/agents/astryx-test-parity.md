@@ -118,7 +118,7 @@ And these get a **counterpart** rather than a translation, which must be comment
 3. Port each case in upstream's order, keeping its title and its assertions. Where the
    assertion cannot survive, write the counterpart and comment the upstream case it stands
    for.
-4. Run it: `pnpm -F @astryx-svelte/core test:unit -- --run`. Report the real output. If the
+4. Run it: `bunx vitest --run`. Report the real output. If the
    browser project cannot start, say that plainly rather than reporting the node project's
    result as the suite's.
 5. A failure is a finding about the _port_ until proven otherwise. Do not weaken an

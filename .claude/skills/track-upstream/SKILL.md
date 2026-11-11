@@ -46,13 +46,13 @@ float.
 
 ```sh
 git grep -n '"@astryxdesign/' -- '**/package.json'
-pnpm install
+bun install
 ```
 
 ## 3. Re-baseline the class oracle
 
 ```sh
-pnpm -F @astryx-svelte/core test:parity
+bun run --filter @astryx-svelte/core test:parity
 ```
 
 Mismatches here are expected — they are the diff. Work them with the `astryx-oracle` agent.

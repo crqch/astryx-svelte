@@ -11,7 +11,7 @@
 // Same shape as packages/themes/neutral/scripts/build-theme.mjs, and the same
 // two requirements: @astryx-svelte/core must be built first (this imports the
 // compiled theme compiler out of its dist/), and Node's type stripping has to be
-// on so the theme definition can stay TypeScript. `pnpm -r build` orders the
+// on so the theme definition can stay TypeScript. `bun run --filter '*' build` orders the
 // first; the `--experimental-strip-types` flag in package.json handles the
 // second. That flag is a no-op from Node 22.18, where stripping is on by
 // default, but the floor here is 22.17 (port/todo.md → Phase 0).

@@ -134,7 +134,8 @@ function findThemePackages(cwd) {
 	for (const entry of entries) {
 		if (!entry.name.startsWith(THEME_PREFIX)) continue;
 		const dir = path.join(scopeDir, entry.name);
-		// pnpm installs packages as symlinks into node_modules/.pnpm, and a
+		// Package managers install workspace packages as symlinks into their store
+		// (.pnpm for pnpm, .bun for Bun), and a
 		// symlink dirent reports isDirectory() as false — stat the target instead.
 		let isDir = entry.isDirectory();
 		if (!isDir && entry.isSymbolicLink()) {

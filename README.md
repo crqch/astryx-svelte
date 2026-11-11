@@ -55,7 +55,7 @@ than one you have to trust.
 npm install @astryx-svelte/core @astryx-svelte/theme-neutral
 ```
 
-`@stylexjs/stylex` is a peer dependency and npm and pnpm install it for you. It is required at
+`@stylexjs/stylex` is a peer dependency and npm and bun install it for you. It is required at
 runtime — the components reach `stylex.props()` through `sx()` — so add it explicitly if your
 package manager does not resolve peers automatically.
 
@@ -137,11 +137,11 @@ npx @astryx-svelte/cli docs getting-started
 ## Contributing
 
 ```sh
-pnpm install
-pnpm -r build     # must run before check — the docs generator reads core's built dist/
-pnpm dev          # the docs site, the port's only demo surface
+bun install
+bun run --filter '*' build     # must run before check — the docs generator reads core's built dist/
+bun run dev          # the docs site, the port's only demo surface
 
-pnpm verify       # the gate: build, check, lint, test, and the status drift check
+bun run verify       # the gate: build, check, lint, test, and the status drift check
 ```
 
 Never install with `--prod` or prune devDependencies: all three fidelity oracles **and** the docs

@@ -237,7 +237,7 @@ Install the library, a theme, and StyleX:
 npm install @astryx-svelte/core @astryx-svelte/theme-neutral
 ```
 
-`@stylexjs/stylex` is a peer dependency and npm and pnpm install it for you. It is required at
+`@stylexjs/stylex` is a peer dependency and npm, pnpm and Bun install it for you. It is required at
 runtime — the components reach `stylex.props()` through `sx()` — so add it explicitly if your
 package manager does not resolve peers automatically.
 

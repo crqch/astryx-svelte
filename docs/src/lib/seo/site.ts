@@ -52,7 +52,7 @@ export const UPSTREAM_URL = 'https://astryx.atmeta.com/';
 /**
  * Counts quoted in marketing copy. Kept here rather than inline so a stale
  * number is a single edit, and so it is obvious that these are claims the repo
- * has to keep true. Each is printed by something: `pnpm -r test` for the oracle
+ * has to keep true. Each is printed by something: `bun run --filter '*' test` for the oracle
  * figures, the content generator for the rest.
  */
 export const FACTS = {

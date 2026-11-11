@@ -5,7 +5,7 @@
 //
 // Requires @astryx-svelte/core to be built first (`pnpm --filter
 // @astryx-svelte/core build`), since it imports the compiled theme compiler.
-// Under pnpm's topological ordering `pnpm -r build` already does that.
+// Under pnpm's topological ordering `bun run --filter '*' build` already does that.
 //
 // The per-package `scripts/build-theme.mjs` is a thin caller: it imports its own
 // theme definition and hands it here. It runs under Node's type stripping so the
