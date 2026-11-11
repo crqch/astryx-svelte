@@ -10,6 +10,13 @@
 		width?: DrawerProps['width'];
 		padding?: DrawerProps['padding'];
 		withHeader?: boolean;
+		withAutofocus?: boolean;
+		onkeydown?: (event: KeyboardEvent) => void;
+		class?: string;
+		sideStyle?: string;
+		dataExtra?: string;
+		ariaDescribedby?: string;
+		onclick?: (event: MouseEvent) => void;
 	}
 </script>
 
@@ -25,7 +32,14 @@
 		label = 'Details',
 		width = 400,
 		padding,
-		withHeader = true
+		withHeader = true,
+		withAutofocus = false,
+		onkeydown,
+		class: className,
+		sideStyle = 'transition-duration: 0.01s',
+		dataExtra,
+		ariaDescribedby,
+		onclick
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
@@ -48,10 +62,18 @@
 	{padding}
 	onOpenChange={(open) => (isOpen = open)}
 	data-testid="drawer"
-	style="transition-duration: 0.01s"
+	data-extra={dataExtra}
+	aria-describedby={ariaDescribedby}
+	class={className}
+	style={sideStyle}
+	{onclick}
+	{onkeydown}
 >
 	{#if withHeader}
 		<DrawerHeader title="Details" onOpenChange={(open) => (isOpen = open)} />
+	{/if}
+	{#if withAutofocus}
+		<button data-autofocus data-testid="autofocus">Autofocus</button>
 	{/if}
 	<div data-testid="drawer-content">Drawer content</div>
 </Drawer>

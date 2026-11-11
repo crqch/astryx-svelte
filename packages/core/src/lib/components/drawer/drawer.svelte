@@ -88,6 +88,7 @@
 		purpose = 'info',
 		padding,
 		children,
+		onclick,
 		ref = $bindable(null),
 		xstyle,
 		class: className,
@@ -99,6 +100,13 @@
 	let isRendered = $state(isOpen);
 	let hasMounted = $state(false);
 	let exitSide = $state(side);
+
+	// Render the panel in the same commit that targets the open transform, or
+	// @starting-style has nothing to animate from and the modal host's focus
+	// steps run against a display:none box.
+	if (isOpen && !isRendered) {
+		isRendered = true;
+	}
 
 	$effect(() => {
 		hasMounted = true;
@@ -125,6 +133,16 @@
 		getContainer: () => dialogEl
 	}));
 
+	$effect(() => {
+		if (!isOpen) return;
+		const target = dialogEl?.querySelector<HTMLElement>('[data-autofocus]');
+		if (target == null) return;
+		// After the native host's own focusing steps, which run synchronously in
+		// showModal() and would otherwise overwrite this focus.
+		const id = setTimeout(() => target.focus(), 0);
+		return () => clearTimeout(id);
+	});
+
 	useDrawerDialogPresence({
 		getDialog: () => dialogEl,
 		getIsOpen: () => isOpen,
@@ -142,10 +160,13 @@
 	}
 
 	function handleClick(event: MouseEvent): void {
-		// A ::backdrop click targets the dialog itself; child clicks target the
-		// child. Stop content clicks at the drawer so wrappers around where it is
-		// written do not also act on them.
+		// Run the consumer's click first, as React's prop composition does. A
+		// consumer `preventDefault()` opts out of the scrim dismissal.
+		(onclick as ((event: MouseEvent) => void) | undefined)?.(event);
 		event.stopPropagation();
+		if (event.defaultPrevented || !hasScrim) return;
+		// A ::backdrop click targets the dialog itself; child clicks target the
+		// child.
 		if (event.target === event.currentTarget && allowScrimClick) onOpenChange(false);
 	}
 
@@ -157,6 +178,11 @@
 	);
 	const effectivePadding = $derived(padding ?? 4);
 	const theme = $derived(themeProps('drawer', { side: anchoredSide }));
+	const safeRest = $derived.by(() => {
+		const next = { ...rest } as Record<string, unknown>;
+		delete next.open;
+		return next;
+	});
 
 	const dialogAttrs = $derived([
 		drawerStyles.dialog,
@@ -193,7 +219,7 @@
 
 <dialog
 	bind:this={dialogEl}
-	{...rest}
+	{...safeRest}
 	{...theme}
 	class={cx(theme.class, dialogStyle.class, className)}
 	style={mergeStyle(dialogStyle.style, styleProp as string | undefined)}

@@ -562,8 +562,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10729          |
-| Declared here              | 6637           |
-| **Short**                  | **4107**       |
+| Declared here              | 6652           |
+| **Short**                  | **4092**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -595,7 +595,6 @@ per connected group.
 | `Item/Item.test.tsx`                                                                                                                                                                     | 105      | 45   | 60    |
 | `Markdown/parser.test.ts`                                                                                                                                                                | 166      | 107  | 59    |
 | `Chat/ChatComposerInput.test.tsx`                                                                                                                                                        | 109      | 51   | 58    |
-| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 14   | 57    |
 | `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
 | `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 91       | 37   | 54    |
 | `Popover/Popover.test.tsx`                                                                                                                                                               | 73       | 23   | 50    |
@@ -607,6 +606,7 @@ per connected group.
 | `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 33   | 43    |
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
 | `Markdown/Markdown.test.tsx`                                                                                                                                                             | 105      | 62   | 43    |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 29   | 42    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
@@ -798,8 +798,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 658    |
-| **Pending** | **76** |
+| Ported      | 666    |
+| **Pending** | **68** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a

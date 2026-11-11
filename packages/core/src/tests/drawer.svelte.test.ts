@@ -180,4 +180,152 @@ describe('Drawer', () => {
 		expect(content).toBeDefined();
 		expect(content.className).not.toBe('');
 	});
+	it('clips its panel with clip, not hidden', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		expect(getComputedStyle(dialog).overflow).toBe('clip');
+	});
+
+	it('calls onOpenChange(false) on Escape in non-modal mode', async () => {
+		const screen = await render(DrawerProbe, { props: { hasScrim: false } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(screen.component.getOpen()).toBe(false));
+	});
+
+	it('prevents the native cancel event and routes it through onOpenChange', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		const cancel = new Event('cancel', { cancelable: true });
+		dialog.dispatchEvent(cancel);
+		expect(cancel.defaultPrevented).toBe(true);
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(dialog.open).toBe(false));
+	});
+
+	it('ignores other keys', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(dialog.open).toBe(true);
+	});
+
+	it('composes a consumer onKeyDown', async () => {
+		const onkeydown = vi.fn();
+		const screen = await render(DrawerProbe, { props: { onkeydown } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'a', bubbles: true }));
+		expect(onkeydown).toHaveBeenCalled();
+	});
+
+	it('merges consumer class, style, data and ARIA attributes', async () => {
+		const screen = await render(DrawerProbe, {
+			props: {
+				class: 'consumer-class',
+				sideStyle: 'transition-duration: 0.01s; color: rgb(1, 2, 3)',
+				dataExtra: 'yes',
+				ariaDescribedby: 'hint'
+			}
+		});
+		const dialog = drawerEl(screen.container);
+		expect(dialog).toHaveClass('astryx-drawer');
+		expect(dialog).toHaveClass('consumer-class');
+		expect(dialog).toHaveAttribute('data-extra', 'yes');
+		expect(dialog).toHaveAttribute('aria-describedby', 'hint');
+		expect(dialog.style.color).toBe('rgb(1, 2, 3)');
+	});
+
+	it.each(['start', 'end'] as const)(
+		'renders side="%s" with the matching data attribute',
+		async (side) => {
+			const screen = await render(DrawerProbe, { props: { side } });
+			expect(drawerEl(screen.container)).toHaveAttribute('data-side', side);
+		}
+	);
+
+	it('applies the default 400px inline budget', async () => {
+		const screen = await render(DrawerProbe);
+		expect(parseFloat(getComputedStyle(drawerEl(screen.container)).width)).toBe(
+			Math.min(400, window.innerWidth - 56)
+		);
+	});
+
+	it('accepts a number of pixels', async () => {
+		const screen = await render(DrawerProbe, { props: { width: 320 } });
+		expect(parseFloat(getComputedStyle(drawerEl(screen.container)).width)).toBe(320);
+	});
+
+	it('accepts any CSS length string', async () => {
+		const screen = await render(DrawerProbe, { props: { width: '32rem' } });
+		expect(parseFloat(getComputedStyle(drawerEl(screen.container)).width)).toBe(
+			Math.min(512, window.innerWidth - 56)
+		);
+	});
+
+	it('renders no close button of its own', async () => {
+		const screen = await render(DrawerProbe, { props: { withHeader: false } });
+		const dialog = drawerEl(screen.container);
+		expect(dialog.querySelectorAll('button[aria-label="Close"]')).toHaveLength(0);
+	});
+
+	it('can be re-opened after closing', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		screen.component.setOpen(false);
+		await closeWithTransition(dialog);
+		await vi.waitFor(() => expect(dialog.open).toBe(false));
+
+		screen.component.setOpen(true);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+	});
+
+	it('focuses the element with data-autofocus on open', async () => {
+		const screen = await render(DrawerProbe, {
+			props: { withAutofocus: true, initialOpen: false }
+		});
+		screen.component.setOpen(true);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		const autofocus = screen.getByTestId('autofocus').element() as HTMLElement;
+		await vi.waitFor(() => expect(document.activeElement).toBe(autofocus));
+	});
+
+	it('runs a consumer onClick before scrim dismissal', async () => {
+		const order: string[] = [];
+		const screen = await render(DrawerProbe, {
+			props: {
+				onclick: () => order.push('consumer')
+			}
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+		expect(order).toEqual(['consumer']);
+	});
+
+	it('lets a consumer onClick preventDefault cancel the scrim dismissal', async () => {
+		const screen = await render(DrawerProbe, {
+			props: {
+				onclick: (event) => event.preventDefault()
+			}
+		});
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		await new Promise((resolve) => setTimeout(resolve, 30));
+		expect(dialog.open).toBe(true);
+	});
 });

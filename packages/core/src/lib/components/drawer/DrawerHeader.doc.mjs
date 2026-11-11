@@ -87,14 +87,14 @@ export default {
 	props: [
 		{
 			name: 'title',
-			type: 'string | Snippet',
+			type: 'string | number | Snippet',
 			description:
 				'Drawer title, rendered as an h2. Keep it inline and non-interactive. It does not name the drawer; pass Drawer a label.',
 			required: true
 		},
 		{
 			name: 'subtitle',
-			type: 'string | Snippet',
+			type: 'string | number | Snippet',
 			description:
 				'Subtitle below the title. Accepts inline content such as a Link; avoid block elements.'
 		},
