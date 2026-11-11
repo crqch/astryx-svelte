@@ -42,19 +42,10 @@ function sleepSync(ms) {
 }
 
 function buildCore() {
-	// On Windows `pnpm` is a `.cmd` shim that Node refuses to spawn without a
-	// shell since the CVE-2024-27980 fix — the same split
-	// `scripts/assert-core-ships-src.mjs` makes for `npm`.
-	if (process.platform === 'win32') {
-		execFileSync('pnpm -F @astryx-svelte/core build', {
-			cwd: REPO_ROOT,
-			stdio: 'pipe',
-			shell: true,
-			timeout: BUILD_TIMEOUT_MS
-		});
-		return;
-	}
-	execFileSync('pnpm', ['-F', '@astryx-svelte/core', 'build'], {
+	// Bun ships a single native binary, so there is no Windows `.cmd` shim to
+	// work around here (unlike the `npm` spawn in
+	// `scripts/assert-core-ships-src.mjs`).
+	execFileSync('bun', ['run', '--filter', '@astryx-svelte/core', 'build'], {
 		cwd: REPO_ROOT,
 		stdio: 'pipe',
 		timeout: BUILD_TIMEOUT_MS

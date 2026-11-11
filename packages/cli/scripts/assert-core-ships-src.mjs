@@ -15,24 +15,24 @@
  * `findCoreDir` finds `packages/core` on disk and reads the working tree. That
  * is the exact shape of a bug that ships.
  *
- * So this asserts against what npm would really publish (`npm pack
+ * So this asserts against what Bun would really publish (`bun pm pack
  * --dry-run`), which honours `files`, its negations and `.npmignore` together,
  * rather than against the `files` array read literally — the array is the
  * input to the question, not the answer.
  *
- * Runs as `pnpm -F @astryx-svelte/cli test:core-src`, wired into the package's
+ * Runs as `bun run --filter @astryx-svelte/cli test:core-src`, wired into the package's
  * `test` script the way `packages/core` wires `test:parity` and
  * `packages/themes/neutral` wires `test:parity` / `test:icons`.
  *
- * Requires core to have been built (`pnpm -r build`) — `dist/` is packed too,
- * and this deliberately runs `npm pack` with `--ignore-scripts` rather than
+ * Requires core to have been built (`bun run --filter '*' build`) — `dist/` is packed too,
+ * and this deliberately runs `bun pm pack` with `--ignore-scripts` rather than
  * letting it fire core's `prepack` and rebuild the package as a side effect of
  * a test.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execFileSync, execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { findCoreDir, listComponents } from '../foundation/fs/paths.mjs';
 
 /**
@@ -64,14 +64,10 @@ if (!coreDir) {
 const core = coreDir;
 
 if (!fs.existsSync(path.join(core, 'dist'))) {
-	fail(`${core} has no dist/. Run \`pnpm -r build\` before this check.`);
+	fail(`${core} has no dist/. Run \`bun run --filter '*' build\` before this check.`);
 }
 
-const PACK_ARGS = ['pack', '--dry-run', '--json', '--ignore-scripts'];
-// Inlined at both call sites rather than hoisted into one shared object:
-// `ExecFileSyncOptions` and `ExecSyncOptions` disagree on `shell`
-// (`string | boolean` vs `string`), so a single annotated constant cannot
-// satisfy both overloads and an un-annotated one satisfies neither.
+const PACK_ARGS = ['pm', 'pack', '--dry-run', '--ignore-scripts'];
 const RUN = /** @type {const} */ ({
 	cwd: core,
 	encoding: 'utf-8',
@@ -79,43 +75,49 @@ const RUN = /** @type {const} */ ({
 });
 
 /**
- * Two spawn paths, for one Windows-specific reason: npm there is a `.cmd`
- * shim, and since the CVE-2024-27980 fix Node refuses to spawn a `.cmd`
- * without a shell — `spawnSync npm.cmd EINVAL`, with no hint as to why.
- * Passing `shell: true` to `execFileSync` fixes that but earns DEP0190,
- * because an args array through a shell is concatenated rather than escaped.
+ * Bun ships one native binary, so the Windows `.cmd` shell workaround the npm
+ * version needed disappears with it.
  *
- * So: POSIX takes `execFileSync` with an args array and no shell at all, which
- * is the form with no injection surface; Windows takes a single command string
- * built only from the module-level literals above. Nothing user-supplied,
- * nothing from argv and nothing from the filesystem reaches either — `cwd`
- * carries the only variable, and it is passed as an option, never interpolated.
+ * `bun pm pack` prints one `packed <size> <path>` line per file instead of
+ * npm's `--json` object. The size token is the only thing that can contain a
+ * space (`4.90KB`), so the path is everything after it. A tar entry that
+ * contains a newline would be split, which is impossible in a published path
+ * on every platform this repo supports.
  *
  * @returns {string}
  */
-function runNpmPack() {
-	const stdio = /** @type {const} */ (['ignore', 'pipe', 'ignore']);
-	if (process.platform !== 'win32') {
-		return execFileSync('npm', PACK_ARGS, { ...RUN, stdio: [...stdio] });
+function runPack() {
+	const output = execFileSync('bun', PACK_ARGS, {
+		...RUN,
+		stdio: ['ignore', 'pipe', 'pipe']
+	});
+	if (/^error:/m.test(output)) {
+		throw new Error(output);
 	}
-	return execSync(`npm ${PACK_ARGS.join(' ')}`, { ...RUN, stdio: [...stdio] });
+	return output;
 }
 
-/** @type {Array<{files?: Array<{path: string}>}>} */
-let packed;
+/** Every path Bun would publish. */
+let files;
 try {
-	packed = JSON.parse(runNpmPack());
+	const packed = runPack();
+	files = new Set(
+		packed
+			.split('\n')
+			.filter((line) => line.startsWith('packed '))
+			.map((line) => line.replace(/^packed\s+\S+\s+/, '').trim())
+			.filter(Boolean)
+	);
 } catch (err) {
 	fail(
-		`\`npm pack --dry-run\` failed in ${core}:\n` +
+		`\`bun pm pack --dry-run\` failed in ${core}:\n` +
 			(err instanceof Error ? err.message : String(err))
 	);
 }
 
-/** Every path npm would publish, with forward slashes (npm normalises these). */
-const files = new Set((packed[0]?.files ?? []).map((f) => f.path));
-if (files.size === 0) {
-	fail(`\`npm pack --dry-run\` reported no files for ${core}.`);
+const packFiles = files ?? new Set();
+if (packFiles.size === 0) {
+	fail(`\`bun pm pack --dry-run\` reported no files for ${core}.`);
 }
 
 /** @type {string[]} */
@@ -151,7 +153,7 @@ if (components.length === 0) {
 }
 
 const onDisk = walk('src/lib');
-const notPacked = onDisk.filter((p) => !files.has(p));
+const notPacked = onDisk.filter((p) => !packFiles.has(p));
 if (notPacked.length > 0) {
 	problems.push(
 		`${notPacked.length} of ${onDisk.length} files under src/lib are not in the tarball:\n` +
@@ -166,14 +168,14 @@ if (notPacked.length > 0) {
 // 2. The barrel and the base props module — agent-docs and `component` resolve
 //    import paths through them.
 for (const required of ['src/lib/index.ts', 'src/lib/base-props.ts']) {
-	if (!files.has(required)) problems.push(`missing from the tarball: ${required}`);
+	if (!packFiles.has(required)) problems.push(`missing from the tarball: ${required}`);
 }
 
 // 3. dist/ must ship too. The docs pipeline reads prop *types* out of
 //    `dist/**/*.d.ts` (CLAUDE.md, "The docs site"), and `component` will do the
 //    same rather than re-deriving types from source.
 for (const required of ['dist/index.js', 'dist/index.d.ts']) {
-	if (!files.has(required)) problems.push(`missing from the tarball: ${required}`);
+	if (!packFiles.has(required)) problems.push(`missing from the tarball: ${required}`);
 }
 
 // 4. The negations in `files` must still hold. A test file inside the tarball
@@ -231,8 +233,8 @@ if (problems.length > 0) {
 	);
 }
 
-const srcCount = [...files].filter((p) => p.startsWith('src/')).length;
+const srcCount = [...packFiles].filter((p) => p.startsWith('src/')).length;
 console.log(
 	`  core ships src/  ${components.length} components, ${srcCount} src files, ` +
-		`${files.size} total — @astryx-svelte/core`
+		`${packFiles.size} total — @astryx-svelte/core`
 );

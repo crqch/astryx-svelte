@@ -25,7 +25,7 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
 		"test:unit": "vitest",
-		"test:client": "bun scripts/run-client-tests.mjs",
+		"test:client": "node scripts/run-client-tests.mjs",
 		"test:parity": "node scripts/compare-upstream-classes.mjs",
 		"test:css": "node scripts/compare-upstream-css.mjs",
 		"build:css": "node scripts/build-css.mjs",
