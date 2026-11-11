@@ -17,9 +17,9 @@ unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0
 2026-08-31 (batch 040), and to `0.7.13` on 2026-11-11. Each move widened the distance rather than
 closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
 dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
-tracked. The first pass at the new pin ported `Timer`, `InfoTip` and `ScrollableArea`; `Drawer`
-and the `SnapPaging` subsystem remain, and most of `useScrollableArea`'s hook cases are still
-unported even though the component's 13-case suite is complete. The size of it is in [`status.md`](./status.md), not here.
+tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea` and `Drawer`; only the
+`SnapPaging` subsystem remains on the component surface. Most of `Drawer`'s 71 cases and the
+remaining `useScrollableArea` frame/focus cases are still unported. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
 (`CodeEditor`, `RichTextEditor`, `ThreeD`, `Sankey`) wrap React-only libraries with no drop-in
