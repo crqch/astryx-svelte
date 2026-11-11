@@ -20,8 +20,8 @@ dynamic type aliases, motion tempo, status roles), and the largest test delta th
 tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea` and `Drawer`; only the
 `SnapPaging` subsystem remains on the component surface. `Drawer`'s 71-case suite, its header, direction
 and SSR suites are complete; its 4-case touch-entrance suite waits on the input-hold stack. The remaining
-`useScrollableArea` frame/focus cases and the input-hold stack behind the touch-entrance suites are the next
-work. All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
+`useScrollableArea` frame/focus cases and the SnapPaging subsystem are the next work; the latter is scoped
+in [`snap-paging.md`](./snap-paging.md). All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
 sizes, motion tempo, status aliases, syntax diff slots, adaptations and local tokens. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
