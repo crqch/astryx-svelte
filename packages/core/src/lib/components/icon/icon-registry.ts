@@ -57,6 +57,7 @@ export type IconName =
 	| 'eyeSlash'
 	| 'viewColumns'
 	| 'copy'
+	| 'upload'
 	| 'checkDouble'
 	| 'wrench'
 	| 'stop'

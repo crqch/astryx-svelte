@@ -27,7 +27,7 @@ import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define
 
 /** Butter syntax palette — T25 / T80 of each color's ramp. */
 const butterSyntax = defineSyntaxTheme({
-	name: 'xds-butter',
+	name: 'astryx-butter',
 	tokens: {
 		keyword: ['#52237b', '#ddb9f6'], // Purple
 		string: ['#004800', '#a5d29d'], // Green

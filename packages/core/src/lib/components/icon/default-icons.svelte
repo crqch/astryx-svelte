@@ -41,6 +41,7 @@
 		eyeSlash,
 		viewColumns,
 		copy,
+		upload,
 		checkDouble,
 		wrench,
 		stop,
@@ -358,6 +359,24 @@
 {/snippet}
 
 <!-- ↑ — arrow up (sort ascending) -->
+<!-- ⇧ — upload into a tray -->
+{#snippet upload()}
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="1.5"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		width="1em"
+		height="1em"
+		aria-hidden="true"
+	>
+		<path d="M12 16V4m0 0L7 9m5-5l5 5M4 15v4a2 2 0 002 2h12a2 2 0 002-2v-4" />
+	</svg>
+{/snippet}
+
 {#snippet arrowUp()}
 	<svg
 		xmlns="http://www.w3.org/2000/svg"

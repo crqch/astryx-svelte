@@ -166,7 +166,7 @@ function glass(material: Material, borderRadius?: string): Record<string, string
  * the editor the platform ships.
  */
 const liquidGlassSyntax = defineSyntaxTheme({
-	name: 'xds-liquid-glass',
+	name: 'astryx-liquid-glass',
 	tokens: {
 		keyword: ['#ad3da4', '#ff7ab2'],
 		string: ['#d12f1b', '#ff8170'],

@@ -39,7 +39,7 @@ import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define
  * categorical ramps, i.e. the same colours the `--color-icon-*` tokens use.
  */
 const neutralSyntax = defineSyntaxTheme({
-	name: 'xds-neutral',
+	name: 'astryx-neutral',
 	tokens: {
 		keyword: ['#700084', '#efa8ff'], // purple T30/T80
 		string: ['#005600', '#a6d2a2'], // green (sat T30 / pastel T80)

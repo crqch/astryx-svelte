@@ -16,7 +16,7 @@
 import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
 
 const y2kSyntax = defineSyntaxTheme({
-	name: 'xds-y2k',
+	name: 'astryx-y2k',
 	tokens: {
 		keyword: ['#615a7a', '#aea6ca'],
 		string: ['#586242', '#a5af8b'],

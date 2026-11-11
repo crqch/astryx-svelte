@@ -72,7 +72,7 @@ export default {
 	props: [
 		{
 			name: 'content',
-			type: 'Snippet',
+			type: 'string | number | Snippet',
 			description:
 				"Content to display in the tooltip. Typically short, non-interactive text. Mirrors Tooltip's content prop.",
 			required: true
