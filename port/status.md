@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 286     | 10812          |
+| Ported here              | 298     | 10906          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **511** | **6113**       |
+| **Unported**             | **499** | **6019**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -74,7 +74,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Chat/useChatKeyboard.test.tsx`                                    | 31    |
 | `DateTimeInput/NativePickerSegments.test.tsx`                      | 31    |
 | `InfoTip/InfoTip.pin.test.tsx`                                     | 31    |
-| `motion/spring.test.ts`                                            | 31    |
 | `Popover/PopoverPresentation.test.tsx`                             | 31    |
 | `Chat/useTriggerMenu.test.tsx`                                     | 29    |
 | `List/listLayoutUpdates.test.tsx`                                  | 29    |
@@ -198,7 +197,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/useBackdropPress.test.tsx`                                  | 10    |
 | `Markdown/emphasis.test.tsx`                                       | 10    |
 | `Markdown/urlSchemes.test.ts`                                      | 10    |
-| `motion/projection.test.ts`                                        | 10    |
 | `MultiSelector/MultiSelector.openHighlight.test.tsx`               | 10    |
 | `PowerSearch/PowerSearchFilterEditor.test.tsx`                     | 10    |
 | `Resizable/paneFocus.test.tsx`                                     | 10    |
@@ -214,7 +212,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `hooks/scrollKeyboardDelegation.test.ts`                           | 9     |
 | `Layer/sharedContexts.test.tsx`                                    | 9     |
 | `Markdown/ast.test.ts`                                             | 9     |
-| `motion/resolveSnapPoint.test.ts`                                  | 9     |
 | `PowerSearch/PowerSearchDateTime.test.tsx`                         | 9     |
 | `Selector/Selector.activeOption.test.tsx`                          | 9     |
 | `Table/__tests__/Table.a11y.test.tsx`                              | 9     |
@@ -233,7 +230,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/toastHost.test.tsx`                                         | 8     |
 | `Markdown/linkDestinations.test.tsx`                               | 8     |
 | `MobileNav/MobileNavTouchPresentation.test.tsx`                    | 8     |
-| `motion/uikit/segmented.test.ts`                                   | 8     |
 | `MultiSelector/MultiSelector.fr10.test.tsx`                        | 8     |
 | `RadioList/__tests__/RadioGroup.a11y.test.tsx`                     | 8     |
 | `Resizable/resizableSlot.test.tsx`                                 | 8     |
@@ -260,8 +256,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Link/__tests__/Link.a11y.test.tsx`                                | 7     |
 | `Markdown/Markdown.codeLanguages.test.tsx`                         | 7     |
 | `Markdown/plugins/frontmatter.test.tsx`                            | 7     |
-| `motion/decay.test.ts`                                             | 7     |
-| `motion/rubberBand.test.ts`                                        | 7     |
 | `PowerSearch/PowerSearch.calendarSystems.test.tsx`                 | 7     |
 | `Slider/__tests__/SliderRange.a11y.test.tsx`                       | 7     |
 | `Table/TableLegacyIncrementalRender.test.tsx`                      | 7     |
@@ -332,8 +326,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/plugin-renderer/MarkdownPluginNodeRenderer.test.tsx`     | 5     |
 | `MobileNav/MobileNavRootScrollClaim.test.tsx`                      | 5     |
 | `motion/uikit/gestures.test.ts`                                    | 5     |
-| `motion/uikit/slider.test.ts`                                      | 5     |
-| `motion/uikit/values.test.ts`                                      | 5     |
 | `privateAttributes/press.test.ts`                                  | 5     |
 | `privateAttributes/reducedMotion.test.tsx`                         | 5     |
 | `ProgressBar/__tests__/ProgressBar.a11y.test.tsx`                  | 5     |
@@ -376,7 +368,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/openFenceFinalNewline.test.tsx`                          | 4     |
 | `Markdown/plugins/softBreaks.test.tsx`                             | 4     |
 | `motion/resolveMotion.test.ts`                                     | 4     |
-| `motion/uikit/selfRegistration.test.ts`                            | 4     |
 | `MultiSelector/MultiSelector.focusableDisabled.test.tsx`           | 4     |
 | `Popover/usePopoverSurfaceMotion.test.tsx`                         | 4     |
 | `Resizable/useResizableForms.test.tsx`                             | 4     |
@@ -430,8 +421,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/longLinkLabels.test.tsx`                                 | 3     |
 | `MobileNav/MobileNavFocusRegion.test.tsx`                          | 3     |
 | `motion/android/android.test.ts`                                   | 3     |
-| `motion/bezier.test.ts`                                            | 3     |
-| `motion/themeTempo.test.ts`                                        | 3     |
 | `PowerSearch/PowerSearch.ssr.test.tsx`                             | 3     |
 | `PowerSearch/resolveDateTimeRangePart.test.ts`                     | 3     |
 | `RadioList/RadioList.fr10.test.tsx`                                | 3     |
@@ -483,7 +472,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `motion/transientCopy.test.ts`                                     | 2     |
 | `motion/uikit/longPress.test.ts`                                   | 2     |
 | `motion/uikit/springRows.test.ts`                                  | 2     |
-| `motion/uikit/tableImports.test.ts`                                | 2     |
 | `MultiSelector/__tests__/MultiSelector.listbox.a11y.test.tsx`      | 2     |
 | `Popover/popoverSurfaceFrame.test.ts`                              | 2     |
 | `privateAttributes/scrollAnchoring.test.ts`                        | 2     |
@@ -552,8 +540,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10812          |
-| Declared here              | 6780           |
+| Upstream, in ported suites | 10906          |
+| Declared here              | 6874           |
 | **Short**                  | **4047**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
