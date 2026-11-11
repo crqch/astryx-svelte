@@ -23,6 +23,7 @@
 		withActions?: boolean;
 		nativeOpen?: boolean;
 		onref?: (node: HTMLDialogElement | null) => void;
+		dir?: 'ltr' | 'rtl';
 	}
 </script>
 
@@ -51,7 +52,8 @@
 		withFileInput = false,
 		withActions = false,
 		nativeOpen = false,
-		onref
+		onref,
+		dir
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
@@ -75,6 +77,7 @@
 	bind:ref={dialogRef}
 	{isOpen}
 	{side}
+	{dir}
 	{hasScrim}
 	{purpose}
 	{label}

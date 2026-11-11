@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 277     | 10729          |
+| Ported here              | 279     | 10736          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **520** | **6196**       |
+| **Unported**             | **518** | **6189**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -368,7 +368,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Collapsible/__tests__/Collapsible.a11y.test.tsx`                  | 4     |
 | `DateInput/TouchDateToday.ssr.test.tsx`                            | 4     |
 | `Dialog/DialogTouchEntrance.test.tsx`                              | 4     |
-| `Drawer/DrawerDirection.test.tsx`                                  | 4     |
 | `Drawer/DrawerTouchEntrance.test.tsx`                              | 4     |
 | `DropdownMenu/DropdownMenuThemeReflection.test.tsx`                | 4     |
 | `Field/textEntryTraits.public.test.ts`                             | 4     |
@@ -414,7 +413,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateTimeInput/Presentation.test.tsx`                              | 3     |
 | `Dialog/Dialog.ssr.test.tsx`                                       | 3     |
 | `dragToSnapPoints/createDragToSnapPoints.reducedMotion.test.ts`    | 3     |
-| `Drawer/Drawer.ssr.test.tsx`                                       | 3     |
 | `DropdownMenu/DropdownMenuDocumentRoot.test.tsx`                   | 3     |
 | `gestures/__tests__/recognizerBundle.test.ts`                      | 3     |
 | `gestures/__tests__/VelocityTracker.harness.test.ts`               | 3     |
@@ -561,8 +559,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10729          |
-| Declared here              | 6694           |
+| Upstream, in ported suites | 10736          |
+| Declared here              | 6701           |
 | **Short**                  | **4050**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |

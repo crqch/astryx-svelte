@@ -1849,3 +1849,43 @@ larger matched set, but the 0.7.13 dynamic type aliases, motion-tempo vars, stat
 theme source moved to the new token set; the rest remain. `port/status.md` does not measure theme
 CSS, so the oracles in `packages/themes/*/scripts/compare-upstream.mjs` are the only source of
 truth.
+
+### `Drawer` does not hold a finger's entrance tap
+
+- **units:** Drawer
+- **kind:** unported
+- **retires:** when the shared input-hold stack (`holdEntranceInput`, `inputHold`, `inputStream`, `flatTree`, `coarsePointer`) is ported
+
+Upstream's `Drawer/DrawerTouchEntrance.test.tsx` (4 cases) and
+`DrawerTouchEntrance.interaction.browser.spec.ts` (7 Playwright specs) prove that a non-modal drawer holds a
+finger's tap while it slides in, lets the hold go when the slide ends or the drawer closes mid-slide, and never
+holds a mouse click. That behavior lives in `Layer/holdEntranceInput` plus the ~1,900-line `inputHold`/
+`inputStream`/`flatTree`/`coarsePointer` stack. This port presents and dismisses the drawer correctly but does
+not hold entrance input, so the four unit cases are unported and listed in `port/status.md`.
+
+### `Button` uses the native `disabled` attribute, not `aria-disabled`
+
+- **units:** Button, ButtonGroup, and every component that renders a disabled Button
+- **kind:** divergence (0.7.13)
+- **retires:** when `Button` drops `disabled` and always reflects `aria-disabled`
+
+Upstream 0.5.2 matched this port: native `disabled`, except `aria-disabled` when a tooltip had to stay
+reachable. 0.7.13 changed the button branch to `aria-disabled={buttonDisabled || props['aria-disabled']}` with no
+native `disabled`, so a disabled button stays focusable and suppresses activation in its handler. This port still
+renders `disabled`, which removes the button from the tab order and from hover/focus affordances. Two Drawer
+group-boundary assertions are restated against `disabled` until this lands; one theming-oracle consequence is
+that disabled-state theme rules keyed on `:disabled` still match here but `[aria-disabled="true"]` rules only
+match the tooltip path.
+
+### A server-open `Drawer` animates its slide-in after hydration
+
+- **units:** Drawer
+- **kind:** divergence
+- **retires:** when the port can detect hydration (Svelte 5 has no public `hydrating` flag)
+
+Upstream's third `Drawer.ssr.test.tsx` case proves a Drawer open in the server markup opens where it rests after
+hydration (`transition-duration: .01s`) and only an open after a close animates. Svelte 5 keeps `hydrating` in
+`internal/client`, which a published library cannot import, so this port cannot tell a hydrated-open mount from a
+client-open mount; both animate. The markup invariant — an open Drawer's server HTML is byte-identical to a
+closed one — is asserted in `drawer-ssr.test.ts`. The client case is restated in
+`drawer-ssr.svelte.test.ts`, and the settled-open half is recorded here.

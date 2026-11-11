@@ -18,8 +18,9 @@ unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0
 closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
 dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
 tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea` and `Drawer`; only the
-`SnapPaging` subsystem remains on the component surface. Most of `Drawer`'s 71 cases and the
-remaining `useScrollableArea` frame/focus cases are still unported. The size of it is in [`status.md`](./status.md), not here.
+`SnapPaging` subsystem remains on the component surface. `Drawer`'s 71-case suite, its header, direction
+and SSR suites are complete; its 4-case touch-entrance suite waits on the input-hold stack. The remaining
+`useScrollableArea` frame/focus cases and the per-theme value/adaptation ports are the next work. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
 (`CodeEditor`, `RichTextEditor`, `ThreeD`, `Sankey`) wrap React-only libraries with no drop-in

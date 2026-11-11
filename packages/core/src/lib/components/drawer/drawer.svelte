@@ -103,16 +103,14 @@
 	}: DrawerProps = $props();
 
 	let dialogEl = $state<HTMLDialogElement | null>(null);
-	let isRendered = $state(isOpen);
+	// The server renders the closed panel whatever `isOpen` says: presence in
+	// the top layer is a client effect, so the first client render keeps the
+	// server's markup and the effect below presents it. Rendering it open here
+	// would put `aria-modal` and the open transform into the server's HTML,
+	// which no closed Drawer has.
+	let isRendered = $state(false);
 	let hasMounted = $state(false);
 	let exitSide = $state(side);
-
-	// Render the panel in the same commit that targets the open transform, or
-	// @starting-style has nothing to animate from and the modal host's focus
-	// steps run against a display:none box.
-	if (isOpen && !isRendered) {
-		isRendered = true;
-	}
 
 	$effect(() => {
 		hasMounted = true;
@@ -123,8 +121,9 @@
 			exitSide = side;
 		}
 	});
-
-	const opensSettled = $derived(isOpen && !hasMounted);
+	// Open-derived presentation waits for the client, so server markup matches a
+	// closed Drawer exactly.
+	const showsOpen = $derived(hasMounted && isOpen);
 	const anchoredSide = $derived(isOpen ? side : exitSide);
 	const allowEscape = $derived(purpose !== 'required');
 	const allowScrimClick = $derived(purpose === 'info');
@@ -199,10 +198,9 @@
 		drawerStyles.dialog,
 		drawerStyles[anchoredSide],
 		isRendered && drawerStyles.rendered,
-		isOpen && (anchoredSide === 'start' ? drawerStyles.startOpen : drawerStyles.endOpen),
+		showsOpen && (anchoredSide === 'start' ? drawerStyles.startOpen : drawerStyles.endOpen),
 		hasScrim && drawerStyles.scrim,
-		hasScrim && isOpen && drawerStyles.scrimOpen,
-		opensSettled && drawerStyles.openSettled,
+		hasScrim && showsOpen && drawerStyles.scrimOpen,
 		drawerInlineSizeStyle(widthValue, mobileWidth),
 		xstyle
 	] as const);
@@ -237,8 +235,8 @@
 	style={mergeStyle(dialogStyle.style, styleProp as string | undefined)}
 	popover={hasScrim ? undefined : 'manual'}
 	aria-label={label}
-	aria-modal={hasScrim && isOpen ? 'true' : undefined}
-	role={purpose === 'required' && hasScrim ? 'alertdialog' : undefined}
+	aria-modal={hasScrim && showsOpen ? 'true' : undefined}
+	role={purpose === 'required' && hasScrim && showsOpen ? 'alertdialog' : undefined}
 	onclick={handleClick}
 	oncancel={handleCancel}
 	{@attach focusTrap.attachContainer}
