@@ -11,7 +11,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UIKIT_GESTURES } from '$lib/motion/uikit/gestures.js';
 import { PanGestureRecognizer } from '$lib/gestures/pan-gesture-recognizer.js';
-import { PRESS_PROFILES, createPressTracker, type ControlEvent } from '$lib/gestures/press-tracker.js';
+import {
+	PRESS_PROFILES,
+	createPressTracker,
+	type ControlEvent
+} from '$lib/gestures/press-tracker.js';
 import { TapGestureRecognizer } from '$lib/gestures/tap-gesture-recognizer.js';
 import { createHarness, scrollProbe } from './gestures/harness.js';
 
