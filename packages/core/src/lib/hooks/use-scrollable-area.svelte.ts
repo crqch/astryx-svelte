@@ -185,18 +185,26 @@ export function useScrollableArea(
 
 	const attachViewport: Attachment<HTMLElement> = (node) => {
 		viewport = node;
-		const syncFocus = () => {
-			// Keep focus current on every change. A viewport that drops its
-			// scrolling axis while focused must keep its leftover `tabindex="-1"`,
-			// and that decision reads this flag after the axis change.
-			isViewportFocused = node.ownerDocument.activeElement === node;
+		// A focusin is a user or programmatic focus on a live node, so it can be
+		// recorded in the handler. A focusout is also the last event a removing
+		// branch fires, during the teardown where Svelte forbids a state write, so
+		// that one is deferred past the commit and re-reads the document.
+		const handleFocusIn = () => {
+			if (!node.isConnected) return;
+			isViewportFocused = true;
 		};
-		syncFocus();
-		node.addEventListener('focusin', syncFocus);
-		node.addEventListener('focusout', syncFocus);
+		const handleFocusOut = () => {
+			queueMicrotask(() => {
+				if (!node.isConnected || viewport !== node) return;
+				isViewportFocused = node.ownerDocument.activeElement === node;
+			});
+		};
+		isViewportFocused = node.ownerDocument.activeElement === node;
+		node.addEventListener('focusin', handleFocusIn);
+		node.addEventListener('focusout', handleFocusOut);
 		return () => {
-			node.removeEventListener('focusin', syncFocus);
-			node.removeEventListener('focusout', syncFocus);
+			node.removeEventListener('focusin', handleFocusIn);
+			node.removeEventListener('focusout', handleFocusOut);
 			isViewportFocused = false;
 			viewport = null;
 		};

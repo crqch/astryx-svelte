@@ -11,6 +11,7 @@ import {
 import * as stylex from '@stylexjs/stylex';
 import ScrollableAreaProbe from './fixtures/scrollable-area-probe.svelte';
 import ScrollableAreaNestedProbe from './fixtures/scrollable-area-nested-probe.svelte';
+import ScrollableAreaDetachProbe from './fixtures/scrollable-area-detach-probe.svelte';
 
 /**
  * The first slice of Astryx's `hooks/useScrollableArea.test.tsx` at the
@@ -744,5 +745,149 @@ describe('useScrollableArea', () => {
 		content.dispatchEvent(new Event('transitionend'));
 		await settle();
 		expect(viewport).toHaveAttribute('tabindex', '0');
+	});
+	it('derives edges as a scroll is dispatched, without reading computed style or requesting a frame', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"inline":{"isScrollable":true'
+			)
+		);
+
+		const styleReads = vi.spyOn(window, 'getComputedStyle');
+		const frameRequests = vi.spyOn(window, 'requestAnimationFrame');
+		const steps: Array<[number, string, string]> = [
+			[80, 'false', 'false'],
+			[200, 'false', 'true'],
+			[0, 'true', 'false']
+		];
+		for (const [scrollLeft, atStart, atEnd] of steps) {
+			setGeometry(viewport, { scrollLeft });
+			viewport.dispatchEvent(new Event('scroll'));
+			expect(screen.component.getState().inline).toEqual({
+				isScrollable: true,
+				atStart: atStart === 'true',
+				atEnd: atEnd === 'true'
+			});
+		}
+		// The scroll path reads box geometry only: no computed style and no frame.
+		expect(styleReads).not.toHaveBeenCalled();
+		expect(frameRequests).not.toHaveBeenCalled();
+		styleReads.mockRestore();
+		frameRequests.mockRestore();
+	});
+
+	it('derives vertical-rl block edges on the scroll path without requesting a frame', async () => {
+		const screen = await render(ScrollableAreaProbe, {
+			props: { axis: 'block', style: 'writing-mode: vertical-rl' }
+		});
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		setGeometry(viewport, {
+			clientWidth: 100,
+			clientHeight: 100,
+			scrollWidth: 220,
+			scrollHeight: 100,
+			scrollLeft: 0,
+			scrollTop: 0
+		});
+		viewport.style.overflowX = 'auto';
+		viewport.dispatchEvent(new Event('transitionend'));
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"block":{"isScrollable":true'
+			)
+		);
+
+		const frameRequests = vi.spyOn(window, 'requestAnimationFrame');
+		setGeometry(viewport, { scrollLeft: -120 });
+		viewport.dispatchEvent(new Event('scroll'));
+		expect(frameRequests).not.toHaveBeenCalled();
+		expect(screen.component.getState().block).toEqual({
+			isScrollable: true,
+			atStart: false,
+			atEnd: true
+		});
+		frameRequests.mockRestore();
+	});
+
+	it('measures fully when a scroll offset contradicts the measured direction', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"inline":{"isScrollable":true'
+			)
+		);
+		expect(screen.component.getState().inline).toEqual({
+			isScrollable: true,
+			atStart: true,
+			atEnd: false
+		});
+
+		// A stylesheet alone turns the area RTL; the next scroll reports a
+		// negative offset the stored mapping rules out.
+		viewport.style.direction = 'rtl';
+		setGeometry(viewport, { scrollLeft: -200 });
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() =>
+			expect(screen.component.getState().inline).toEqual({
+				isScrollable: true,
+				atStart: false,
+				atEnd: true
+			})
+		);
+	});
+
+	it('coalesces repeated invalidations into one animation frame', async () => {
+		const screen = await render(ScrollableAreaProbe);
+		const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 300);
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('state').element()).toHaveTextContent(
+				'"inline":{"isScrollable":true'
+			)
+		);
+
+		const frameRequests = vi.spyOn(window, 'requestAnimationFrame');
+		const content = screen.getByTestId('content').element() as HTMLElement;
+		for (let index = 0; index < 5; index += 1) {
+			content.appendChild(document.createElement('span'));
+		}
+		await new Promise((resolve) => setTimeout(resolve, 20));
+		expect(frameRequests).toHaveBeenCalledTimes(1);
+		frameRequests.mockRestore();
+	});
+	it('stops tracking a viewport that detaches while the hook stays mounted', async () => {
+		const screen = await render(ScrollableAreaDetachProbe);
+		const viewport = screen.getByTestId('detachable').element() as HTMLElement;
+		makeOverflowing(viewport, 'x', 180);
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '0'));
+		viewport.focus();
+		setGeometry(viewport, { scrollWidth: 100 });
+		viewport.dispatchEvent(new Event('scroll'));
+		await vi.waitFor(() => expect(viewport).toHaveAttribute('tabindex', '-1'));
+		expect(getRegisteredScrollOwnerState(viewport)).toBeDefined();
+
+		await screen.rerender({ isAttached: false });
+		expect(getRegisteredScrollOwnerState(viewport)).toBeUndefined();
+		expect(screen.getByTestId('retained-tab-index').element()).toHaveTextContent('undefined');
+
+		// The old node's listeners are gone, so focusing it again changes nothing.
+		document.body.append(viewport);
+		try {
+			viewport.focus();
+			expect(screen.getByTestId('retained-tab-index').element()).toHaveTextContent('undefined');
+		} finally {
+			viewport.remove();
+		}
+
+		await screen.rerender({ isAttached: true });
+		const replacement = screen.getByTestId('detachable').element() as HTMLElement;
+		expect(replacement).not.toBe(viewport);
+		await vi.waitFor(() => expect(getRegisteredScrollOwnerState(replacement)).toBeDefined());
+		expect(getRegisteredScrollOwnerState(viewport)).toBeUndefined();
 	});
 });
