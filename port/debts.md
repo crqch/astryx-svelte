@@ -1863,20 +1863,6 @@ holds a mouse click. That behavior lives in `Layer/holdEntranceInput` plus the ~
 `inputStream`/`flatTree`/`coarsePointer` stack. This port presents and dismisses the drawer correctly but does
 not hold entrance input, so the four unit cases are unported and listed in `port/status.md`.
 
-### `BottomSheet`'s standalone exit completes before its inert frame
-
-- **units:** BottomSheet
-- **kind:** open defect
-- **retires:** when `keeps a standalone modal sheet presented through its exit animation` is green
-
-`bottom-sheet.svelte.test.ts` asserts that a closes-itself sheet keeps the native dialog open
-with `inert` and `aria-hidden` while it slides out. In this browser the panel's motion effect
-reports `exiting` as complete on the same tick, so the dialog closes and `isPresented` flips
-before the inert attribute is observable. No change in this batch touched the sheet's motion
-path; the case fails identically in isolation and is the one red test in the client project.
-The `waitForTransition` measurement during the closing render needs to read the exit style
-rather than the pre-close one.
-
 ### A server-open `Drawer` animates its slide-in after hydration
 
 - **units:** Drawer
