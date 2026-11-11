@@ -1861,3 +1861,22 @@ hydration (`transition-duration: .01s`) and only an open after a close animates.
 client-open mount; both animate. The markup invariant — an open Drawer's server HTML is byte-identical to a
 closed one — is asserted in `drawer-ssr.test.ts`. The client case is restated in
 `drawer-ssr.svelte.test.ts`, and the settled-open half is recorded here.
+
+### Three gesture suites are unported: they inspect a bundle or a sibling harness
+
+- **units:** gestures
+- **kind:** unported
+- **retires:** when the port ships its own esbuild-based bundle proof and interaction harness
+
+`gestures/__tests__/recognizerBundle.test.ts` (3) bundles the sources with esbuild in a
+child process and reads the metafile; esbuild is not a dependency of this repo, and the
+browser project cannot spawn a process. `gestures/__tests__/VelocityTracker.harness.test.ts`
+(3) compares the tracker with `internal/interaction-harness`'s `readRelease`, a Playwright
+harness this port does not vendor; the copy would only duplicate the filter under test.
+`gestures/__tests__/GestureHost.bundle.test.ts` (5) has the same esbuild prerequisite.
+
+The remaining GestureHost cases run in Chromium, where two jsdom assumptions do not hold.
+Each restatement is marked in the suite: an inline `touch-action` write (a browser applies
+the host's rule itself), `caretRangeFromPoint` finding real text under a synthetic pointer
+(stubbed away for the three claim-during-selection cases), and the shared page's input
+stream outliving a case (reset between cases). The behaviour asserted is the same.

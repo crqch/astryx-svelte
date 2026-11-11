@@ -75,6 +75,13 @@ export type InputEventMap = WindowEventMap & DocumentEventMap;
  */
 const inputState = realmValue(sharedKey('input-stream', 1), () => ({
 	streams: new WeakMap<Window, Map<string, Channel>>(),
+	/**
+	 * Every window whose stream has held a listener. A WeakMap cannot be
+	 * walked, and the browser test project needs a way to stop the streams one
+	 * page accumulates between suites (jsdom gives every file a fresh window).
+	 * Test-only.
+	 */
+	views: new Set<Window>(),
 	/** The type of the latest pointer event each window's stream delivered. */
 	lastPointerTypes: new WeakMap<Window, string>(),
 	/** Where the latest mouse pointer event each window's stream delivered was. */
@@ -82,7 +89,7 @@ const inputState = realmValue(sharedKey('input-stream', 1), () => ({
 	/** Each window's finger and pen presses that are down, by pointer id. */
 	downPresses: new WeakMap<Window, Map<number, MousePoint>>()
 }));
-const { streams, lastPointerTypes, lastMousePoints, downPresses } = inputState;
+const { streams, views, lastPointerTypes, lastMousePoints, downPresses } = inputState;
 const NO_PRESSES: ReadonlyMap<number, MousePoint> = new Map();
 
 /** A point in the viewport, in CSS pixels. */
@@ -131,6 +138,7 @@ export function subscribeInput<K extends keyof InputEventMap>(
 	listener: (event: InputEventMap[K]) => unknown,
 	{ cancels = false, first = false }: InputSubscriptionOptions = {}
 ): () => void {
+	views.add(view);
 	let channels = streams.get(view);
 	if (channels == null) {
 		channels = new Map();
@@ -265,4 +273,26 @@ function report(error: unknown): void {
 	queueMicrotask(() => {
 		throw error;
 	});
+}
+
+/**
+ * Test-only: remove every listener this stream registered on `view` and forget
+ * its channels. jsdom gives each file a fresh window; the browser project
+ * shares one, so suites that count native registrations reset between cases.
+ */
+export function __resetInputStreamForTest(view: Window = window): void {
+	const channels = streams.get(view);
+	if (channels != null) {
+		for (const [type, channel] of channels) {
+			if (channel.native != null) {
+				view.removeEventListener(type, channel.native.listener, { capture: true });
+			}
+		}
+		channels.clear();
+	}
+	streams.delete(view);
+	views.delete(view);
+	lastPointerTypes.delete(view);
+	lastMousePoints.delete(view);
+	downPresses.delete(view);
 }

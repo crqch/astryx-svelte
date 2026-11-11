@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 307     | 11274          |
+| Ported here              | 331     | 11760          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **490** | **5651**       |
+| **Unported**             | **466** | **5165**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -34,7 +34,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 | Suite                                                              | Cases |
 | ------------------------------------------------------------------ | ----- |
-| `gestures/__tests__/GestureHost.test.ts`                           | 240   |
 | `PowerSearch/PowerSearchBottomSheet.test.tsx`                      | 181   |
 | `hooks/usePager.test.ts`                                           | 132   |
 | `Resizable/useResizable.test.ts`                                   | 97    |
@@ -56,9 +55,7 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `theme/themeMotion.test.ts`                                        | 43    |
 | `gestures/__tests__/useGestureRecognizer.test.tsx`                 | 42    |
 | `DateInput/Wheel.test.tsx`                                         | 41    |
-| `gestures/__tests__/arena.test.ts`                                 | 41    |
 | `hooks/menuPressGesture.test.ts`                                   | 39    |
-| `gestures/__tests__/wheelSegmenter.test.ts`                        | 38    |
 | `hooks/useAnnounce.modal.test.tsx`                                 | 38    |
 | `Lightbox/zoomStage.test.ts`                                       | 38    |
 | `utils/calendarDateParser.test.ts`                                 | 37    |
@@ -99,13 +96,10 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Switch/switchTouch.test.ts`                                       | 22    |
 | `Markdown/plugins/sourceDecoration.test.tsx`                       | 21    |
 | `__tests__/BusyOwnerAnnouncement.test.tsx`                         | 20    |
-| `gestures/__tests__/ScreenEdgePanGestureRecognizer.test.ts`        | 20    |
 | `AvatarGroup/AvatarGroupOverflow.test.tsx`                         | 19    |
 | `Calendar/Calendar.calendarSystems.test.tsx`                       | 19    |
 | `DateInput/DateInputTouch.calendar.test.tsx`                       | 19    |
 | `dragToSnapPoints/createDragToSnapPoints.test.ts`                  | 19    |
-| `gestures/__tests__/PanGestureRecognizer.test.ts`                  | 19    |
-| `gestures/__tests__/PressTracker.test.ts`                          | 19    |
 | `hooks/useAnnounce.replace.test.tsx`                               | 19    |
 | `Layer/outsidePress.test.ts`                                       | 19    |
 | `Lightbox/useLightbox.test.tsx`                                    | 19    |
@@ -134,7 +128,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/plugins/sourceLines.test.tsx`                            | 15    |
 | `TimeInput/NativeTimeInput.test.tsx`                               | 15    |
 | `utils/clickGuard.test.ts`                                         | 15    |
-| `gestures/__tests__/arenaTapLongPress.test.ts`                     | 14    |
 | `i18n/useTranslator.test.tsx`                                      | 14    |
 | `Markdown/blockDirection.test.tsx`                                 | 14    |
 | `Markdown/indentedFences.test.tsx`                                 | 14    |
@@ -147,7 +140,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `utils/selectionLock.test.ts`                                      | 14    |
 | `Collapsible/useCollapsible.test.tsx`                              | 13    |
 | `DateInput/DateInput.fr10.test.tsx`                                | 13    |
-| `gestures/__tests__/arenaContinuous.test.ts`                       | 13    |
 | `hooks/rootScrollStyles.test.ts`                                   | 13    |
 | `hooks/useScrollRegionProps.test.tsx`                              | 13    |
 | `Layer/layerClickBoundary.test.tsx`                                | 13    |
@@ -174,7 +166,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `CodeBlock/languages.test.ts`                                      | 11    |
 | `DateTimeInput/DateTimeInput.calendar.test.tsx`                    | 11    |
 | `gestures/__tests__/haptics.test.ts`                               | 11    |
-| `gestures/__tests__/VelocityTracker.test.ts`                       | 11    |
 | `hooks/useDragToSnapPoints.test.tsx`                               | 11    |
 | `Indicator/touchTarget.test.tsx`                                   | 11    |
 | `Layer/gestureCounter.test.ts`                                     | 11    |
@@ -200,7 +191,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `CodeBlock/CodeLanguage.test.tsx`                                  | 9     |
 | `DateInput/wheelStrip.test.ts`                                     | 9     |
 | `DateRangeInput/DateRangeInput.fr10.test.tsx`                      | 9     |
-| `gestures/__tests__/LongPressGestureRecognizer.test.ts`            | 9     |
 | `hooks/longPressDetector.test.ts`                                  | 9     |
 | `hooks/scrollKeyboardDelegation.test.ts`                           | 9     |
 | `Layer/sharedContexts.test.tsx`                                    | 9     |
@@ -217,7 +207,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateInput/MonthScrollerSettle.test.tsx`                           | 8     |
 | `DateRangeInput/DateRangeInput.calendar.test.tsx`                  | 8     |
 | `EmptyState/EmptyState.announce.test.tsx`                          | 8     |
-| `gestures/__tests__/TapGestureRecognizer.test.ts`                  | 8     |
 | `Layer/LayerProvider.test.tsx`                                     | 8     |
 | `Layer/popoverOperations.test.ts`                                  | 8     |
 | `Layer/toastHost.test.tsx`                                         | 8     |
@@ -238,9 +227,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DateInput/DateInput.noTemporal.test.tsx`                          | 7     |
 | `DateInput/MonthScroller.test.tsx`                                 | 7     |
 | `Field/fieldInputFamily.test.tsx`                                  | 7     |
-| `gestures/__tests__/arenaPinchSwipeEdge.test.ts`                   | 7     |
-| `gestures/__tests__/VelocityTracker.streams.test.ts`               | 7     |
-| `gestures/__tests__/watcherRecognizer.test.ts`                     | 7     |
 | `hooks/useAnimator.test.tsx`                                       | 7     |
 | `hooks/useRenamedProp.test.tsx`                                    | 7     |
 | `Layer/layerPortalBoundary.test.ts`                                | 7     |
@@ -261,7 +247,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `CodeBlock/CodeBlock.startLineNumber.test.tsx`                     | 6     |
 | `DropdownMenu/DropdownMenuForcedColors.test.tsx`                   | 6     |
 | `gestures/__tests__/importGraph.test.ts`                           | 6     |
-| `gestures/__tests__/SwipeGestureRecognizer.test.ts`                | 6     |
 | `hooks/useAnnounceRenderedText.test.tsx`                           | 6     |
 | `internal/useDismissSearchOnTouchDrag.test.tsx`                    | 6     |
 | `keyboard/keyboardModel.test.ts`                                   | 6     |
@@ -298,10 +283,7 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DropdownMenu/__tests__/Menu.a11y.test.tsx`                        | 5     |
 | `DropdownMenu/__tests__/MenuButton.a11y.test.tsx`                  | 5     |
 | `Field/textEntryTraits.test.ts`                                    | 5     |
-| `gestures/__tests__/arenaTimersAndClaims.test.ts`                  | 5     |
-| `gestures/__tests__/finePointerListeners.test.ts`                  | 5     |
 | `gestures/__tests__/GestureHost.bundle.test.ts`                    | 5     |
-| `gestures/__tests__/sharedTouchState.test.ts`                      | 5     |
 | `hooks/__tests__/useAttachmentPair.test.tsx`                       | 5     |
 | `hooks/nestedTouchPress.adopters.test.tsx`                         | 5     |
 | `hooks/useBusyAnnouncement.test.tsx`                               | 5     |
@@ -350,7 +332,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `DropdownMenu/DropdownMenuThemeReflection.test.tsx`                | 4     |
 | `Field/textEntryTraits.public.test.ts`                             | 4     |
 | `FieldStatus/__tests__/StatusMessage.a11y.test.tsx`                | 4     |
-| `gestures/__tests__/PinchGestureRecognizer.test.ts`                | 4     |
 | `hooks/useHighlightedOptionScroll.test.ts`                         | 4     |
 | `HoverCard/popupTrigger.test.ts`                                   | 4     |
 | `InputGroup/InputGroupText.test.tsx`                               | 4     |
@@ -437,9 +418,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Field/PanelSearchInput.secondDocument.test.tsx`                   | 2     |
 | `gestures/__tests__/passiveByDefault.test.tsx`                     | 2     |
 | `gestures/__tests__/presentedGlide.test.ts`                        | 2     |
-| `gestures/__tests__/recognizerInternals.test.ts`                   | 2     |
-| `gestures/__tests__/recognizerKind.test.ts`                        | 2     |
-| `gestures/__tests__/touchActionRule.test.ts`                       | 2     |
 | `gestures/__tests__/wheelEnd.harness.test.ts`                      | 2     |
 | `hooks/actionGroupTracker.exports.test.ts`                         | 2     |
 | `hooks/deprecatedApis.public.test.ts`                              | 2     |
@@ -495,8 +473,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Field/fieldStatusPlacement.public.test.ts`                        | 1     |
 | `FieldStatus/FieldStatus.deprecation.test.ts`                      | 1     |
 | `FileInput/FileInput.fr10.test.tsx`                                | 1     |
-| `gestures/__tests__/pressTrackerFactory.test.ts`                   | 1     |
-| `gestures/__tests__/selectionLockReexport.test.ts`                 | 1     |
 | `hooks/menuPressValues.test.ts`                                    | 1     |
 | `hooks/useFocusReturnVisibility.test.ts`                           | 1     |
 | `hooks/useScrollLockImports.test.ts`                               | 1     |
@@ -531,8 +507,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11274          |
-| Declared here              | 7241           |
+| Upstream, in ported suites | 11760          |
+| Declared here              | 7727           |
 | **Short**                  | **4048**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
