@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 298     | 10906          |
+| Ported here              | 304     | 11216          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **499** | **6019**       |
+| **Unported**             | **493** | **5709**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -34,7 +34,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 | Suite                                                              | Cases |
 | ------------------------------------------------------------------ | ----- |
-| `motion/animator.test.ts`                                          | 266   |
 | `gestures/__tests__/GestureHost.test.ts`                           | 240   |
 | `PowerSearch/PowerSearchBottomSheet.test.tsx`                      | 181   |
 | `hooks/usePager.test.ts`                                           | 132   |
@@ -171,7 +170,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `keyboard/keyboardChromium.test.ts`                                | 12    |
 | `Layer/settledBox.test.ts`                                         | 12    |
 | `MobileNav/MobileNavFocus.test.tsx`                                | 12    |
-| `motion/progress.test.ts`                                          | 12    |
 | `motion/uikit/uikit.test.ts`                                       | 12    |
 | `theme/tokenValueCompat.test.ts`                                   | 12    |
 | `AlertDialog/useImperativeAlertDialog.test.tsx`                    | 11    |
@@ -184,8 +182,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/gestureCounter.test.ts`                                     | 11    |
 | `Layout/__tests__/nestedPadding.test.tsx`                          | 11    |
 | `Markdown/Markdown.fr23.perf.test.ts`                              | 11    |
-| `motion/reducedMotionPlan.test.ts`                                 | 11    |
-| `motion/resolveMotion.tempo.test.ts`                               | 11    |
 | `motion/themeTiming.test.ts`                                       | 11    |
 | `PowerSearch/PowerSearchTokenNaming.test.tsx`                      | 11    |
 | `Tooltip/useTooltip.showHide.test.tsx`                             | 11    |
@@ -278,7 +274,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/Markdown.public.test.ts`                                 | 6     |
 | `Markdown/Markdown.renderBoundary.test.tsx`                        | 6     |
 | `motion/animatedLayout.boundary.test.ts`                           | 6     |
-| `motion/coast.test.ts`                                             | 6     |
 | `NumberInput/__tests__/NumberInput.a11y.test.tsx`                  | 6     |
 | `SelectableCard/SelectableCardRadio.test.tsx`                      | 6     |
 | `Selector/Selector.fr10.test.tsx`                                  | 6     |
@@ -367,7 +362,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `List/ListItem.hitArea.test.tsx`                                   | 4     |
 | `Markdown/openFenceFinalNewline.test.tsx`                          | 4     |
 | `Markdown/plugins/softBreaks.test.tsx`                             | 4     |
-| `motion/resolveMotion.test.ts`                                     | 4     |
 | `MultiSelector/MultiSelector.focusableDisabled.test.tsx`           | 4     |
 | `Popover/usePopoverSurfaceMotion.test.tsx`                         | 4     |
 | `Resizable/useResizableForms.test.tsx`                             | 4     |
@@ -540,9 +534,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 10906          |
-| Declared here              | 6874           |
-| **Short**                  | **4047**       |
+| Upstream, in ported suites | 11216          |
+| Declared here              | 7183           |
+| **Short**                  | **4048**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -553,7 +547,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (201)</summary>
+<details><summary>Suites short of upstream (202)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -746,6 +740,7 @@ per connected group.
 | `i18n/__tests__/e2e-powersearch.test.tsx`                                                                                                                                                | 6        | 5    | 1     |
 | `Layer/anchorName.test.ts`                                                                                                                                                               | 16       | 15   | 1     |
 | `MobileNav/MobileNavScrollbarGutter.test.tsx`                                                                                                                                            | 4        | 3    | 1     |
+| `motion/animator.test.ts`                                                                                                                                                                | 266      | 265  | 1     |
 | `NavIcon/NavIcon.test.tsx`                                                                                                                                                               | 4        | 3    | 1     |
 | `PowerSearch/usePowerSearchConfig.test.ts`                                                                                                                                               | 52       | 51   | 1     |
 | `Table/plugins/columnSettings/useTableColumnSettings.test.tsx`                                                                                                                           | 7        | 6    | 1     |
