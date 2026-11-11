@@ -564,8 +564,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10650          |
-| Declared here              | 6594           |
-| **Short**                  | **4071**       |
+| Declared here              | 6615           |
+| **Short**                  | **4050**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -616,7 +616,6 @@ per connected group.
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
 | `CheckboxList/CheckboxList.test.tsx`                                                                                                                                                     | 88       | 51   | 37    |
 | `ComplexSelector/ComplexSelector.test.tsx`                                                                                                                                               | 49       | 12   | 37    |
-| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 10   | 37    |
 | `Table/plugins/rowExpansion/useTableRowExpansion.test.tsx`                                                                                                                               | 50       | 13   | 37    |
 | `utils/plainDate.test.ts`                                                                                                                                                                | 124      | 87   | 37    |
 | `Chat/ChatMessage.test.tsx`<br>`Chat/ChatMessageBubble.test.tsx`<br>`Chat/ChatMessageList.test.tsx`<br>`Chat/ChatMessageMetadata.test.tsx`<br>`Chat/ChatSystemMessage.test.tsx`          | 79       | 43   | 36    |
@@ -658,6 +657,7 @@ per connected group.
 | `hooks/useOverflow.test.ts`                                                                                                                                                              | 43       | 26   | 17    |
 | `TopNav/TopNavMegaMenu.test.tsx`                                                                                                                                                         | 56       | 39   | 17    |
 | `hooks/useLongPress.test.tsx`                                                                                                                                                            | 25       | 9    | 16    |
+| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 31   | 16    |
 | `OverflowList/OverflowList.test.tsx`                                                                                                                                                     | 34       | 18   | 16    |
 | `Token/Token.test.tsx`                                                                                                                                                                   | 58       | 42   | 16    |
 | `TopNav/TopNavMenu.test.tsx`                                                                                                                                                             | 30       | 14   | 16    |

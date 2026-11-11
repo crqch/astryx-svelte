@@ -186,11 +186,9 @@ export function useScrollableArea(
 	const attachViewport: Attachment<HTMLElement> = (node) => {
 		viewport = node;
 		const syncFocus = () => {
-			const current = state;
-			// Only a viewport with no scrollable axis reads this state, and the
-			// measurement that ends its scrolling reads focus again, so a scrollable
-			// one can skip the render.
-			if (current.inline.isScrollable || current.block.isScrollable) return;
+			// Keep focus current on every change. A viewport that drops its
+			// scrolling axis while focused must keep its leftover `tabindex="-1"`,
+			// and that decision reads this flag after the axis change.
 			isViewportFocused = node.ownerDocument.activeElement === node;
 		};
 		syncFocus();
@@ -474,7 +472,9 @@ export function useScrollableArea(
 		);
 		const styled = sx(overflowStyle, xstyle);
 		const mayHoldFocus =
-			isViewportFocused || measured.inline.isScrollable || measured.block.isScrollable;
+			isViewportFocused ||
+			(axisIsRequested(axis, 'inline') && measured.inline.isScrollable) ||
+			(axisIsRequested(axis, 'block') && measured.block.isScrollable);
 		const behavior: string[] = [];
 		if (axisIsRequested(axis, 'inline')) {
 			behavior.push(

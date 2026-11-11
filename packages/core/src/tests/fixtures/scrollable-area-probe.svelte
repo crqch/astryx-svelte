@@ -1,4 +1,5 @@
 <script lang="ts" module>
+	import type { Snippet } from 'svelte';
 	import type {
 		ScrollAxis,
 		ScrollOverscroll,
@@ -11,6 +12,10 @@
 		keyboardOwner?: 'viewport' | 'contentOrViewport';
 		stickyContainment?: ScrollStickyContainment;
 		style?: string;
+		contentStyle?: string;
+		contentClass?: string;
+		contentXstyle?: import('$lib/internal/sx.js').StyleArg;
+		children?: Snippet;
 	}
 </script>
 
@@ -22,7 +27,11 @@
 		chaining = 'allow',
 		keyboardOwner = 'viewport',
 		stickyContainment,
-		style = 'background-color: red'
+		style = 'background-color: red',
+		contentStyle,
+		contentClass,
+		contentXstyle,
+		children
 	}: ScrollableAreaProbeProps = $props();
 
 	const hook = useScrollableArea(() => ({
@@ -40,8 +49,15 @@
 </script>
 
 <div data-testid="viewport" {...hook.getViewportProps({ style })}>
-	<div data-testid="content" {...hook.getContentProps()}>
-		<span data-testid="descendant">Content</span>
+	<div
+		data-testid="content"
+		{...hook.getContentProps({ style: contentStyle, class: contentClass, xstyle: contentXstyle })}
+	>
+		{#if children}
+			{@render children()}
+		{:else}
+			<span data-testid="descendant">Content</span>
+		{/if}
 	</div>
 </div>
 <output data-testid="state">{JSON.stringify(hook.state)}</output>
