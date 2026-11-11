@@ -566,9 +566,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10590          |
-| Declared here              | 6567           |
+| Declared here              | 6566           |
 | **Short**                  | **4039**       |
-| Over, across 6 groups      | +16            |
+| Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s

@@ -328,7 +328,7 @@ describe('generateThemeCss', () => {
 	});
 
 	it('keys component overrides off the stable class themeProps renders', () => {
-		expect(css).toContain('.astryx-button.destructive {');
+		expect(css).toContain('.astryx-button[data-variant="destructive"] {');
 	});
 
 	it('emits a pseudo-class block as a second rule on the same selector', () => {

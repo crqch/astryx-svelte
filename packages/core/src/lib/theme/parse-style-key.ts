@@ -1,34 +1,46 @@
+import { themeDataAttributeName } from '../internal/theme-props.js';
+
+/** Escape a value for a double-quoted CSS attribute selector string. */
+function escapeAttributeValue(value: string): string {
+	let escaped = '';
+	for (const char of value) {
+		const codePoint = char.codePointAt(0) ?? 0;
+		if (char === '"' || char === '\\' || codePoint < 0x20 || codePoint === 0x7f) {
+			escaped += `\\${(codePoint === 0 ? 0xfffd : codePoint).toString(16)} `;
+		} else {
+			escaped += char;
+		}
+	}
+	return escaped;
+}
+
 /**
- * Ported from Astryx's `src/utils/parseStyleKey.ts`.
+ * Parse a component style key into a CSS data-attribute selector suffix.
  *
- * Theme authors key component overrides by the visual state they target, and
- * this turns those keys into the class suffix that `themeProps()` will have put
- * on the element.
+ * Ported from Astryx's `utils/parseStyleKey.ts`. Theme authors key component
+ * overrides by the visual state they target, and this turns those keys into the
+ * selector that `themeProps()`'s reflected `data-*` attributes satisfy:
  *
  * @example
- * parseStyleKey('base')                       // ''
- * parseStyleKey('checked')                    // '.checked'
- * parseStyleKey('checked+disabled')           // '.checked.disabled'
- * parseStyleKey('variant:secondary')          // '.secondary'
- * parseStyleKey('level:1')                    // '.level-1'
- * parseStyleKey('variant:destructive+size:sm')// '.destructive.sm'
+ * parseStyleKey('base')                        // ''
+ * parseStyleKey('checked')                     // '[data-checked="checked"]'
+ * parseStyleKey('checked+disabled')            // '[data-checked="checked"][data-disabled="disabled"]'
+ * parseStyleKey('variant:secondary')           // '[data-variant="secondary"]'
+ * parseStyleKey('level:1')                     // '[data-level="1"]'
+ * parseStyleKey('variant:destructive+size:sm') // '[data-variant="destructive"][data-size="sm"]'
  */
 export function parseStyleKey(key: string): string {
-	if (key === 'base') return '';
+	if (key === 'base') {
+		return '';
+	}
 
 	return key
 		.split('+')
 		.map((part) => {
-			const [prop, value] = part.split(':');
-
-			// Bare state name, e.g. 'checked', 'disabled', 'selected'.
-			if (value === undefined) return `.${prop}`;
-
-			// CSS classes can't start with a digit — prefix with the prop name so
-			// `level:1` becomes `.level-1`.
-			if (/^\d/.test(value)) return `.${prop}-${value}`;
-
-			return `.${value}`;
+			const separator = part.indexOf(':');
+			const prop = separator === -1 ? part : part.slice(0, separator);
+			const value = separator === -1 ? part : part.slice(separator + 1);
+			return `[${themeDataAttributeName(prop)}="${escapeAttributeValue(value)}"]`;
 		})
 		.join('');
 }

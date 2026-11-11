@@ -47,7 +47,6 @@
 <script lang="ts">
 	import { cx } from '../../internal/sx.js';
 	import { stableClassName } from '../../internal/naming.js';
-	import { themeProps } from '../../internal/theme-props.js';
 	import Button from '../button/button.svelte';
 	import Layer from '../layer/layer.svelte';
 	import {
@@ -88,12 +87,12 @@
 
 	// The surface is created here, not by the calling component, so a component
 	// that wants its popup themeable cannot reach it on its own — a target it
-	// renders itself would land on the content INSIDE this box. `popover-surface`
-	// is the shared class every popup carries; `surfaceTarget` names this one.
-	const surfaceTheme = $derived(themeProps('popover-surface'));
+	// renders itself would land on the content INSIDE this box. Upstream 0.7.13
+	// removed the private `popover-surface` class and documents `popover` as the
+	// broad target instead; `surfaceTarget` still names a component-specific
+	// class where one exists.
 	const surfaceClass = $derived(
 		cx(
-			surfaceTheme.class,
 			popover.surfaceTarget != null ? stableClassName(popover.surfaceTarget) : undefined,
 			contentWrapper.class
 		)

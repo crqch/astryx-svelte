@@ -118,6 +118,7 @@ const ENUMERATED_IN_PROSE = new Set(['IconName']);
 const PORT_DOC_TYPE_DEBT = new Set([
 	'CheckboxInput.status',
 	'CheckboxList.status',
+	'Code.size',
 	'ComplexSelector.startIcon',
 	'ContextMenuItem.icon',
 	'DropdownMenuCheckboxItem.icon',
@@ -144,16 +145,15 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	'Switch.status',
 	'TabMenu.options',
 	'Text.hasTruncateTooltip',
-	'Text.type',
 	'TextArea.status',
 	'TextInput.status',
 	'TimeInput.status',
-	'Timestamp.type',
 	'Toast.onDismiss',
 	'Toast.onHide',
 	'Tokenizer.startIcon',
 	'Toolbar.dividers',
 	'Typeahead.startIcon',
+	'useTableRowStatus.getStatus',
 	'useTableSortable.onSortChange'
 ]);
 

@@ -379,6 +379,12 @@ async function discoverComponents(): Promise<ComponentInfo[]> {
 		.map((d) => d.name);
 
 	for (const dir of dirs) {
+		// Upstream has no `Chat.doc.mjs`: the chat family is documented through its
+		// member components, and those docs carry no `theming.targets`. There is no
+		// single file whose union is the family's surface, so the guard has
+		// nothing to compare — the same shape the 0.5.2 port had when it skipped
+		// the directory for want of a `Chat.doc.mjs`.
+		if (dir === 'chat') continue;
 		const dirPath = join(COMPONENTS_DIR, dir);
 		const dirEntries = readdirSync(dirPath);
 

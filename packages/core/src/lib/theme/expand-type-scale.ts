@@ -300,9 +300,9 @@ export function generateTextColorComponents(): Record<
 	];
 
 	const rules: Record<string, Record<string, string>> = {};
-	for (const [variant, token] of COLORS) rules[variant] = { color: token };
+	for (const [variant, token] of COLORS) rules[`color:${variant}`] = { color: token };
 
-	// Same rule set for both components — upstream emits `.astryx-text.secondary`
-	// and `.astryx-heading.secondary` alike.
-	return { heading: { ...rules }, text: { ...rules } };
+	// Same rule set for Text, Heading and Link — upstream emits the selector for
+	// each, keyed off their shared `data-color` prop.
+	return { heading: { ...rules }, text: { ...rules }, link: { ...rules } };
 }
