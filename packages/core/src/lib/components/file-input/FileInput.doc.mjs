@@ -15,6 +15,10 @@ export default {
 			{
 				className: 'astryx-file-input',
 				visualProps: ['mode', 'status']
+			},
+			{
+				className: 'astryx-file-input-icon',
+				visualProps: ['mode']
 			}
 		]
 	},
@@ -79,7 +83,7 @@ export default {
 			{
 				name: 'Upload icon',
 				required: false,
-				description: 'An arrow icon in the drop zone hinting at the upload action.'
+				description: 'An upload-to-tray icon in the drop zone hinting at the upload action.'
 			},
 			{
 				name: 'Placeholder',
@@ -94,7 +98,8 @@ export default {
 			{
 				name: 'Clear button',
 				required: false,
-				description: 'A close button that removes selected files and returns focus to the input.'
+				description:
+					'A close button that removes selected files and returns focus to the file-selection trigger.'
 			},
 			{
 				name: 'Spinner',
@@ -223,7 +228,7 @@ export default {
 			name: 'statusVariant',
 			type: "'tooltip' | 'attached' | 'detached'",
 			description:
-				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing; tooltip hides the message box and surfaces it in a tooltip on the status icon.',
+				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing; tooltip hides the message box and surfaces it in a tooltip on the status icon. Dropzone mode does not support attached: use detached or tooltip. From the next minor release, a dropzone resolves attached to detached and defaults to it.',
 			default: "'attached'"
 		},
 		{
@@ -236,6 +241,38 @@ export default {
 			type: 'SizeValue',
 			description:
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
+		},
+		{
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

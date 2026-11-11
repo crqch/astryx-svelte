@@ -66,7 +66,8 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Whether this individual item is disabled.',
+			description:
+				"Whether this individual item is disabled. A disabled selected item keeps the control's Tab stop.",
 			default: 'false'
 		}
 	]

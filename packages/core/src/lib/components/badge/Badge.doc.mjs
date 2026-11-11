@@ -116,7 +116,8 @@ export default {
 			name: 'label',
 			type: 'string | Snippet',
 			description:
-				"Badge text content. A badge is one line, so a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover."
+				"Badge text content. A badge is one line and at least as tall as that line of its label, so it grows with its text (a larger text size); a label wider than the space available is cut with an ellipsis rather than escaping its container; a string or number label is also set as the badge's title so the full text stays reachable on hover.",
+			required: true
 		},
 		{
 			name: 'icon',

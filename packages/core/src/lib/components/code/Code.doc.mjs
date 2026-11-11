@@ -8,33 +8,85 @@ export default {
 	type: 'component',
 	name: 'Code',
 	displayName: 'Code',
-	subComponentOf: 'CodeBlock',
-	description:
-		'Inline code element. Renders a styled <code> with monospace font and muted background. For fenced blocks, use CodeBlock.',
-	keywords: [
-		'code',
-		'syntax',
-		'highlight',
-		'snippet',
-		'prism',
-		'shiki',
-		'pre',
-		'monospace',
-		'codeblock',
-		'inline'
-	],
+	keywords: ['inlinecode', 'monospace'],
+	group: 'Code',
 	category: 'Content',
+	theming: {
+		targets: [
+			{
+				className: 'astryx-code',
+				visualProps: ['color', 'size']
+			}
+		]
+	},
+	usage: {
+		description:
+			'Code marks short inline references such as function names, variables, file paths, and command-line flags. Use CodeBlock for standalone or multi-line snippets.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Use Code for short technical terms inside prose, such as a function name, prop, file path, or command-line flag.'
+			},
+			{
+				guidance: true,
+				description:
+					"Set size to 'inherit' when inline code should match the surrounding text size and line height."
+			},
+			{
+				guidance: false,
+				description:
+					'Use Code for multi-line or standalone snippets. Use CodeBlock instead so readers get appropriate block formatting and syntax support.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use Code as an interactive copy or navigation control. Pair it with the appropriate Button or Link when an action is required.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Container',
+				required: true,
+				description:
+					'The semantic code element that contains the inline code content and paints the background, typography, padding, and radius.'
+			}
+		]
+	},
+	playground: {
+		defaults: {
+			children: 'const count = 0'
+		}
+	},
 	props: [
 		{
 			name: 'children',
 			type: 'Snippet',
-			description: 'Code content.',
+			description: 'The inline code content.',
 			required: true
+		},
+		{
+			name: 'color',
+			type: "'inherit' | 'primary' | 'secondary'",
+			description: "Text color. Use 'inherit' to take the surrounding text color.",
+			default: "'primary'"
+		},
+		{
+			name: 'size',
+			type: 'CodeSize',
+			description:
+				"Set to 'inherit' to take the surrounding font size and line height. Omit it to use the code type-scale size."
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description: 'Ref forwarded to the semantic code element.'
 		},
 		{
 			name: 'xstyle',
 			type: 'StyleArg',
-			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+			description:
+				'StyleX styles for layout customization. Must be a stylex.create() value, not an inline style object like style={{}}.'
 		},
 		{
 			name: 'class',
@@ -44,7 +96,7 @@ export default {
 		{
 			name: 'style',
 			type: 'string | null',
-			description: 'Inline styles. Prefer xstyle for StyleX-optimized styling.'
+			description: 'Inline styles for the root element. Prefer xstyle for StyleX-optimized styling.'
 		},
 		{
 			name: 'data-testid',

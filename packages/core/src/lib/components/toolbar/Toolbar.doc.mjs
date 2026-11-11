@@ -29,6 +29,20 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Outer chrome',
+				required: true,
+				description:
+					'Section-owned container that supplies the toolbar surface, padding, and selected divider edges.'
+			},
+			{
+				name: 'Toolbar',
+				required: true,
+				description:
+					'Named toolbar row that owns toolbar semantics and the start, optional center, and end layout.'
+			}
+		],
 		description:
 			'Toolbar is a horizontal bar with left, center, and right areas. Use it for contextual actions within a content area (above a table, inside a card, or in a panel), not as a page-level header. Set the size once on the toolbar and all buttons, inputs, and tabs inside it match automatically.',
 		bestPractices: [
@@ -90,7 +104,8 @@ export default {
 		{
 			name: 'centerContent',
 			type: 'Snippet',
-			description: 'Centered content. Switches layout to CSS grid (1fr auto 1fr).'
+			description:
+				'Centered content. Switches to the three-lane layout: centered while each side lane fits in half of the width it leaves, and the row wraps when the lanes do not fit.'
 		},
 		{
 			name: 'endContent',
@@ -106,7 +121,7 @@ export default {
 		},
 		{
 			name: 'gap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Gap between items within each slot.',
 			default: '1'
 		},

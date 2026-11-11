@@ -261,6 +261,36 @@ export const DATE_FORMAT_WEEKDAY_ONLY: Intl.DateTimeFormatOptions = {
 	weekday: 'short'
 };
 
+/**
+ * The platform's weekday names for a locale, Sunday first, in `Intl`'s
+ * `short` width (CLDR's abbreviated) or its `narrow` width. Returns `null`
+ * when the platform has no data for the locale's language, so a caller uses
+ * its own fallback instead of the host's default locale.
+ *
+ * Ported from upstream's `utils/plainDate.ts`, whose formatter cache is not
+ * reproduced: this is only called on a locale miss, and the generated CLDR
+ * table answers every other case.
+ */
+export function plainDateWeekdayNames(
+	locale: Locale,
+	width: 'short' | 'narrow' = 'short'
+): string[] | null {
+	const options: Intl.DateTimeFormatOptions = { weekday: width };
+	const format = new Intl.DateTimeFormat(locale, { ...options, calendar: 'gregory' });
+	const resolved = format.resolvedOptions().locale;
+	try {
+		if (new Intl.Locale(resolved).language !== new Intl.Locale(locale).language) {
+			return null;
+		}
+	} catch {
+		return null;
+	}
+	// January 4, 1970 was a Sunday.
+	return Array.from({ length: 7 }, (_, day) =>
+		plainDateFormat({ year: 1970, month: 1, day: 4 + day }, options, locale)
+	);
+}
+
 // e.g. "January" (locale-dependent) — the month on its own, for a control
 // that shows a list of months and carries the year separately.
 export const DATE_FORMAT_MONTH_ONLY: Intl.DateTimeFormatOptions = {

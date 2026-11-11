@@ -10,7 +10,7 @@ export default {
 	displayName: 'Chat Layout',
 	subComponentOf: 'Chat',
 	description:
-		'Layout shell for full chat interfaces. Messages flow in normal page flow, composer is fixed to the bottom with a frosted glass dock. Adapts density (compact/balanced/spacious) automatically via container width observation. Includes built-in auto-scroll, a "New messages" scroll-to-bottom button, and a frosted glass blur layer behind the composer. By default the layout root is the scroll container; pass scrollRef to delegate scrolling to a parent element or the document body.',
+		'Layout shell for full chat interfaces. Messages flow in normal page flow, composer is fixed to the bottom with a frosted glass dock. Set density (compact/balanced/spacious) to control spacing, message max-width, and blur layer sizing. Includes built-in auto-scroll, a "New messages" scroll-to-bottom button, and a frosted glass blur layer behind the composer. By default the layout root is the scroll container; pass scrollRef to delegate scrolling to a parent element or the document body. Where the visual viewport shrinks for the software keyboard, the composer stays on top of the keyboard, and a conversation at its newest message stays there. In Chrome on Android the composer rides Gboard’s slides in step with them. In Safari on iOS (in the browser and as a home-screen app) and in Firefox for Android, it moves above the keyboard once the browser reports it. On a touch screen, in a top-level page, every way into the composer’s text (a tap, the keyboard’s previous and next buttons, Tab, the input’s focus()) focuses it without scrolling the page; under a mouse or inside an iframe the browser’s own focus applies. Where your page sets interactive-widget=resizes-content, Chrome on Android shrinks the page for the keyboard itself and the composer stays above it without moving (see the browser-support guide).',
 	keywords: [
 		'chat',
 		'message',
@@ -32,7 +32,7 @@ export default {
 	category: 'Chat',
 	usage: {
 		description:
-			'ChatLayout is the layout shell for full-page chat interfaces. It renders messages in normal page flow and docks the composer to the bottom with a frosted glass blur layer. Density adapts automatically via container width observation. Use it to wrap ChatMessageList and ChatComposer for a complete chat experience with built-in auto-scroll and a scroll-to-bottom button.',
+			'ChatLayout is the layout shell for full-page chat interfaces. It renders messages in normal page flow and docks the composer to the bottom with a frosted glass blur layer. Set the density prop to control spacing; it defaults to balanced. Use it to wrap ChatMessageList and ChatComposer for a complete chat experience with built-in auto-scroll and a scroll-to-bottom button.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -48,6 +48,16 @@ export default {
 				guidance: true,
 				description:
 					'Use scrollRef when the chat is embedded in a page where a parent element handles scrolling.'
+			},
+			{
+				guidance: true,
+				description:
+					"Give a full-page ChatLayout a container 100dvh tall, not 100vh: where a phone browser's toolbar collapses, 100vh is the viewport with the toolbar hidden, so the composer would start below the screen's edge."
+			},
+			{
+				guidance: true,
+				description:
+					'Markdown prose keeps its 680px measure, while code blocks and tables span the message column. To give a reply one right edge, pass contentWidth="100%" to its Markdown.'
 			},
 			{
 				guidance: false,
@@ -71,7 +81,7 @@ export default {
 				name: 'Frosted glass dock',
 				required: true,
 				description:
-					'Sticky or fixed container at the bottom with a backdrop-blur layer. Houses the scroll button and composer.'
+					'Sticky or fixed container at the bottom with a backdrop-blur layer. Houses the scroll button and composer. While a software keyboard is up it sits on top of the keyboard, and the message area gets room to scroll above it.'
 			},
 			{
 				name: 'Scroll-to-bottom button',
@@ -83,7 +93,7 @@ export default {
 				name: 'Composer',
 				required: true,
 				description:
-					'The input area for sending messages, typically ChatComposer. Docked at the bottom inside the frosted glass layer.'
+					'The input area for sending messages, typically ChatComposer. Docked at the bottom inside the frosted glass layer. In a top-level page on a touch screen, its wrapper (without the scroll button) is a group with no name. When the keyboard’s Done ends typing, focus rests on that group (it is no tab stop), so the next tap or Tab starts from the composer. It shows the focus ring after keyboard input only. Under a mouse or inside an iframe, the wrapper is a plain container.'
 			},
 			{
 				name: 'Empty state',
@@ -124,6 +134,13 @@ export default {
 			type: '() => HTMLElement | null',
 			description:
 				'External scroll container ref. When provided, auto-scroll and scroll-to-bottom target this element instead of the layout root. Use when the chat is embedded in a page where a parent element or the document body scrolls.'
+		},
+		{
+			name: 'density',
+			type: "'compact' | 'balanced' | 'spacious'",
+			description:
+				'Visual density: controls dock padding, message-area max-width and inline padding, and the height of the frosted glass blur layer.',
+			default: "'balanced'"
 		}
 	]
 };

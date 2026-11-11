@@ -60,6 +60,11 @@ export default {
 					'Show two months side by side when the user frequently selects dates that span a month boundary.'
 			},
 			{
+				guidance: true,
+				description:
+					'For a custom month view, use useCalendarNavigation and useCalendarDays from @astryx-svelte/core To show another calendar system, pass the same calendar to both and feed visibleCalendarMonths into useCalendarDays. The hooks default to gregory and never read the InternationalizationProvider calendar.'
+			},
+			{
 				guidance: false,
 				description:
 					'Use a calendar for dates far in the past or future like a birth date. A text input is faster for open-ended entry.'
@@ -72,6 +77,11 @@ export default {
 		],
 		anatomy: [
 			{
+				name: 'Calendar root',
+				required: true,
+				description: 'The container that holds the month header and the day grid.'
+			},
+			{
 				name: 'Month header',
 				required: true,
 				description:
@@ -81,6 +91,11 @@ export default {
 				name: 'Day grid',
 				required: true,
 				description: 'A 7-column grid of days with column headers for the day names.'
+			},
+			{
+				name: 'Day button',
+				required: true,
+				description: 'One day in the grid; the control a date is picked with.'
 			},
 			{
 				name: 'Selected day',
@@ -105,7 +120,8 @@ export default {
 		{
 			name: 'value',
 			type: '`${number}${number}${number}${number}-${number}${number}-${number}${number}` | DateRange',
-			description: 'Controlled selected value.'
+			description:
+				'Controlled selected value. Use null for no selection; omit value or pass undefined for uncontrolled mode.'
 		},
 		{
 			name: 'defaultValue',
@@ -175,21 +191,30 @@ export default {
 		{
 			name: 'hasWeekNumbers',
 			type: 'boolean',
-			description: 'Show ISO week numbers.',
+			description:
+				'Show ISO 8601 week numbers. They are ISO 8601 week numbers in every calendar system.',
 			default: 'false'
 		},
 		{
 			name: 'hasVariableRowCount',
 			type: 'boolean',
-			description: 'Variable vs fixed 6-row grid.',
+			description:
+				'Give each month only the rows it needs. The default fixed 6-row grid keeps the same height from month to month; a variable row count trades that fixed height for a more compact grid.',
 			default: 'false'
 		},
 		{
 			name: 'weekStartsOn',
-			type: "0 | 6 | 2 | 4 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
+			type: "0 | 4 | 6 | 2 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
 			description:
 				'First day of week. Accepts a number (0=Sunday) or a three-letter day name (e.g. "mon").',
 			default: '0'
+		},
+		{
+			name: 'calendar',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
+			description:
+				"Calendar system the grid shows, such as 'persian', 'hebrew', or 'islamic-umalqura'. It sets the months, their names, and month and year navigation. value, min, max, focusDate, and every callback stay Gregorian ISO dates. Calendars other than gregory, iso8601, buddhist, roc, and japanese need Temporal; where the runtime lacks it, load a polyfill such as temporal-polyfill/full/global on the server and in the browser, or the grid shows Gregorian months. Month starts in the Chinese and Dangi calendars come from the runtime's Temporal, and some polyfills start a few months one day apart from native Temporal; when server and browser markup must match, use one implementation on both sides, such as installImplementation() from temporal-polyfill/full/shim, which replaces a native Temporal.",
+			default: 'the InternationalizationProvider calendar, else gregory'
 		}
 	]
 };

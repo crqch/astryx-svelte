@@ -22,11 +22,71 @@ export default {
 		'search',
 		'modal',
 		'dialog',
-		'navigation'
+		'navigation',
+		'commandmenu',
+		'cmdk'
 	],
 	group: 'CommandPalette',
 	category: 'Overlay',
 	isHiddenFromOverview: true,
+	theming: {
+		targets: [
+			{
+				className: 'astryx-command-palette-input'
+			}
+		]
+	},
+	usage: {
+		description:
+			'Use CommandPaletteInput inside CommandPalette for a popup-backed command query, or as an independent search field when no result popup is present.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Pass a concise label that identifies what can be searched when "Search commands" does not describe it; the placeholder is never the field\'s name.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use endContent for short supporting controls or shortcut hints at the trailing edge.'
+			},
+			{
+				guidance: false,
+				description:
+					'Override combobox role or popup state. CommandPaletteInput owns those semantics when connected to CommandPalette.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Input',
+				required: true,
+				description:
+					'The surrounding inline layout for the search glyph, query field, and trailing content.'
+			},
+			{
+				name: 'Search glyph',
+				required: true,
+				description: 'A decorative search icon before the query field.'
+			},
+			{
+				name: 'Query field',
+				required: true,
+				description:
+					'The native text field. It is a searchbox when standalone without popup attributes and a combobox when popup relationships are supplied or CommandPalette context is present.'
+			},
+			{
+				name: 'Loading spinner',
+				required: false,
+				description:
+					'A delayed pending indicator shown before trailing content while search is busy.'
+			},
+			{
+				name: 'Trailing content',
+				required: false,
+				description: 'Caller-provided supporting content such as a clear control or shortcut hint.'
+			}
+		]
+	},
 	playground: {
 		defaults: {
 			placeholder: 'Search commands, files, or actions...',
@@ -38,13 +98,13 @@ export default {
 			name: 'placeholder',
 			type: 'string',
 			description: 'Placeholder text for the input.',
-			default: "'Search...'"
+			default: "'Search…'"
 		},
 		{
 			name: 'label',
 			type: 'string',
 			description:
-				'Accessible label for the combobox input, announced by screen readers. Falls back to the placeholder text when omitted.'
+				'Accessible label for the query field, announced by screen readers. Defaults to the translated "Search commands"; the placeholder is never used as the name.'
 		},
 		{
 			name: 'hasAutoFocus',

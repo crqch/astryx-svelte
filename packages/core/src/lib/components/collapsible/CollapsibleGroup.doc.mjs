@@ -62,10 +62,45 @@ export default {
 				"Row density controlling trigger and content block padding on the group's items. Defaults to 'balanced' when dividers are shown; otherwise items keep their default unpadded look."
 		},
 		{
+			name: 'chevronPosition',
+			type: "'start' | 'end'",
+			description:
+				"Logical position shared by the group's direct Collapsible items. `end` is the default trailing indicator; `start` is a leading disclosure arrow that points inward when collapsed (mirrored under RTL) and down when expanded. An individual Collapsible can still override it.",
+			default: "'end'"
+		},
+		{
 			name: 'children',
 			type: 'Snippet',
 			description: 'Collapsible instances to coordinate.',
 			required: true
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description: 'Ref forwarded to the group wrapper when hasDividers renders one.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the group wrapper when hasDividers renders one. Must be a stylex.create() value.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description:
+				'CSS class name for the group wrapper when hasDividers renders one. Prefer xstyle for styling.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description:
+				'Inline styles for the group wrapper when hasDividers renders one. Prefer xstyle for StyleX-optimized styling.'
+		},
+		{
+			name: 'data-testid',
+			type: 'string',
+			description: 'Test selector forwarded to the group wrapper when hasDividers renders one.'
 		}
 	]
 };

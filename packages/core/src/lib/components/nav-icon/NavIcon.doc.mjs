@@ -16,14 +16,22 @@ export default {
 		targets: [
 			{
 				className: 'astryx-nav-icon'
-			},
-			{
-				className: 'astryx-navicon',
-				deprecatedFor: 'nav-icon'
 			}
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Container',
+				required: true,
+				description: 'Circular painted container for the supplied icon.'
+			},
+			{
+				name: 'Icon',
+				required: true,
+				description: 'Caller-supplied visual content rendered inside the container.'
+			}
+		],
 		description:
 			'NavIcon is a circular icon container with an accent-colored background. Use it in navigation headers such as TopNavHeading and PageNavHeader to visually identify a section or application.',
 		bestPractices: [

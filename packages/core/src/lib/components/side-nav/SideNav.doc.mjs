@@ -64,7 +64,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'SideNav renders a navigation landmark, and a collapsible item follows the WAI-ARIA APG Disclosure pattern (https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/): the toggle carries aria-expanded and aria-controls, and the group it owns is inert while collapsed. Keep item labels short; they are the accessible name in both expanded and icon-only modes.'
+					'SideNav renders a navigation landmark, and a collapsible item follows the WAI-ARIA APG Disclosure pattern (https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/): the toggle carries aria-expanded and aria-controls, and the group it owns is inert while collapsed. Keep item labels short; they name icon-only items unless a meaningful aria-label supplies more context.'
 			},
 			{
 				guidance: true,
@@ -137,7 +137,7 @@ export default {
 			name: 'resizable',
 			type: 'boolean | ResizableConfig',
 			description:
-				'Enables a resize handle at the inline-end edge. true for defaults (260px initial, 180-480px range), or a ResizableConfig object (defaultWidth, minWidth, maxWidth, autoSaveId for localStorage persistence of width and collapse state, onWidthChange). It can also own collapse state (defaultIsCollapsed, isCollapsed + onCollapseChange); when both props carry collapse state, resizable wins and a dev warning names the conflicting keys. The handle is hidden while collapsed.',
+				"Enables a resize handle at the inline-end edge. true for defaults (260px initial, 180-480px range), or a ResizableConfig object (defaultWidth, minWidth, maxWidth, autoSaveId for localStorage persistence of width and collapse state, onWidthChange). It can also own collapse state (defaultIsCollapsed, isCollapsed + onCollapseChange); when both props carry collapse state, resizable wins and a dev warning names the conflicting keys. It also takes the output of useResizable(), whose axis ('horizontal' | 'vertical') must be 'horizontal': that region then owns the width and the collapse state, so the rail follows its isCollapsed, the toggle calls its collapse and expand, and its autoSaveId saves the width. With the hook's output, the region's own collapsible option also decides whether the rail collapses; a collapsible prop that disagrees, or the collapse state it sets, is ignored, with a dev warning. The handle is hidden while collapsed.",
 			default: 'false'
 		},
 		{

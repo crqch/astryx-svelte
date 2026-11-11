@@ -7,7 +7,7 @@ import type { Locator, LocatorSelectors } from 'vitest/browser';
 import { createAttachmentKey } from 'svelte/attachments';
 import Calendar from '$lib/components/calendar/calendar.svelte';
 import { calendarNavIconAttrs } from '$lib/components/calendar/calendar.stylex.js';
-import { standaloneShortWeekdayNamesByLocale } from '$lib/components/calendar/standalone-short-weekday-names.generated.js';
+import { weekdayHeaderNamesByLocale } from '$lib/components/calendar/weekday-header-names.generated.js';
 import { defineTheme } from '$lib/theme/define-theme.js';
 import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
 import type { DayOfWeekName, ISODateString } from '$lib/utils/date-types.js';
@@ -292,8 +292,8 @@ describe('Calendar', () => {
 	});
 
 	it('uses the provider locale for stand-alone short day names', async () => {
-		const localizedNames = standaloneShortWeekdayNamesByLocale.es;
-		const englishNames = standaloneShortWeekdayNamesByLocale.en;
+		const localizedNames = weekdayHeaderNamesByLocale.es;
+		const englishNames = weekdayHeaderNamesByLocale.en;
 		expect(localizedNames).not.toEqual(englishNames);
 
 		// Upstream re-renders a whole `<Provider locale><Calendar /></Provider>`
@@ -318,7 +318,7 @@ describe('Calendar', () => {
 	});
 
 	it('rotates localized day names by numeric weekday index', async () => {
-		const localizedNames = standaloneShortWeekdayNamesByLocale.es;
+		const localizedNames = weekdayHeaderNamesByLocale.es;
 
 		const screen = await render(CalendarI18n, {
 			props: { locale: 'es-ES', calendar: { weekStartsOn: 1 } }
@@ -675,16 +675,16 @@ describe('Calendar', () => {
 		const screen = await render(Calendar, { props: { weekStartsOn: 1 } });
 
 		// First day name should be Monday
-		const dayNames = monthLabel(screen, /^(Mo|Tu|We|Th|Fr|Sa|Su)$/).elements();
-		expect(dayNames[0]).toHaveTextContent('Mo');
+		const dayNames = monthLabel(screen, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/).elements();
+		expect(dayNames[0]).toHaveTextContent('Mon');
 	});
 
 	it('accepts a three-letter day name for weekStartsOn', async () => {
 		const screen = await render(Calendar, { props: { weekStartsOn: 'mon' } });
 
 		// "mon" should behave exactly like the numeric 1 (Monday first).
-		const dayNames = monthLabel(screen, /^(Mo|Tu|We|Th|Fr|Sa|Su)$/).elements();
-		expect(dayNames[0]).toHaveTextContent('Mo');
+		const dayNames = monthLabel(screen, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/).elements();
+		expect(dayNames[0]).toHaveTextContent('Mon');
 	});
 
 	it('treats weekStartsOn day names case-insensitively', async () => {
@@ -694,8 +694,8 @@ describe('Calendar', () => {
 			props: { weekStartsOn: 'WED' as unknown as DayOfWeekName }
 		});
 
-		const dayNames = monthLabel(screen, /^(Mo|Tu|We|Th|Fr|Sa|Su)$/).elements();
-		expect(dayNames[0]).toHaveTextContent('We');
+		const dayNames = monthLabel(screen, /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/).elements();
+		expect(dayNames[0]).toHaveTextContent('Wed');
 	});
 
 	// ─── Range Mode ──────────────────────────────────────────────
@@ -1323,7 +1323,7 @@ describe('Calendar', () => {
 
 		// Verify they contain day name abbreviations
 		const dayNames = columnHeaders.map((h) => h.textContent);
-		expect(dayNames).toEqual(['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']);
+		expect(dayNames).toEqual(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']);
 	});
 
 	it('button inside gridcell does not duplicate role="gridcell"', async () => {

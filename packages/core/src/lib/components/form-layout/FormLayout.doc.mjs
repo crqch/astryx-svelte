@@ -30,7 +30,7 @@ export default {
 	},
 	usage: {
 		description:
-			'A layout container that arranges form fields with consistent spacing and direction. FormLayout handles where fields go, not state or submission. Wrap it in a <form> for that. Supports vertical (default), horizontal, and horizontal-labels directions, and can be nested to mix them.',
+			'A layout container that arranges form fields with consistent spacing and direction. FormLayout handles where fields go, not state or submission. Wrap it in a native <form> for that; <form> has no Astryx replacement, so it stays a plain element. Supports vertical (default), horizontal, and horizontal-labels directions, and can be nested to mix them.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -50,7 +50,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					"Use FormLayout for form state or submission. It's just layout. Wrap it in a <form> for that."
+					"Use FormLayout for form state or submission. It's just layout. Wrap it in a native <form> for that."
 			},
 			{
 				guidance: false,
@@ -64,6 +64,11 @@ export default {
 			}
 		],
 		anatomy: [
+			{
+				name: 'Layout container',
+				required: true,
+				description: 'Owns field arrangement, spacing, direction, and form-level optionality.'
+			},
 			{
 				name: 'Form title',
 				required: false,
@@ -86,14 +91,14 @@ export default {
 			name: 'direction',
 			type: "'horizontal' | 'vertical' | 'horizontal-labels'",
 			description:
-				'Controls field arrangement. Vertical stacks top-to-bottom, horizontal arranges left-to-right with equal flex-grow, and horizontal-labels uses CSS Grid with labels to the left of inputs (collapses to vertical on narrow viewports <=480px).',
+				'Controls field arrangement. Vertical stacks top-to-bottom, horizontal uses one fractional grid track per field in logical inline order, and horizontal-labels uses CSS Grid with labels beside inputs on the inline-start side (collapsing to vertical when the viewport is <=480px).',
 			default: "'vertical'"
 		},
 		{
 			name: 'defaultOptionality',
 			type: "'required' | 'optional'",
 			description:
-				'The state the form treats as its default, so only the exception shows an optional/required indicator. With "optional", only fields marked isRequired show an indicator; with "required", only fields marked isOptional do. A field that restates the default shows nothing. Under "required" the unmarked fields also expose aria-required so screen readers match the visual default; aria-required only, never the native required attribute. Leave unset for today\'s per-field behavior.'
+				'The state the form treats as its default, so only the exception shows an optional/required indicator. With "optional", only fields marked isRequired show an indicator; with "required", only fields marked isOptional do. A field that restates the default shows nothing. Under "required" the unmarked fields also expose aria-required so screen readers match the visual default; aria-required only, never the native required attribute. CheckboxInput, Switch and CheckboxList are the exception: an unchecked box, an off switch or an empty group is an answer, so they take no required state from the default. A CheckboxInput or Switch is required only through its own isRequired. Leave unset for today\'s per-field behavior.'
 		},
 		{
 			name: 'children',

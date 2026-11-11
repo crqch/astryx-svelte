@@ -12,18 +12,48 @@ export default {
 	group: 'BottomSheet',
 	category: 'Overlay',
 	usage: {
+		anatomy: [
+			{
+				name: 'Sheet dialogs',
+				required: true,
+				description:
+					"One native dialog per child sheet, presented and closed by the switcher; the dialog hosting the active sheet carries the flow's ref, id, modality, and dismissal."
+			},
+			{
+				name: 'Sheet panels',
+				required: true,
+				description:
+					'Direct BottomSheet children; exactly one is interactive while a previous panel may remain visible and inert during a handoff.'
+			},
+			{
+				name: 'Scrim',
+				required: false,
+				description:
+					'Native dialog backdrop shown by the default scrim-backed modal presentation; one sheet dialog paints it at a time, so a handoff never dims the page twice.'
+			}
+		],
 		description:
-			"Coordinates a multi-step bottom-sheet flow in one shared dialog; set activeSheet to a nested BottomSheet's sheetId to open or switch steps, and to null to close.",
+			"Deprecated: write each step as its own BottomSheet with isOpen, controlled by one state value that names the open step. Closing the top sheet and opening the next in the same update, from a control inside the open step, runs the same replace handoff (see BottomSheet, Replacing a sheet), with no sheetId and no switcher; a step changed from a control outside the flow (a page control, or code after focus left the step) closes and opens with ordinary push and pop motion. BottomSheetSwitcher keeps working until a future minor release removes it: a flow used on its own behaves as released (with three fixes: a toast raised from a step renders above the flow and can be pressed, under reduced motion its steps follow the reduced-motion rule, and a step with a hasAutoFocus field opens on that field in every browser), and a flow stacked with other sheets is one level of the stack (it recedes and is blocked when covered, shares the one scrim, and stands down from dismissal while covered). Modal and hasScrim={false} flows migrate the same way. Set activeSheet to a nested BottomSheet's sheetId to open or switch steps, and to null to close.\n\nStacking. A scrim flow is one level in the stack of open sheets (see BottomSheet, Stacking). Open it while a standalone sheet is open and the flow sits on top of that sheet, which recedes and is blocked; open a standalone sheet while the flow is open, from a step's content or from anywhere else, and that sheet sits on top while the whole flow recedes as one. Switching the step in place never changes the flow's position. Escape, the scrim, a swipe, and a platform close request reach only the top level: the flow's onActiveSheetChange(null) when the flow is on top, the standalone sheet's onOpenChange(false) when that sheet is. A standalone sheet rendered inside a step's content is presented only while that step is the active one: it leaves when the flow switches step or closes, its isOpen stays yours, and it is presented again, on top, if the step returns while it is still open. Only the bottom level's backdrop dims the page. A no-scrim flow stays out of the stack.",
 		bestPractices: [
 			{
 				guidance: true,
 				description:
-					'Use when each step depends on the previous one and only one step needs attention at a time.'
+					'Prefer one standalone BottomSheet per step with one state value naming the open step; the replace handoff is the same and nothing has to be nested under a switcher.'
+			},
+			{
+				guidance: true,
+				description:
+					'Migrate an existing flow in place: replace activeSheet / onActiveSheetChange with one step value, give each step isOpen={step === id} and a guarded onOpenChange (clear the step only if it is still the open one) in place of sheetId, remove the wrapper and move its hasScrim onto every step. Map the other switcher props: onCancel becomes a guarded onOpenChange on each step (ignore false while the flow must stay open) — a standalone sheet reports Escape, the platform close, the scrim tap and the swipe all as onOpenChange(false) with no reason, so the guard holds the step against all of them while it applies, and a veto of Escape alone has no equivalent; the only per-path lever is purpose (form keeps Escape and blocks the scrim tap and the swipe; required blocks all three and exposes the step as an alertdialog). A consumer aria-label or aria-labelledby becomes each step label, which names its dialog. ref, id, data-testid, className, style, xstyle and the other dialog props have no dialog-level equivalent: a standalone sheet sends its ref and base props to the panel div and its dialog is implementation, so a test or anchor that needs the dialog queries the panel closest("dialog"), and dialog-level styling is dropped.'
 			},
 			{
 				guidance: false,
 				description:
 					"Don't split information across sheets when people need to compare it; use a full-page layout that keeps the relevant content visible together instead."
+			},
+			{
+				guidance: false,
+				description:
+					"Don't use a step flow when multiple panels must stay interactive or visible together; a flow intentionally selects one interactive step."
 			}
 		]
 	},
@@ -34,6 +64,18 @@ export default {
 		overlay: true
 	},
 	props: [
+		{
+			name: 'ref',
+			type: 'HTMLDialogElement | null',
+			description:
+				"Ref resolved to the native dialog hosting the flow: the active sheet's dialog, which changes to the next sheet's on a handoff; the exiting sheet's through its exit; and, while the flow is closed, the dialog that hosted it last (or the first mounted sheet's). It is never null while a sheet is mounted, from the first commit on. id and data-testid render on this dialog only: a flow that mounts open carries them on the active sheet's dialog in server markup too; a flow that mounts closed carries them from the first commit's synchronous re-render on, and its server markup carries them on no element. Other dialog props apply to every sheet dialog."
+		},
+		{
+			name: 'oncancel',
+			type: 'EventHandler<Event, T> | null',
+			description:
+				"Called before the switcher handles a native cancel request (Escape or the platform close). Attached to every sheet dialog; the browser raises cancel on the dialog it is presenting, the active sheet's. Calling preventDefault() keeps the controlled flow open."
+		},
 		{
 			name: 'activeSheet',
 			type: 'string | null',
@@ -52,7 +94,7 @@ export default {
 			name: 'hasScrim',
 			type: 'boolean',
 			description:
-				"Whether the shared dialog is modal. true uses showModal() once for one native ::backdrop, focus trap, scroll lock, and click-to-dismiss when the active BottomSheet has purpose='info'. false uses show() with no backdrop and leaves the page interactive; avoid transformed, contained, or clipping ancestors because the non-modal dialog remains in its containing context.",
+				"Whether the sheet dialogs are modal. true presents each sheet with showModal() for a native ::backdrop, native focus containment, one body scroll lock held for the whole flow, and click-to-dismiss when the active BottomSheet has purpose='info'; only one backdrop paints at a time. false uses show() with no backdrop and leaves the page interactive; avoid transformed, contained, or clipping ancestors because a non-modal dialog remains in its containing context.",
 			default: 'true'
 		},
 		{

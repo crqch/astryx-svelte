@@ -30,12 +30,70 @@ export default {
 	],
 	group: 'Chat',
 	category: 'Chat',
+	theming: {
+		targets: [
+			{
+				className: 'astryx-chat-system-message',
+				visualProps: ['variant']
+			}
+		]
+	},
+	usage: {
+		description:
+			'Use ChatSystemMessage for concise, non-sender content inside a chat transcript. Choose the default variant for factual status notices and the divider variant for date or section breaks. Long default content wraps within the available width. It carries no live role: inside a ChatMessageList, the log announces new notices. The divider branch includes a labelled separator.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Keep the visible message concise and self-contained so it remains understandable without an icon.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use the divider variant for temporal or section boundaries and the default variant for factual status notices.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use ChatSystemMessage for sender-authored content; use ChatMessage and ChatMessageBubble instead.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use caller-provided icon artwork as the only source of meaning; the visible message must carry the same information.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'System message',
+				required: true,
+				description:
+					'The noninteractive status row that carries the chat-system-message theme target.'
+			},
+			{
+				name: 'Content',
+				required: true,
+				description: 'The concise caller-provided message or divider label.'
+			},
+			{
+				name: 'Icon content',
+				required: false,
+				description:
+					'Rendered before the message in the default variant; the divider variant currently does not render it.'
+			},
+			{
+				name: 'Divider',
+				required: false,
+				description: 'A labelled horizontal Divider rendered by the divider variant.'
+			}
+		]
+	},
 	props: [
 		{
 			name: 'children',
 			type: 'string | Snippet',
 			description:
-				'System message content: a short, factual string like a date, a join/leave notice, or a status change.',
+				'System message content: factual text or React content such as a date, join/leave notice, or status change. Long default content wraps within the available width.',
 			required: true
 		},
 		{
@@ -49,7 +107,13 @@ export default {
 			name: 'icon',
 			type: 'Snippet',
 			description:
-				'Leading icon that reinforces the message type. Wrap in Icon for consistent sizing. Use for membership changes, encryption notices, or AI activity.'
+				'Optional caller-provided icon content. Rendered before the message in the default variant; the divider variant currently does not render it. Wrap in Icon for consistent sizing.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for layout customization. Must be a stylex.create() value: not an inline style object like style={{}}.'
 		}
 	]
 };

@@ -10,7 +10,7 @@ export default {
 	displayName: 'Dropdown Menu Radio Group',
 	subComponentOf: 'DropdownMenu',
 	description:
-		'A single-select group of radio menu items (role="group" of menuitemradio). Owns the selected value and lays its items out with the menu\'s inter-item gap.',
+		'A controlled, named single-select group of DropdownMenuRadioItem children (role="group" of menuitemradio). Owns value propagation, close policy, root composition, and the menu inter-item gap; the parent DropdownMenu owns keyboard navigation.',
 	keywords: [
 		'dropdown',
 		'menu',
@@ -25,23 +25,87 @@ export default {
 	group: 'DropdownMenu',
 	category: 'Action',
 	isHiddenFromOverview: true,
+	usage: {
+		description:
+			'Use DropdownMenuRadioGroup inside compound-mode DropdownMenu when several commands represent one mutually exclusive choice. Keep value in caller state, provide a concise accessible label, and render each choice as DropdownMenuRadioItem.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Keep value controlled and update it from onChange so checked state follows caller data.'
+			},
+			{
+				guidance: true,
+				description:
+					'Provide a concise label even when aria-labelledby points to visible text; label remains required and supplies the aria-label fallback.'
+			},
+			{
+				guidance: true,
+				description:
+					'Set hasCloseOnSelect=false only when the menu must stay open to show another selection or an in-place result.'
+			},
+			{
+				guidance: false,
+				description:
+					'Place buttons, links, checkboxes, or arbitrary menu rows inside the radio group.'
+			},
+			{
+				guidance: false,
+				description:
+					'Add a second key handler or roving-focus model; DropdownMenu owns keyboard navigation.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Group',
+				required: true,
+				description:
+					'The role="group" root that owns the accessible name, controlled-selection context, close policy, root inputs, and inter-item gap.'
+			},
+			{
+				name: 'Radio items',
+				required: true,
+				description:
+					'DropdownMenuRadioItem children; each child owns its menuitemradio role, checked state, content, and indicator paint.'
+			}
+		]
+	},
+	playground: {
+		defaults: {
+			value: 'newest',
+			label: 'Sort by'
+		},
+		wrapper: {
+			component: 'DropdownMenu',
+			props: {
+				button: {
+					label: 'Sort'
+				},
+				presentation: 'popover',
+				isMenuOpen: true
+			}
+		}
+	},
 	props: [
 		{
 			name: 'value',
 			type: 'string',
 			description:
-				'The currently selected value in the group. Pass undefined when nothing is selected yet.'
+				'The currently selected value in the group. Pass undefined when nothing is selected yet.',
+			required: true
 		},
 		{
 			name: 'onChange',
 			type: '(value: string) => void',
-			description: 'Callback fired when the selected value changes.'
+			description: 'Callback fired when the selected value changes.',
+			required: true
 		},
 		{
 			name: 'label',
 			type: 'string',
 			description:
-				'Accessible name for the group, applied as aria-label so screen readers announce the radios as a named set, e.g. "Sort by". Required. Pass aria-labelledby (via base props) instead when the name already exists as a visible element.'
+				'Accessible name for the group, applied as aria-label so screen readers announce the radios as a named set, e.g. "Sort by". Required even when aria-labelledby (via base props) points to visible text; that visible reference becomes the computed name while label remains the fallback.',
+			required: true
 		},
 		{
 			name: 'hasCloseOnSelect',
@@ -51,9 +115,15 @@ export default {
 			default: 'true'
 		},
 		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the role="group" root.'
+		},
+		{
 			name: 'children',
 			type: 'Snippet',
-			description: 'The DropdownMenuRadioItems that make up the group.'
+			description: 'The DropdownMenuRadioItems that make up the group.',
+			required: true
 		}
 	]
 };

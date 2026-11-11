@@ -45,6 +45,11 @@ export default {
 			{
 				guidance: true,
 				description:
+					'Provide a group label when the automatic count does not explain what the calls represent.'
+			},
+			{
+				guidance: true,
+				description:
 					'Provide resultDetail with a code block for calls that produce output (diffs for edits, terminal output for shell commands) so users can inspect results inline.'
 			},
 			{
@@ -73,7 +78,7 @@ export default {
 				name: 'Status icon',
 				required: true,
 				description:
-					'A colored circle with a check, cross, or spinner indicating whether the call is pending, running, complete, or errored.'
+					'A themed semantic success/error icon, or a spinner while the call is pending or running.'
 			},
 			{
 				name: 'Tool name',
@@ -112,6 +117,26 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			calls: [
+				{
+					name: 'read_file',
+					status: 'complete',
+					target: 'Button.tsx',
+					duration: '120ms'
+				},
+				{
+					name: 'run_tests',
+					status: 'complete',
+					target: 'yarn test',
+					duration: '1.2s',
+					additions: 12,
+					deletions: 3
+				}
+			]
+		}
+	},
 	props: [
 		{
 			name: 'calls',
@@ -123,7 +148,8 @@ export default {
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Custom summary label for groups. Auto-generated from count if omitted.'
+			description:
+				'Custom summary label shown for an expanded group. The translated call count is used when omitted.'
 		},
 		{
 			name: 'isExpanded',

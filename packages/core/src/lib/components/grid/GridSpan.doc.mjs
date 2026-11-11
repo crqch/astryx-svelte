@@ -27,11 +27,24 @@ export default {
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			columns: 2,
+			children: 'Spans 2 columns'
+		},
+		wrapper: {
+			component: 'Grid',
+			props: {
+				columns: 3,
+				gap: 2
+			}
+		}
+	},
 	props: [
 		{
 			name: 'columns',
 			type: "number | 'full'",
-			description: "Columns to span; use `'full'` to span the entire row."
+			description: "Columns to span; use `'full'` to span all explicit columns."
 		},
 		{
 			name: 'rows',
@@ -42,6 +55,28 @@ export default {
 			name: 'children',
 			type: 'Snippet',
 			description: 'Content.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles applied to the span wrapper. Must be a stylex.create() value: not an inline style object like style={{}}.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'CSS class name applied to the span wrapper.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description:
+				'Inline styles applied to the span wrapper. When `columns` or `rows` is set, its `grid-column` or `grid-row` replaces the same property in `style`.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the span wrapper.'
 		}
 	]
 };

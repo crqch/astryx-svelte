@@ -24,7 +24,7 @@ export default {
 	},
 	usage: {
 		description:
-			'Overlay layers action or supporting content over media, cards, video, or other bounded surfaces with an optional scrim and reveal behavior.',
+			'Overlay layers action or supporting content over media, cards, video, or other bounded surfaces with an optional scrim and reveal behavior. Host attributes and DOM handlers (id, data-*, aria-*) reach the root element.',
 		bestPractices: [
 			{
 				guidance: true,

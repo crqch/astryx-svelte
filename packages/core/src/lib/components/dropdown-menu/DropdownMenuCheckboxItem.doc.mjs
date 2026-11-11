@@ -25,6 +25,38 @@ export default {
 	group: 'DropdownMenu',
 	category: 'Action',
 	isHiddenFromOverview: true,
+	theming: {
+		targets: [
+			{
+				className: 'astryx-dropdown-menu-item',
+				visualProps: ['size']
+			}
+		]
+	},
+	usage: {
+		anatomy: [
+			{
+				name: 'Checkable row',
+				required: true,
+				description:
+					'The menuitemcheckbox root that owns the accessible name, checked state, focus, and activation.'
+			},
+			{
+				name: 'Label/content',
+				required: true,
+				description:
+					'Caller content laid out by Item: the required label plus optional description, icon, and end content.'
+			},
+			{
+				name: 'Checkbox marker',
+				required: true,
+				description:
+					'Decorative shared Indicator chrome that visualizes checked and disabled state without adding a second control.'
+			}
+		],
+		description:
+			'An independently checkable option inside DropdownMenu. The row owns menuitemcheckbox semantics while the shared Indicator supplies decorative checkbox paint.'
+	},
 	props: [
 		{
 			name: 'label',
@@ -40,7 +72,7 @@ export default {
 			name: 'icon',
 			type: 'Snippet | IconName',
 			description:
-				'Icon to display before the label. See `npx astryx docs icons` for valid semantic names.'
+				'Icon to display before the label. See `astryx docs icons` for valid semantic names.'
 		},
 		{
 			name: 'value',
@@ -56,7 +88,7 @@ export default {
 			name: 'isDisabled',
 			type: 'boolean',
 			description:
-				'Whether the item is disabled. Disabled items stay focusable (via aria-disabled) so they remain discoverable by keyboard and assistive technology, but activation is blocked.',
+				'Whether the item is disabled. A disabled item stays in the accessibility tree as disabled (aria-disabled), and the arrow keys and typeahead reach it so keyboard users find it. The pointer highlight skips it, and activation is blocked.',
 			default: 'false'
 		},
 		{
@@ -65,6 +97,12 @@ export default {
 			description:
 				'Whether toggling the item closes the menu. Checkbox items default to staying open so several can be toggled in a single session.',
 			default: 'false'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description:
+				'Ref forwarded to the row root, the element carrying role="menuitemcheckbox". Register the row with an element-keyed observer or overlay.'
 		},
 		{
 			name: 'endContent',

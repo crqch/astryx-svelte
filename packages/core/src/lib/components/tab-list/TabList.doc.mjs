@@ -63,7 +63,7 @@ export default {
 	},
 	usage: {
 		description:
-			'TabList provides tab-style navigation for organizing content into categorized sections. Use it to let users switch between related views without leaving the page, with overflow items handled by a built-in "more" menu.',
+			'TabList provides tab-style navigation for organizing content into categorized sections. Use it to let users switch between related views without leaving the page. A strip narrower than its tabs scrolls horizontally and keeps the selected tab in view.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -84,6 +84,11 @@ export default {
 				guidance: true,
 				description:
 					'Reach for role="tablist" when the strip switches panels in place, and give each tab a panelId pointing at the panel it opens: that link is how a screen reader gets from a tab to its content. Leave it off for navigation between views.'
+			},
+			{
+				guidance: true,
+				description:
+					"Set isFullBleed to stretch a tab bar inside a padded LayoutHeader, Card, or Section to the container's inline content edges, instead of reaching for negative-margin CSS."
 			},
 			{
 				guidance: false,
@@ -154,6 +159,13 @@ export default {
 			name: 'hasDivider',
 			type: 'boolean',
 			description: 'Whether to show a bottom border divider under the tab list.',
+			default: 'false'
+		},
+		{
+			name: 'isFullBleed',
+			type: 'boolean',
+			description:
+				"Makes the tab strip escape its parent's container padding, extending to the container's content edges (cancels the nearest padded Layout container's --container-padding-* custom properties with negative margins). The inner strip pads back by the portion of the container inset that is not already supplied by the first or last tab stop, keeping edge labels aligned while a hasDivider underline spans the full content width. Matches Divider's isFullBleed: inline (start/end) edges only; block-edge docking stays with the surrounding layout.",
 			default: 'false'
 		},
 		{

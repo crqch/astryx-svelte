@@ -8,7 +8,17 @@ export default {
 	type: 'component',
 	name: 'Timestamp',
 	displayName: 'Timestamp',
-	keywords: ['date', 'time', 'datetime', 'relative', 'ago', 'clock', 'format', 'duration'],
+	keywords: [
+		'date',
+		'time',
+		'datetime',
+		'relative',
+		'ago',
+		'clock',
+		'format',
+		'duration',
+		'relativetime'
+	],
 	category: 'Content',
 	theming: {
 		targets: [
@@ -44,6 +54,11 @@ export default {
 				guidance: true,
 				description:
 					"Use tooltipEntries when readers must compare zones, such as an incident log where the reader's time and the event's origin zone both matter."
+			},
+			{
+				guidance: true,
+				description:
+					'Pass timezoneID when an absolute time must read the same for every viewer and on the server, like an incident log timestamp or anything server-rendered; without it the server markup depends on the server zone.'
 			},
 			{
 				guidance: true,
@@ -130,8 +145,14 @@ export default {
 			name: 'format',
 			type: "'auto' | 'date' | 'date_long' | 'date_weekday' | 'system_date' | 'time' | 'relative' | 'relative_short' | 'date_time' | 'system_date_time' | 'system_time' | 'unix_seconds'",
 			description:
-				"Display format. 'relative' shows '2 hours ago', 'relative_short' shows the same tiers abbreviated ('2h ago', '1d ago', '3mo ago') for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency.",
+				"Display format. 'relative' uses the locale's native long relative-time wording ('2 hours ago' in English), 'relative_short' uses its narrow pattern ('2h ago' in English) for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency. Absolute formats never read the current time. 'relative', 'relative_short' and 'auto' read it on the client only: a server render or static prerender shows the full date and time in UTC, labelled, and the client switches to the format's normal output after hydration. Date-bearing formats ('date', 'date_long', 'date_weekday', 'date_time', and the full date in the hover card and the accessible name) use the InternationalizationProvider calendar, such as calendar=\"persian\"; 'time', the relative formats, 'system_*', and 'unix_seconds' do not change.",
 			default: "'auto'"
+		},
+		{
+			name: 'timezoneID',
+			type: 'string',
+			description:
+				"IANA time zone the absolute formats render in, such as 'UTC' or 'America/Los_Angeles'. Omit (or pass 'local') for the viewer's own zone. An explicit zone renders identically on the server and the client, so it is the way to show an absolute time without a hydration mismatch; relative formats' visible text ignores it, while configured tooltipEntries rows still follow it. An unknown identifier warns once in development and falls back to the viewer's zone."
 		},
 		{
 			name: 'autoThreshold',
@@ -143,14 +164,14 @@ export default {
 			name: 'hasTooltip',
 			type: 'boolean',
 			description:
-				'Whether to show a copyable hover card with the full date/time on hover. Applies to relative timestamps and to any format once tooltipEntries is configured.',
+				'Whether to show a copyable hover card with the full date/time on hover or keyboard focus. Applies to relative timestamps and to any format once tooltipEntries is configured.',
 			default: 'true'
 		},
 		{
 			name: 'tooltipEntries',
 			type: 'ReadonlyArray<TimestampTooltipEntry>',
 			description:
-				"Lines to show on hover, so one instant can be read (and optionally copied) in several time zones and/or formats at once. Each entry is one line, in the order given. Omit timezoneID (or pass 'local') for the viewer's own zone; format defaults to the full absolute style and also accepts 'full' alongside every non-relative TimestampFormat. Rows are read-only unless they set isCopyable (default false); copyable rows show a copy button in a dedicated trailing action column so buttons align, and the column is only present when some row is copyable. With no entries the card shows a single default row with the full absolute time, which is copyable. Configuring entries also attaches the surface to absolute formats, which otherwise have none."
+				"Lines to show on hover, so one instant can be read (and optionally copied) in several time zones and/or formats at once. Each entry is one line, in the order given. An entry without timezoneID follows the Timestamp timezoneID when set, else the viewer's zone; 'local' always means the viewer's zone; format defaults to the full absolute style and also accepts 'full' alongside every non-relative TimestampFormat. Rows are read-only unless they set isCopyable (default false); copyable rows show a copy button in a dedicated trailing action column so buttons align, and the column is only present when some row is copyable. With no entries the card shows a single default row with the full absolute time, which is copyable. Configuring entries also attaches the surface to absolute formats, which otherwise have none."
 		},
 		{
 			name: 'isTimezoneShown',

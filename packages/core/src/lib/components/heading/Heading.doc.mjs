@@ -23,10 +23,18 @@ export default {
 		'subtitle'
 	],
 	category: 'Content',
+	theming: {
+		targets: [
+			{
+				className: 'astryx-heading',
+				visualProps: ['level', 'color', 'type', 'weight']
+			}
+		]
+	},
 	props: [
 		{
 			name: 'level',
-			type: '6 | 2 | 4 | 1 | 3 | 5',
+			type: '4 | 6 | 2 | 1 | 3 | 5',
 			description:
 				'Heading level. Determines the semantic HTML element (h1-h6) and the visual styling from the theme (unless `type` is set).',
 			required: true
@@ -35,7 +43,13 @@ export default {
 			name: 'type',
 			type: "'display-1' | 'display-2' | 'display-3'",
 			description:
-				'Display type variant. Overrides the visual styling from `level` with display-scale sizing (larger, lighter weight, tighter line-height). The `level` still determines the HTML element for accessibility. Use for hero banners, marketing headlines, and data callouts.'
+				'Display type variant. Overrides the visual styling from `level` with display-scale sizing (larger, lighter weight, tighter line-height). Themes may add custom visual types. The `level` still determines the HTML element for accessibility. Use for hero banners, marketing headlines, and data callouts.'
+		},
+		{
+			name: 'weight',
+			type: "'normal' | 'medium' | 'semibold' | 'bold'",
+			description:
+				'Explicit font-weight override. Wins over the selected visual type or heading-level default.'
 		},
 		{
 			name: 'children',
@@ -45,7 +59,7 @@ export default {
 		},
 		{
 			name: 'accessibilityLevel',
-			type: '6 | 2 | 4 | 1 | 3 | 5',
+			type: '4 | 6 | 2 | 1 | 3 | 5',
 			description:
 				'Accessibility level override. When set and different from `level`, applies `aria-level` so the document outline differs from the visual style.'
 		},
@@ -80,7 +94,7 @@ export default {
 			name: 'wordBreak',
 			type: "'break-word' | 'break-all'",
 			description:
-				"Word break behavior when truncating. Defaults to 'break-all' for single-line truncation, 'break-word' otherwise."
+				"Word break behavior when truncating. Defaults to 'break-all' for single-line truncation, 'break-word' otherwise. Without truncation, a token longer than its line (a URL, an ID) wraps (`overflow-wrap: break-word`), so in ordinary flow text does not make the page scroll sideways. Inside a flex row, give the flex child `min-width: 0` so it can shrink. A container you style with `overflow-wrap: anywhere` does not reach this text; Astryx's own containers pass their wrap through."
 		},
 		{
 			name: 'textWrap',
@@ -110,6 +124,28 @@ export default {
 			name: 'id',
 			type: 'string | null',
 			description: 'HTML id attribute.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles applied to the heading element. Must be a stylex.create() value: not an inline style object like style={{}}.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'CSS class name applied to the heading element.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description:
+				'Inline styles applied to the heading element. When `maxLines` is above 1, its line clamp replaces any `WebkitLineClamp` in `style`.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLHeadingElement | null',
+			description: 'Ref forwarded to the heading element.'
 		}
 	]
 };

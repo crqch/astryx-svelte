@@ -48,7 +48,7 @@
 	},
 	"devDependencies": {
 		"@astryx-svelte/core": "workspace:*",
-		"@astryxdesign/theme-stone": "0.5.2",
+		"@astryxdesign/theme-stone": "0.7.13",
 		"svelte": "^5.56.1",
 		"typescript": "^6.0.3"
 	},

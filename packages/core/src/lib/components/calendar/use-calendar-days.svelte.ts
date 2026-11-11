@@ -3,7 +3,7 @@ import {
 	InternationalizationContext,
 	type InternationalizationContextValue
 } from '../../i18n/internationalization-context.svelte.js';
-import { getStandaloneShortWeekdayNames } from './get-standalone-short-weekday-names.js';
+import { getWeekdayHeaderNames } from './get-weekday-header-names.js';
 import {
 	getDaysInMonth,
 	plainDateAddDays,
@@ -111,11 +111,9 @@ export function useCalendarDays(options: () => UseCalendarDaysOptions): UseCalen
 	});
 
 	// Generated strings avoid `Date` anchors, so weekday headers cannot shift with
-	// the runtime timezone. Keep numeric indices as the rotation source of truth.
-	const dayNames = $derived.by(() => {
-		const names = getStandaloneShortWeekdayNames(intl().locale);
-		return Array.from({ length: 7 }, (_, index) => names[(index + weekStartsOn) % 7]);
-	});
+	// the runtime timezone. The rotation is the resolver's, so the same column
+	// order also names each header's day of week.
+	const dayNames = $derived(getWeekdayHeaderNames(intl().locale, weekStartsOn));
 
 	const days = $derived.by(() => {
 		const { daysInMonth: totalDaysInMonth, startingDayOfWeek, totalCells } = gridInfo;

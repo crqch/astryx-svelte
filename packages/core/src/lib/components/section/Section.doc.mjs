@@ -27,6 +27,18 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Section container',
+				required: true,
+				description: 'Painted container that groups a page region.'
+			},
+			{
+				name: 'Consumer content',
+				required: false,
+				description: 'Caller-provided content rendered inside the section container.'
+			}
+		],
 		description:
 			'Section is the correct way to create page regions and group related content on a page. Use it for settings groups, form sections, sidebar areas, or any time you need visual separation between parts of a page. If you are tempted to use a Card for a page section, use Section instead.',
 		bestPractices: [
@@ -52,6 +64,11 @@ export default {
 				guidance: false,
 				description:
 					'Use Card when you mean Section. Cards are for discrete items (one notification, one profile). Sections are for page regions.'
+			},
+			{
+				guidance: true,
+				description:
+					"To center a Section, set marginInlineStart and marginInlineEnd to 'auto' in xstyle. If Astryx source is compiled in your app's own StyleX pass, the marginInline shorthand loses to Section's own inline margins."
 			}
 		]
 	},
@@ -96,7 +113,7 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Internal padding using the spacing scale (0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10). Use padding={0} for edge-to-edge content.',
 			default: '4'
@@ -121,7 +138,7 @@ export default {
 		},
 		{
 			name: 'paddingBlock',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Block (vertical) padding override. Overrides only the block-axis padding while preserving inline padding from `padding` or the container theme default. Accepts the spacing scale (0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10).'
 		},

@@ -28,6 +28,18 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Shortcut',
+				required: true,
+				description: 'Group that presents the complete keyboard shortcut and its accessible name.'
+			},
+			{
+				name: 'Key badge',
+				required: true,
+				description: 'Painted key badge rendered once for each key in the shortcut.'
+			}
+		],
 		description:
 			'Renders a keyboard shortcut as styled key badges. Use Kbd in tooltips, menus, and help text to show key combinations.',
 		bestPractices: [
@@ -42,9 +54,19 @@ export default {
 					"Use mod instead of ctrl or cmd; it automatically adapts to the user's platform."
 			},
 			{
+				guidance: true,
+				description:
+					'Let Kbd name the shortcut: screen readers hear the keys as words, such as "Command + K". Kbd ignores an aria-label you pass; to name it from visible text, use aria-labelledby.'
+			},
+			{
 				guidance: false,
 				description:
 					'Use Kbd as the only way to discover an action; shortcuts should supplement visible controls, not replace them.'
+			},
+			{
+				guidance: false,
+				description:
+					'Expect Kbd to handle the key press. It only shows the keys; listen for the shortcut in your own code.'
 			}
 		]
 	},
@@ -53,14 +75,14 @@ export default {
 			name: 'keys',
 			type: 'string',
 			description:
-				'Keyboard shortcut string. Use "+" to separate keys. Special keys: mod (Cmd on Mac), ctrl, alt, shift, enter, backspace, escape, tab, up, down, left, right.',
+				'Keyboard shortcut string. Use "+" to separate keys. Special keys: mod (⌘ on Apple platforms, Ctrl elsewhere), ctrl, alt and shift (Apple symbols on Apple platforms, Ctrl, Alt and Shift text elsewhere), meta (⌘ on Apple platforms, Win elsewhere and before hydration), enter, backspace, escape, tab, up, down, left, right, plus. Aliases: esc for escape and return for enter.',
 			required: true
 		},
 		{
 			name: 'xstyle',
 			type: 'StyleArg',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}.'
 		},
 		{
 			name: 'class',
@@ -73,6 +95,11 @@ export default {
 			type: 'string | null',
 			description:
 				'Inline styles for the root element. Prefer xstyle for styling; inline styles bypass StyleX optimization.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLSpanElement | null',
+			description: 'Ref forwarded to the shortcut group element.'
 		}
 	]
 };

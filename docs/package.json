@@ -29,8 +29,8 @@
 		"@stylexjs/stylex": "^0.19.0"
 	},
 	"devDependencies": {
-		"@astryxdesign/cli": "0.5.2",
-		"@astryxdesign/core": "0.5.2",
+		"@astryxdesign/cli": "0.7.13",
+		"@astryxdesign/core": "0.7.13",
 		"@qwik.dev/partytown": "^0.14.0",
 		"@stylexjs/unplugin": "^0.19.0",
 		"@sveltejs/adapter-vercel": "^6.3.3",

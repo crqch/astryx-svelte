@@ -67,19 +67,14 @@ export default {
 		{
 			name: 'options.onPageUp',
 			type: '() => void',
-			description: 'Callback for Page Up key (e.g., navigate to previous month in calendars).'
+			description:
+				'Callback for Page Up key (e.g., navigate to previous month in calendars). Receives the key event, so `event.shiftKey` can select a larger step, such as a year.'
 		},
 		{
 			name: 'options.onPageDown',
 			type: '() => void',
-			description: 'Callback for Page Down key (e.g., navigate to next month in calendars).'
-		},
-		{
-			name: 'options.isRtl',
-			type: 'boolean',
 			description:
-				'Swap ArrowLeft/ArrowRight so horizontal navigation follows visual direction in right-to-left contexts. When omitted, auto-detected from the container computed direction on keydown.',
-			default: "undefined (auto-detect from the container's computed direction)"
+				'Callback for Page Down key (e.g., navigate to next month in calendars). Receives the key event, so `event.shiftKey` can select a larger step, such as a year.'
 		},
 		{
 			name: 'options.hasRovingTabIndex',

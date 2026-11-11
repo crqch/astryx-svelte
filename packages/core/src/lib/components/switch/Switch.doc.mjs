@@ -32,8 +32,45 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Field',
+				required: true,
+				description: 'Container arranging the switch, label, and feedback.'
+			},
+			{
+				name: 'Track',
+				required: true,
+				description: 'Pill-shaped surface that shows the off or on state.'
+			},
+			{
+				name: 'Thumb',
+				required: true,
+				description: 'Indicator that moves across the track when state changes.'
+			},
+			{
+				name: 'Label',
+				required: true,
+				description: 'Text identifying the setting controlled by the switch.'
+			},
+			{
+				name: 'Description',
+				required: false,
+				description: 'Helper text below the label.'
+			},
+			{
+				name: 'Spinner',
+				required: false,
+				description: 'Loading indicator shown inside the thumb while busy.'
+			},
+			{
+				name: 'Status message',
+				required: false,
+				description: 'Error, warning, or success message below the switch.'
+			}
+		],
 		description:
-			'A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead.',
+			'A toggle control for on/off states that take effect immediately. Supports labels, descriptions, loading states, and validation. Use it for settings or preferences that apply instantly. For changes requiring a form submission, use a checkbox instead. Under a finger it moves like the iOS switch on every touch screen: a press lifts the thumb, a drag across flips it, lifting the finger commits, and a tap toggles through the browser’s click. The thumb keeps its circle and size on every device, and under a coarse pointer the invisible hit area grows toward 44 × 44 px, stopping halfway to any neighbouring control so a tap goes to the nearer one. With reduced motion on, a change cross-fades on a touch screen and is immediate with a mouse.',
 		bestPractices: [
 			{
 				guidance: true,

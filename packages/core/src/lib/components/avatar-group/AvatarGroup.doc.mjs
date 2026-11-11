@@ -54,6 +54,11 @@ export default {
 			{
 				guidance: true,
 				description:
+					'Wrap an Avatar child in HoverCard or Tooltip to show more on hover; the avatars still overlap. Set tooltip={false} on the wrapped Avatar so its built-in name tooltip does not compete.'
+			},
+			{
+				guidance: true,
+				description:
 					'Make avatars interactive with href or onClick to link to profiles. Interactive avatars share a single Tab stop; arrow keys move between them, and the group announces a keyboard hint to assistive tech. This follows the WAI-ARIA APG roving tabindex technique for managing focus in a composite: https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex'
 			},
 			{
@@ -92,7 +97,7 @@ export default {
 			name: 'size',
 			type: "48 | 32 | 'sm' | 'md' | 'lg' | 20 | 'xl' | 'xsm' | 16 | 24 | 36 | 40 | 60 | 64 | 72 | 96 | 128 | 144 | 180",
 			description:
-				"Size applied to all avatars via context. This wins over each child Avatar's own size prop, including when it is left at the default, so set the size here rather than on the children.",
+				"Size applied to all avatars: named sizes are 'xsm' (20px), 'sm' (24px), 'md' (36px), 'lg' (48px), and 'xl' (128px); numeric sizes must be one of the pixel values listed in the type. The group's size always overrides each child Avatar's size, including when the group uses its default size.",
 			default: "'md'"
 		},
 		{

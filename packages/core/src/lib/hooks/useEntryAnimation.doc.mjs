@@ -32,12 +32,12 @@ export default {
 			name: 'entryStyle',
 			type: 'StyleXStyles | null',
 			description:
-				'A StyleX style object for the entry animation, or null if the element was rendered on initial page load (no animation needed).'
+				'A StyleX style object for the entry animation, or null if the element was rendered on initial page load or hydrated from server HTML (no animation needed).'
 		}
 	],
 	usage: {
 		description:
-			'Returns a StyleX style for animating an element on mount. Only animates when the element is dynamically inserted after the initial page paint; elements rendered on page load are not animated. Uses Astryx motion tokens (duration, easing) for consistent animation timing. Requires "use client"; does not support SSR.',
+			'Returns a StyleX style for animating an element on mount. Only animates when the element is dynamically inserted after the initial page paint; elements rendered on page load are not animated. Uses Astryx motion tokens (duration, easing) for consistent animation timing. Server-rendered elements hydrate without the entry style and never animate; elements mounted after hydration animate.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -57,5 +57,5 @@ export default {
 	},
 	relatedComponents: ['FieldStatus'],
 	importPath: '@astryx-svelte/core/hooks',
-	category: 'animation'
+	category: 'motion & gestures'
 };

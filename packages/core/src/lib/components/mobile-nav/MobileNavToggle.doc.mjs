@@ -10,7 +10,7 @@ export default {
 	displayName: 'Mobile Nav Toggle',
 	subComponentOf: 'MobileNav',
 	description:
-		'Hamburger button that opens/closes the mobile nav drawer. Reads open state from AppShell context automatically: does NOT accept isOpen or onOpenChange props. Renders nothing above the mobile breakpoint.',
+		'Hamburger button that opens/closes the mobile nav drawer. Reads open state from AppShell context automatically: does NOT accept isOpen or onOpenChange props. Renders nothing above the mobile breakpoint. Host attributes and DOM handlers (id, data-*, aria-*) reach the button; its aria-expanded and aria-controls stay component-owned, and a caller onClick runs after the toggle.',
 	keywords: [
 		'mobilenav',
 		'drawer',

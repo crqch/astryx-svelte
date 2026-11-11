@@ -89,7 +89,8 @@ export default {
 		{
 			name: 'isHiddenWhenUnsupported',
 			type: 'boolean',
-			description: 'When true, renders nothing if the browser does not support SpeechRecognition.',
+			description:
+				'When true, renders nothing if the browser does not support SpeechRecognition. When false, keeps the button visible but disabled.',
 			default: 'true'
 		},
 		{

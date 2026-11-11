@@ -24,7 +24,8 @@ export default {
 		targets: [
 			{
 				className: 'astryx-token',
-				visualProps: ['color', 'size']
+				visualProps: ['color', 'size'],
+				states: ['disabled']
 			}
 		]
 	},
@@ -139,7 +140,8 @@ export default {
 		{
 			name: 'href',
 			type: 'string',
-			description: 'Link URL. When provided, the token renders as an <a> element.'
+			description:
+				'Link URL. When provided, the token renders as an <a> element. The destination follows the shared navigation rule described on the Link `href` prop.'
 		},
 		{
 			name: 'description',

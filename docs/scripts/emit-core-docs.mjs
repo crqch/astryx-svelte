@@ -99,9 +99,19 @@ const HEADER =
 // upstream's authored keys exactly when the emitter was written.
 
 const USAGE_FIELDS = new Set(['description', 'bestPractices', 'anatomy']);
+// Upstream 0.7.x added per-component accessibility contracts to `usage`. The
+// CLI's doctype contract here has not ported those fields yet, so they are
+// dropped rather than widening the contract silently — the docs emitter's rule
+// is that a dropped upstream field is named, not absorbed. Remove this set once
+// `packages/cli/authoring/doctypes/{base,component}/type.ts` declares them.
+const USAGE_FIELDS_NOT_PORTED = new Set(['accessibility', 'accessibilityThemeCoverage']);
 const BEST_PRACTICE_FIELDS = new Set(['guidance', 'description']);
 const ANATOMY_FIELDS = new Set(['name', 'required', 'description']);
 const THEMING_FIELDS = new Set(['container', 'targets', 'vars', 'derived']);
+// 0.7.x theme icon slots (`defineTheme({componentIcons})`) are not in this
+// port's CLI contract yet; named here so the drop is visible rather than a
+// silent filter. Remove once the CLI declares `ComponentIconSlotDoc`.
+const THEMING_FIELDS_NOT_PORTED = new Set(['componentIcons']);
 // `deprecatedFor` marks a target that has been RENAMED and is still emitted for
 // a deprecation window — the input family's `astryx-*-clear-icon` targets now
 // carry it, superseded by the shared `input-clear-icon`. It is part of
@@ -152,6 +162,7 @@ function assertDeclared(value, declared, where) {
  * @param {string} where
  */
 function usageDoc(usage, where) {
+	for (const field of USAGE_FIELDS_NOT_PORTED) delete usage[field];
 	assertDeclared(usage, USAGE_FIELDS, `${where} usage`);
 	for (const practice of usage.bestPractices ?? []) {
 		assertDeclared(practice, BEST_PRACTICE_FIELDS, `${where} usage.bestPractices[]`);
@@ -169,6 +180,7 @@ function usageDoc(usage, where) {
  * @param {string} where
  */
 function themingDoc(theming, where) {
+	for (const field of THEMING_FIELDS_NOT_PORTED) delete theming[field];
 	assertDeclared(theming, THEMING_FIELDS, `${where} theming`);
 	for (const target of theming.targets ?? []) {
 		assertDeclared(target, THEMING_TARGET_FIELDS, `${where} theming.targets[]`);
@@ -436,14 +448,26 @@ function findEmitted(dir, found = []) {
  */
 const UPSTREAM_EXAMPLES_NOT_PORTED = new Set([
 	'AvatarGroupOverflow',
+	'Banner',
 	'BottomSheet',
 	'BottomSheetSwitcher',
+	'Button',
+	'Calendar',
+	'Card',
 	'CheckboxListItem',
 	'DialogHeader',
 	'Field',
 	'InternationalizationProvider',
+	'Layout',
 	'Markdown',
 	'Outline',
+	'Popover',
+	'PowerSearch',
+	'Section',
+	'SegmentedControl',
+	'Tab',
+	'Timer',
+	'useResizable',
 	'useTableRowExpansion',
 	'useTableSelection',
 	'useTableTreeData'

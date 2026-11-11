@@ -28,6 +28,13 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Placeholder',
+				required: true,
+				description: 'Painted shape that stands in for content while it loads.'
+			}
+		],
 		description:
 			'An animated shimmer placeholder that previews the shape of content while it loads. Use it to build loading screens that match the layout of the real content. For content with unknown dimensions, use Spinner instead.',
 		bestPractices: [
@@ -77,7 +84,7 @@ export default {
 		},
 		{
 			name: 'radius',
-			type: "0 | 'rounded' | 2 | 4 | 'none' | 1 | 3",
+			type: "0 | 'rounded' | 4 | 2 | 'none' | 1 | 3",
 			description:
 				'Border radius using design token scale. Use none for sharp corners, rounded for fully rounded (avatars, pills, circles).',
 			default: '3'

@@ -18,6 +18,15 @@ export default {
 				className: 'astryx-clickable-card',
 				visualProps: ['variant']
 			}
+		],
+		vars: [
+			{
+				name: '--_press-overlay',
+				description:
+					"Colour of the ::after interaction overlay for the hover and mouse states: transparent at rest, the hover overlay token on hover (hover-capable pointers), the pressed overlay token while a mouse holds `:active`. A press the touch press controller paints (`data-astryx-press`) is the overlay's image instead, at the press's strength, and the colour yields to it. Set on the card element by its own interaction arms.",
+				default: 'transparent',
+				private: true
+			}
 		]
 	},
 	usage: {
@@ -35,6 +44,11 @@ export default {
 			{
 				guidance: false,
 				description: 'Use for toggling selection; use SelectableCard for that.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use with a transparent variant and no padding only to borrow the press model for a surface that owns its own box. Compose the chrome-free recipe in the useClickableContainer docs instead: it adds no Card styles to the page.'
 			}
 		],
 		anatomy: [
@@ -72,7 +86,8 @@ export default {
 		{
 			name: 'href',
 			type: 'string',
-			description: 'Navigation URL.'
+			description:
+				'Navigation URL. Plain, new-tab, Cmd/Ctrl-click, and middle-click activation all follow the shared navigation rule described on the Link `href` prop.'
 		},
 		{
 			name: 'target',
@@ -83,7 +98,8 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disables the card.',
+			description:
+				'Disables the card and removes a link destination; the card keeps its tab stop and is announced as disabled.',
 			default: 'false'
 		},
 		{
@@ -93,7 +109,7 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Inner padding.',
 			default: '4'
 		},

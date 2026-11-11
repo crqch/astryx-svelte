@@ -19,7 +19,8 @@ export default {
 		{
 			name: 'label',
 			type: 'string | Snippet',
-			description: 'Primary text.',
+			description:
+				'Primary content. A plain string gets single-line truncation automatically; a ReactNode renders as given, so child components control their own text behavior.',
 			required: true
 		},
 		{
@@ -52,7 +53,8 @@ export default {
 		{
 			name: 'href',
 			type: 'string',
-			description: 'Link URL; enables the invisible anchor pattern.'
+			description:
+				'Link URL; enables the invisible anchor pattern. The destination follows the shared navigation rule described on the Link `href` prop.'
 		},
 		{
 			name: 'target',
@@ -67,6 +69,13 @@ export default {
 				'Link relationship tokens. noopener noreferrer are merged automatically for target="_blank".'
 		},
 		{
+			name: 'align',
+			type: "'center' | 'start' | 'first-line'",
+			description:
+				'Vertical alignment of the start and end content against the label, passed through to Item unchanged. `first-line` keeps a small mark (a status dot, an icon) level with the first line of a wrapped label. See Item.align.',
+			default: "'center'"
+		},
+		{
 			name: 'isDisabled',
 			type: 'boolean',
 			description: 'Disabled state; sets aria-disabled on the item.',
@@ -75,8 +84,27 @@ export default {
 		{
 			name: 'isSelected',
 			type: 'boolean',
-			description: 'Selected state; sets aria-selected on the item.',
+			description:
+				'Selected state; marks the item as the current one with aria-current="true" (a list item cannot carry aria-selected).',
 			default: 'false'
+		},
+		{
+			name: 'itemKey',
+			type: 'string | number',
+			description:
+				"The row's item key, a string or a number from the data (the shape Table's idKey returns). It is the row's identity for the list's animated layout (List animatedLayout): with a handle, the list matches rows by it to animate inserts, removals and moves, and a row without one changes at once. In a reorderable List (List reorderable), it is the key the reorderable object's onReorder reports and isReorderable is asked about, and a row without one has no reorder handle and keeps its place. Separate from React's key."
+		},
+		{
+			name: 'swipeActions',
+			type: '{leading?: ItemSwipeAction[]; trailing?: ItemSwipeAction[]}',
+			description:
+				"Swipe actions for touch, passed through to Item unchanged: the verbs a sideways drag uncovers on each side, each `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`. See Item.swipeActions; List clips its rows in the inline axis for them."
+		},
+		{
+			name: 'swipeBehavior',
+			type: "'reveal' | 'commit'",
+			description: 'What a swipe does, passed through to Item unchanged. See Item.swipeBehavior.',
+			default: "'reveal'"
 		}
 	]
 };

@@ -10,7 +10,7 @@ export default {
 	displayName: 'Base Typeahead',
 	subComponentOf: 'Typeahead',
 	description:
-		'Unstyled combobox engine providing input, search, keyboard navigation, and dropdown. No wrapper div, no border styling, no token rendering. Used by Typeahead and Tokenizer for custom compositions.',
+		'Composable combobox engine providing a bare input, search, keyboard navigation, and a styled result dropdown. It renders no input wrapper, border, or selected-value token. Typeahead and Tokenizer compose it for standard fields.',
 	keywords: [
 		'typeahead',
 		'autocomplete',
@@ -28,18 +28,82 @@ export default {
 	category: 'Form Controls',
 	isHiddenFromOverview: true,
 	usage: {
+		anatomy: [
+			{
+				name: 'Input',
+				required: true,
+				description:
+					'Bare combobox input. The caller supplies its visible field chrome and accessible name.'
+			},
+			{
+				name: 'Loading status',
+				required: false,
+				description:
+					'Named Spinner shown beside the input while an asynchronous source is pending, unless a composed owner takes over the busy indicator lane.'
+			},
+			{
+				name: 'Dropdown',
+				required: false,
+				description: 'Anchored listbox surface containing current search or bootstrap results.'
+			},
+			{
+				name: 'Empty state',
+				required: false,
+				description: 'Disabled listbox option shown after a completed search returns no results.'
+			},
+			{
+				name: 'Result group heading',
+				required: false,
+				description: 'Visible label for a group of result options.'
+			},
+			{
+				name: 'Result row',
+				required: false,
+				description:
+					'Option wrapper that owns highlight, selection, pointer, and keyboard behavior.'
+			},
+			{
+				name: 'Default item content',
+				required: false,
+				description:
+					'TypeaheadItem label and optional supporting content rendered inside a result row.'
+			},
+			{
+				name: 'Caller-rendered item content',
+				required: false,
+				description:
+					'Caller content supplied through renderItem or item.element inside the stable result row.'
+			},
+			{
+				name: 'Menu content',
+				required: false,
+				description:
+					'Caller content from menu.render: information around the result list in the listbox role, or the content of the dialog role.'
+			},
+			{
+				name: 'Menu dialog',
+				required: false,
+				description:
+					'The named dialog a dialog-role menu shows in the anchored layer; it takes focus and returns it on close.'
+			},
+			{
+				name: 'Selected result state',
+				required: false,
+				description: 'Selected row weight and trailing check shown when a result matches value.'
+			}
+		],
 		description:
-			'Unstyled combobox engine providing input, search, keyboard navigation, and dropdown. No wrapper div, no border styling, no token rendering. Used by Typeahead and Tokenizer for custom compositions.',
+			'Composable combobox engine providing a bare input, search, keyboard navigation, and a styled result dropdown. It renders no input wrapper, border, or selected-value token. Typeahead and Tokenizer compose it for standard fields.',
 		bestPractices: [
 			{
 				guidance: true,
 				description:
-					'Use Typeahead or Tokenizer for standard fields; they wrap BaseTypeahead with the wrapper div, border styling, and token rendering it intentionally omits.'
+					'Use Typeahead or Tokenizer for standard fields; they wrap BaseTypeahead with input chrome and selected-value rendering it intentionally omits.'
 			},
 			{
 				guidance: true,
 				description:
-					'Provide your own wrapper div with border and layout when composing directly, since BaseTypeahead renders no visual chrome of its own.'
+					'Provide your own visible label or aria-label and custom input wrapper so the bare combobox has an accessible name, focus treatment, border, and layout.'
 			},
 			{
 				guidance: true,
@@ -49,12 +113,17 @@ export default {
 			{
 				guidance: false,
 				description:
-					"Expect a wrapper div, border, or token rendering. BaseTypeahead is an engine only; all visual chrome is the caller's responsibility."
+					'Expect input chrome or selected-value rendering. BaseTypeahead is an engine; the caller owns those visible parts.'
 			},
 			{
 				guidance: false,
 				description:
 					'Use BaseTypeahead when Typeahead or Tokenizer would suffice; the extra wrapper and styling work is only justified for truly custom compositions.'
+			},
+			{
+				guidance: false,
+				description:
+					'Treat Escape as cancellation of pending source work. It hides the current popup, but a late response can reopen it.'
 			}
 		]
 	},
@@ -62,7 +131,8 @@ export default {
 		{
 			name: 'searchSource',
 			type: 'SearchSource<T>',
-			description: 'Data source providing search and bootstrap methods.',
+			description:
+				'Data source providing search and bootstrap methods. `search(query, context)` may call `context.update(items)` to show matches it already has before it returns; the value it returns is the final list, and every list after the first for a query keeps the shown rows first and adds new rows after them.',
 			required: true
 		},
 		{
@@ -86,7 +156,7 @@ export default {
 			name: 'placeholder',
 			type: 'string',
 			description: 'Input placeholder text.',
-			default: "'Search...'"
+			default: "'Search…'"
 		},
 		{
 			name: 'hasEntriesOnFocus',
@@ -103,7 +173,7 @@ export default {
 		{
 			name: 'menuWidth',
 			type: 'number',
-			description: 'Fixed dropdown width in pixels. The menu never shrinks below its anchor width.'
+			description: 'Requested dropdown width in pixels before viewport clamping.'
 		},
 		{
 			name: 'minQueryLength',
@@ -113,15 +183,23 @@ export default {
 			default: '1'
 		},
 		{
-			name: 'emptySearchResultsText',
-			type: 'string',
-			description: 'Text shown when search returns no results.',
+			name: 'emptySearchText',
+			type: 'string | Snippet',
+			description:
+				'Content shown when the query matched nothing. Takes a ReactNode, so the dead end can carry a link or a create row. Announced in a polite live region as the text it renders, read from the DOM; aria-hidden parts stay out of both, and content that renders no text announces nothing. null counts as not given, like undefined, and falls through to the default; pass an empty string to render nothing.',
 			default: "'No results found'"
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
 			description: 'Whether the input is disabled.',
+			default: 'false'
+		},
+		{
+			name: 'isFocusableDisabled',
+			type: 'boolean',
+			description:
+				'Keep a disabled input focusable with aria-disabled and readOnly so a caller-owned disabled reason remains discoverable. It blocks text entry, opening the results and picking a result, also from results that were open before it applied; Escape or Tab still closes them.',
 			default: 'false'
 		},
 		{
@@ -134,8 +212,14 @@ export default {
 			name: 'debounceMs',
 			type: 'number',
 			description:
-				'Debounce delay in ms before triggering search. Set to 0 for synchronous sources.',
+				'Debounce delay in ms before triggering search. Set to 0 for synchronous sources, and for a source that shows local matches through `context.update` and delays its own server request.',
 			default: '150'
+		},
+		{
+			name: 'size',
+			type: "'sm' | 'md' | 'lg'",
+			description: 'Size used to scale dropdown option padding.',
+			default: "'md'"
 		},
 		{
 			name: 'anchorRef',
@@ -147,6 +231,18 @@ export default {
 			name: 'inputXStyle',
 			type: 'StyleArg',
 			description: 'Additional StyleX styles for the input element.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'Standard BaseProps StyleX styles applied to the input. Must be a stylex.create() value, not an inline style object.'
+		},
+		{
+			name: 'inputTabIndex',
+			type: 'number',
+			description:
+				'Legacy input-specific alias for native tabIndex. When provided, it takes precedence; otherwise native tabIndex is preserved.'
 		},
 		{
 			name: 'onKeyDown',
@@ -165,14 +261,34 @@ export default {
 			description: 'Callback when the dropdown opens or closes.'
 		},
 		{
+			name: 'menu',
+			type: 'BaseTypeaheadMenu',
+			description:
+				"What the menu shows. role 'listbox' (default) is the result list; its optional render({listbox, query, isBusy, isEmptySearch, close}) places information such as a header or a hint around it, and anything a person acts on stays a result so the arrow keys reach it. role 'dialog' shows render({query, close}) in a dialog named by label that takes focus; Escape, an outside press or close() returns focus to where it was when the menu opened. Astryx owns the layer either way. Switching from listbox to dialog keeps the menu open: call handleRef.open() from onChange."
+		},
+		{
+			name: 'handleRef',
+			type: 'BaseTypeaheadHandle | null',
+			description:
+				'Imperative handle: open() opens the menu (a dialog at once; a listbox shows or loads its results) and close() closes it. There is no controlled open state; onOpenChange reports changes.'
+		},
+		{
 			name: 'inputId',
 			type: 'string',
-			description: 'ID for the input element (for label association).'
+			description:
+				'Legacy input-specific alias for native id. When provided, it takes precedence; otherwise native id is preserved.'
 		},
 		{
 			name: 'ariaDescribedBy',
 			type: 'string',
-			description: 'Additional aria-describedby IDs.'
+			description:
+				'Legacy input-specific alias for native aria-describedby. When provided, it takes precedence; otherwise the native attribute is preserved.'
+		},
+		{
+			name: 'ariaLabelledBy',
+			type: 'string',
+			description:
+				'Legacy input-specific alias for native aria-labelledby. When provided, it takes precedence; otherwise the native attribute is preserved.'
 		}
 	]
 };

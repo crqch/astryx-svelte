@@ -40,6 +40,11 @@ export default {
 			{
 				guidance: true,
 				description:
+					'Use Button for an action attached to the input; InputGroup connects its corners automatically.'
+			},
+			{
+				guidance: true,
+				description:
 					'Use InputGroup with compatible single-line inputs: TextInput, NumberInput, TimeInput, DateInput, Typeahead, Selector, and MultiSelector.'
 			},
 			{
@@ -96,7 +101,7 @@ export default {
 			name: 'children',
 			type: 'Snippet',
 			description:
-				'InputGroupText and compatible input children: TextInput, NumberInput, TimeInput, DateInput, Typeahead, Selector, or MultiSelector.',
+				'InputGroupText, Button addons, and compatible input children: TextInput, NumberInput, TimeInput, DateInput, Typeahead, Selector, or MultiSelector.',
 			required: true
 		},
 		{
@@ -125,7 +130,7 @@ export default {
 		{
 			name: 'isOptional',
 			type: 'boolean',
-			description: 'Show "(optional)" indicator.',
+			description: 'Show the "Optional" indicator after the label.',
 			default: 'false'
 		},
 		{
@@ -143,7 +148,8 @@ export default {
 		{
 			name: 'status',
 			type: 'InputStatus',
-			description: 'Status indicator applied to the group border.'
+			description:
+				'Validation status. Its message shows below the group. The group border does not change; a theme can style the row from `data-status`.'
 		},
 		{
 			name: 'labelTooltip',

@@ -10,7 +10,7 @@ export default {
 	displayName: 'Chat Message Metadata',
 	subComponentOf: 'Chat',
 	description:
-		'Composable metadata row for chat messages. Renders timestamp, footer content, and delivery status in a single row. Direction reverses for user sender. Renders nothing if all props are empty.',
+		'Composable metadata row for chat messages. Renders timestamp, footer content, and delivery status in a single row. Direction reverses for user sender. Omits the row when both slots are omitted or non-rendering scalars and status is omitted.',
 	keywords: [
 		'chat',
 		'message',
@@ -30,6 +30,53 @@ export default {
 	],
 	group: 'Chat',
 	category: 'Chat',
+	usage: {
+		description:
+			'Place ChatMessageMetadata below a message or in the last ChatMessageBubble metadata slot to show a timestamp, footer content, and optional delivery status. Non-rendering scalar slots (booleans and empty strings) create no separator; numeric zero remains visible. Composite React content remains caller-owned.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Put metadata in the last bubble metadata slot when the message uses bubbles, so it follows the bubble content.'
+			},
+			{
+				guidance: true,
+				description:
+					'Pass timestamp and footer content independently; separators are omitted for non-rendering scalar slots. Composite React nodes are used as supplied.'
+			},
+			{
+				guidance: false,
+				description:
+					'Do not supply footer actions without their own accessible names and interaction behavior; the metadata row does not own those controls.'
+			},
+			{
+				guidance: false,
+				description: 'Do not put the same metadata on both a bubble and its enclosing message.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Metadata row',
+				required: true,
+				description: 'Sender-aware line containing the visible metadata items.'
+			},
+			{
+				name: 'Timestamp',
+				required: false,
+				description: 'Caller-supplied time content at the start of the logical sequence.'
+			},
+			{
+				name: 'Footer',
+				required: false,
+				description: 'Caller-supplied information or actions between time and status.'
+			},
+			{
+				name: 'Status',
+				required: false,
+				description: 'Localized delivery icon and text when a status is supplied.'
+			}
+		]
+	},
 	props: [
 		{
 			name: 'timestamp',

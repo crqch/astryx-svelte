@@ -19,6 +19,18 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Tooltip surface',
+				required: true,
+				description: 'Painted overlay surface that presents the tooltip.'
+			},
+			{
+				name: 'Tooltip text',
+				required: true,
+				description: 'Tooltip content rendered within the surface.'
+			}
+		],
 		description:
 			'A short text hint that appears on hover or focus, anchored to a trigger element. Use it to describe icon-only buttons, show the full text of truncated labels, or provide supplementary context without cluttering the UI.',
 		bestPractices: [
@@ -33,7 +45,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Set touchTrigger to tap when the trigger is a button whose only job is revealing the tooltip, such as an info icon: touch has no hover, and auto keeps the tap for triggers that perform an action.'
+					'Set touchTrigger to tap when the trigger is a button whose only job is revealing the tooltip: touch has no hover, and auto keeps the tap for triggers that perform an action. For an info icon, use InfoTip, which also pins its help on a press.'
 			},
 			{
 				guidance: false,
@@ -104,7 +116,7 @@ export default {
 			name: 'touchTrigger',
 			type: "'none' | 'auto' | 'tap'",
 			description:
-				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (a button, link, or form control), whose tap belongs to the control. tap always opens; use it for an info icon rendered as a button, whose only job is to reveal the tooltip. none never opens on touch.',
+				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (a button, link, or form control), whose tap belongs to the control; an aria-disabled control performs none, so a tap on it opens its reason. tap always opens, for a button whose only job is to reveal the tooltip; for an info icon, use InfoTip. none never opens on touch.',
 			default: "'auto'"
 		},
 		{
@@ -133,7 +145,8 @@ export default {
 		{
 			name: 'isOpen',
 			type: 'boolean',
-			description: 'Controlled open state for the tooltip.'
+			description:
+				'Controlled open state for the tooltip. Held closed, focus that would open it calls onOpenChange(true) and shows nothing; held open, Escape calls onOpenChange(false) and it stays.'
 		}
 	]
 };

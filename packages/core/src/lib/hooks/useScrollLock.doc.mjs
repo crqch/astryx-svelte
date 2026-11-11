@@ -13,12 +13,12 @@ export default {
 		'lock',
 		'modal',
 		'dialog',
-		'body',
+		'page',
 		'prevent',
 		'background',
 		'ios',
 		'safari',
-		'fixed',
+		'touch',
 		'scrollbar',
 		'gutter',
 		'layout shift',
@@ -28,14 +28,14 @@ export default {
 		{
 			name: 'isLocked',
 			type: '() => boolean',
-			description: 'whether body scroll should be locked.',
+			description: 'whether page scroll should be locked.',
 			required: true
 		}
 	],
 	returns: [],
 	usage: {
 		description:
-			'Locks body scroll when active by pinning the body with position: fixed. This prevents background scrolling behind modals and dialogs, which is necessary for iOS Safari where overscroll-behavior: contain does not work. Restores the original scroll position when unlocked. Pinning hides the document scrollbar, so where that scrollbar takes layout space (desktop) the hook holds its gutter open with scrollbar-gutter: stable for the duration of the lock. The page, including any position: fixed chrome, does not shift sideways.',
+			'Locks page scroll while active and keeps the page where it is. The page gets overflow: hidden (on the root, or on body when its own overflow is the one the viewport uses), which stops wheel, keyboard and scrollbar scrolling, and overscroll-behavior-y: none on the root and body, which stops the overscroll bounce while the lock holds. Where the primary pointer is coarse (phones and tablets), a one-finger pan that would scroll the page is cancelled, because iOS Safari scrolls an overflow: hidden page under a finger; pans that a scroller inside the overlay can take, drags on a native range input, pinch-zoom, and one-finger drags on a pinch-zoomed page (which pan the zoomed view) still work. The scroll offset never changes, so nothing jumps when the lock starts or ends, and iOS Safari keeps its toolbar as it was. Where the hidden scrollbar takes layout space (desktop), the hook holds its gutter open with scrollbar-gutter: stable, so the page, including any position: fixed chrome, does not shift sideways.',
 		bestPractices: [
 			{
 				guidance: true,

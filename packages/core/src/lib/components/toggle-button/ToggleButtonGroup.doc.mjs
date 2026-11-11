@@ -10,25 +10,16 @@ export default {
 	displayName: 'Toggle Button Group',
 	subComponentOf: 'ToggleButton',
 	description:
-		'Groups toggle buttons for exclusive (single) or multi-select behavior. Uses discriminated union on type for type-safe value/onChange.',
-	keywords: [
-		'toggle',
-		'togglebutton',
-		'pressed',
-		'toolbar',
-		'formatting',
-		'segmented',
-		'button-group',
-		'exclusive',
-		'multi-select'
-	],
+		"Groups toggle buttons for exclusive (single) or multi-select behavior. Uses discriminated union on type for type-safe value/onChange. Under the touch presentation a press tracks like a menu: press a toggle and slide across the others, and the highlight follows. Only the toggle you lift on toggles, and lifting outside the group toggles nothing. With a finger, each toggle's target grows toward 44 px, up to half the gap to a neighbour, without the toggles growing.",
+	keywords: ['togglegroup', 'buttontogglegroup'],
 	group: 'Button',
 	category: 'Action',
 	props: [
 		{
 			name: 'children',
 			type: 'Snippet',
-			description: 'ToggleButton children.',
+			description:
+				'ToggleButton children. Give each member a value; the group owns its pressed state and ignores its isPressed, onPressedChange, and pressedChangeAction props. Member activation calls the group’s onChange without starting a member Action transition.',
 			required: true
 		},
 		{

@@ -59,8 +59,30 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Control',
+				required: true,
+				description: 'Container for the mutually exclusive segment choices.'
+			},
+			{
+				name: 'Segment',
+				required: true,
+				description: 'Individual choice within the control.'
+			},
+			{
+				name: 'Label',
+				required: false,
+				description: 'Visible text identifying a segment when its label is not hidden.'
+			},
+			{
+				name: 'Icon',
+				required: false,
+				description: 'Optional caller-supplied icon shown inside a segment.'
+			}
+		],
 		description:
-			'A segmented button group that allows users to make a single selection from a small set of mutually exclusive options. Use SegmentedControl when all options should be visible at once and the selection controls a value or mode, not page navigation.',
+			'A segmented button group that allows users to make a single selection from a small set of mutually exclusive options. Use SegmentedControl when all options should be visible at once and the selection controls a value or mode, not page navigation. Under a finger, on a touch device (a coarse primary pointer), the selection slides to the new segment, whether a tap, an arrow key or a new value moved it; with Reduce Motion nothing travels: the old selection fades out as the new one fades in. There, dragging the selected segment carries the selection along with the selected label’s colour following it, and the segment under the finger is chosen when it lets go (letting go outside the control selects nothing); a tap selects through the browser’s click; a pressed segment shows the shared pressed overlay, and nothing lifts or dims. With a mouse or a pen every change, a click included, slides on the theme’s duration and easing, and dragging the selected segment carries it as a finger does.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -85,7 +107,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled SegmentedControl in Tooltip to explain why it is disabled; disabled controls swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled SegmentedControl in Tooltip to explain why it is disabled; the reason is then not attached to the control or its segments. Use the disabledMessage prop instead.'
 			}
 		]
 	},
@@ -124,20 +146,21 @@ export default {
 			name: 'layout',
 			type: "'fill' | 'hug'",
 			description:
-				'Layout mode. hug (default) sizes segments to content; fill stretches them equally to fill the container.',
+				'Layout mode. hug (default) sizes segments to content, capped at the container width (segment labels truncate when it is too narrow); fill stretches them equally to fill the container.',
 			default: "'hug'"
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Whether the entire control is disabled.',
+			description:
+				'Whether the entire control is disabled. The selected segment keeps the Tab stop, announced as disabled (aria-disabled), and nothing can be selected.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the control is disabled. Applies to the whole-group disabled state (isDisabled), not per segment. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the control focusable via aria-disabled (selection stays blocked). Use this instead of wrapping a disabled SegmentedControl in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the control is disabled. Applies to the whole-group disabled state (isDisabled), not per segment. With isDisabled, shows a tooltip on hover/keyboard focus, and the reason describes each segment (selection stays blocked). Use this instead of wrapping a disabled SegmentedControl in Tooltip, so the reason is attached to the control itself.'
 		},
 		{
 			name: 'children',

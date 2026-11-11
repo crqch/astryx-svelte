@@ -10,20 +10,27 @@ export default {
 	displayName: 'Layout Panel',
 	subComponentOf: 'Layout',
 	description: 'Sidebar for navigation, settings, or inspector panels.',
-	keywords: [
-		'layout',
-		'container',
-		'content',
-		'flex',
-		'box',
-		'wrapper',
-		'scaffold',
-		'page',
-		'shell'
-	],
+	keywords: ['layout', 'container', 'content', 'flex', 'box', 'wrapper', 'page', 'regions'],
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			children: 'Panel Content',
+			hasDivider: true,
+			width: 200
+		},
+		wrapper: {
+			component: 'Layout',
+			props: {
+				content: {
+					__element: 'LayoutContent',
+					props: {},
+					children: 'Main content area'
+				}
+			}
+		}
+	},
 	props: [
 		{
 			name: 'children',
@@ -33,14 +40,15 @@ export default {
 		{
 			name: 'hasDivider',
 			type: 'boolean',
-			description: 'Border on the appropriate edge.',
+			description:
+				"Line on the edge that faces the content: the inline end in the start slot, the inline start in the end slot. Without it and without padding, the panel and the content share one gap. The Layout's defaultHasDividers does not apply. Beside a ResizeHandle that draws its own line, leave it false.",
 			default: 'false'
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
-				'Internal padding using the spacing scale. Overrides the default padding from the layout container.'
+				'Internal padding on every edge, using the spacing scale. Replaces the automatic inset and the gap shared with the content. 0 is full bleed.'
 		},
 		{
 			name: 'isScrollable',
@@ -51,7 +59,8 @@ export default {
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Accessible label for the landmark element.'
+			description:
+				'Accessible label for the landmark element. While the region scrolls, it also names the scrolling region, which otherwise takes a translated "Content".'
 		},
 		{
 			name: 'role',
@@ -62,13 +71,18 @@ export default {
 			name: 'width',
 			type: 'SizeValue',
 			description:
-				'Width of the panel. Numbers are treated as pixels, strings are used as-is. Ignored when resizable is provided; the hook controls width.'
+				"Width of the panel. Numbers are treated as pixels, strings are used as-is. Ignored when resizable is provided; the hook controls width. Beside a ResizeHandle given a useResizable region's props, a panel at width={region.size} is inert while the region is collapsed, and focus inside it moves to the handle as it collapses."
 		},
 		{
 			name: 'resizable',
 			type: 'ResizableProps',
 			description:
-				'Resize props from useResizable(). When provided, the hook drives the panel width and a ResizeHandle should be placed adjacent to the panel.'
+				"The output of useResizable(), or its props. When provided, the hook drives the panel width and a ResizeHandle should be placed adjacent to the panel. Carries the region's axis ('horizontal' | 'vertical'), which must match the adjacent ResizeHandle's direction. With the hook's own value, the panel slides closed and open from the edge facing its ResizeHandle; a hand-built object does not slide. Either way, focus inside the panel moves to its ResizeHandle as it collapses, and the panel is inert while collapsed."
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the panel element.'
 		}
 	]
 };

@@ -43,7 +43,7 @@ export default {
 				name: 'Container',
 				required: true,
 				description:
-					'The interactive wrapper. Renders as an anchor when a URL is provided, or a span otherwise.'
+					'The root wrapper. Accepted source URLs render an anchor; missing or rejected URLs render an inert span.'
 			},
 			{
 				name: 'Icon',
@@ -79,7 +79,7 @@ export default {
 			name: 'source',
 			type: 'CitationSource',
 			description:
-				'The citation source object containing title, url, an optional image src, and an optional icon node.',
+				'The citation source object containing title, url, an optional image src, and an optional icon node. The url follows the shared navigation rule described on the Link `href` prop; rejected destinations leave the citation visible without navigation. Image src uses separate resource handling.',
 			required: true
 		},
 		{

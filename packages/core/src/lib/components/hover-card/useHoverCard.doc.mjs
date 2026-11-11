@@ -41,14 +41,14 @@ export default {
 			name: 'focusTrigger',
 			type: "'auto' | 'always' | 'never'",
 			description:
-				'When focus should open the hover card. auto only attaches focus listeners to naturally focusable elements.',
+				'When focus should open the hover card. auto opens when the trigger itself takes focus, or focus lands inside a trigger that is focusable at that moment, so a roving-tabindex member opens when the arrow keys reach it.',
 			default: "'auto'"
 		},
 		{
 			name: 'touchTrigger',
 			type: "'none' | 'auto' | 'tap'",
 			description:
-				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own; tap always opens; none never opens on touch.',
+				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (an aria-disabled control performs none); tap always opens; none never opens on touch.',
 			default: "'auto'"
 		},
 		{

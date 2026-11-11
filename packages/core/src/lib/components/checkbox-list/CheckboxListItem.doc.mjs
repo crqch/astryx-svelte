@@ -10,7 +10,7 @@ export default {
 	displayName: 'Checkbox List Item',
 	subComponentOf: 'CheckboxList',
 	description:
-		'Individual checkbox item with label, description, and end content slot. Works in collection mode (inside CheckboxList) or standalone mode (inside List).',
+		'Individual checkbox item with label, description, and end content slot. Works in collection mode (inside a CheckboxList with a value array) or standalone mode (inside List, or inside a CheckboxList without value, such as a select-all item). On a touch screen (a coarse primary pointer), a toggleable row is one press target: a touch on the label, the description or the box itself shows the pressed state on the row and its checkbox together. Where the primary pointer is fine, the box keeps its own press.',
 	keywords: [
 		'checkboxlist',
 		'checkbox',
@@ -27,29 +27,38 @@ export default {
 			name: 'label',
 			type: 'string | Snippet',
 			description:
-				'Primary text label for the item. A plain string names the checkbox automatically; a rich (ReactNode) label should be paired with aria-label so screen readers get a concise name.',
+				'Primary text label for the item. Rich labels may contain links or buttons, which keep their own behavior without toggling the item. A ReactNode label names the checkbox from its visible text; pass aria-label only when that text is absent, or include all visible label words in the override.',
 			required: true
 		},
 		{
 			name: 'aria-label',
 			type: 'string',
 			description:
-				'Plain-text accessible name for the checkbox when label is a ReactNode. Applied to the checkbox control. Without it, rich-label items all announce as the generic "Checkbox" to screen readers.'
+				'Plain-text accessible name for the checkbox, replacing the one derived from label. Applied to the checkbox control. Use it when a rich label has no visible text; otherwise the value must retain every visible label word.'
 		},
 		{
 			name: 'value',
 			type: 'string',
-			description: 'Identity key (required inside CheckboxList).'
+			description:
+				'Identity key. Required when the parent CheckboxList has a value array; the item throws without it there.'
 		},
 		{
 			name: 'description',
 			type: 'string',
-			description: 'Secondary text below the label.'
+			description:
+				"Secondary content below the label. String or ReactNode. Exposed as the checkbox's accessible description through aria-describedby, so assistive technology can tell it is the explanation for that choice."
 		},
 		{
 			name: 'endContent',
 			type: 'Snippet',
 			description: 'Content rendered after the label area.'
+		},
+		{
+			name: 'align',
+			type: "'center' | 'start' | 'first-line'",
+			description:
+				'Vertical alignment of the start and end content against the label, passed through to Item unchanged. `first-line` keeps a small mark (a checkbox) level with the first line of a wrapped label. See Item.align.',
+			default: "'center'"
 		},
 		{
 			name: 'isDisabled',
@@ -67,12 +76,14 @@ export default {
 		{
 			name: 'isChecked',
 			type: "boolean | 'indeterminate'",
-			description: 'Direct checked state (standalone mode only).'
+			description:
+				'Direct checked state in standalone mode: inside List, or inside a CheckboxList without value (for example, a select-all item). Ignored when the parent CheckboxList has a value array.'
 		},
 		{
 			name: 'onCheck',
 			type: '(checked: boolean) => void',
-			description: 'Direct check handler (standalone mode only).'
+			description:
+				"Direct check handler in standalone mode: inside List, or inside a CheckboxList without value. Ignored when the parent CheckboxList has a value array; that list's onChange receives the change."
 		}
 	]
 };

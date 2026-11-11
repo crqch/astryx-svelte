@@ -24,6 +24,14 @@ export default {
 	usage: {
 		description:
 			'Wraps your app to set the active locale and (optionally) merge additional translation catalogs + per-locale overrides. Astryx components inside the subtree resolve their strings against this context. If no provider is present, components fall back to the shipped English defaults.',
+		anatomy: [
+			{
+				name: 'Provider boundary',
+				required: true,
+				description:
+					'A nonvisual context boundary that supplies locale, message catalogs, overrides, and direction to descendant Astryx components, and a calendar system to `Calendar`. It renders no DOM element.'
+			}
+		],
 		bestPractices: [
 			{
 				guidance: true,
@@ -38,7 +46,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Use real BCP 47 tags such as `fr`, `pt-BR`, or `ar`; regional locales fall back to their base language before English.'
+					'Use real BCP 47 tags such as `fr-FR`, `pt-BR`, or `ar-SA`; regional locales fall back to their base language before English.'
 			},
 			{
 				guidance: true,
@@ -46,9 +54,14 @@ export default {
 					"Set the `dir` attribute on `<html>` (or a wrapping element) yourself; the provider does not set it. Astryx components mirror layout and directional icons from the DOM `dir`, so an RTL locale won't visually mirror without it. Use `getLocaleDirection(locale)` to derive the value for both the provider and the DOM."
 			},
 			{
+				guidance: true,
+				description:
+					'Set `calendar` to show `Calendar`, `DateInput`, `DateRangeInput`, and `DateTimeInput` in another calendar system and write Timestamp, PowerSearch, and Schedule dates in it. A locale never selects the calendar: `fa-IR` shows Gregorian dates until you set `calendar="persian"`, and a `-u-ca-` keyword in `locale`, as in `th-TH-u-ca-buddhist`, keeps Gregorian dates too. Date values stay Gregorian ISO strings.'
+			},
+			{
 				guidance: false,
 				description:
-					'Cast custom catalog maps to `any`; the i18n package exports `MessagesByLocale` and `Catalog` for local catalog typing.'
+					'Cast custom catalog maps to `any`; the i18n package exports `ProviderMessagesByLocale`, `MessagesByLocale`, `Catalog`, and `RuntimeCatalog` for local catalog typing.'
 			}
 		]
 	},
@@ -64,7 +77,7 @@ export default {
 			name: 'messages',
 			type: 'MessagesByLocale',
 			description:
-				'Optional map of BCP 47 tag to translation catalog. Import shipped catalogs from `@astryx-svelte/core`; the shipped "en" catalog is always available and does not need to be listed here.'
+				'Optional map of BCP 47 tag to a rich or generated runtime catalog. Import compact shipped catalogs from `@astryx-svelte/core`; the shipped "en" catalog is always available and does not need to be listed here.'
 		},
 		{
 			name: 'overrides',
@@ -77,6 +90,12 @@ export default {
 			type: "'ltr' | 'rtl'",
 			description:
 				'Explicit text-direction override for the context. When omitted, direction is derived from `locale` via `Intl.Locale.getTextInfo()`. This sets the direction Astryx reads, but it does NOT set the DOM `dir` attribute; you must set `dir` on `<html>` (or a wrapping element) yourself, since Astryx components mirror layout and directional icons from the DOM `dir`, not from this prop. Set both to the same value and keep them in sync.'
+		},
+		{
+			name: 'calendar',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
+			description:
+				"Calendar system of the subtree, such as 'persian', 'hebrew', or 'buddhist'. `Calendar`, `DateInput`, `DateRangeInput`, and `DateTimeInput` show it, and Timestamp, PowerSearch, and Lab's Schedule write their dates in it. When omitted, the calendar is Gregorian: a locale never selects it, neither by its default calendar nor by a `-u-ca-` keyword. A component's own `calendar` prop takes precedence. Values stay Gregorian ISO dates. Calendars other than gregory, iso8601, buddhist, roc, and japanese need `Temporal`; the context keeps the requested calendar, and where the runtime lacks `Temporal`, these components show Gregorian dates and warn in development. Load a polyfill such as `temporal-polyfill/full/global` on the server and in the browser."
 		},
 		{
 			name: 'children',

@@ -9,7 +9,8 @@ export default {
 	name: 'DropdownMenuItem',
 	displayName: 'Dropdown Menu Item',
 	subComponentOf: 'DropdownMenu',
-	description: 'Helper component for custom item rendering with consistent styling.',
+	description:
+		'One action or destination row in the pointer presentation of DropdownMenu. The parent menu owns keyboard navigation; the row owns activation, disabled state, destination behavior, content layout, and its theme target. Supported host attributes, DOM handlers, className, style, xstyle, and ref reach or compose on the role="menuitem" root.',
 	keywords: [
 		'dropdown',
 		'menu',
@@ -24,6 +25,48 @@ export default {
 	group: 'DropdownMenu',
 	category: 'Action',
 	isHiddenFromOverview: true,
+	theming: {
+		targets: [
+			{
+				className: 'astryx-dropdown-menu-item',
+				visualProps: ['size', 'variant']
+			}
+		]
+	},
+	usage: {
+		description:
+			'Use DropdownMenuItem inside DropdownMenu compound mode for one action or destination. Keep label, description, icon, and endContent non-interactive; controls belong in separate rows or the menu header/footer.',
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Use href for a destination so LinkProvider, modified clicks, middle clicks, and browser link affordances remain available.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use hasCloseOnSelect=false only when activation reports a result in place on the same row.'
+			},
+			{
+				guidance: false,
+				description:
+					'Put buttons, links, or other focusable controls inside label, description, or endContent. Each menu row is one interactive target.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Row',
+				required: true,
+				description:
+					'The role="menuitem" root that owns activation, disabled state, destination behavior, and theme state.'
+			},
+			{
+				name: 'Content',
+				required: true,
+				description: 'The non-interactive label plus optional icon, description, and end content.'
+			}
+		]
+	},
 	playground: {
 		defaults: {
 			label: 'Edit',
@@ -40,7 +83,8 @@ export default {
 		{
 			name: 'label',
 			type: 'string | Snippet',
-			description: 'Primary label text.'
+			description: 'Primary label text.',
+			required: true
 		},
 		{
 			name: 'description',
@@ -48,9 +92,39 @@ export default {
 			description: 'Secondary description text displayed below the label.'
 		},
 		{
+			name: 'onClick',
+			type: '() => void',
+			description:
+				"Callback when the item is selected. A keyboard activation arrives as a synthesized click carrying the key's modifiers. On a row with `href` it runs before the browser navigates and is skipped for a modified click (⌘, Ctrl, Shift, Alt, middle button), which is left to the browser."
+		},
+		{
+			name: 'href',
+			type: 'string',
+			description:
+				'Address the row navigates to. The row then renders as a real anchor with role="menuitem" (through LinkProvider), so a modified click or a middle click keeps the browser\'s meaning — a new tab — instead of running onClick.'
+		},
+		{
+			name: 'target',
+			type: "'_blank' | '_self'",
+			description: 'Link target. Only used with href.'
+		},
+		{
+			name: 'rel',
+			type: 'string',
+			description:
+				'Link relationship. noopener noreferrer is added for target="_blank". Only used with href.'
+		},
+		{
+			name: 'isDisabled',
+			type: 'boolean',
+			description:
+				'Whether the row is unavailable. Disabled rows expose aria-disabled, remove link destinations, and suppress activation.',
+			default: 'false'
+		},
+		{
 			name: 'endContent',
 			type: 'Snippet',
-			description: 'Additional content rendered after the label and description.'
+			description: 'Non-interactive content rendered after the label and description.'
 		},
 		{
 			name: 'hasCloseOnSelect',
@@ -71,6 +145,12 @@ export default {
 			type: 'StyleArg',
 			description:
 				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description:
+				'Ref forwarded to the row root, the element carrying role="menuitem". Register the row with an element-keyed observer or overlay.'
 		}
 	]
 };

@@ -25,15 +25,18 @@ export default {
 		targets: [
 			{
 				className: 'astryx-collapsible',
-				visualProps: ['density']
+				visualProps: ['density'],
+				states: ['divided']
 			},
 			{
 				className: 'astryx-collapsible-trigger',
-				visualProps: ['density']
+				visualProps: ['density', 'chevronPosition'],
+				states: ['open', 'disabled']
 			},
 			{
 				className: 'astryx-collapsible-content',
-				visualProps: ['density']
+				visualProps: ['density'],
+				states: ['open']
 			},
 			{
 				className: 'astryx-collapsible-group',
@@ -45,6 +48,11 @@ export default {
 		description:
 			'Collapsible hides and reveals content behind a trigger button. Use it in settings panels, FAQ pages, or detail views to keep the page scannable while letting users drill into sections they care about. Wrap multiple collapsibles in CollapsibleGroup for accordion behavior. For custom collapsible components, use the `useCollapsible` hook directly (`astryx hook useCollapsible`).',
 		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Give every trigger a meaningful accessible name. Visible text usually supplies it; custom trigger content should include VisuallyHidden text when its visuals do not.'
+			},
 			{
 				guidance: true,
 				description:
@@ -88,6 +96,12 @@ export default {
 		],
 		anatomy: [
 			{
+				name: 'Container',
+				required: true,
+				description:
+					'The root that contains one trigger and its controlled content and, in a divided group, paints the item divider.'
+			},
+			{
 				name: 'Trigger',
 				required: true,
 				description:
@@ -96,12 +110,19 @@ export default {
 			{
 				name: 'Chevron',
 				required: false,
-				description: 'Animated arrow that rotates to show open or closed state.'
+				description:
+					'Animated disclosure arrow. It follows the label by default; chevronPosition="start" moves it ahead of the label, points inward when collapsed (mirrored under RTL), and turns down when expanded.'
 			},
 			{
 				name: 'Content',
 				required: false,
 				description: 'The area that hides or reveals when the trigger is clicked.'
+			},
+			{
+				name: 'Group container',
+				required: false,
+				description:
+					'The CollapsibleGroup wrapper rendered when dividers are enabled. It contains the coordinated items and carries their density.'
 			}
 		]
 	},
@@ -125,13 +146,15 @@ export default {
 		{
 			name: 'defaultIsOpen',
 			type: 'boolean',
-			description: 'Default open state (uncontrolled).',
+			description:
+				'Default open state for standalone uncontrolled usage. Ignored when value binds the item to a surrounding CollapsibleGroup.',
 			default: 'true'
 		},
 		{
 			name: 'isOpen',
 			type: 'boolean',
-			description: 'Controlled open state.'
+			description:
+				'Controlled open state for standalone usage. Ignored when value binds the item to a surrounding CollapsibleGroup.'
 		},
 		{
 			name: 'isDisabled',
@@ -143,13 +166,52 @@ export default {
 		{
 			name: 'onOpenChange',
 			type: '(isOpen: boolean) => void',
-			description: 'Callback invoked when the open state changes.'
+			description:
+				'Callback invoked when standalone open state changes. A surrounding CollapsibleGroup owns grouped state and calls its onChange instead.'
+		},
+		{
+			name: 'chevronPosition',
+			type: "'start' | 'end'",
+			description:
+				"Logical position of Collapsible's disclosure chevron. `end` (default) follows the label, pointing down when collapsed and up when expanded. `start` precedes the label, pointing inward toward content when collapsed (mirrored under RTL) and down when expanded. Inside a CollapsibleGroup this defaults to the group's chevronPosition.",
+			default: "'end'"
 		},
 		{
 			name: 'value',
 			type: 'string',
 			description:
-				'Identifier used for group coordination. Required when placed inside an CollapsibleGroup.'
+				'Identifier used for group coordination. When set inside a CollapsibleGroup, the group owns open state and its onChange is the notification callback.'
+		},
+		{
+			name: 'animatedLayout',
+			type: 'AnimatedLayout',
+			description:
+				'The handle from useAnimatedLayout({containerRef}). With it, opening and closing glides the content after this Collapsible, up to that container, on one shared motion role instead of jumping, and the revealed content and the chevron move on the same motion. Without it, the content after it takes its place at once.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the root collapsible element.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'CSS class name for the root element. Prefer xstyle for styling.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description: 'Inline styles. Prefer xstyle for StyleX-optimized styling.'
+		},
+		{
+			name: 'data-testid',
+			type: 'string',
+			description: 'Test selector for automated testing frameworks.'
 		}
 	]
 };

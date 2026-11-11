@@ -49,7 +49,7 @@ export default {
 			name: 'theme',
 			type: 'DefinedTheme',
 			description:
-				'Theme object to apply. Prefer built theme objects for static production themes; use runtime `defineTheme()` for dynamic themes.',
+				"Theme object to apply. Prefer built theme objects for static production themes; use runtime `defineTheme()` for dynamic themes. Its `motion` can set `tempo` (0.75–1.5) and `character` (`'crisp' | 'standard' | 'expressive'`).",
 			required: true
 		},
 		{

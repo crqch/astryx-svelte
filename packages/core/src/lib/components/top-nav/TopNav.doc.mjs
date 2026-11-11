@@ -114,7 +114,7 @@ export default {
 			name: 'centerContent',
 			type: 'Snippet',
 			description:
-				'Center content slot (tabs, search bar, primary navigation): when provided, switches the layout to a three-column CSS grid for true horizontal centering.'
+				'Center content slot (tabs, search bar, primary navigation): when provided, switches the layout to three regions that keep it at the middle of the bar while they fit one row; the bar wraps when they do not.'
 		},
 		{
 			name: 'endContent',

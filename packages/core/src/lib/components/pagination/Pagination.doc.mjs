@@ -41,6 +41,69 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Pagination',
+				required: true,
+				description:
+					'Navigation landmark containing the current paging controls and optional page-size selector.'
+			},
+			{
+				name: 'Page-size selector',
+				required: false,
+				description: 'Optional Selector for choosing how many items appear per page.'
+			},
+			{
+				name: 'First/last buttons',
+				required: false,
+				description: 'Optional Button controls that jump to the first or last known page.'
+			},
+			{
+				name: 'Previous/next buttons',
+				required: true,
+				description: 'Button controls that move backward or forward through the pages.'
+			},
+			{
+				name: 'Page number button',
+				required: false,
+				description: 'Button for one directly selectable page in the numbered presentation.'
+			},
+			{
+				name: 'Ellipsis',
+				required: false,
+				description: 'Visual omission marker between non-adjacent page-number buttons.'
+			},
+			{
+				name: 'Count readout',
+				required: false,
+				description: 'Text showing the current item range and total item count.'
+			},
+			{
+				name: 'Compact readout',
+				required: false,
+				description: 'Text showing the current page and total page count.'
+			},
+			{
+				name: 'Dot',
+				required: false,
+				description: 'Page indicator control that reflects and changes the active page.'
+			},
+			{
+				name: 'Page input label',
+				required: false,
+				description: 'Leading visible label for the editable page-number field.'
+			},
+			{
+				name: 'Page input',
+				required: false,
+				description: 'NumberInput used to enter a page directly.'
+			},
+			{
+				name: 'Page input total',
+				required: false,
+				description: 'Trailing text showing the known total page count.'
+			}
+		],
 		description:
 			'Pagination lets users step through pages of content. Place it below a table, list, or card grid so users can move forward and backward through results. Pick a variant to match the context: numbered pages for data tables, a count for large lists, compact for tight spaces, or dots for carousels.',
 		bestPractices: [
@@ -150,7 +213,7 @@ export default {
 			name: 'variant',
 			type: "'none' | 'compact' | 'input' | 'count' | 'pages' | 'dots'",
 			description:
-				"Visual variant controlling what appears between prev/next buttons. 'pages' shows page number buttons with ellipsis, 'count' shows 'X-Y of Z' text, 'compact' shows 'Page X of Y', 'dots' shows dot indicators, 'input' shows an editable page-number box with a leading label ('Page [ n ] / N') flanked by first/last buttons by default (the box needs a known total to clamp against, so it is disabled in cursor/hasMore mode), 'none' shows just prev/next buttons.",
+				"Visual variant controlling what appears between prev/next buttons. 'pages' shows page number buttons with ellipsis, 'count' shows 'X-Y of Z' text, 'compact' shows 'Page X of Y' (add first/last buttons with hasFirstLast), 'dots' shows dot indicators, 'input' shows an editable page-number box with a leading label ('Page [ n ] / N') flanked by first/last buttons by default (the box needs a known total to clamp against, so it is disabled in cursor/hasMore mode), 'none' shows just prev/next buttons.",
 			default: "'pages'"
 		},
 		{
@@ -163,8 +226,8 @@ export default {
 			name: 'hasFirstLast',
 			type: 'boolean',
 			description:
-				"Whether to show first/last («/») double-chevron buttons flanking prev/next. Only applies to the 'input' variant; omitted when the page count is unknown (cursor/hasMore pagination).",
-			default: 'true'
+				"Whether to show first/last («/») double-chevron buttons flanking prev/next. Applies to the 'input' variant (shown unless false) and the 'compact' variant (shown only when true); other variants ignore it. Omitted when the page count is unknown (cursor/hasMore pagination).",
+			default: "true for 'input'; false for 'compact'"
 		},
 		{
 			name: 'step',

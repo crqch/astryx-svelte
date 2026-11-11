@@ -9,7 +9,8 @@ export default {
 	name: 'FieldLabel',
 	displayName: 'Field Label',
 	subComponentOf: 'Field',
-	description: 'Standalone label component with optional/required indicators and tooltip support.',
+	description:
+		'Standalone label group for one control or a caller-labelled group, with optional supporting text, optionality indicators, icon, and tooltip.',
 	keywords: [
 		'field',
 		'formfield',
@@ -29,7 +30,7 @@ export default {
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Label text.',
+			description: 'Label text, always rendered for accessibility.',
 			required: true
 		},
 		{
@@ -39,38 +40,87 @@ export default {
 			required: true
 		},
 		{
+			name: 'labelID',
+			type: 'string',
+			description:
+				'ID applied to the label element itself. Use it with `aria-labelledby` when `isGroupLabel` is true.'
+		},
+		{
+			name: 'isGroupLabel',
+			type: 'boolean',
+			description: 'Render a span that can name a group instead of a native label for one control.',
+			default: 'false'
+		},
+		{
 			name: 'isLabelHidden',
 			type: 'boolean',
-			description: 'Visually hide the label.',
+			description:
+				'Visually hide the label and description while keeping both available to assistive technology.',
 			default: 'false'
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Whether the associated input is disabled.',
+			description: 'Use disabled label presentation for the associated control.',
 			default: 'false'
 		},
 		{
 			name: 'isOptional',
 			type: 'boolean',
-			description: 'Show "Optional" indicator.',
+			description:
+				"Show the localized optional indicator unless it matches FormLayout's default optionality.",
 			default: 'false'
 		},
 		{
 			name: 'isRequired',
 			type: 'boolean',
-			description: 'Show "Required" indicator.',
+			description:
+				"Show the localized required indicator unless it matches FormLayout's default optionality.",
 			default: 'false'
 		},
 		{
 			name: 'labelIcon',
 			type: 'Snippet',
-			description: 'Icon before the label text. See `astryx docs icons` for valid semantic names.'
+			description:
+				'Icon or rendered icon content before the label text. See `astryx docs icons` for semantic names.'
 		},
 		{
 			name: 'labelTooltip',
 			type: 'string',
-			description: 'Tooltip text for info icon at end of label.'
+			description:
+				'Help text for an info button after the label, named "About {label}". Hover and keyboard focus preview it; a tap, click, Enter, or Space opens it and never focuses or toggles the control.'
+		},
+		{
+			name: 'description',
+			type: 'string | Snippet',
+			description:
+				"Supporting content displayed below the label and kept separate from the control's accessible name."
+		},
+		{
+			name: 'descriptionID',
+			type: 'string',
+			description:
+				'ID applied to the supporting description for caller-owned `aria-describedby` wiring.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLLabelElement | null',
+			description: 'Ref forwarded to the label element. Group mode currently renders a span.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description: 'StyleX styles applied to the label element after its base and state styles.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'CSS class name appended to the label element.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description: 'Inline styles applied to the label element after StyleX inline styles.'
 		}
 	]
 };

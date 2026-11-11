@@ -41,14 +41,14 @@ export default {
 			name: 'focusTrigger',
 			type: "'auto' | 'always' | 'never'",
 			description:
-				'When focus should open the tooltip. auto only attaches focus listeners to naturally focusable elements.',
+				'When focus should open the tooltip. auto opens when the trigger itself takes focus, or focus lands inside a trigger that is focusable at that moment, so a roving-tabindex member opens when the arrow keys reach it.',
 			default: "'auto'"
 		},
 		{
 			name: 'touchTrigger',
 			type: "'none' | 'auto' | 'tap'",
 			description:
-				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own; tap always opens (an info icon rendered as a button); none never opens on touch.',
+				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (an aria-disabled control performs none); tap always opens (a button whose only job is revealing the tooltip); none never opens on touch.',
 			default: "'auto'"
 		},
 		{
@@ -61,7 +61,7 @@ export default {
 			name: 'isOpen',
 			type: 'boolean',
 			description:
-				'Controlled open state. true force-shows, false force-hides, undefined lets hover/focus manage visibility.'
+				'Controlled open state. true force-shows; false force-hides, and focus that would show it calls onShow; undefined lets hover/focus manage visibility.'
 		},
 		{
 			name: 'isDefaultOpen',
@@ -72,7 +72,8 @@ export default {
 		{
 			name: 'onShow',
 			type: '() => void',
-			description: 'Callback fired when the tooltip becomes visible.'
+			description:
+				'Callback fired when the tooltip becomes visible. Under isOpen={false}, it reports focus that would show the tooltip.'
 		},
 		{
 			name: 'onHide',
@@ -112,6 +113,18 @@ export default {
 			type: "(children: string | Snippet, props?: Omit<ContextRenderProps, 'positioning'>) => string | Snippet",
 			description:
 				'Render function for the anchor-positioned tooltip content. The positioning opt-out is excluded: the tooltip always derives its position from placement/alignment.'
+		},
+		{
+			name: 'show',
+			type: '() => void',
+			description:
+				'Opens the tooltip now and keeps it open until hide(), Escape, a press outside, or focus leaving its trigger. Its text is announced once, and onShow fires. Under a controlled isOpen it only calls onShow. Does nothing while isEnabled is false.'
+		},
+		{
+			name: 'hide',
+			type: '() => void',
+			description:
+				'Closes the tooltip now, and onHide fires. Under a controlled isOpen it only calls onHide.'
 		}
 	],
 	usage: {
@@ -127,6 +140,11 @@ export default {
 				guidance: true,
 				description:
 					'Prefer the Tooltip component for standard wrapping; use the hook when the trigger is not a simple child.'
+			},
+			{
+				guidance: true,
+				description:
+					'For a toggle-style trigger, have your own button call show() and hide() on each press. Give it aria-describedby and aria-controls set to describedBy, and aria-expanded (true while show() holds the tooltip, false after hide() or onHide), and keep its own accessible name. For an info icon, use InfoTip instead.'
 			},
 			{
 				guidance: false,

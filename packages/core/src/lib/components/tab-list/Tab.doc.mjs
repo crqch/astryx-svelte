@@ -90,7 +90,8 @@ export default {
 		{
 			name: 'endContent',
 			type: 'Snippet',
-			description: 'Content rendered after the label, such as a badge count or status dot.'
+			description:
+				'Content rendered after the label, such as a badge count or status dot. The tab is one button, so endContent holds only non-interactive content: no button, link, InfoTip, or other focusable control. To explain a tab, anchor a Tooltip on the Tab through its ref, render it after the TabList, and put a decorative info Icon here.'
 		},
 		{
 			name: 'xstyle',

@@ -32,12 +32,17 @@ export default {
 	},
 	usage: {
 		description:
-			'TimeInput lets users enter a time of day and converts it to a standard format. It also allows users to adjust times using the arrow keys. Use it in forms, scheduling flows, or any interface where users need to select a specific time.',
+			"TimeInput uses a browser/OS time picker on coarse pointers by default and Astryx's typed field on fine pointers. It converts values to a standard format and supports arrow-key adjustment on the typed surface. Use it in forms, scheduling flows, or any interface where users need to select a specific time.",
 		bestPractices: [
 			{
 				guidance: true,
 				description:
-					"Choose the hour format (12h or 24h) that matches your audience's locale: 12-hour with AM/PM for US-centric UIs, 24-hour for international or technical contexts."
+					"Base props such as ref, id, data-*, aria-*, and DOM event handlers go to the time input, the element that is focused and announced. A DOM handler runs after TimeInput's own handler for the same event and still receives events it handled (including ones it called preventDefault on), so it cannot cancel built-in behavior."
+			},
+			{
+				guidance: true,
+				description:
+					"Leave hourFormat unset so the field follows the InternationalizationProvider locale's hour cycle (12-hour in en-US, 24-hour in en-GB or de-DE). Set it only when the field itself needs a fixed format, and carry a person's own 12/24-hour preference on the provider locale (e.g. 'en-US-u-hc-h23') rather than on each field."
 			},
 			{
 				guidance: true,
@@ -77,19 +82,21 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled TimeInput in Tooltip to explain why it is disabled; disabled triggers swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled TimeInput in Tooltip to explain why it is disabled. Use the disabledMessage prop instead, which ties the reason to the field.'
 			}
 		],
 		anatomy: [
 			{
 				name: 'Clock icon',
 				required: false,
-				description: 'A leading clock icon that identifies the field as a time input.'
+				description:
+					'A leading clock icon that identifies the field and opens the browser/OS picker in native mode.'
 			},
 			{
-				name: 'Text input',
+				name: 'Time control',
 				required: true,
-				description: 'The editable text field where users type or see the formatted time.'
+				description:
+					'A real input type=time in native modes, or Astryx\'s editable text field for fine pointers, presentation="text-input", seconds, and custom increments.'
 			},
 			{
 				name: 'Clear button',
@@ -145,14 +152,15 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disables the input and suppresses interactions.',
+			description:
+				'Disables the input and suppresses interactions. The input stays focusable and exposes `aria-disabled`.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the field focusable via aria-disabled (activation stays blocked). Use this instead of wrapping a disabled TimeInput in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and describes the input (activation stays blocked). Use this instead of wrapping a disabled TimeInput in Tooltip.'
 		},
 		{
 			name: 'value',
@@ -203,15 +211,29 @@ export default {
 			name: 'hourFormat',
 			type: "'12h' | '24h'",
 			description:
-				"Controls the display format. '12h' shows AM/PM (e.g. '2:30 PM'); '24h' uses 24-hour notation (e.g. '14:30').",
-			default: "'12h'"
+				"Controls the display format. '12h' shows the locale's day period (e.g. '2:30 PM', '오후 2:30'); '24h' uses 24-hour notation (e.g. '14:30'). When unset, follows the InternationalizationProvider locale's hour cycle: en-US reads 12-hour, en-GB and de-DE read 24-hour. To honor a person's own preference, pass it on the locale tag (e.g. 'en-US-u-hc-h23') rather than per field.",
+			default: "the locale's hour cycle"
 		},
 		{
 			name: 'increment',
 			type: 'number',
 			description:
-				'Number of minutes to add or subtract when the user presses the up or down arrow key.',
+				'Number of minutes to add or subtract when the user presses the up or down arrow key. Steps are whole minutes; a fractional value leaves the time unchanged.',
 			default: '1'
+		},
+		{
+			name: 'presentation',
+			type: "'text-input' | 'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native'",
+			description:
+				"Which surface selects the time. 'adaptive-native' (the default) uses Astryx's typed field on a fine pointer and the browser/OS input type=time on a coarse pointer — except hasSeconds or increment other than 1, which retain the typed field because iOS has no seconds wheel and treats step as validation rather than picker cadence; 'native' always uses the browser/OS control with no Astryx fallback; 'adaptive-bottom-sheet' uses the typed field on a fine pointer and Astryx's bottom-sheet time wheels on a coarse pointer; 'bottom-sheet' forces the wheels on every pointer; 'text-input' (like 'popover', which has no distinct TimeInput surface) keeps only the typed field. Native mode forwards min/max and enforces them on commit. hourFormat formats the closed value; the open OS picker follows the device locale.",
+			default: "'adaptive-native'"
+		},
+		{
+			name: 'nativePicker',
+			type: "'touch' | 'always' | 'never'",
+			description:
+				"Deprecated: use presentation ('touch' = 'adaptive-native', 'always' = 'native', 'never' = 'text-input'). Still works exactly as released; presentation wins when both are set.",
+			default: "'touch'"
 		},
 		{
 			name: 'placeholder',
@@ -251,10 +273,16 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+				'StyleX styles for the Field box around the label, control, and status. containerClassName and containerStyle take a class name and inline styles for the same box. No effect (development warning) where no Field box renders: inside InputGroup (style the group) and in a horizontal-labels FormLayout.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the bordered element that holds the text, icons, and end controls, never the native input. controlClassName and controlStyle take a class name and inline styles for the same box. Replaces root xstyle, className, and style, which this component does not accept.'
 		}
 	]
 };
