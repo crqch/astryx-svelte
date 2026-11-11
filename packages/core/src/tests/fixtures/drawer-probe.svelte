@@ -17,6 +17,8 @@
 		dataExtra?: string;
 		ariaDescribedby?: string;
 		onclick?: (event: MouseEvent) => void;
+		experimental?: DrawerProps['experimental'];
+		xstyle?: import('$lib/internal/sx.js').StyleArg;
 	}
 </script>
 
@@ -39,7 +41,9 @@
 		sideStyle = 'transition-duration: 0.01s',
 		dataExtra,
 		ariaDescribedby,
-		onclick
+		onclick,
+		experimental,
+		xstyle
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
@@ -62,6 +66,8 @@
 	{label}
 	{width}
 	{padding}
+	{experimental}
+	{xstyle}
 	onOpenChange={(open) => (isOpen = open)}
 	data-testid="drawer"
 	data-extra={dataExtra}

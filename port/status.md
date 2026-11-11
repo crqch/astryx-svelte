@@ -562,8 +562,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10729          |
-| Declared here              | 6654           |
-| **Short**                  | **4090**       |
+| Declared here              | 6662           |
+| **Short**                  | **4082**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -609,7 +609,6 @@ per connected group.
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
-| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 31   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
@@ -619,6 +618,7 @@ per connected group.
 | `utils/plainDate.test.ts`                                                                                                                                                                | 124      | 87   | 37    |
 | `Chat/ChatMessage.test.tsx`<br>`Chat/ChatMessageBubble.test.tsx`<br>`Chat/ChatMessageList.test.tsx`<br>`Chat/ChatMessageMetadata.test.tsx`<br>`Chat/ChatSystemMessage.test.tsx`          | 79       | 43   | 36    |
 | `AlertDialog/AlertDialog.test.tsx`                                                                                                                                                       | 46       | 12   | 34    |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 39   | 32    |
 | `Icon/Icon.test.tsx`                                                                                                                                                                     | 65       | 33   | 32    |
 | `Chat/ChatDictationButton.test.tsx`<br>`Chat/ChatLayout.test.tsx`<br>`Chat/ChatLayoutScrollButton.test.tsx`<br>`Chat/useChatNewMessages.test.tsx`<br>`Chat/useChatStreamScroll.test.tsx` | 60       | 30   | 30    |
 | `DateInput/DateInputTouch.test.tsx`                                                                                                                                                      | 160      | 130  | 30    |

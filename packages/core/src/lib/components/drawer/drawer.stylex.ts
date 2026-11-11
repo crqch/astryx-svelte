@@ -1,4 +1,12 @@
 import * as stylex from '@stylexjs/stylex';
+import { container, type SpacingToken } from '../../internal/container.stylex.js';
+import {
+	containerPaddingBlockEndVarStyles,
+	containerPaddingBlockStartVarStyles,
+	containerPaddingInlineVarStyles,
+	paddingStyles
+} from '../../internal/padding.stylex.js';
+import { sx, type SvelteStyleAttrs } from '../../internal/sx.js';
 import {
 	borderVars,
 	colorVars,
@@ -140,4 +148,38 @@ export const drawerMobilePageReveal = MOBILE_PAGE_REVEAL;
 
 export function drawerInlineSizeStyle(desktopWidth: string, mobileWidth: string) {
 	return dynamicStyles.inlineSize(desktopWidth, mobileWidth);
+}
+
+/**
+ * The scrolling content box's styles.
+ *
+ * Ported from `Drawer.tsx`'s inline `stylex.props(...)`: the theme chain when
+ * no explicit padding was passed, the four-edge override set for any other
+ * step, and the safe-area composition last so the home indicator never covers
+ * the last line of content.
+ */
+export function drawerContentAttrs(
+	usesThemePadding: boolean,
+	effectivePadding: 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10,
+	paddingToken: SpacingToken
+): SvelteStyleAttrs {
+	const explicit = !usesThemePadding && effectivePadding !== 4;
+	return sx(
+		styles.content,
+		...container(
+			usesThemePadding
+				? { useThemeDefault: 'drawer' }
+				: {
+						paddingInnerX: paddingToken,
+						paddingInnerY: paddingToken,
+						paddingOuterX: paddingToken,
+						paddingOuterY: paddingToken
+					}
+		),
+		explicit && paddingStyles[effectivePadding],
+		explicit && containerPaddingInlineVarStyles[effectivePadding],
+		explicit && containerPaddingBlockStartVarStyles[effectivePadding],
+		explicit && containerPaddingBlockEndVarStyles[effectivePadding],
+		styles.contentSafeArea
+	);
 }

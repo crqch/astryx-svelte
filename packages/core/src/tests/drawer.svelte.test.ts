@@ -3,6 +3,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
+import { cssIn } from './forced-colors.js';
+import * as stylex from '@stylexjs/stylex';
 import { userEvent } from 'vitest/browser';
 import DrawerProbe from './fixtures/drawer-probe.svelte';
 
@@ -346,5 +348,138 @@ describe('Drawer', () => {
 		await vi.waitFor(() =>
 			expect(getComputedStyle(dialog).transform).toBe('matrix(1, 0, 0, 1, 0, 0)')
 		);
+	});
+	it('applies the shared text baseline and structural reset on the root dialog', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		const { layerTextReset } = await import('$lib/components/layer/layer-text-reset.stylex.js');
+		const { layerStructureReset } =
+			await import('$lib/components/layer/layer-structure-reset.stylex.js');
+		const classes = dialog.className.split(' ');
+		// The test-side StyleX runtime reports dev debug names in the `__`
+		// namespace; the component carries the compiled atoms, so only those
+		// are comparable.
+		for (const reset of [layerTextReset.reset, layerStructureReset.reset]) {
+			for (const cls of (stylex.props(reset).className ?? '')
+				.split(' ')
+				.filter((token) => token && !token.includes('__'))) {
+				expect(classes).toContain(cls);
+			}
+		}
+		expect(getComputedStyle(dialog).textAlign).toBe('start');
+	});
+
+	it('resets container padding custom properties on the root dialog element', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+
+		const computed = getComputedStyle(dialog);
+		for (const edge of ['inline-start', 'inline-end', 'block-start', 'block-end']) {
+			expect(computed.getPropertyValue(`--container-padding-${edge}`)).toBe('0px');
+		}
+	});
+
+	describe('container padding', () => {
+		function contentAreaIn(container: HTMLElement): HTMLElement {
+			const child = container.querySelector('[data-testid="drawer-content"]');
+			const area = child?.parentElement;
+			if (!(area instanceof HTMLElement)) throw new Error('expected a content area');
+			return area;
+		}
+
+		it("defaults to Dialog's --spacing-4 inset and publishes the theme chain", async () => {
+			const screen = await render(DrawerProbe);
+			const dialog = drawerEl(screen.container);
+			await vi.waitFor(() => expect(dialog.open).toBe(true));
+			const area = contentAreaIn(screen.container);
+			const computed = getComputedStyle(area);
+			// A browser substitutes custom-property references before
+			// `getComputedStyle` reads them, so the published chain is asserted
+			// against the compiled rule and the applied edges against pixels.
+			const css = cssIn(area).replace(/\s+/g, '');
+
+			for (const edge of ['inline-start', 'inline-end', 'block-start']) {
+				expect(css).toContain(`var(--astryx-drawer-padding-${edge}`);
+			}
+			expect(css).toContain('var(--astryx-drawer-padding,var(--spacing-4))');
+			expect(css).toContain('var(--container-padding-inline-start)');
+			for (const name of [
+				'--layout-padding-outer-x',
+				'--layout-padding-outer-y',
+				'--layout-padding-inner-x',
+				'--layout-padding-inner-y'
+			]) {
+				expect(computed.getPropertyValue(name), name).toBe(
+					getComputedStyle(document.documentElement).getPropertyValue('--spacing-4').trim()
+				);
+			}
+			// The applied edges read the published value, so bleed children
+			// subtract exactly the inset they sit in.
+			const spacing4 = getComputedStyle(document.documentElement).getPropertyValue('--spacing-4');
+			expect(computed.paddingInlineStart).toBe(spacing4.trim());
+			expect(computed.paddingTop).toBe(spacing4.trim());
+			expect(computed.paddingBottom).toBe(spacing4.trim());
+		});
+
+		it.each([0, 2] as const)(
+			'applies and publishes an explicit padding step (%s)',
+			async (padding) => {
+				const screen = await render(DrawerProbe, { props: { padding } });
+				const dialog = drawerEl(screen.container);
+				await vi.waitFor(() => expect(dialog.open).toBe(true));
+				const area = contentAreaIn(screen.container);
+				const computed = getComputedStyle(area);
+				expect(cssIn(area).replace(/\s+/g, '')).toContain(`var(--spacing-${padding})`);
+				const spacing = getComputedStyle(document.documentElement)
+					.getPropertyValue(`--spacing-${padding}`)
+					.trim();
+
+				for (const edge of ['inline-start', 'inline-end', 'block-start', 'block-end']) {
+					expect(computed.getPropertyValue(`--container-padding-${edge}`)).toBe(spacing);
+				}
+				expect(computed.getPropertyValue('--layout-padding-inner-x')).toBe(spacing);
+				expect(computed.paddingInlineStart).toBe(spacing);
+			}
+		);
+
+		it('keeps the panel itself unpadded and free of a padding attribute', async () => {
+			const screen = await render(DrawerProbe, { props: { padding: 2 } });
+			const dialog = drawerEl(screen.container);
+			await vi.waitFor(() => expect(dialog.open).toBe(true));
+			expect(dialog.hasAttribute('padding')).toBe(false);
+			expect(getComputedStyle(dialog).getPropertyValue('--container-padding-inline-start')).toBe(
+				'0px'
+			);
+		});
+	});
+
+	it('preserves a 56px page reveal without exceeding the width budget on mobile', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		const style = dialog.getAttribute('style') ?? '';
+		expect(style).toContain('400px');
+		expect(style).toContain('min(400px, calc(100dvw - 56px))');
+	});
+
+	it('covers the full viewport on mobile with experimental.isFullWidthOnMobile', async () => {
+		const screen = await render(DrawerProbe, {
+			props: { experimental: { isFullWidthOnMobile: true } }
+		});
+		const dialog = drawerEl(screen.container);
+		const style = dialog.getAttribute('style') ?? '';
+		expect(style).toContain('100dvw');
+		expect(style).not.toContain('100dvw - 56px');
+		expect(dialog).not.toHaveAttribute('experimental');
+	});
+
+	it('keeps the 56px page reveal when experimental omits the option', async () => {
+		const screen = await render(DrawerProbe, { props: { experimental: {} } });
+		const dialog = drawerEl(screen.container);
+		const style = dialog.getAttribute('style') ?? '';
+		expect(style).toContain('min(400px, calc(100dvw - 56px))');
 	});
 });

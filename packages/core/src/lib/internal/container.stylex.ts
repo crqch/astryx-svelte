@@ -23,7 +23,7 @@ import { spacingVars } from '../styles/tokens.stylex.js';
  * reference them. They also do not cross an overlay boundary — see
  * `overlayPaddingReset` in `padding.stylex.ts`.
  *
- * The `card`, `section` and `dialog` chains are ported.
+ * The `card`, `section`, `dialog` and `drawer` chains are ported.
  */
 
 /** Spacing token keys accepted by the padding props. */
@@ -93,6 +93,15 @@ const dialogInlineStart = `var(--astryx-dialog-padding-inline-start, ${dialogInl
 const dialogInlineEnd = `var(--astryx-dialog-padding-inline-end, ${dialogInline})`;
 const dialogBlockStart = `var(--astryx-dialog-padding-block-start, ${dialogShorthand})`;
 const dialogBlockEnd = `var(--astryx-dialog-padding-block-end, ${dialogShorthand})`;
+
+// Drawer padding chain: same shape as Dialog's, under the drawer's own theme
+// names. Without a theme the inset resolves to --spacing-4, as in Dialog.
+const drawerShorthand = `var(--astryx-drawer-padding, ${SP4})`;
+const drawerInline = `var(--astryx-drawer-padding-inline, ${drawerShorthand})`;
+const drawerInlineStart = `var(--astryx-drawer-padding-inline-start, ${drawerInline})`;
+const drawerInlineEnd = `var(--astryx-drawer-padding-inline-end, ${drawerInline})`;
+const drawerBlockStart = `var(--astryx-drawer-padding-block-start, ${drawerShorthand})`;
+const drawerBlockEnd = `var(--astryx-drawer-padding-block-end, ${drawerShorthand})`;
 
 const cardDefaultPaddingStyles = stylex.create({
 	containerPaddingInlineStart: {
@@ -175,10 +184,38 @@ const dialogDefaultPaddingStyles = stylex.create({
 	}
 });
 
+const drawerDefaultPaddingStyles = stylex.create({
+	containerPaddingInlineStart: {
+		'--container-padding-inline-start': drawerInlineStart
+	},
+	containerPaddingInlineEnd: {
+		'--container-padding-inline-end': drawerInlineEnd
+	},
+	containerPaddingBlockStart: {
+		'--container-padding-block-start': drawerBlockStart
+	},
+	containerPaddingBlockEnd: {
+		'--container-padding-block-end': drawerBlockEnd
+	},
+	layoutPaddingOuterX: {
+		'--layout-padding-outer-x': drawerInlineStart
+	},
+	layoutPaddingOuterY: {
+		'--layout-padding-outer-y': drawerBlockStart
+	},
+	layoutPaddingInnerX: {
+		'--layout-padding-inner-x': drawerInlineStart
+	},
+	layoutPaddingInnerY: {
+		'--layout-padding-inner-y': drawerBlockStart
+	}
+});
+
 const themeDefaultStyles = {
 	card: cardDefaultPaddingStyles,
 	section: sectionDefaultPaddingStyles,
-	dialog: dialogDefaultPaddingStyles
+	dialog: dialogDefaultPaddingStyles,
+	drawer: drawerDefaultPaddingStyles
 };
 
 /** A container component whose padding a theme can override by name. */

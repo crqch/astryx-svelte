@@ -56,17 +56,21 @@
 	import type { Attachment } from 'svelte/attachments';
 	import { cx, mergeStyle, sx, type SvelteStyleAttrs } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
-	import {
-		containerPaddingBlockEndVarStyles,
-		containerPaddingBlockStartVarStyles,
-		containerPaddingInlineVarStyles,
-		paddingStyles
-	} from '../../internal/padding.stylex.js';
+	import { spacingStepToToken } from '../../internal/padding.stylex.js';
+	import type { SpacingToken } from '../../internal/container.stylex.js';
+	import { overlayPaddingReset } from '../../internal/padding.stylex.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
 	import { useFocusTrap } from '../../hooks/use-focus-trap.svelte.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
-	import { drawerInlineSizeStyle, drawerMobilePageReveal, drawerStyles } from './drawer.stylex.js';
+	import { layerStructureReset } from '../layer/layer-structure-reset.stylex.js';
+	import { layerTextReset } from '../layer/layer-text-reset.stylex.js';
+	import {
+		drawerContentAttrs,
+		drawerInlineSizeStyle,
+		drawerMobilePageReveal,
+		drawerStyles
+	} from './drawer.stylex.js';
 	import { useDrawerDialogPresence } from './use-drawer-dialog-presence.svelte.js';
 
 	/**
@@ -178,6 +182,8 @@
 			: `min(${widthValue}, calc(100dvw - ${drawerMobilePageReveal}px))`
 	);
 	const effectivePadding = $derived(padding ?? 4);
+	const usesThemePadding = $derived(padding == null);
+	const paddingToken = $derived(spacingStepToToken[effectivePadding] as SpacingToken);
 	const theme = $derived(themeProps('drawer', { side: anchoredSide }));
 	const safeRest = $derived.by(() => {
 		const next = { ...rest } as Record<string, unknown>;
@@ -186,6 +192,9 @@
 	});
 
 	const dialogAttrs = $derived([
+		layerTextReset.reset,
+		layerStructureReset.reset,
+		overlayPaddingReset.reset,
 		drawerStyles.dialog,
 		drawerStyles[anchoredSide],
 		isRendered && drawerStyles.rendered,
@@ -197,15 +206,9 @@
 		xstyle
 	] as const);
 	const dialogStyle = $derived(sxFrom(dialogAttrs));
-	const contentStyles = $derived.by(() => [
-		drawerStyles.content,
-		paddingStyles[effectivePadding],
-		containerPaddingInlineVarStyles[effectivePadding],
-		containerPaddingBlockStartVarStyles[effectivePadding],
-		containerPaddingBlockEndVarStyles[effectivePadding],
-		drawerStyles.contentSafeArea
-	]);
-	const contentStyle = $derived(sxFrom(contentStyles));
+	const contentStyle = $derived(
+		drawerContentAttrs(usesThemePadding, effectivePadding, paddingToken)
+	);
 
 	const bindRef: Attachment<HTMLDialogElement> = (node) => {
 		ref = node;
