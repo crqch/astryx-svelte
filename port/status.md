@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 342     | 11971          |
+| Ported here              | 347     | 12097          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **455** | **4954**       |
+| **Unported**             | **450** | **4828**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -49,7 +49,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `BottomSheet/BottomSheetReplace.test.tsx`                          | 51    |
 | `Markdown/remark.test.tsx`                                         | 51    |
 | `utils/hitArea.test.ts`                                            | 48    |
-| `motion/animatedLayout.test.ts`                                    | 47    |
 | `keyboard/keyboardTarget.test.ts`                                  | 44    |
 | `theme/themeMotion.test.ts`                                        | 43    |
 | `DateInput/Wheel.test.tsx`                                         | 41    |
@@ -73,12 +72,10 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `TimeInput/timeWheelRules.test.ts`                                 | 29    |
 | `Toast/ToastViewport.modalHost.test.tsx`                           | 29    |
 | `Typeahead/BaseTypeahead.menu.test.tsx`                            | 29    |
-| `motion/animatedLayout.swap.test.ts`                               | 28    |
 | `SideNav/SideNavRailMotion.test.tsx`                               | 27    |
 | `Typeahead/BaseTypeahead.test.tsx`                                 | 27    |
 | `hooks/actionGroupTracker.test.ts`                                 | 26    |
 | `Layer/layerExitCopy.test.ts`                                      | 25    |
-| `motion/animatedLayout.edge.test.ts`                               | 25    |
 | `Popover/popoverSurfaceMotion.test.ts`                             | 25    |
 | `Resizable/paneReveal.test.tsx`                                    | 24    |
 | `Slider/useSliderTouch.test.tsx`                                   | 24    |
@@ -139,8 +136,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Layer/layerClickBoundary.test.tsx`                                | 13    |
 | `List/__tests__/reorderModel.test.ts`                              | 13    |
 | `Markdown/plugins/textTransform.test.ts`                           | 13    |
-| `motion/animatedLayout.presented.test.ts`                          | 13    |
-| `motion/animatedLayout.slide.test.ts`                              | 13    |
 | `motion/roles.test.ts`                                             | 13    |
 | `PowerSearch/PowerSearchDateZone.test.tsx`                         | 13    |
 | `TimeInput/TimeWheels.test.tsx`                                    | 13    |
@@ -496,9 +491,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11971          |
-| Declared here              | 7948           |
-| **Short**                  | **4038**       |
+| Upstream, in ported suites | 12097          |
+| Declared here              | 8028           |
+| **Short**                  | **4084**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -509,7 +504,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (202)</summary>
+<details><summary>Suites short of upstream (207)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -576,6 +571,7 @@ per connected group.
 | `Markdown/incremental.test.ts`                                                                                                                                                           | 79       | 56   | 23    |
 | `utils/focusReturn.test.ts`                                                                                                                                                              | 27       | 4    | 23    |
 | `AppShell/AppShell.test.tsx`                                                                                                                                                             | 70       | 48   | 22    |
+| `motion/animatedLayout.swap.test.ts`                                                                                                                                                     | 28       | 6    | 22    |
 | `NavMenu/NavHeadingMenu.test.tsx`                                                                                                                                                        | 45       | 23   | 22    |
 | `PowerSearch/PowerSearchEditPopover.test.tsx`                                                                                                                                            | 25       | 3    | 22    |
 | `Field/Field.test.tsx`<br>`Field/FieldLabel.test.tsx`                                                                                                                                    | 73       | 52   | 21    |
@@ -594,6 +590,7 @@ per connected group.
 | `Token/Token.test.tsx`                                                                                                                                                                   | 58       | 42   | 16    |
 | `TopNav/TopNavMenu.test.tsx`                                                                                                                                                             | 30       | 14   | 16    |
 | `Kbd/Kbd.test.tsx`                                                                                                                                                                       | 31       | 16   | 15    |
+| `motion/animatedLayout.edge.test.ts`                                                                                                                                                     | 25       | 10   | 15    |
 | `Banner/Banner.test.tsx`                                                                                                                                                                 | 63       | 49   | 14    |
 | `Breadcrumbs/Breadcrumbs.test.tsx`                                                                                                                                                       | 53       | 39   | 14    |
 | `hooks/useTypeahead.test.tsx`                                                                                                                                                            | 30       | 16   | 14    |
@@ -661,6 +658,7 @@ per connected group.
 | `hooks/useMediaQuery.test.ts`                                                                                                                                                            | 14       | 10   | 4     |
 | `hooks/useTreeFocus.test.tsx`                                                                                                                                                            | 20       | 16   | 4     |
 | `InfoTip/InfoTip.test.tsx`                                                                                                                                                               | 22       | 18   | 4     |
+| `motion/animatedLayout.slide.test.ts`                                                                                                                                                    | 13       | 9    | 4     |
 | `theme/derivedVarRegistry.test.ts`                                                                                                                                                       | 14       | 10   | 4     |
 | `theme/useTheme.test.tsx`                                                                                                                                                                | 22       | 18   | 4     |
 | `utils/devWarning.test.ts`                                                                                                                                                               | 9        | 5    | 4     |
@@ -673,6 +671,7 @@ per connected group.
 | `EmptyState/EmptyState.test.tsx`                                                                                                                                                         | 23       | 20   | 3     |
 | `hooks/useClipboard.test.tsx`                                                                                                                                                            | 11       | 8    | 3     |
 | `MobileNav/MobileNavToggle.test.tsx`                                                                                                                                                     | 6        | 3    | 3     |
+| `motion/animatedLayout.test.ts`                                                                                                                                                          | 47       | 44   | 3     |
 | `Table/plugins/filtering/useTableFiltering.test.tsx`                                                                                                                                     | 19       | 16   | 3     |
 | `Table/plugins/groupedRows/useTableGroupedRows.test.tsx`                                                                                                                                 | 13       | 10   | 3     |
 | `theme/extensibleAxes.test.ts`                                                                                                                                                           | 6        | 3    | 3     |
@@ -686,6 +685,7 @@ per connected group.
 | `InteractiveRoleContext/InteractiveRoleContext.test.tsx`                                                                                                                                 | 19       | 17   | 2     |
 | `Layer/layerDismissalInvariants.test.tsx`                                                                                                                                                | 17       | 15   | 2     |
 | `Layer/layerHost.test.ts`                                                                                                                                                                | 8        | 6    | 2     |
+| `motion/animatedLayout.presented.test.ts`                                                                                                                                                | 13       | 11   | 2     |
 | `Outline/parseOutlineFromMarkdown.test.ts`                                                                                                                                               | 14       | 12   | 2     |
 | `SizeContext/SizeContext.test.tsx`                                                                                                                                                       | 23       | 21   | 2     |
 | `Skeleton/Skeleton.test.tsx`                                                                                                                                                             | 6        | 4    | 2     |

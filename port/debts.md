@@ -1891,3 +1891,19 @@ Upstream's suite keeps the last committed `onPan` through a render React discard
 into Suspense. Every Svelte rerender commits, so there is no state in which a
 discarded listener exists; the other 14 `createPanGesture`/`usePanGesture`
 declarations are ported and green.
+
+### The animatedLayout suites are partly ported: their jsdom frame grid has no browser counterpart
+
+- **units:** motion/animatedLayout
+- **kind:** unported cases
+- **retires:** when a browser-side animation stand-in reproduces jsdom's frame grid and rect stubs
+
+The source is ported (`motion/animated-layout.ts` and the copy/inert/ride modules), and
+`presentedGlide` passes 2/2. Of the seven upstream suites, five have their browser-compatible
+cases here: `animatedLayout` 44/47, `.presented` 11/13, `.slide` 9/13, `.edge` 10/25,
+`.swap` 6/28. The remaining declarations compare per-frame keyframe/clip values against
+jsdom's stubbed animation timeline and layout rectangles; Chromium produces a different
+frame grid and live layout, so the values cannot be asserted without a jsdom-equivalent
+animation stand-in. `animatedLayoutAdopters` (18) and `.boundary` (6) are not ported:
+the first needs this port's Collapsible/TreeList adoption wiring, the second checks
+upstream's file names and public entries.
