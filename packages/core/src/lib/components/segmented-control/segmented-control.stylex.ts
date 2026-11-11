@@ -45,7 +45,11 @@ const styles = stylex.create({
 	// lens can scale/move without a layout read per frame.
 	lens: {
 		position: 'absolute',
+		// The lens is placed from client rects in physical coordinates; both
+		// writing directions use the same measured box.
+		// eslint-disable-next-line astryx/no-physical-properties -- measured box
 		left: 0,
+		// eslint-disable-next-line astryx/no-physical-properties -- measured box
 		top: 0,
 		zIndex: -1,
 		pointerEvents: 'none',

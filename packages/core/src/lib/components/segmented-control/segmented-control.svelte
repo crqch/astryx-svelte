@@ -176,7 +176,7 @@
 	$effect(() => {
 		const container = containerEl;
 		// Track the selected value.
-		value;
+		void value;
 		if (container == null || isDragging) return;
 		measureLens(value);
 		const stop = observeResize(container, () => {

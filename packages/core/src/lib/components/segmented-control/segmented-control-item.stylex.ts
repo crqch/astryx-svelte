@@ -5,7 +5,6 @@ import {
 	durationVars,
 	easeVars,
 	fontWeightVars,
-	shadowVars,
 	sizeVars,
 	spacingVars,
 	typeScaleVars
