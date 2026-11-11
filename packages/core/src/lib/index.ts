@@ -313,6 +313,7 @@ export { useTheme, useThemeName } from './theme/use-theme.svelte.js';
 export type { UseThemeReturn } from './theme/use-theme.svelte.js';
 export { default as Thumbnail } from './components/thumbnail/thumbnail.svelte';
 export { default as TimeInput } from './components/time-input/time-input.svelte';
+export { default as Timer } from './components/timer/timer.svelte';
 export { default as Timestamp } from './components/timestamp/timestamp.svelte';
 // `Toast` is exported for inline rendering in previews and documentation, and
 // `ToastViewport` for LayerProvider integration — upstream's stated reasons.
@@ -1167,6 +1168,7 @@ export type {
 	TimeInputStatusType
 } from './components/time-input/time-input.svelte';
 export type { TimeInputSize } from './components/time-input/time-input.stylex.js';
+export type { TimerFormat, TimerProps } from './components/timer/timer.svelte';
 export type { TimestampProps } from './components/timestamp/timestamp.svelte';
 export type { ToastProps } from './components/toast/toast.svelte';
 export type { ToastViewportProps } from './components/toast/toast-viewport.svelte';
