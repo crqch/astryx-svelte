@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 351     | 12181          |
+| Ported here              | 352     | 12188          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **446** | **4744**       |
+| **Unported**             | **445** | **4737**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -224,7 +224,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Table/TableLegacyIncrementalRender.test.tsx`                      | 7     |
 | `TabList/__tests__/Tabs.a11y.test.tsx`                             | 7     |
 | `TimeInput/TimeWheelsTouch.test.tsx`                               | 7     |
-| `utils/browserClickWait.test.ts`                                   | 7     |
 | `__tests__/slotPresence.controls.test.tsx`                         | 6     |
 | `AppShell/AppShellSafeArea.test.tsx`                               | 6     |
 | `CheckboxInput/__tests__/Checkbox.a11y.test.tsx`                   | 6     |
@@ -487,10 +486,10 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12181          |
-| Declared here              | 8047           |
-| **Short**                  | **4149**       |
-| Over, across 5 groups      | +15            |
+| Upstream, in ported suites | 12188          |
+| Declared here              | 8106           |
+| **Short**                  | **4101**       |
+| Over, across 6 groups      | +19            |
 | Beyond upstream            | 96 in 20 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s
@@ -500,7 +499,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (209)</summary>
+<details><summary>Suites short of upstream (208)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -524,7 +523,6 @@ per connected group.
 | `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
 | `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 91       | 37   | 54    |
 | `Popover/Popover.test.tsx`                                                                                                                                                               | 73       | 23   | 50    |
-| `SegmentedControl/useSegmentedSelectionMotion.test.ts`                                                                                                                                   | 52       | 4    | 48    |
 | `Stepper/Stepper.test.tsx`                                                                                                                                                               | 96       | 48   | 48    |
 | `Tokenizer/Tokenizer.test.tsx`                                                                                                                                                           | 108      | 61   | 47    |
 | `Dialog/Dialog.test.tsx`                                                                                                                                                                 | 85       | 40   | 45    |

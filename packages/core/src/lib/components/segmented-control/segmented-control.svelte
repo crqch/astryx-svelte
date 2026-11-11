@@ -45,15 +45,14 @@
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import { observeResize } from '../../internal/shared-resize-observer.js';
 	import { setSegmentedControlContext } from './segmented-control-context.svelte.js';
-	import {
-		segmentedControlContainerAttrs,
-		segmentedControlLensAttrs
-	} from './segmented-control.stylex.js';
+	import { isCoarsePointer, watchCoarsePointer } from '../../utils/coarse-pointer.js';
+	import { awaitBrowserClick, clickForLift } from '../../utils/browser-click-wait.js';
+	import { segmentedControlContainerAttrs } from './segmented-control.stylex.js';
+	import { SegmentedSelectionMotion } from './segmented-selection-motion.js';
 	import {
 		liftTargetAt,
 		measureLiftArea,
-		measureSegments,
-		segmentTargetAt
+		measureSegments
 	} from './use-segmented-touch-tracking.js';
 
 	/**
@@ -130,199 +129,155 @@
 	}));
 
 	let containerEl = $state<HTMLDivElement | null>(null);
-	/**
-	 * The selected face's box, relative to the container's padding box. It is one
-	 * element rather than each item's own background, so a selection change moves
-	 * and resizes one surface instead of cross-fading two.
-	 */
-	let lens = $state({ x: 0, y: 0, width: 0, height: 0, ready: false });
-	/** False for the first placement, so the lens starts on the selection. */
-	let canAnimate = $state(false);
-	let isDragging = $state(false);
+	const motion = new SegmentedSelectionMotion();
+	let isTouchPresentation = $state(false);
+	let previousValue = value;
+
+	/** The segment under a pointer, for the press that begins there. */
+	function segmentAtTarget(target: EventTarget | null): HTMLElement | null {
+		return target instanceof Element
+			? (target.closest<HTMLElement>('[role="radio"][data-value]') ?? null)
+			: null;
+	}
+
+	$effect(() => {
+		isTouchPresentation = isCoarsePointer(window);
+		return watchCoarsePointer(window, (isCoarse) => {
+			isTouchPresentation = isCoarse;
+		});
+	});
+
+	$effect(() => {
+		motion.present(isTouchPresentation);
+	});
+
+	// The DOM already shows the new value; the controller moves the lens from
+	// the segment that held it.
+	$effect(() => {
+		const next = value;
+		if (next !== previousValue && containerEl != null) {
+			motion.select(containerEl, previousValue, next);
+		}
+		previousValue = next;
+	});
+
+	// The controller's animators attach while the control is mounted. A resize
+	// hands any motion in flight back, because its boxes were measured before it.
+	$effect(() => {
+		const track = containerEl;
+		if (track == null) return;
+		motion.attachTrack(track);
+		const stop = observeResize(track, () => motion.resized(track));
+		return () => {
+			stop();
+			motion.settle();
+			motion.attachTrack(null);
+			motion.stop();
+		};
+	});
 
 	interface SegmentedDrag {
 		pointerId: number;
 		startX: number;
-		startLensX: number;
+		carriesLens: boolean;
 		moved: boolean;
 	}
 	let drag: SegmentedDrag | null = null;
 	let suppressClick = false;
+	/** The browser's click a lift is waiting for, if any. */
+	let endClickWait: (() => void) | null = null;
 
-	function segments(): HTMLElement[] {
-		if (containerEl == null) return [];
-		return [...containerEl.querySelectorAll<HTMLElement>('[role="radio"][data-value]')].filter(
-			(item) => item.getAttribute('aria-disabled') !== 'true'
-		);
+	function endWait(): void {
+		endClickWait?.();
+		endClickWait = null;
 	}
 
-	function segmentFor(target: string): HTMLElement | null {
-		return segments().find((item) => item.dataset.value === target) ?? null;
-	}
-
-	function measureLens(target: string): void {
-		const container = containerEl;
-		if (container == null) return;
-		const item = segmentFor(target);
-		if (item == null) {
-			if (lens.ready) lens = { ...lens, ready: false };
-			return;
-		}
-		const containerRect = container.getBoundingClientRect();
-		const itemRect = item.getBoundingClientRect();
-		lens = {
-			x: itemRect.left - containerRect.left - container.clientLeft,
-			y: itemRect.top - containerRect.top - container.clientTop,
-			width: itemRect.width,
-			height: itemRect.height,
-			ready: true
-		};
-	}
-
-	$effect(() => {
-		const container = containerEl;
-		// Track the selected value.
-		void value;
-		if (container == null || isDragging) return;
-		measureLens(value);
-		const stop = observeResize(container, () => {
-			if (!isDragging) measureLens(value);
+	/**
+	 * A tap: the browser's own click commits it. The wait reports after the
+	 * segment's click handlers run, and clicks the segment itself when no click
+	 * comes (a hold), so the selection commits either way.
+	 */
+	function waitForClick(segment: HTMLElement, track: HTMLElement, committed: string): void {
+		endWait();
+		const end = awaitBrowserClick(segment, {
+			onClicked: (isCancelled) => {
+				endClickWait = null;
+				motion.clicked(track, committed, isCancelled);
+			},
+			onNoClick: () => {
+				endClickWait = null;
+				motion.clicked(track, committed, clickForLift(segment));
+			}
 		});
-		const frame = requestAnimationFrame(() => {
-			canAnimate = true;
-		});
-		return () => {
-			stop();
-			cancelAnimationFrame(frame);
-		};
-	});
-
-	function segmentAtPointer(event: PointerEvent): HTMLElement | null {
-		const container = containerEl;
-		if (container == null) return null;
-		const x = event.clientX - container.getBoundingClientRect().left - container.clientLeft;
-		const items = segments();
-		const inside = items.find(
-			(item) => x >= item.offsetLeft && x <= item.offsetLeft + item.offsetWidth
-		);
-		if (inside != null) return inside;
-		return (
-			items.reduce<HTMLElement | null>((best, item) => {
-				if (best == null) return item;
-				const itemDistance = Math.abs(item.offsetLeft + item.offsetWidth / 2 - x);
-				const bestDistance = Math.abs(best.offsetLeft + best.offsetWidth / 2 - x);
-				return itemDistance < bestDistance ? item : best;
-			}, null) ?? null
-		);
+		endClickWait = end;
 	}
 
 	function handlePointerDown(event: PointerEvent): void {
-		if (isDisabled || event.button !== 0 || containerEl == null) return;
-		const target =
-			event.target instanceof Element
-				? event.target.closest<HTMLElement>('[role="radio"][data-value]')
-				: null;
-		if (
-			target == null ||
-			target.dataset.value !== value ||
-			target.getAttribute('aria-disabled') === 'true'
-		) {
-			return;
-		}
+		const container = containerEl;
+		if (isDisabled || event.button !== 0 || container == null) return;
+		endWait();
+		const target = segmentAtTarget(event.target);
+		if (target == null || target.getAttribute('aria-disabled') === 'true') return;
+		motion.begin(container, target, event.pointerType === 'touch');
 		drag = {
 			pointerId: event.pointerId,
 			startX: event.clientX,
-			startLensX: lens.x,
+			carriesLens: target.dataset.value === value,
 			moved: false
 		};
 		try {
-			containerEl.setPointerCapture?.(event.pointerId);
+			container.setPointerCapture?.(event.pointerId);
 		} catch {
-			// A synthetic pointer may not be active; the drag still works from the
-			// container's own pointermove events.
+			// A synthetic pointer may not be active; the container still hears it.
 		}
 	}
 
 	function handlePointerMove(event: PointerEvent): void {
-		const container = containerEl;
-		if (drag == null || container == null || event.pointerId !== drag.pointerId) return;
-		const dx = event.clientX - drag.startX;
-		if (!drag.moved && Math.abs(dx) < 4) return;
+		if (drag == null || event.pointerId !== drag.pointerId) return;
+		if (!drag.moved && Math.abs(event.clientX - drag.startX) < 4) return;
 		drag.moved = true;
-		if (!isDragging) isDragging = true;
-		const items = segments();
-		if (items.length === 0) return;
-		const first = items[0];
-		const last = items[items.length - 1];
-		const min = first.offsetLeft;
-		const max = Math.max(min, last.offsetLeft + last.offsetWidth - lens.width);
-		const x = Math.min(Math.max(drag.startLensX + dx, min), max);
-		lens = { ...lens, x };
-		// The face moves to a neighbour only once its center is past that
-		// segment's boundary by a quarter of the segment's width (at least 8 px),
-		// so a short wobble on the selected segment does not switch it.
-		const index = items.findIndex((item) => item.dataset.value === value);
-		if (index < 0) return;
-		const current = items[index];
-		const center = x + lens.width / 2;
-		let nextIndex = index;
-		if (center > current.offsetLeft + current.offsetWidth) {
-			const following = items[index + 1];
-			if (
-				following != null &&
-				center >= following.offsetLeft + Math.max(8, 0.25 * following.offsetWidth)
-			) {
-				nextIndex = index + 1;
-			}
-		} else if (center < current.offsetLeft) {
-			const previous = items[index - 1];
-			if (
-				previous != null &&
-				center <= current.offsetLeft - Math.max(8, 0.25 * current.offsetWidth)
-			) {
-				nextIndex = index - 1;
-			}
-		}
-		if (nextIndex !== index) {
-			const next = items[nextIndex].dataset.value;
-			if (next != null) onChange(next);
-		}
+		if (drag.carriesLens) motion.drag(event.clientX);
 	}
 
 	function finishDrag(event: PointerEvent, isCancelled = false): void {
-		if (drag == null || event.pointerId !== drag.pointerId) return;
+		const container = containerEl;
+		if (drag == null || container == null || event.pointerId !== drag.pointerId) return;
 		const wasMoved = drag.moved;
+		const carriesLens = drag.carriesLens;
+		const pointerType = event.pointerType;
 		drag = null;
 		try {
-			containerEl?.releasePointerCapture?.(event.pointerId);
+			container.releasePointerCapture?.(event.pointerId);
 		} catch {
 			// The pointer capture may already have ended.
 		}
-		if (!wasMoved) return;
-		// The drop commits the segment under the pointer, so a fast drag that
-		// never reached the hysteresis still lands where it was let go.
-		if (!isCancelled) {
-			const container = containerEl;
-			if (container != null) {
-				const spans = measureSegments(container);
-				const dropped = liftTargetAt(
-					event.clientX,
-					event.clientY,
-					measureLiftArea(container, spans),
-					spans
-				);
-				const next = dropped?.dataset.value;
-				if (next != null && next !== value) onChange(next);
-			}
+		if (isCancelled) {
+			motion.cancel();
+			if (wasMoved) suppressClick = true;
+			return;
 		}
-		suppressClick = !isCancelled;
-		isDragging = false;
-		measureLens(value);
-		if (suppressClick) {
-			setTimeout(() => {
-				suppressClick = false;
-			}, 0);
+		const spans = measureSegments(container);
+		const target = liftTargetAt(
+			event.clientX,
+			event.clientY,
+			measureLiftArea(container, spans),
+			spans
+		);
+		const committed = motion.release(target);
+		if (committed == null) return;
+		if (!wasMoved && target != null && pointerType === 'touch') {
+			// A finger's tap: its click (and the focus it moves) comes after the
+			// lift, so the press stays in force until the click has run.
+			waitForClick(target, container, committed);
+			return;
 		}
+		// The browser sends no click for a drag (or a mouse tap has already
+		// dispatched it): commit now and settle the lens on the new value.
+		if (wasMoved) suppressClick = true;
+		onChange(committed);
+		queueMicrotask(() => {
+			if (containerEl != null) motion.clicked(containerEl, committed, false);
+		});
 	}
 
 	function handleClickCapture(event: MouseEvent): void {
@@ -332,17 +287,14 @@
 		event.stopPropagation();
 	}
 
-	const lensAttrs = segmentedControlLensAttrs();
-	const lensStyle = $derived(
-		`transform: translate3d(${lens.x}px, ${lens.y}px, 0); width: ${lens.width}px; height: ${lens.height}px; visibility: ${lens.ready ? 'visible' : 'hidden'};${isDragging || !canAnimate ? ' transition: none;' : ''}`
-	);
-
 	const theme = $derived(themeProps('segmented-control', { size }));
 	const containerAttrs = $derived(
 		segmentedControlContainerAttrs({ size, layout, isDisabled, showsDisabledMessage }, xstyle)
 	);
 
 	function handleContainerKeyDown(e: KeyboardEvent): void {
+		// A key going down makes a focus move the keyboard's, which selects.
+		endWait();
 		onKeyDownProp?.(e as KeyboardEvent & { currentTarget: HTMLDivElement });
 		if (e.defaultPrevented) {
 			return;
@@ -362,7 +314,9 @@
 		}
 		keyboardHint.onFocus(e);
 		listFocus.handleFocus(e);
-		if (isDisabled) {
+		// A pointer press moves focus before its click commits; that click owns
+		// the selection, so the focus move itself selects nothing.
+		if (isDisabled || motion.isPressed || endClickWait != null) {
 			return;
 		}
 		const currentTarget = e.currentTarget as HTMLElement;
@@ -411,7 +365,6 @@
 	class={cx(theme.class, containerAttrs.class, className)}
 	style={mergeStyle(containerAttrs.style, styleProp as string | undefined)}
 >
-	<span {...lensAttrs} style={lensStyle} data-astryx-segmented-lens="" aria-hidden="true"></span>
 	{@render children()}
 	<KeyboardHintLayer hint={keyboardHint} />
 </div>

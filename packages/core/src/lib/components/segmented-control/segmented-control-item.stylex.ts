@@ -5,6 +5,7 @@ import {
 	durationVars,
 	easeVars,
 	fontWeightVars,
+	shadowVars,
 	sizeVars,
 	spacingVars,
 	typeScaleVars
@@ -63,13 +64,11 @@ const styles = stylex.create({
 			'@media (forced-colors: active)': 'HighlightText'
 		},
 		fontWeight: fontWeightVars['--font-weight-semibold'],
-		// The selected face is the moving lens; the item itself paints only under
-		// forced colors, where the lens is hidden.
 		backgroundColor: {
-			default: 'transparent',
+			default: colorVars['--color-background-surface'],
 			'@media (forced-colors: active)': 'Highlight'
 		},
-		boxShadow: 'none'
+		boxShadow: shadowVars['--shadow-low']
 	},
 	disabled: {
 		cursor: 'default',

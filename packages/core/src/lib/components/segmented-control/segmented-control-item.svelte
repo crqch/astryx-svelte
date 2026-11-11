@@ -19,6 +19,7 @@
 <script lang="ts">
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { segmentTitleProps } from '../../private-attributes/segment-title.js';
 	import { useSegmentedControlContext } from './segmented-control-context.svelte.js';
 	import {
 		segmentedControlIconAttrs,
@@ -96,6 +97,9 @@
 	{#if icon}
 		<span class={iconAttrs.class} style={iconAttrs.style}>{@render icon()}</span>
 	{/if}
-	{#if !isLabelHidden}<span class={labelTextAttrs.class} style={labelTextAttrs.style}>{label}</span
+	{#if !isLabelHidden}<span
+			{...segmentTitleProps}
+			class={labelTextAttrs.class}
+			style={labelTextAttrs.style}>{label}</span
 		>{/if}
 </button>

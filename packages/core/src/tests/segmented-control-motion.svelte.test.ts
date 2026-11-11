@@ -1,6 +1,6 @@
 /** PORTS: SegmentedControl/useSegmentedSelectionMotion.test.ts */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import SegmentedControlLiveProbe from './fixtures/segmented-control-live-probe.svelte';
@@ -8,10 +8,13 @@ import SegmentedControlLiveProbe from './fixtures/segmented-control-live-probe.s
 /**
  * The moving selected face of this port's SegmentedControl. Astryx implements
  * it through `useSegmentedSelectionMotion`; this suite covers the observable
- * contract a browser can assert — one lens, the theme's transition, and a
- * pointer drag that carries and commits the selection. The remaining upstream
- * declarations (face hysteresis, reduced-motion cross-fade, per-frame spring
- * frames) target the jsdom animation stand-in and are recorded in
+ * contract a browser can assert — the selected segment paints its own raised
+ * surface at rest, the radiogroup's ::before carries that surface while a
+ * change or a drag is in flight, and a pointer drag carries the lens and
+ * commits the segment under the pointer. The remaining upstream declarations
+ * (face hysteresis, reduced-motion cross-fade, per-frame spring frames) target
+ * the jsdom animation stand-in and are covered by
+ * `segmented-selection-motion.svelte.test.ts`; the gaps are recorded in
  * `port/debts.md`.
  */
 
@@ -21,9 +24,14 @@ const ITEMS = [
 	{ value: 'three', label: 'Three' }
 ];
 
-function lens(container: HTMLElement): HTMLElement {
-	const found = container.querySelector('[data-astryx-segmented-lens]');
-	if (!(found instanceof HTMLElement)) throw new Error('expected the selected lens');
+/** The lens is the radiogroup's ::before: a pseudo-element, not an element. */
+function lensOf(group: HTMLElement): CSSStyleDeclaration {
+	return getComputedStyle(group, '::before');
+}
+
+function group(container: HTMLElement): HTMLElement {
+	const found = container.querySelector('[role="radiogroup"]');
+	if (!(found instanceof HTMLElement)) throw new Error('expected the radiogroup');
 	return found;
 }
 
@@ -35,10 +43,15 @@ function radio(container: HTMLElement, name: string): HTMLElement {
 	return found;
 }
 
+function surfaceOf(segment: HTMLElement): string {
+	return getComputedStyle(segment).backgroundColor;
+}
+
 function pointer(
 	type: string,
 	target: EventTarget,
 	x: number,
+	y: number,
 	options: { buttons?: number; id?: number } = {}
 ): void {
 	target.dispatchEvent(
@@ -49,75 +62,135 @@ function pointer(
 			pointerId: options.id ?? 1,
 			pointerType: 'mouse',
 			clientX: x,
-			clientY: 10,
+			clientY: y,
 			button: 0,
 			buttons: options.buttons ?? (type === 'pointerup' ? 0 : 1)
 		})
 	);
 }
 
-describe('SegmentedControl selected lens', () => {
-	it('renders one lens with the theme transition and places it on the selected segment', async () => {
+function center(rect: DOMRect): { x: number; y: number } {
+	return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
+
+/** Keeps the lens on screen long enough for the assertions to observe it. */
+function slowTransitions(container: HTMLElement): void {
+	for (const segment of container.querySelectorAll<HTMLElement>('[role="radio"]')) {
+		segment.style.setProperty('transition-duration', '600ms');
+	}
+}
+
+describe('SegmentedControl selected surface', () => {
+	it('paints the selected segment’s raised surface at rest, with the lens hidden', async () => {
 		const screen = await render(SegmentedControlLiveProbe, { props: { items: ITEMS } });
-		const element = lens(screen.container);
-		await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-		expect(element).not.toBeNull();
-		const style = getComputedStyle(element);
-		expect(style.transitionDuration).not.toBe('0s');
-		expect(style.transitionProperty).toContain('transform');
-		expect(element.style.transform).toContain('translate3d');
-		expect(element.style.visibility).toBe('visible');
+		await tick();
+		const selected = radio(screen.container, 'One');
+		const surface = getComputedStyle(selected);
+		expect(surface.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+		expect(surface.boxShadow).not.toBe('none');
+		// Only the selected segment is raised.
+		expect(getComputedStyle(radio(screen.container, 'Two')).boxShadow).toBe('none');
+		// At rest the surface belongs to the segment, not to a pseudo-element.
+		expect(lensOf(group(screen.container)).visibility).toBe('hidden');
+		expect(screen.container.querySelector('[data-astryx-segmented-lens]')).toBeNull();
 	});
 
-	it('moves the lens when selection changes', async () => {
+	it('moves the surface to the ::before lens during a change, then hands it back to the item', async () => {
 		const screen = await render(SegmentedControlLiveProbe, { props: { items: ITEMS } });
-		const element = lens(screen.container);
-		const before = element.style.transform;
-		radio(screen.container, 'Three').click();
+		await tick();
+		slowTransitions(screen.container);
+		const track = group(screen.container);
+		const one = radio(screen.container, 'One');
+		const three = radio(screen.container, 'Three');
+		const surface = surfaceOf(one);
+
+		three.click();
 		await tick();
 		expect(screen.component.getValue()).toBe('three');
-		expect(element.style.transform).not.toBe(before);
-		const three = radio(screen.container, 'Three');
-		const group = screen.container.querySelector('[role="radiogroup"]') as HTMLElement;
-		const groupRect = group.getBoundingClientRect();
+
+		// The lens carries the selected surface, over the destination's box.
+		const lens = lensOf(track);
+		expect(lens.visibility).toBe('visible');
+		expect(lens.backgroundColor).toBe(surface);
+		expect(lens.boxShadow).not.toBe('none');
+		const trackRect = track.getBoundingClientRect();
 		const threeRect = three.getBoundingClientRect();
-		expect(Number.parseFloat(element.style.width)).toBeCloseTo(threeRect.width, 2);
-		expect(Number.parseFloat(element.style.height)).toBeCloseTo(threeRect.height, 2);
-		expect(element.style.transform).toContain(
-			`translate3d(${Math.round(threeRect.left - groupRect.left)}`
+		expect(Number.parseFloat(lens.left)).toBeCloseTo(
+			threeRect.left - trackRect.left - track.clientLeft,
+			1
+		);
+		expect(Number.parseFloat(lens.width)).toBeCloseTo(threeRect.width, 1);
+		expect(Number.parseFloat(lens.height)).toBeCloseTo(threeRect.height, 1);
+		// The destination hides its own paint while the lens carries it.
+		expect(three.style.backgroundColor).toBe('transparent');
+
+		// It lands, the lens goes away, and the selected segment paints again.
+		await vi.waitFor(
+			() => {
+				expect(track.style.getPropertyValue('--_segmented-lens-visibility')).toBe('');
+				expect(surfaceOf(three)).toBe(surface);
+			},
+			{ timeout: 3000 }
+		);
+		expect(lensOf(track).visibility).toBe('hidden');
+		expect(three.style.backgroundColor).toBe('');
+	});
+
+	it('drags the lens and commits the segment under the pointer', async () => {
+		const screen = await render(SegmentedControlLiveProbe, { props: { items: ITEMS } });
+		await tick();
+		slowTransitions(screen.container);
+		const track = group(screen.container);
+		const one = radio(screen.container, 'One');
+		const two = radio(screen.container, 'Two');
+		const surface = surfaceOf(one);
+		const start = center(one.getBoundingClientRect());
+		const target = center(two.getBoundingClientRect());
+		const lensBefore = lensOf(track).visibility;
+		expect(lensBefore).toBe('hidden');
+
+		pointer('pointerdown', one, start.x, start.y);
+		await tick();
+		expect(screen.component.getValue()).toBe('one');
+
+		// A move past the tap's slop hands the surface from the segment to
+		// the lens, at its resting size.
+		pointer('pointermove', track, start.x + 20, start.y, { buttons: 1 });
+		await tick();
+		expect(lensOf(track).visibility).toBe('visible');
+		expect(track.style.getPropertyValue('--_segmented-lens-background-color')).toBe(surface);
+		expect(one.style.backgroundColor).toBe('transparent');
+
+		// The lift commits the segment under the pointer, not the one the
+		// lens crossed on its way there.
+		pointer('pointerup', track, target.x, target.y);
+		await tick();
+		expect(screen.component.getValue()).toBe('two');
+		await vi.waitFor(
+			() => {
+				expect(track.style.getPropertyValue('--_segmented-lens-visibility')).toBe('');
+				expect(surfaceOf(two)).toBe(surface);
+			},
+			{ timeout: 3000 }
 		);
 	});
 
-	it('drags the selected face across segments and commits the segment under the finger', async () => {
+	it('leaves a small press as a tap and keeps the selection’s own surface', async () => {
 		const screen = await render(SegmentedControlLiveProbe, { props: { items: ITEMS } });
-		const group = screen.container.querySelector('[role="radiogroup"]') as HTMLElement;
+		await tick();
+		const track = group(screen.container);
 		const one = radio(screen.container, 'One');
-		const two = radio(screen.container, 'Two');
-		const start = one.getBoundingClientRect();
-		const target = two.getBoundingClientRect();
-		const element = lens(screen.container);
-		const before = element.style.transform;
+		const surface = surfaceOf(one);
+		const start = center(one.getBoundingClientRect());
 
-		pointer('pointerdown', one, start.left + start.width / 2);
-		pointer('pointermove', group, start.left + start.width / 2 + 20, { buttons: 1 });
+		pointer('pointerdown', one, start.x, start.y);
+		pointer('pointermove', track, start.x + 2, start.y, { buttons: 1 });
+		pointer('pointerup', track, start.x + 2, start.y);
 		await tick();
-		expect(element.style.transform).not.toBe(before);
-		pointer('pointermove', group, target.left + target.width / 2, { buttons: 1 });
-		await tick();
-		expect(screen.component.getValue()).toBe('two');
-		pointer('pointerup', group, target.left + target.width / 2);
-		await tick();
-		expect(screen.component.getValue()).toBe('two');
-	});
-
-	it('leaves a small press as a tap and keeps the selection', async () => {
-		const screen = await render(SegmentedControlLiveProbe, { props: { items: ITEMS } });
-		const group = screen.container.querySelector('[role="radiogroup"]') as HTMLElement;
-		const one = radio(screen.container, 'One');
-		const start = one.getBoundingClientRect();
-		pointer('pointerdown', one, start.left + start.width / 2);
-		pointer('pointermove', group, start.left + start.width / 2 + 2, { buttons: 1 });
-		pointer('pointerup', group, start.left + start.width / 2 + 2);
 		expect(screen.component.getValue()).toBe('one');
+		// Nothing was carried, so the segment never gave up its surface.
+		expect(lensOf(track).visibility).toBe('hidden');
+		expect(one.style.backgroundColor).toBe('');
+		expect(surfaceOf(one)).toBe(surface);
 	});
 });

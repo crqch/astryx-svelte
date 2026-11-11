@@ -1910,18 +1910,19 @@ kebab modules and current adopters). `animatedLayoutAdopters` has 1/18: the
 wired to the handle, their exit holds, chevron motion and a `LayoutChangeSnapshot`
 commit hook.
 
-### SegmentedControl's selection lens is a CSS transition, not the UIKit motion engine
+### SegmentedControl's press tracking is pointer handlers, not the Pan recognizer
 
 - **units:** SegmentedControl
 - **kind:** divergence
-- **retires:** when `useSegmentedSelectionMotion` is ported in full
+- **retires:** when `useSegmentedTouchTracking`'s recognizer half is wired in
 
-The moving selected face, the drag that carries it, hysteresis and the drop
-commit are implemented and covered by `segmented-control-motion.svelte.test.ts`.
-The motion itself is a CSS transition over `transform`/`width`/`height` (the
-theme's fast duration and standard curve, zero under Reduce Motion), not
-upstream's spring/animator engine with its reduced-motion cross-fade, per-frame
-face frames and copied-surface paint. `useSegmentedTouchTracking`'s
-segment/lift resolution is ported and green (8/8); its Pan recognizer and
-action-group press tracker are replaced by the container's pointer handlers
-with a four-pixel slop, `liftTargetAt` on release and `touch-action: pan-y`.
+The selection lens is upstream's `SegmentedSelectionMotion`: the full
+`useSegmentedSelectionMotion` suite passes 52/52 (slide, hand-back, mid-flight
+retarget, Reduced Motion cross-fade, press, chase, commit and title faces), and
+the component paints it on the radiogroup's `::before`/`::after`. The touch
+layer's segment/lift geometry is ported and green (8/8). Its Pan
+recognizer/action-group press tracker is replaced by the container's pointer
+handlers with a four-pixel slop, `liftTargetAt` on release, a browser-click
+wait for taps and `touch-action: pan-y`; the drag, lift commit and
+outside-cancel behavior is covered by `segmented-control-motion.svelte.test.ts`
+and the browser probes.
