@@ -1,7 +1,7 @@
 {
 	"name": "@astryx-svelte/theme-stone",
 	"version": "0.5.2",
-	"description": "Stone theme for astryx-svelte — warm stone and slate, earthy and understated.",
+	"description": "Stone theme for astryx-svelte \u2014 warm stone and slate, earthy and understated.",
 	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
 	"bugs": {
 		"url": "https://github.com/devrohit06/astryx-svelte/issues"
@@ -37,7 +37,7 @@
 	"scripts": {
 		"build": "bun scripts/build-theme.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
-		"lint": "oxfmt --check .",
+		"lint": "oxfmt --check . && oxlint .",
 		"format": "oxfmt --write .",
 		"test:parity": "bun scripts/compare-upstream.mjs",
 		"test:icons": "bun scripts/check-icons.mjs",

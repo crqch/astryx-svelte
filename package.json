@@ -16,7 +16,7 @@
 		"check": "bun run --filter '*' check",
 		"test": "bun run --filter '*' test",
 		"lint": "bun run --filter '*' lint",
-		"lint:root": "oxfmt --check port/*.md *.md",
+		"lint:root": "oxfmt --check port/*.md *.md && oxlint scripts .github .claude/hooks",
 		"format": "bun run --filter '*' format",
 		"check:publish": "bun scripts/check-publish.mjs",
 		"status": "bun scripts/status.mjs",

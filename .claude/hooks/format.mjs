@@ -79,7 +79,7 @@ async function resolveConfig(from) {
 try {
 	const config = await resolveConfig(abs);
 	if (!config) exit();
-	const { $schema, ignorePatterns, ...options } = config;
+	const { $schema: _schema, ignorePatterns: _ignorePatterns, ...options } = config;
 	const src = await fs.readFile(abs, 'utf8');
 	const result = await format(abs, src, options);
 	if (result.errors.length === 0 && result.code !== src) {

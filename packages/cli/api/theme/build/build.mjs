@@ -761,6 +761,7 @@ function extractThemeDefinitionLegacy(filePath) {
 			);
 		}
 
+		// oxlint-disable-next-line no-eval -- parsing a legacy theme literal, not executing user input.
 		return eval(`(${defaultMatch[1]})`);
 	}
 
@@ -769,6 +770,7 @@ function extractThemeDefinitionLegacy(filePath) {
 	objStr = objStr.replace(/icons:\s*[a-zA-Z_][a-zA-Z0-9_]*/g, 'icons: undefined');
 
 	try {
+		// oxlint-disable-next-line no-eval -- parsing a legacy theme literal, not executing user input.
 		return eval(`(${objStr})`);
 	} catch (e) {
 		const err = /** @type {Error} */ (e);

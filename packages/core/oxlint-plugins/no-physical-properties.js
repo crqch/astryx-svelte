@@ -20,7 +20,7 @@
  * unchanged — same two maps, same conflict guard, same autofix behaviour. Only
  * the packaging differs: upstream ships an `eslint-plugin-astryx` package with
  * `strict`/`recommended` tiers, and this port has one consumer, so the rule is a
- * local module wired directly into `eslint.config.js`.
+ * local module wired into `.oxlintrc.json` as an Oxlint JS plugin.
  *
  * It matters that this is upstream's rule rather than one written here: it is
  * what keeps the RTL phase-2 migration from rotting. The migration is a no-op in
@@ -37,7 +37,7 @@
  *
  * The port has no un-migrated ones — only *deliberate* ones. Roughly 19
  * declarations stay physical to keep byte-parity with upstream's compiled
- * classes, and each carries an inline `eslint-disable` naming the reason
+ * classes, and each carries an inline `oxlint-disable` naming the reason
  * (symmetric pairs whose logical spelling emits identical CSS; a published
  * physical API like `DialogProps.position`; a Markdown table's author-specified
  * `textAlign: 'right'`, which means the literal right edge, not the line end).

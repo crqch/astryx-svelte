@@ -24,5 +24,6 @@
 		"packages/cli/assets/templates/**",
 		"packages/core/src/lib/locales/**",
 		"**/.astryx-*/**"
-	]
+	],
+	"sortPackageJson": false
 }
