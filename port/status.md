@@ -562,8 +562,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10729          |
-| Declared here              | 6652           |
-| **Short**                  | **4092**       |
+| Declared here              | 6654           |
+| **Short**                  | **4090**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -606,10 +606,10 @@ per connected group.
 | `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 33   | 43    |
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
 | `Markdown/Markdown.test.tsx`                                                                                                                                                             | 105      | 62   | 43    |
-| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 29   | 42    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 71       | 31   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |

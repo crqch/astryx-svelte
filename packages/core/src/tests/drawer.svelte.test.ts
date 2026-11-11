@@ -328,4 +328,23 @@ describe('Drawer', () => {
 		await new Promise((resolve) => setTimeout(resolve, 30));
 		expect(dialog.open).toBe(true);
 	});
+	it('does not close on a self-click when non-modal (no scrim to click)', async () => {
+		const screen = await render(DrawerProbe, { props: { hasScrim: false } });
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.matches(':popover-open')).toBe(true));
+
+		dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		await new Promise((resolve) => setTimeout(resolve, 30));
+		expect(screen.component.getOpen()).toBe(true);
+	});
+
+	it('renders the panel in its open position', async () => {
+		const screen = await render(DrawerProbe);
+		const dialog = drawerEl(screen.container);
+		await vi.waitFor(() => expect(dialog.open).toBe(true));
+		// translateX(0) resolves to the identity matrix in a real browser.
+		await vi.waitFor(() =>
+			expect(getComputedStyle(dialog).transform).toBe('matrix(1, 0, 0, 1, 0, 0)')
+		);
+	});
 });

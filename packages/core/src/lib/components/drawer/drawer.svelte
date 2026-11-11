@@ -53,6 +53,7 @@
 </script>
 
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import { cx, mergeStyle, sx, type SvelteStyleAttrs } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import {
@@ -206,6 +207,13 @@
 	]);
 	const contentStyle = $derived(sxFrom(contentStyles));
 
+	const bindRef: Attachment<HTMLDialogElement> = (node) => {
+		ref = node;
+		return () => {
+			if (ref === node) ref = null;
+		};
+	};
+
 	function sxFrom(args: readonly unknown[]): SvelteStyleAttrs {
 		return sx(...(args as never[]));
 	}
@@ -230,12 +238,8 @@
 	onclick={handleClick}
 	oncancel={handleCancel}
 	{@attach focusTrap.attachContainer}
-	{@attach (node: HTMLDialogElement) => {
-		ref = node;
-		return () => {
-			if (ref === node) ref = null;
-		};
-	}}
+	{@attach bindRef}
+	{@attach bindRef}
 >
 	<LayerDepthProvider>{@render contentArea()}</LayerDepthProvider>
 </dialog>

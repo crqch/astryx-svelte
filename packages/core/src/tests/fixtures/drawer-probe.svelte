@@ -43,11 +43,13 @@
 	}: DrawerProbeProps = $props();
 
 	let isOpen = $state(initialOpen);
+	let dialogRef = $state<HTMLDialogElement | null>(null);
 
 	export const setOpen = (value: boolean) => {
 		isOpen = value;
 	};
 	export const getOpen = () => isOpen;
+	export const getDialog = () => dialogRef;
 </script>
 
 <button data-testid="trigger" onclick={() => (isOpen = true)}>Open drawer</button>
