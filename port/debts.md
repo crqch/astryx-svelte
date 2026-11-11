@@ -1904,6 +1904,8 @@ cases here: `animatedLayout` 44/47, `.presented` 11/13, `.slide` 9/13, `.edge` 1
 `.swap` 6/28. The remaining declarations compare per-frame keyframe/clip values against
 jsdom's stubbed animation timeline and layout rectangles; Chromium produces a different
 frame grid and live layout, so the values cannot be asserted without a jsdom-equivalent
-animation stand-in. `animatedLayoutAdopters` (18) and `.boundary` (6) are not ported:
-the first needs this port's Collapsible/TreeList adoption wiring, the second checks
-upstream's file names and public entries.
+animation stand-in. `animatedLayout.boundary` is ported 6/6 (restated for this port's
+kebab modules and current adopters). `animatedLayoutAdopters` has 1/18: the
+`useAnimatedLayout` hook is ported, but the other declarations need Collapsible/TreeList
+wired to the handle, their exit holds, chevron motion and a `LayoutChangeSnapshot`
+commit hook.

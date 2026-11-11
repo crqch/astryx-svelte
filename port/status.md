@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 347     | 12097          |
+| Ported here              | 349     | 12121          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **450** | **4828**       |
+| **Unported**             | **448** | **4804**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -100,7 +100,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Resizable/createResizableHandle.test.ts`                          | 19    |
 | `Selector/useCombobox.test.tsx`                                    | 19    |
 | `hooks/useClickableContainer.test.tsx`                             | 18    |
-| `motion/animatedLayoutAdopters.test.tsx`                           | 18    |
 | `motion/paging.test.ts`                                            | 18    |
 | `ToggleButton/ToggleButtonGroupTracking.test.tsx`                  | 18    |
 | `virtualization/listWindow.test.ts`                                | 18    |
@@ -241,7 +240,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/Markdown.helpers.perf.test.ts`                           | 6     |
 | `Markdown/Markdown.public.test.ts`                                 | 6     |
 | `Markdown/Markdown.renderBoundary.test.tsx`                        | 6     |
-| `motion/animatedLayout.boundary.test.ts`                           | 6     |
 | `NumberInput/__tests__/NumberInput.a11y.test.tsx`                  | 6     |
 | `SelectableCard/SelectableCardRadio.test.tsx`                      | 6     |
 | `Selector/Selector.fr10.test.tsx`                                  | 6     |
@@ -491,9 +489,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12097          |
-| Declared here              | 8028           |
-| **Short**                  | **4084**       |
+| Upstream, in ported suites | 12121          |
+| Declared here              | 8035           |
+| **Short**                  | **4101**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -504,7 +502,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (207)</summary>
+<details><summary>Suites short of upstream (208)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -584,6 +582,7 @@ per connected group.
 | `RadioList/RadioList.test.tsx`                                                                                                                                                           | 62       | 44   | 18    |
 | `DateRangeInput/DateRangeInput.test.tsx`                                                                                                                                                 | 64       | 47   | 17    |
 | `hooks/useOverflow.test.ts`                                                                                                                                                              | 43       | 26   | 17    |
+| `motion/animatedLayoutAdopters.test.tsx`                                                                                                                                                 | 18       | 1    | 17    |
 | `TopNav/TopNavMegaMenu.test.tsx`                                                                                                                                                         | 56       | 39   | 17    |
 | `hooks/useLongPress.test.tsx`                                                                                                                                                            | 25       | 9    | 16    |
 | `OverflowList/OverflowList.test.tsx`                                                                                                                                                     | 34       | 18   | 16    |
