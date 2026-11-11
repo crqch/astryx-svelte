@@ -149,11 +149,12 @@
 	// Disabled links are an accessibility anti-pattern — fall back to <button>.
 	const renderAsLink = $derived(href != null && !buttonDisabled);
 
-	// Use aria-disabled when a tooltip is present so the button stays focusable
-	// and keyboard users can still reach the tooltip. Otherwise use native
-	// disabled. Only reachable on the `<button>` branch: a disabled button never
-	// renders as a link.
-	const useAriaDisabled = $derived(tooltip != null && buttonDisabled);
+	// A disabled button reflects `aria-disabled` rather than the native
+	// attribute, as upstream 0.7.13 does: the control stays focusable, hover and
+	// focus affordances still work, and the click/key handlers suppress
+	// activation themselves. Only reachable on the `<button>` branch — a disabled
+	// button never renders as a link.
+	const useAriaDisabled = $derived(buttonDisabled);
 
 	// Attach tooltip behaviour via the hook rather than wrapping the button in a
 	// <Tooltip>. The hook adds hover/focus triggers to the button itself, so no
@@ -321,7 +322,6 @@
 {:else}
 	<button
 		{type}
-		disabled={useAriaDisabled ? undefined : buttonDisabled}
 		{...rest}
 		{...theme}
 		{...edgeCompAttr}
@@ -331,7 +331,7 @@
 		aria-label={needsAriaLabel ? label : undefined}
 		aria-describedby={describedBy}
 		aria-busy={isLoadingState || undefined}
-		aria-disabled={useAriaDisabled || undefined}
+		aria-disabled={buttonDisabled || undefined}
 		onclick={handleClick}
 		onkeydown={handleKeyDown}
 	>

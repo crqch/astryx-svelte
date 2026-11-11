@@ -847,14 +847,11 @@ describe('Drawer', () => {
 		const explicit = screen.getByRole('button', { name: 'Explicit disabled' }).element();
 		const inner = screen.getByRole('button', { name: 'Inner member' }).element();
 
-		// RESTATED: this port's Button renders the native `disabled` attribute
-		// for a group-disabled member, where 0.7.13 uses `aria-disabled` alone.
-		// The boundary contract is the same: membership stops at the drawer.
-		expect(outer).toHaveAttribute('disabled');
-		expect(independent).not.toHaveAttribute('disabled');
+		expect(outer).toHaveAttribute('aria-disabled', 'true');
+		expect(independent).not.toHaveAttribute('aria-disabled');
 		independent.click();
-		expect(explicit).toHaveAttribute('disabled');
-		expect(inner).toHaveAttribute('disabled');
+		expect(explicit).toHaveAttribute('aria-disabled', 'true');
+		expect(inner).toHaveAttribute('aria-disabled', 'true');
 	});
 
 	it('lets a focused control open its tooltip after the show, with no error', async () => {

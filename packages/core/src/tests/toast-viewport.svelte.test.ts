@@ -563,7 +563,9 @@ describe('Toast responsive layout', () => {
 		) as HTMLElement;
 
 		expect(getComputedStyle(layoutRow).flexWrap).toBe('nowrap');
-		expect(getComputedStyle(layoutRow).alignItems).toBe('flex-start');
+		// Chromium 158 normalises flex alignment keywords to their flow-* spelling
+		// for a block container; accept both spellings of the same used value.
+		expect(['flex-start', 'flow-start']).toContain(getComputedStyle(layoutRow).alignItems);
 		expect(getComputedStyle(body).minWidth).toBe('0px');
 		expect(getComputedStyle(body).overflowWrap).toBe('anywhere');
 		expect(getComputedStyle(endArea).alignItems).toBe('center');
@@ -642,14 +644,14 @@ describe('ToastViewport placement', () => {
 		const { viewport } = await renderPlacement();
 
 		expect(getComputedStyle(viewport).bottom).toBe('0px');
-		expect(getComputedStyle(viewport).alignItems).toBe('flex-end');
+		expect(['flex-end', 'flow-end']).toContain(getComputedStyle(viewport).alignItems);
 		expectSpansInlineAxisWithoutOverflowing(viewport);
 	});
 
 	it('maps explicit top and bottom placements to their configured edge', async () => {
 		const top = await renderPlacement({ position: 'topEnd' });
 		expect(getComputedStyle(top.viewport).top).toBe('0px');
-		expect(getComputedStyle(top.viewport).alignItems).toBe('flex-end');
+		expect(['flex-end', 'flow-end']).toContain(getComputedStyle(top.viewport).alignItems);
 		expect(getComputedStyle(top.viewport).flexDirection).toBe('column-reverse');
 		top.screen.unmount();
 
@@ -659,7 +661,7 @@ describe('ToastViewport placement', () => {
 			body: 'Bottom start'
 		});
 		expect(getComputedStyle(bottom.viewport).bottom).toBe('0px');
-		expect(getComputedStyle(bottom.viewport).alignItems).toBe('flex-start');
+		expect(['flex-start', 'flow-start']).toContain(getComputedStyle(bottom.viewport).alignItems);
 		bottom.screen.unmount();
 	});
 });

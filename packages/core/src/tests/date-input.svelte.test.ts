@@ -1197,14 +1197,15 @@ describe('DateInput', () => {
 			const screen = await render(DateInput, {
 				props: { label: 'Date', onChange: noop }
 			});
+			// 0.7.13 resolves CLDR abbreviated names when they fit the header.
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Su',
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa'
+				'Sun',
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat'
 			]);
 		});
 
@@ -1213,13 +1214,13 @@ describe('DateInput', () => {
 				props: { label: 'Date', onChange: noop, weekStartsOn: 1 }
 			});
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 
@@ -1228,13 +1229,13 @@ describe('DateInput', () => {
 				props: { label: 'Date', onChange: noop, weekStartsOn: 'mon' }
 			});
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 	});
