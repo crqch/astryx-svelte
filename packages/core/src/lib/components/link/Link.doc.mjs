@@ -171,7 +171,7 @@ export default {
 		},
 		{
 			name: 'type',
-			type: 'TextType',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
 			description:
 				'Text type forwarded to Text, or a custom text type the theme defines. Use `inherit` for a link inside a Text, so the link takes the size and line height of the text around it.',
 			default: "'body'"

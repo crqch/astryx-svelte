@@ -12,27 +12,40 @@ import type { Elevation, SizeValue, SpacingStep } from '../../internal/types.js'
 import { borderVars, colorVars, radiusVars, shadowVars } from '../../styles/tokens.stylex.js';
 
 /**
- * Background variant.
+ * Extensible variant map for Card.
+ *
+ * A theme adds a variant by augmenting this interface, exactly as upstream:
+ *
+ * @example
+ * declare module '@astryx-svelte/core' {
+ *   interface CardVariantMap {
+ *     brand: true;
+ *   }
+ * }
  *
  * Only `default` draws a visible border. Its width is subtracted from the
  * padding, so the total inset — border plus padding — equals the padding token
  * rather than exceeding it. That keeps content geometry on the spacing scale
  * and identical to the borderless variants.
  */
-export type CardVariant =
-	| 'default'
-	| 'transparent'
-	| 'muted'
-	| 'blue'
-	| 'cyan'
-	| 'gray'
-	| 'green'
-	| 'orange'
-	| 'pink'
-	| 'purple'
-	| 'red'
-	| 'teal'
-	| 'yellow';
+export interface CardVariantMap {
+	default: true;
+	transparent: true;
+	muted: true;
+	blue: true;
+	cyan: true;
+	gray: true;
+	green: true;
+	orange: true;
+	pink: true;
+	purple: true;
+	red: true;
+	teal: true;
+	yellow: true;
+}
+
+/** Background variant, derived from {@link CardVariantMap}. */
+export type CardVariant = keyof CardVariantMap;
 
 const styles = stylex.create({
 	card: {

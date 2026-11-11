@@ -36,13 +36,29 @@ export type BuiltinTextType =
 	| 'inherit';
 
 /**
- * Semantic text type.
+ * Augmentation seam for theme-provided semantic text types.
  *
- * Themes may define custom types via component overrides. Those render on the
- * `body` StyleX baseline and take their visual treatment from theme CSS
- * (`.astryx-text.<custom-type>`), which is why this stays open to any string.
+ * `astryx theme build` generates this augmentation when it detects new
+ * `type:*` values in a theme's component overrides. Without an augmentation
+ * the type is closed to the built-ins, so a misspelled type is a type error
+ * rather than silently rendering on the `body` baseline.
+ *
+ * @example
+ * declare module '@astryx-svelte/core' {
+ *   interface CustomTextTypes {
+ *     hero: true;
+ *     caption: true;
+ *   }
+ * }
  */
-export type TextType = BuiltinTextType | (string & {});
+export interface CustomTextTypes {}
+
+/**
+ * Semantic text type: one of the built-ins or a theme-registered custom type.
+ * A custom type renders on the `body` StyleX baseline and takes its visual
+ * treatment from theme CSS (`.astryx-text[data-type="<custom-type>"]`).
+ */
+export type TextType = BuiltinTextType | (keyof CustomTextTypes & string);
 
 export type TextSize =
 	| '4xs'

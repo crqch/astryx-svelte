@@ -82,7 +82,7 @@ export default {
 		},
 		{
 			name: 'type',
-			type: 'TextType',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
 			description: 'Semantic text type. Uses the same typography behavior as Timestamp.',
 			default: "'supporting'"
 		},

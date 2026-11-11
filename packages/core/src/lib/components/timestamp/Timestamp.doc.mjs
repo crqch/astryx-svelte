@@ -188,7 +188,7 @@ export default {
 		},
 		{
 			name: 'type',
-			type: 'TextType',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
 			description: 'Semantic text type from Text. Determines size, weight, and line-height.',
 			default: "'supporting'"
 		},

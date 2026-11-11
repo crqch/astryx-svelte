@@ -1269,7 +1269,7 @@ export type {
 	ButtonVariant,
 	ButtonVariantMap
 } from './components/button/button.stylex.js';
-export type { CardVariant } from './components/card/card.stylex.js';
+export type { CardVariant, CardVariantMap } from './components/card/card.stylex.js';
 export type { CenterAxis } from './components/center/center.stylex.js';
 // No `CodeBlockSize`/`CodeBlockContainer` here: upstream inlines both unions in
 // `CodeBlockProps` and publishes no named type for either, unlike `Code`'s
@@ -1524,6 +1524,7 @@ export type {
 export type {
 	BuiltinTextColor,
 	BuiltinTextType,
+	CustomTextTypes,
 	TextColor,
 	TextColorMap,
 	TextDisplay,

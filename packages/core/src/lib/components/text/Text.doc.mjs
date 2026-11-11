@@ -112,7 +112,7 @@ export default {
 	props: [
 		{
 			name: 'type',
-			type: 'TextType',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
 			description:
 				"Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`.",
 			default: "'body'"
