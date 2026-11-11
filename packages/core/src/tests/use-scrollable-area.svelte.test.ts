@@ -1148,3 +1148,61 @@ describe('useScrollableArea content changes and focus continuity', () => {
 		expect(getComputedStyle(content).color).toBe('rgb(1, 2, 3)');
 	});
 });
+
+describe('useScrollableArea ancestor motion', () => {
+	it('leaves an ancestor that moves on the compositor alone, and measures on its direction and its size', async () => {
+		const callbacks = new Map<number, FrameRequestCallback>();
+		let nextId = 0;
+		const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+			nextId += 1;
+			callbacks.set(nextId, callback);
+			return nextId;
+		});
+		const caf = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id: number) => {
+			callbacks.delete(id);
+		});
+		const runFrame = () => {
+			const entries = [...callbacks];
+			callbacks.clear();
+			for (const [, callback] of entries) callback(performance.now());
+		};
+		const settleMutations = () => new Promise((resolve) => setTimeout(resolve, 0));
+		try {
+			const screen = await render(ScrollableAreaProbe, { props: { axis: 'block' } });
+			const viewport = screen.getByTestId('viewport').element() as HTMLElement;
+			const ancestor = viewport.parentElement as HTMLElement;
+			runFrame();
+			await settleMutations();
+			for (let settleFrame = 0; settleFrame < 5; settleFrame += 1) {
+				runFrame();
+				await settleMutations();
+			}
+			expect(callbacks.size).toBe(0);
+			const styleReads = vi.spyOn(window, 'getComputedStyle');
+			const readsBefore = styleReads.mock.calls.length;
+
+			for (const offset of [8, 16, 24]) {
+				ancestor.style.transform = `translateY(${offset}px)`;
+				ancestor.style.setProperty('--_scrim-opacity', `${1 - offset / 100}`);
+			}
+			await settleMutations();
+			expect(callbacks.size).toBe(0);
+			expect(styleReads.mock.calls.length).toBe(readsBefore);
+
+			// The axis mapping is the ancestor's to change; a `dir` attribute is
+			// observed directly, as upstream's style.direction is.
+			document.body.dir = 'rtl';
+			await settleMutations();
+			expect(callbacks.size).toBe(1);
+			runFrame();
+
+			window.dispatchEvent(new Event('resize'));
+			await settleMutations();
+			expect(callbacks.size).toBe(1);
+		} finally {
+			document.body.removeAttribute('dir');
+			raf.mockRestore();
+			caf.mockRestore();
+		}
+	});
+});

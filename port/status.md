@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 341     | 11969          |
+| Ported here              | 342     | 11971          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **456** | **4956**       |
+| **Unported**             | **455** | **4954**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -407,7 +407,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `dragToSnapPoints/publicSurface.test.ts`                           | 2     |
 | `DropdownMenu/DropdownMenuLazySheet.test.tsx`                      | 2     |
 | `Field/PanelSearchInput.secondDocument.test.tsx`                   | 2     |
-| `gestures/__tests__/presentedGlide.test.ts`                        | 2     |
 | `gestures/__tests__/wheelEnd.harness.test.ts`                      | 2     |
 | `hooks/actionGroupTracker.exports.test.ts`                         | 2     |
 | `hooks/deprecatedApis.public.test.ts`                              | 2     |
@@ -497,9 +496,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11969          |
-| Declared here              | 7945           |
-| **Short**                  | **4039**       |
+| Upstream, in ported suites | 11971          |
+| Declared here              | 7948           |
+| **Short**                  | **4038**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -510,7 +509,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (203)</summary>
+<details><summary>Suites short of upstream (202)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -700,7 +699,6 @@ per connected group.
 | `hooks/useImageMode.test.ts`                                                                                                                                                             | 6        | 5    | 1     |
 | `hooks/useInputStatusIcon.test.tsx`                                                                                                                                                      | 7        | 6    | 1     |
 | `hooks/useKeyboardHint.test.tsx`                                                                                                                                                         | 8        | 7    | 1     |
-| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 47       | 46   | 1     |
 | `i18n/__tests__/e2e-powersearch.test.tsx`                                                                                                                                                | 6        | 5    | 1     |
 | `Layer/anchorName.test.ts`                                                                                                                                                               | 16       | 15   | 1     |
 | `MobileNav/MobileNavScrollbarGutter.test.tsx`                                                                                                                                            | 4        | 3    | 1     |
