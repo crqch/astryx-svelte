@@ -748,6 +748,7 @@ export type { MultiSelectorSize } from './components/multi-selector/multi-select
 export type {
 	MultiSelectorOptionType,
 	MultiSelectorOptionData,
+	MultiSelectorSelectedItem,
 	MultiSelectorDivider,
 	MultiSelectorSection,
 	MultiSelectorStatus
@@ -1413,6 +1414,7 @@ export {
 	resetIcons,
 	type ExtendedIconName,
 	type IconName,
+	type NamespacedIconName,
 	type IconRegistry,
 	type IconRegistrySource,
 	type IconType

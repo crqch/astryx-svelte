@@ -63,6 +63,14 @@ export type IconName =
 	| 'microphone';
 
 /**
+ * A namespaced icon key: `<namespace>:<name>`, the form a component or library
+ * owns rather than a built-in name. Accepted anywhere a built-in name is,
+ * including `<Icon icon>`, so a namespaced glyph keeps `size`, `color` and
+ * `xstyle`.
+ */
+export type NamespacedIconName = `${string}:${string}`;
+
+/**
  * A semantic icon name — either one of the built-in {@link IconName}s or an
  * arbitrary string key contributed by a library or app.
  *

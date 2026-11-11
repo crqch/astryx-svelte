@@ -1031,6 +1031,10 @@
     "defaultMessage": "Navigation",
     "description": "Screen-reader-only fallback name for the MobileNav overlay dialog when no explicit label was passed."
   },
+  "@astryx.multiSelector.selectedCount": {
+    "defaultMessage": "{count, plural, one {# selected} other {# selected}}",
+    "description": "Visible text on a closed MultiSelector's trigger when it shows a count of the chosen options (`triggerDisplay=\"count\"`), for example `2 selected`. `{count}` is the number of chosen options; use a plural form if your language needs one."
+  },
   "@astryx.multiSelector.clearAll": {
     "defaultMessage": "Clear all {label}",
     "description": "Screen-reader-only label on the X that clears every selected value from a MultiSelector. Example: `Clear all Countries`. `{label}` is typically already plural in English."

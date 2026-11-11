@@ -285,7 +285,7 @@ export default {
 		},
 		{
 			name: 'formatValue',
-			type: '(items: {value: string; label: string}[]) => string',
+			type: '(items: MultiSelectorSelectedItem[]) => string',
 			description:
 				'Formats the trigger text when triggerDisplay="count" or "labels". Receives the selected items (value plus resolved label); the count is items.length. Not used by triggerDisplay="badges".'
 		},

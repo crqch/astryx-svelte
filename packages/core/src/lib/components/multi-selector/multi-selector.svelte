@@ -12,6 +12,7 @@
 	import type { MultiSelectorSize, MultiSelectorVariant } from './multi-selector.stylex.js';
 	import type {
 		MultiSelectorOptionData,
+		MultiSelectorSelectedItem,
 		MultiSelectorOptionType,
 		// Aliased locally only so the import and the re-export below do not name
 		// the same binding twice in one module.
@@ -174,6 +175,18 @@
 		 * @default 'count'
 		 */
 		triggerDisplay?: 'count' | 'labels' | 'badges';
+		/**
+		 * Formats the selected items into the trigger's text. Receives each selected
+		 * option's value and its resolved label, in selection order.
+		 *
+		 * Not called when nothing is selected — the placeholder shows instead — and
+		 * not called for `triggerDisplay: 'badges'`, which renders Badge elements
+		 * rather than text.
+		 *
+		 * @default the translated `@astryx.multiSelector.selectedCount` message for
+		 *   `'count'`, "A, B, C, +N" for `'labels'`
+		 */
+		formatValue?: (items: MultiSelectorSelectedItem[]) => string;
 		/**
 		 * Maximum number of badges to show before showing "+N".
 		 * Only used when `triggerDisplay` is `'badges'`.
@@ -352,6 +365,7 @@
 		hasSearch = false,
 		searchPlaceholder: searchPlaceholderFromProps,
 		triggerDisplay = 'count',
+		formatValue,
 		maxBadges = 3,
 		renderOption,
 		indicatorPosition = 'start',
@@ -732,12 +746,13 @@
 	});
 
 	// Build trigger display content
-	const selectedLabels = $derived(
+	const selectedItems = $derived(
 		optimisticValue.map((v) => {
 			const item = selectableItems.find((i) => i.value === v);
-			return item?.label ?? v;
+			return { value: v, label: item?.label ?? v };
 		})
 	);
+	const selectedLabels = $derived(selectedItems.map((item) => item.label));
 
 	const labelsText = $derived.by(() => {
 		const displayed = selectedLabels.slice(0, 3);
@@ -929,10 +944,14 @@
 		<span class={triggerTextAttrs.class} style={triggerTextAttrs.style}>{placeholder}</span>
 	{:else if triggerDisplay === 'count'}
 		<span class={triggerTextAttrs.class} style={triggerTextAttrs.style}>
-			{optimisticValue.length} selected
+			{formatValue
+				? formatValue(selectedItems)
+				: t('@astryx.multiSelector.selectedCount', { count: optimisticValue.length })}
 		</span>
 	{:else if triggerDisplay === 'labels'}
-		<span class={triggerTextAttrs.class} style={triggerTextAttrs.style}>{labelsText}</span>
+		<span class={triggerTextAttrs.class} style={triggerTextAttrs.style}>
+			{formatValue ? formatValue(selectedItems) : labelsText}
+		</span>
 	{:else}
 		<span class={triggerBadgesAttrs.class} style={triggerBadgesAttrs.style}>
 			<!--

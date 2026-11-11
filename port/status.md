@@ -566,8 +566,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 10590          |
-| Declared here              | 6561           |
-| **Short**                  | **4045**       |
+| Declared here              | 6567           |
+| **Short**                  | **4039**       |
 | Over, across 6 groups      | +16            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -586,9 +586,9 @@ per connected group.
 | `SideNav/SideNav.test.tsx`                                                                                                                                                               | 252      | 116  | 136   |
 | `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
-| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 101  | 98    |
 | `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 33   | 96    |
 | `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 123  | 94    |
+| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 106  | 93    |
 | `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 149      | 65   | 84    |
 | `Typeahead/Typeahead.test.tsx`                                                                                                                                                           | 127      | 49   | 78    |
 | `DateTimeInput/DateTimeInput.test.tsx`                                                                                                                                                   | 161      | 89   | 72    |
@@ -622,7 +622,7 @@ per connected group.
 | `utils/plainDate.test.ts`                                                                                                                                                                | 124      | 87   | 37    |
 | `Chat/ChatMessage.test.tsx`<br>`Chat/ChatMessageBubble.test.tsx`<br>`Chat/ChatMessageList.test.tsx`<br>`Chat/ChatMessageMetadata.test.tsx`<br>`Chat/ChatSystemMessage.test.tsx`          | 79       | 43   | 36    |
 | `AlertDialog/AlertDialog.test.tsx`                                                                                                                                                       | 46       | 12   | 34    |
-| `Icon/Icon.test.tsx`                                                                                                                                                                     | 65       | 32   | 33    |
+| `Icon/Icon.test.tsx`                                                                                                                                                                     | 65       | 33   | 32    |
 | `Chat/ChatDictationButton.test.tsx`<br>`Chat/ChatLayout.test.tsx`<br>`Chat/ChatLayoutScrollButton.test.tsx`<br>`Chat/useChatNewMessages.test.tsx`<br>`Chat/useChatStreamScroll.test.tsx` | 60       | 30   | 30    |
 | `DateInput/DateInputTouch.test.tsx`                                                                                                                                                      | 160      | 130  | 30    |
 | `theme/generateThemeRules.test.ts`                                                                                                                                                       | 80       | 50   | 30    |

@@ -21,7 +21,7 @@ import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
  * icon theme target`, `MultiSelector list structure`, `MultiSelector search
  * affordances`, `MultiSelector disabled state theme target`, `MultiSelector
  * dropdown option theme target` and `MultiSelector popup theme target`), **101
- * here** — 1 dropped and 9 unported, all named below.
+ * here** — 1 dropped and the cases below are unported, all named below.
  *
  * Two titles differ and are **not** gaps: upstream's `announces the
  * empty-results message when nothing matches`, `announces the all-selected
@@ -36,16 +36,8 @@ import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
  * `collapsible.svelte.test.ts` and `more-menu.svelte.test.ts` drop. There is no
  * ref-callback case in the file, so nothing else is React-only.
  *
- * ## The 9 that are unported
+ * ## What remains unported
  *
- * **Six arrived at 0.5.0**, all in the top-level `MultiSelector` block:
- *
- * - **Five `formatValue` cases** — `formats the count display with
- *   formatValue`, `passes selected values and resolved labels to formatValue`,
- *   `formats the labels display with formatValue`, `ignores formatValue in
- *   badges display`, and `shows the placeholder rather than calling formatValue
- *   when empty`. This is a **component** gap: `MultiSelector` here has no
- *   `formatValue` prop at all, so none of the five has anything to call.
  * - **`hides a standalone divider from the accessibility tree (#4994)`**, in
  *   `MultiSelector list structure`. `Selector` and `AvatarGroup` carry the
  *   sibling of this case, and both are unported there too.
@@ -235,6 +227,94 @@ describe('MultiSelector', () => {
 		await expect
 			.element(screen.getByText('Apple, Banana, Orange, +2', { exact: true }))
 			.toBeInTheDocument();
+	});
+
+	it('formats the count display with formatValue', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Spaces',
+				options: defaultOptions,
+				value: ['Apple', 'Banana'],
+				onChange: () => {},
+				formatValue: (items) => `${items.length} spaces selected`
+			}
+		});
+		await expect
+			.element(screen.getByText('2 spaces selected', { exact: true }))
+			.toBeInTheDocument();
+	});
+
+	it('passes selected values and resolved labels to formatValue', async () => {
+		const formatValue = vi.fn(
+			(items: { value: string; label: string }[]) =>
+				`${items[0].label} and ${items.length - 1} more`
+		);
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: [
+					{ value: 'a', label: 'Apple' },
+					{ value: 'b', label: 'Banana' }
+				],
+				value: ['a', 'b'],
+				onChange: () => {},
+				formatValue
+			}
+		});
+		expect(formatValue).toHaveBeenCalledWith([
+			{ value: 'a', label: 'Apple' },
+			{ value: 'b', label: 'Banana' }
+		]);
+		await expect.element(screen.getByText('Apple and 1 more', { exact: true })).toBeInTheDocument();
+	});
+
+	it('formats the labels display with formatValue', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: ['Apple', 'Banana', 'Orange'],
+				onChange: () => {},
+				triggerDisplay: 'labels',
+				formatValue: (items) => items.map((item) => item.label).join(' & ')
+			}
+		});
+		await expect
+			.element(screen.getByText('Apple & Banana & Orange', { exact: true }))
+			.toBeInTheDocument();
+	});
+
+	it('ignores formatValue in badges display', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: ['Apple', 'Banana'],
+				onChange: () => {},
+				triggerDisplay: 'badges',
+				formatValue: () => 'formatted'
+			}
+		});
+		const trigger = screen.getByRole('combobox').element();
+		expect(trigger.textContent).not.toContain('formatted');
+		expect(trigger.textContent).toContain('Apple');
+		expect(trigger.textContent).toContain('Banana');
+	});
+
+	it('shows the placeholder rather than calling formatValue when empty', async () => {
+		const formatValue = vi.fn(() => 'formatted');
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: [],
+				onChange: () => {},
+				placeholder: 'Pick fruits...',
+				formatValue
+			}
+		});
+		expect(formatValue).not.toHaveBeenCalled();
+		await expect.element(screen.getByText('Pick fruits...', { exact: true })).toBeInTheDocument();
 	});
 
 	it('opens dropdown on click', async () => {

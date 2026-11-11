@@ -3,8 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { createAttachmentKey } from 'svelte/attachments';
+import { createRawSnippet } from 'svelte';
 import Icon from '$lib/components/icon/icon.svelte';
-import { resetIcons } from '$lib/components/icon/icon-registry.js';
+import { registerIcons, resetIcons } from '$lib/components/icon/icon-registry.js';
 import IconNestedTheme from './fixtures/icon-nested-theme.svelte';
 import TestIcon from './fixtures/test-icon.svelte';
 import { probe } from './fixtures/xstyle-probe.stylex.js';
@@ -198,6 +199,21 @@ describe('Icon', () => {
 
 		await expect.element(screen.getByTestId('outer')).toHaveTextContent('outer-check');
 		await expect.element(screen.getByTestId('inner')).toHaveTextContent('inner-check');
+		resetIcons();
+	});
+
+	it('resolves a namespaced key registered globally', async () => {
+		resetIcons();
+		registerIcons({
+			'richtext:bold': createRawSnippet(() => ({
+				render: () => '<svg data-testid="namespaced-bold"></svg>'
+			}))
+		});
+
+		const screen = await render(Icon, {
+			props: { icon: 'richtext:bold', 'data-testid': 'icon' }
+		});
+		expect(screen.container.querySelector('[data-testid="namespaced-bold"]')).not.toBeNull();
 		resetIcons();
 	});
 
