@@ -2,15 +2,24 @@
 
 /**
  * @file createPanGesture.test.tsx
- * @input createPanGesture and usePanGesture driven by touches through the
- *   document's gesture host
+ * @input createPanGesture and a Svelte usePanGesture driven by touches through
+ *   the document's gesture host
  * @output Tests for spec:AST-107 FR1 and FR6. A drag is reported as values,
  *   on each axis, and as cancelled. A press or a long press reports nothing.
  *   One API works at two layers. Destroy leaves no listener.
- * @position Tests of the public pan factory and its hook
+ * @position Tests of the public pan factory and its Svelte hook
+ *
+ * 14 of upstream's 15 declarations are here. The missing one keeps the last
+ * committed `onPan` through a render React discards into Suspense; Svelte has
+ * no discarded render (a rerender commits), so there is no counterpart state
+ * to assert.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { tick } from 'svelte';
+import { render } from 'vitest-browser-svelte';
+import { armClickGuard, disarmClickGuard } from '$lib/utils/click-guard.js';
+import PanHookProbe from './fixtures/pan-hook-probe.svelte';
 import {
 	createPanGesture,
 	type PanGestureEvent,
@@ -337,5 +346,78 @@ describe('createPanGesture on the server (spec:AST-107 FR6)', () => {
 			}
 		}
 		expect(touched).toEqual([]);
+	});
+});
+
+describe('usePanGesture (spec:AST-107 FR1, FR6)', () => {
+	it('reports what its factory reports, through the latest onPan', async () => {
+		const first = vi.fn();
+		const events: PanGestureEvent[] = [];
+		const screen = await render(PanHookProbe, {
+			props: { axis: 'x' as const, onPan: first }
+		});
+		const surface = screen.container.querySelector('[data-testid="a"]') as HTMLElement;
+		await screen.rerender({ axis: 'x', onPan: (event) => events.push(event) });
+		drag(surface, 40, 0);
+		expect(first).not.toHaveBeenCalled();
+		expect(phases(events)).toEqual(['began', 'changed', 'ended']);
+		expect(events.at(-1)?.translation).toEqual({ x: 30, y: 0 });
+	});
+
+	it('calls onPan from no effect: a drag in progress at unmount ends without a cancelled event', async () => {
+		const events: PanGestureEvent[] = [];
+		const screen = await render(PanHookProbe, {
+			props: { axis: 'x' as const, onPan: (event) => events.push(event) }
+		});
+		drag(screen.container.querySelector('[data-testid="a"]') as Element, 40, 0, { lift: false });
+		expect(phases(events)).toEqual(['began', 'changed']);
+		screen.unmount();
+		expect(phases(events)).toEqual(['began', 'changed']);
+	});
+
+	it('calls onPan from no effect: a drag in progress when the axis changes ends without a cancelled event', async () => {
+		const events: PanGestureEvent[] = [];
+		const onPan = (event: PanGestureEvent) => events.push(event);
+		const screen = await render(PanHookProbe, { props: { axis: 'x' as const, onPan } });
+		const surface = screen.container.querySelector('[data-testid="a"]') as Element;
+		drag(surface, 40, 0, { lift: false });
+		expect(phases(events)).toEqual(['began', 'changed']);
+		await screen.rerender({ axis: 'y', onPan });
+		expect(phases(events)).toEqual(['began', 'changed']);
+	});
+
+	it('attaches once and removes every listener at unmount', async () => {
+		const events: PanGestureEvent[] = [];
+		const holder = document.createElement('div');
+		document.body.append(holder);
+		surfaces.push(holder);
+		// Warm the once-per-document listeners first so the count is the pan's.
+		armClickGuard(document);
+		disarmClickGuard(document);
+		const live = trackListeners();
+		const before = live();
+		const screen = await render(PanHookProbe, {
+			props: { axis: 'x' as const, onPan: (event) => events.push(event) }
+		});
+		drag(screen.container.querySelector('[data-testid="a"]') as Element, 40, 0);
+		expect(phases(events)).toEqual(['began', 'changed', 'ended']);
+		screen.unmount();
+		disarmClickGuard(document);
+		expect(live()).toBe(before);
+	});
+
+	it('follows the element when the ref moves to a new node', async () => {
+		const events: PanGestureEvent[] = [];
+		const screen = await render(PanHookProbe, {
+			props: { axis: 'x' as const, onPan: (event) => events.push(event) }
+		});
+		const first = screen.container.querySelector('[data-testid="a"]') as Element;
+		const swap = screen.container.querySelector('button') as HTMLButtonElement;
+		swap.click();
+		await tick();
+		drag(first, 40, 0);
+		expect(events).toHaveLength(0);
+		drag(screen.container.querySelector('[data-testid="b"]') as Element, 40, 0);
+		expect(phases(events)).toEqual(['began', 'changed', 'ended']);
 	});
 });

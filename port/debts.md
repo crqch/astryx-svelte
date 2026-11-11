@@ -1880,3 +1880,18 @@ Each restatement is marked in the suite: an inline `touch-action` write (a brows
 the host's rule itself), `caretRangeFromPoint` finding real text under a synthetic pointer
 (stubbed away for the three claim-during-selection cases), and the shared page's input
 stream outliving a case (reset between cases). The behaviour asserted is the same.
+
+### The gesture hook suites still need Svelte counterparts
+
+- **units:** gestures
+- **kind:** unported
+- **retires:** when `useGestureRecognizer` (42) and the five remaining
+  `usePanGesture` Suspense case are ported and green
+
+`useFingerScroll` (15) and `usePanGesture` (5 of 6) now have Svelte rune hooks
+with their suites. `useGestureRecognizer` (42 declarations) is the React face of
+the gesture host, covering recognizer identity, enable/disable, action groups,
+replaced nodes, and `usePressTracker`; it needs a rune-hook rewrite and a Svelte
+probe per component shape in its suite. The one `usePanGesture` case left
+asserts that React keeps the last committed `onPan` when a Suspense transition
+is discarded; Svelte has no discarded render to test.

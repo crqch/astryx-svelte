@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 339     | 11912          |
+| Ported here              | 340     | 11927          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **458** | **5013**       |
+| **Unported**             | **457** | **4998**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -117,7 +117,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `hooks/useScrollOverflow.test.tsx`                                 | 16    |
 | `Table/plugins/virtualization/useTableWindow.test.tsx`             | 16    |
 | `Calendar/hooks/calendarHooks.calendarSystems.test.tsx`            | 15    |
-| `gestures/__tests__/useFingerScroll.test.tsx`                      | 15    |
 | `i18n/__tests__/calendarSystem.test.tsx`                           | 15    |
 | `Icon/componentIcons.test.tsx`                                     | 15    |
 | `Layer/layerScopedContext.test.tsx`                                | 15    |
@@ -499,9 +498,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 11912          |
-| Declared here              | 7873           |
-| **Short**                  | **4054**       |
+| Upstream, in ported suites | 11927          |
+| Declared here              | 7893           |
+| **Short**                  | **4049**       |
 | Over, across 5 groups      | +15            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -642,7 +641,6 @@ per connected group.
 | `theme/onMediaTokens.test.ts`                                                                                                                                                            | 29       | 22   | 7     |
 | `Badge/Badge.test.tsx`                                                                                                                                                                   | 14       | 8    | 6     |
 | `CodeBlock/tokenizer.test.ts`                                                                                                                                                            | 18       | 12   | 6     |
-| `gestures/__tests__/createPanGesture.test.tsx`                                                                                                                                           | 15       | 9    | 6     |
 | `hooks/useAnnounce.test.tsx`                                                                                                                                                             | 15       | 9    | 6     |
 | `InputGroup/InputGroup.test.tsx`                                                                                                                                                         | 24       | 18   | 6     |
 | `Layer/layerDismissalFamilies.test.tsx`                                                                                                                                                  | 17       | 11   | 6     |
@@ -699,6 +697,7 @@ per connected group.
 | `VisuallyHidden/VisuallyHidden.test.tsx`                                                                                                                                                 | 9        | 7    | 2     |
 | `__tests__/stubMatchMedia.test.ts`                                                                                                                                                       | 7        | 6    | 1     |
 | `Avatar/AvatarStatusDot.test.tsx`                                                                                                                                                        | 20       | 19   | 1     |
+| `gestures/__tests__/createPanGesture.test.tsx`                                                                                                                                           | 15       | 14   | 1     |
 | `hooks/useHotkeys.test.ts`                                                                                                                                                               | 13       | 12   | 1     |
 | `hooks/useImageMode.test.ts`                                                                                                                                                             | 6        | 5    | 1     |
 | `hooks/useInputStatusIcon.test.tsx`                                                                                                                                                      | 7        | 6    | 1     |
