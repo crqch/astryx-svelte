@@ -140,5 +140,9 @@
 </button>
 
 <TooltipLayer {tooltip}>
-	{@render content()}
+	{#if typeof content === 'string' || typeof content === 'number'}
+		{content}
+	{:else}
+		{@render content()}
+	{/if}
 </TooltipLayer>
