@@ -77,9 +77,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          # Writes an .npmrc at NPM_CONFIG_USERCONFIG. The auth line it writes
-          # is the literal `${NODE_AUTH_TOKEN}`, which Bun 1.3.14 does not
-          # expand; the next step replaces it with the resolved secret.
+          # Writes an .npmrc at NPM_CONFIG_USERCONFIG. Bun 1.3.14 ignores that
+          # variable and reads only `$HOME/.npmrc` / the project `.npmrc`, so
+          # the next step writes the resolved secret to both.
           #
           # NPM_TOKEN must be an **Automation** token (classic) or a **Granular
           # Access Token** with write access to the @astryx-sv scope. A
@@ -93,9 +93,14 @@ jobs:
 
       - name: Configure npm authentication
         run: |
-          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-          printf '//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$npmrc"
-          printf 'registry=https://registry.npmjs.org/\n' >> "$npmrc"
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "NPM_TOKEN is empty; cannot publish." >&2
+            exit 1
+          fi
+          for npmrc in "$HOME/.npmrc" ".npmrc"; do
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$npmrc"
+            printf 'registry=https://registry.npmjs.org/\n' >> "$npmrc"
+          done
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
