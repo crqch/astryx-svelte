@@ -294,4 +294,62 @@ describe('ComplexSelector popup theme target', () => {
 			expect(handle.isOpen()).toBe(false);
 		});
 	});
+
+	/**
+	 * `ComplexSelector/ComplexSelector.fr10.test.tsx`'s field-part cases, at the
+	 * surface this port added: the `container*` props reach the Field box and the
+	 * `control*` props reach the bordered control box around the trigger. The
+	 * type-level `expectFieldInputProps` case has no runtime counterpart; the
+	 * props are declared through `FieldInputBaseProps` in the component's public
+	 * type.
+	 */
+	describe('field parts (FR10)', () => {
+		it('puts control* on the themed control box around the trigger, not on the trigger or the popup', async () => {
+			const screen = await render(ComplexSelector, {
+				props: {
+					label: 'Fruit blend',
+					value: 'Apple',
+					triggerLabel: 'Apple',
+					controlClassName: 'fr10-control',
+					containerClassName: 'fr10-container',
+					children: doneContent
+				}
+			});
+			const trigger = screen.getByRole('combobox', { name: 'Fruit blend', exact: true });
+			const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+			expect(controlBox).not.toBeNull();
+			expect(controlBox).toHaveClass('astryx-complex-selector');
+			expect(controlBox).toContainElement(trigger.element() as HTMLElement);
+			expect(trigger.element()).not.toHaveClass('fr10-control');
+			expect(screen.container.querySelectorAll('.fr10-control')).toHaveLength(1);
+			expect(screen.container.querySelectorAll('.fr10-container')).toHaveLength(1);
+			// The container class reaches the Field box that wraps the label and
+			// the control, not the popup or the trigger.
+			const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+			expect(fieldBox).toContainElement(controlBox);
+
+			await userEvent.click(trigger);
+			await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
+			expect(screen.getByRole('dialog').element()).not.toHaveClass('fr10-control');
+		});
+
+		it('applies controlStyle and containerStyle to their boxes', async () => {
+			const screen = await render(ComplexSelector, {
+				props: {
+					label: 'Fruit blend',
+					value: 'Apple',
+					triggerLabel: 'Apple',
+					controlClassName: 'fr10-control',
+					controlStyle: 'outline-color: red',
+					containerClassName: 'fr10-container',
+					containerStyle: 'gap: 3px',
+					children: doneContent
+				}
+			});
+			const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+			expect(controlBox.getAttribute('style')).toContain('outline-color: red');
+			const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+			expect(fieldBox.getAttribute('style')).toContain('gap: 3px');
+		});
+	});
 });
