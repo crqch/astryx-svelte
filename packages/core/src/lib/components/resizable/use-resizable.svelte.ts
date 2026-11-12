@@ -1,29 +1,56 @@
 /**
- * Ported from Astryx's `Resizable/useResizable.ts`.
+ * Ported from Astryx's `Resizable/useResizable.ts` at the 0.7.13 pin.
  *
- * The size model is pure state arithmetic — nothing here measures the DOM, and
- * `ResizeHandle` only ever hands it a *delta*. That is what makes the keyboard
- * path identical to the pointer one, and what lets the whole hook transcribe.
+ * The hook is the Svelte wrapper around `createResizable`: the factory owns
+ * the region's state, persistence, percentage basis and motion; this module
+ * creates it during component init, feeds it the options each update, and
+ * exposes the snapshot as reactive state.
  *
- * Two React devices go. The two refs (`preCollapseSize`, `dragStartSize`) are
- * plain `let`s: they exist upstream only because a value has to survive a
- * re-render without causing one, which is what a non-reactive binding already
- * is here. And every `useCallback` is a plain function — the options arrive as a
- * getter read at *call* time, so there is no dependency list to keep and no
- * stale closure to dodge.
- *
- * What could not transcribe is the return. React recomputes `size`,
- * `isCollapsed` and `props` on every render; a plain object here would freeze a
- * consumer at the values it had on mount, so those three are **getters** — the
- * shape `useMediaQuery` established.
+ * Three React devices go. `useSyncExternalStore` becomes a `$state` snapshot
+ * fed by the factory's own snapshot channel. The options object's identity is
+ * not a render, so an effect calls `update` whenever the config getter's
+ * values change. And the props object is stable with getters rather than
+ * rebuilt each render, because this port's pane and handle registries key on
+ * its identity.
  */
 
+import {
+	createResizableAs,
+	readInitialResizableState,
+	readResizableInternals,
+	type CreateResizableOptions,
+	type ResizableSnapshot
+} from './create-resizable.js';
+import { createRegionPaneSlot, registerPropsRegion } from './resizable-pane.js';
+import {
+	DEFAULT_COLLAPSED_SIZE,
+	percent,
+	type ResizableDirection,
+	type ResizablePercentSize,
+	type ResizableSize,
+	type SizeValue
+} from './resizable-model.js';
+import { pixel } from '../table/column-utils.js';
+
+export { percent, pixel };
+export type { ResizableDirection, ResizablePercentSize, ResizableSize };
+
+/** A pixel size with its Table-compatible structured spelling. */
+export type { PixelWidth } from '../table/table-types.js';
+
 export interface ResizableRegionConfig {
-	/** Default size in pixels, or percentage string (e.g. '20%'). */
-	defaultSize?: number | string;
-	/** Minimum size in pixels. @default 50 */
+	/**
+	 * Initial size. A number is pixels, exact `Npx` is pixels, exact `N%` is a
+	 * share of the basis, and `percent()` adds one pixel floor or ceiling.
+	 */
+	defaultSize?: ResizableSize | SizeValue;
+	/** Minimum size, in the same forms. @default 50 */
+	minSize?: ResizableSize;
+	/** Maximum size, in the same forms. Unbounded when omitted. */
+	maxSize?: ResizableSize;
+	/** Legacy alias of `minSize`, kept for this port's released API. */
 	minSizePx?: number;
-	/** Maximum size in pixels. @default Infinity */
+	/** Legacy alias of `maxSize`, kept for this port's released API. */
 	maxSizePx?: number;
 	/** Whether this region can collapse to 0. @default false */
 	collapsible?: boolean;
@@ -47,24 +74,46 @@ export interface ResizableConfig {
 	minWidth?: number;
 	/** Maximum width in pixels. @default 480 */
 	maxWidth?: number;
-	/** localStorage key for persisting width. */
+	/** localStorage key for persisting width and collapse state. */
 	autoSaveId?: string;
 	/** Called when the width changes (on drag end). */
 	onWidthChange?: (width: number) => void;
+	/** Start collapsed (uncontrolled). A persisted entry wins over this. */
+	defaultIsCollapsed?: boolean;
+	/** Controlled collapse state. Pair with `onCollapseChange`. */
+	isCollapsed?: boolean;
+	/** Called once per collapse state change. */
+	onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 export interface UseResizableSingleConfig extends ResizableRegionConfig {
+	/**
+	 * The element a percentage is a share of. Omitted, percentages are a share
+	 * of the viewport.
+	 */
+	containerRef?: { readonly current: HTMLElement | null };
+	/** Which axis this region resizes along. @default 'horizontal' */
+	direction?: ResizableDirection;
 	/** Unique key for localStorage persistence. */
 	autoSaveId?: string;
+	/**
+	 * Initial collapse state (uncontrolled). A persisted entry wins over it.
+	 * Only honored when `collapsible` is true.
+	 */
+	defaultIsCollapsed?: boolean;
+	/** Controlled collapse state. When set, the caller owns collapse. */
+	isCollapsed?: boolean;
 	/** Called when size changes during drag. */
 	onSizeChange?: (size: number) => void;
-	/** Called when collapse state changes (via drag or programmatic). */
+	/** Called once per collapse state change. */
 	onCollapseChange?: (isCollapsed: boolean) => void;
 }
 
 export interface UseResizableMultiConfig {
-	/** Layout direction. @default 'horizontal' */
-	direction?: 'horizontal' | 'vertical';
+	/** Layout direction, shared by every region. @default 'horizontal' */
+	direction?: ResizableDirection;
+	/** One container for every region's percentage basis. */
+	containerRef?: { readonly current: HTMLElement | null };
 	/** Named region configurations. */
 	regions: Record<string, ResizableRegionConfig>;
 	/** Unique key for localStorage persistence. */
@@ -92,204 +141,180 @@ export interface ResizableProps {
 	_onResizeStart: () => void;
 	_onResizeMove: (delta: number) => void;
 	_onResizeEnd: () => void;
+	/**
+	 * The gesture ended without completing — pointercancel, a lost pointer
+	 * capture, or a handle unmounted mid-drag. Separate from `_onResizeEnd`
+	 * because a cancelled drag deliberately does not signal a resize end, but
+	 * it must still release everything the gesture was holding.
+	 */
+	_onResizeCancel?: () => void;
 	_minSizePx: number;
 	_maxSizePx: number;
 	_snaps: number[];
 	_collapsedSize: number;
 	/** Whether the region supports collapsing. */
 	_collapsible: boolean;
+	/**
+	 * The hook's axis, so a handle can flag a direction mismatch. Optional for
+	 * the same reason as `_onResizeCancel`: this type is exported, and a
+	 * hand-built object from before it existed must keep compiling.
+	 */
+	_direction?: ResizableDirection;
 	_isResizableProps: true;
 }
 
-const DEFAULT_MIN = 50;
-const DEFAULT_COLLAPSED_SIZE = 40;
-const STORAGE_PREFIX = 'astryx-resizable:';
+// =============================================================================
+// The hook's channels to the factory and its handle
+// =============================================================================
 
-function clampSize(size: number, min: number, max: number, snaps: number[]): number {
-	const clamped = Math.min(max, Math.max(min, size));
+type CollapseControls = { collapse: () => void; expand: () => void };
+const collapseControls = new WeakMap<ResizableProps, CollapseControls>();
 
-	// When snap points are defined, always snap to the nearest one.
-	// No intermediate positions — the panel can only rest at snap values.
-	if (snaps.length > 0) {
-		let nearest = snaps[0];
-		let nearestDist = Math.abs(clamped - nearest);
-		for (let i = 1; i < snaps.length; i++) {
-			const dist = Math.abs(clamped - snaps[i]);
-			if (dist < nearestDist) {
-				nearest = snaps[i];
-				nearestDist = dist;
-			}
-		}
-		return Math.min(max, Math.max(min, nearest));
-	}
+/** A drag's end with its release velocity, signed like the move's delta. */
+const releaseEnds = new WeakMap<ResizableProps, (velocity: number) => void>();
 
-	return clamped;
+/** The maximum an unbounded region reports as `aria-valuemax`. */
+const effectiveMaxima = new WeakMap<ResizableProps, number>();
+
+/** The props behind a component's `resizable` slot. */
+export function resizablePropsOf(value: ResizableRegion | ResizableProps): ResizableProps {
+	return 'props' in value ? value.props : value;
 }
 
-function loadPersistedSize(key: string): number | null {
-	if (typeof window === 'undefined') {
-		return null;
-	}
-	try {
-		const raw = localStorage.getItem(STORAGE_PREFIX + key);
-		if (raw != null) {
-			const parsed = JSON.parse(raw);
-			if (typeof parsed === 'number') {
-				return parsed;
-			}
-		}
-	} catch {
-		/* ignore */
-	}
-	return null;
+/** Whether a `resizable` value is useResizable's output for one region. */
+export function isResizableRegion(value: unknown): value is ResizableRegion {
+	return typeof value === 'object' && value !== null && 'props' in value;
 }
 
-function persistSize(key: string, size: number): void {
-	if (typeof window === 'undefined') {
+/** The reported maximum for `props`, or `undefined` for a hand-built object. */
+export function getEffectiveMaxPx(props: ResizableProps): number | undefined {
+	return effectiveMaxima.get(props);
+}
+
+/**
+ * The collapse/expand pair the hook registered for `props`, or `undefined`
+ * for a hand-built `ResizableProps` object (which the handle then toggles
+ * with a resize gesture).
+ */
+export function getCollapseControls(props: ResizableProps): CollapseControls | undefined {
+	return collapseControls.get(props);
+}
+
+/**
+ * Ends the drag `props` follows at a release `velocity`. A props object the
+ * hook did not return ends without one.
+ */
+export function endResizeAt(props: ResizableProps, velocity: number): void {
+	const end = releaseEnds.get(props);
+	if (end == null) {
+		props._onResizeEnd();
 		return;
 	}
-	try {
-		localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(size));
-	} catch {
-		/* ignore */
-	}
+	end(velocity);
 }
 
-function resolveDefaultSize(defaultSize: number | string | undefined): number {
-	if (defaultSize == null) {
-		return 250;
-	}
-	if (typeof defaultSize === 'number') {
-		return defaultSize;
-	}
-	if (defaultSize.endsWith('%')) {
-		const pct = parseFloat(defaultSize);
-		if (!isNaN(pct)) {
-			const approx = typeof window !== 'undefined' ? window.innerWidth : 1200;
-			return Math.round((pct / 100) * approx);
-		}
-	}
-	return 250;
+const EMPTY_SNAPS: number[] = [];
+
+/** Maps the released pixel aliases onto upstream's `minSize` / `maxSize`. */
+function optionsOf(config: UseResizableSingleConfig): CreateResizableOptions {
+	const { minSizePx, maxSizePx, ...rest } = config;
+	return {
+		...rest,
+		minSize: config.minSize ?? minSizePx,
+		maxSize: config.maxSize ?? maxSizePx
+	};
 }
 
 function useSingleResizable(config: () => UseResizableSingleConfig): ResizableRegion {
-	// Read once, for the initial state only — upstream's lazy `useState`
-	// initialisers, which likewise see the config as it was on mount.
-	const first = config();
-	const resolvedFirstDefault = resolveDefaultSize(first.defaultSize);
-	const persisted = first.autoSaveId ? loadPersistedSize(first.autoSaveId) : null;
-	const initial = persisted ?? resolvedFirstDefault;
+	const controller = createResizableAs('useResizable', null, optionsOf(config()));
+	const channel = readResizableInternals(controller)!;
+	const slot = createRegionPaneSlot();
+	channel.followRegion(slot);
 
-	const initialSize = clampSize(
-		initial,
-		first.minSizePx ?? DEFAULT_MIN,
-		first.maxSizePx ?? Infinity,
-		first.snaps ?? []
-	);
+	let snapshot = $state(channel.snapshot());
 
-	let size = $state(initialSize);
-	let isCollapsed = $state(persisted === 0 && (first.collapsible ?? false));
+	const props: ResizableProps = {
+		get _size() {
+			return snapshot.size;
+		},
+		get _isCollapsed() {
+			return snapshot.isCollapsed;
+		},
+		_onResizeStart: () => channel.model.start(),
+		_onResizeMove: (delta: number) => channel.model.move(delta),
+		_onResizeEnd: () => channel.model.end(),
+		_onResizeCancel: () => channel.model.cancel(),
+		get _minSizePx() {
+			return snapshot.minPx;
+		},
+		get _maxSizePx() {
+			return snapshot.maxPx;
+		},
+		get _snaps() {
+			const snaps = config().snaps;
+			return snaps == null ? EMPTY_SNAPS : snaps;
+		},
+		get _collapsedSize() {
+			return config().collapsedSize ?? DEFAULT_COLLAPSED_SIZE;
+		},
+		get _collapsible() {
+			return config().collapsible ?? false;
+		},
+		get _direction() {
+			return config().direction ?? 'horizontal';
+		},
+		_isResizableProps: true
+	};
 
-	// Upstream's two refs, seeded from the same initial size its `useRef(size)`
-	// captures. Neither drives rendering — they only carry a value across an
-	// interaction — so a plain binding is the whole of what a ref was.
-	let preCollapseSize = initialSize;
-	let dragStartSize = initialSize;
-
-	const resolvedDefault = $derived(resolveDefaultSize(config().defaultSize));
-	const minSizePx = $derived(config().minSizePx ?? DEFAULT_MIN);
-	const maxSizePx = $derived(config().maxSizePx ?? Infinity);
-	const collapsible = $derived(config().collapsible ?? false);
-	const collapsedSize = $derived(config().collapsedSize ?? DEFAULT_COLLAPSED_SIZE);
-	const snaps = $derived(config().snaps ?? []);
-	const autoSaveId = $derived(config().autoSaveId);
-
-	$effect(() => {
-		if (autoSaveId) {
-			persistSize(autoSaveId, isCollapsed ? 0 : size);
+	collapseControls.set(props, {
+		collapse: () => controller.collapse(),
+		expand: () => controller.expand()
+	});
+	releaseEnds.set(props, (velocity) => channel.model.end(velocity));
+	registerPropsRegion(props, slot);
+	const noteEffectiveMax = () => {
+		if (snapshot.effectiveMaxPx != null) {
+			effectiveMaxima.set(props, snapshot.effectiveMaxPx);
 		}
+	};
+	noteEffectiveMax();
+	const unsubscribe = channel.subscribeSnapshot(() => {
+		snapshot = channel.snapshot();
+		noteEffectiveMax();
 	});
 
-	function collapse(): void {
-		if (!collapsible) {
-			return;
+	$effect.pre(() => {
+		const options = optionsOf(config());
+		// Reading the element makes a swap behind a stable ref a tracked change.
+		if (options.containerRef != null) {
+			void options.containerRef.current;
 		}
-		preCollapseSize = size;
-		isCollapsed = true;
-		size = 0;
-		config().onCollapseChange?.(true);
-		config().onSizeChange?.(0);
-	}
+		controller.update(options);
+	});
 
-	function expand(): void {
-		isCollapsed = false;
-		const restored = preCollapseSize || resolvedDefault;
-		const newSize = clampSize(restored, minSizePx, maxSizePx, snaps);
-		size = newSize;
-		config().onCollapseChange?.(false);
-		config().onSizeChange?.(newSize);
-	}
+	$effect(() => {
+		return () => {
+			unsubscribe();
+			controller.destroy();
+		};
+	});
 
-	function resize(newSize: number): void {
-		const clamped = clampSize(newSize, minSizePx, maxSizePx, snaps);
-		size = clamped;
-		isCollapsed = false;
-		config().onSizeChange?.(clamped);
-	}
-
-	function onResizeStart(): void {
-		dragStartSize = isCollapsed ? 0 : size;
-	}
-
-	function onResizeMove(delta: number): void {
-		const raw = dragStartSize + delta;
-		if (collapsible && raw < collapsedSize) {
-			if (!isCollapsed) {
-				preCollapseSize = size;
-				config().onCollapseChange?.(true);
-			}
-			isCollapsed = true;
-			size = 0;
-			config().onSizeChange?.(0);
-			return;
-		}
-		if (isCollapsed && raw >= collapsedSize) {
-			isCollapsed = false;
-			config().onCollapseChange?.(false);
-		}
-		const clamped = clampSize(raw, minSizePx, maxSizePx, snaps);
-		size = clamped;
-		config().onSizeChange?.(clamped);
-	}
-
-	function onResizeEnd(): void {
-		// Sizes already committed during move
-	}
+	const collapse = () => controller.collapse();
+	const expand = () => controller.expand();
+	const resize = (size: number) => controller.resize(size);
 
 	return {
 		get size() {
-			return isCollapsed ? 0 : size;
+			return snapshot.size;
 		},
 		get isCollapsed() {
-			return isCollapsed;
+			return snapshot.isCollapsed;
 		},
 		collapse,
 		expand,
 		resize,
-		get props(): ResizableProps {
-			return {
-				_size: isCollapsed ? 0 : size,
-				_isCollapsed: isCollapsed,
-				_onResizeStart: onResizeStart,
-				_onResizeMove: onResizeMove,
-				_onResizeEnd: onResizeEnd,
-				_minSizePx: minSizePx,
-				_maxSizePx: maxSizePx,
-				_snaps: snaps,
-				_collapsedSize: collapsedSize,
-				_collapsible: collapsible,
-				_isResizableProps: true
-			};
+		get props() {
+			return props;
 		}
 	};
 }
@@ -304,13 +329,16 @@ function useSingleResizable(config: () => UseResizableSingleConfig): ResizableRe
  */
 function useMultiResizable(config: () => UseResizableMultiConfig): Record<string, ResizableRegion> {
 	const result: Record<string, ResizableRegion> = {};
+	const { regions } = config();
 
-	for (const key of Object.keys(config().regions)) {
+	for (const key of Object.keys(regions)) {
 		result[key] = useSingleResizable(() => {
-			const { regions, autoSaveId } = config();
+			const current = config();
 			return {
-				...regions[key],
-				autoSaveId: autoSaveId ? `${autoSaveId}:${key}` : undefined
+				...current.regions[key],
+				containerRef: current.containerRef,
+				direction: current.direction,
+				autoSaveId: current.autoSaveId ? `${current.autoSaveId}:${key}` : undefined
 			};
 		});
 	}
@@ -329,4 +357,9 @@ export function useResizable(
 		return useMultiResizable(config as () => UseResizableMultiConfig);
 	}
 	return useSingleResizable(config as () => UseResizableSingleConfig);
+}
+
+/** The initial state a region renders before its factory exists, for SSR. */
+export function readResizableServerState(config: UseResizableSingleConfig): ResizableSnapshot {
+	return readInitialResizableState(optionsOf(config), 'server');
 }

@@ -1428,20 +1428,6 @@ Reduce Motion. Upstream's version also defers the landing to the layout effect t
 `flushSync` so the fade-in starts after the month changes; reproducing that ordering in
 Svelte is its own change, not a call swap.
 
-### `Resizable` has no spring-back, close slide or rubber-band drawing
-
-- **units:** Resizable
-- **kind:** unported
-- **retires:** when `Resizable/createResizable.ts`'s motion is ported
-
-Upstream's pane keeps the finger on a rubber band, springs a drawn handle back
-(`drawing.springBack(resolveMotion(element, springs.settle))`), and slides the next pane
-into the freed space on release; under Reduce Motion it clears the drawing and closes at
-once. This port's `use-resizable.svelte.ts` drives the same collapse and size state but
-none of that motion: there is no `springBack`, no `slideNextOnRelease` and no
-`prefers-reduced-motion` branch in it. The 97-case `Resizable/useResizable.test.ts` is
-likewise unported.
-
 ### BottomSheet cross-fades a touch dismissal only on a coarse pointer
 
 - **units:** BottomSheet

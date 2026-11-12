@@ -62,6 +62,9 @@
 	import { useTranslator } from '../../i18n/index.js';
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { devWarn } from '../../utils/dev-warning.js';
+	import { endResizeAt, getCollapseControls, getEffectiveMaxPx } from './use-resizable.svelte.js';
+	import { regionOfProps, registerResizeHandle } from './resizable-pane.js';
 	import {
 		resizeHandleAttrs,
 		resizeHandleHitAreaAttrs,
@@ -140,30 +143,45 @@
 		event.preventDefault();
 		event.stopPropagation();
 		isDragging = true;
+		const dragRegion = resizable;
+		regionOfProps(resizable)?.setPointerDragging(true);
 		resizable._onResizeStart();
 		const startPos = isHorizontal ? event.clientX : event.clientY;
 		const rtl = isHorizontal ? getRTLMultiplier() : 1;
+		let lastPos = startPos;
+		let lastTime = performance.now();
+		let velocity = 0;
 		document.body.style.cursor = isHorizontal ? 'col-resize' : 'row-resize';
 		document.body.style.userSelect = 'none';
 
 		const onMove = (ev: PointerEvent) => {
 			const currentPos = isHorizontal ? ev.clientX : ev.clientY;
 			const delta = (currentPos - startPos) * rtl * sign;
-			resizable._onResizeMove(delta);
+			const now = performance.now();
+			const elapsed = now - lastTime;
+			if (elapsed > 0) {
+				// The release velocity is the last sample's, signed like the move.
+				velocity = ((currentPos - lastPos) * rtl * sign * 1000) / elapsed;
+			}
+			lastPos = currentPos;
+			lastTime = now;
+			(resizable ?? dragRegion)._onResizeMove(delta);
 		};
-		const onUp = () => {
+		const release = (isCancelled: boolean) => {
 			cleanup();
 			isDragging = false;
-			resizable._onResizeEnd();
+			const region = resizable ?? dragRegion;
+			regionOfProps(region)?.setPointerDragging(false);
+			if (isCancelled) {
+				region._onResizeCancel?.();
+			} else {
+				endResizeAt(region, velocity);
+			}
 			document.body.style.cursor = '';
 			document.body.style.userSelect = '';
 		};
-		const onCancel = () => {
-			cleanup();
-			isDragging = false;
-			document.body.style.cursor = '';
-			document.body.style.userSelect = '';
-		};
+		const onUp = () => release(false);
+		const onCancel = () => release(true);
 		function cleanup() {
 			window.removeEventListener('pointermove', onMove);
 			window.removeEventListener('pointerup', onUp);
@@ -219,9 +237,20 @@
 			case 'Enter': {
 				event.preventDefault();
 				if (resizable._collapsible) {
-					resizable._onResizeStart();
-					resizable._onResizeMove(resizable._isCollapsed ? resizable._minSizePx : -resizable._size);
-					resizable._onResizeEnd();
+					const controls = getCollapseControls(resizable);
+					if (controls != null) {
+						if (resizable._isCollapsed) {
+							controls.expand();
+						} else {
+							controls.collapse();
+						}
+					} else {
+						resizable._onResizeStart();
+						resizable._onResizeMove(
+							resizable._isCollapsed ? resizable._minSizePx : -resizable._size
+						);
+						resizable._onResizeEnd();
+					}
 				}
 				break;
 			}
@@ -232,6 +261,15 @@
 		if (isDisabled || !resizable || !resizable._collapsible) {
 			return;
 		}
+		const controls = getCollapseControls(resizable);
+		if (controls != null) {
+			if (resizable._isCollapsed) {
+				controls.expand();
+			} else {
+				controls.collapse();
+			}
+			return;
+		}
 		resizable._onResizeStart();
 		resizable._onResizeMove(resizable._isCollapsed ? resizable._minSizePx : -resizable._size);
 		resizable._onResizeEnd();
@@ -240,15 +278,43 @@
 	// A drag in flight when the handle unmounts never gets its pointerup, so tear
 	// down the window listeners here too — otherwise every pointermove keeps
 	// driving the (still-mounted) region after the handle is gone, and the body
-	// cursor/user-select overrides stick.
+	// cursor/user-select overrides stick. The region hears the gesture was
+	// cancelled, so it releases the basis it froze.
 	$effect(() => {
 		return () => {
 			if (dragCleanup) {
 				dragCleanup();
 				document.body.style.cursor = '';
 				document.body.style.userSelect = '';
+				if (resizable) {
+					regionOfProps(resizable)?.setPointerDragging(false);
+					resizable._onResizeCancel?.();
+				}
 			}
 		};
+	});
+
+	// The pane's drawing looks for the handle beside it, and a collapsing panel
+	// hands focus here.
+	$effect(() => {
+		if (!handleEl) {
+			return;
+		}
+		return registerResizeHandle(handleEl);
+	});
+
+	// The hook measures one axis and the handle drags one. Upstream names the
+	// mismatch, because the two cannot both be right.
+	$effect(() => {
+		const regionDirection = resizable?._direction;
+		if (regionDirection != null && regionDirection !== direction) {
+			devWarn(
+				'ResizeHandle',
+				`direction="${direction}" but its useResizable region is ` +
+					`"${regionDirection}". They must match: the hook measures one axis ` +
+					'and the handle drags the other.'
+			);
+		}
 	});
 
 	// When collapsed the panel's real size (0) sits below aria-valuemin, which is
@@ -272,7 +338,10 @@
 	);
 	const ariaValueMin = $derived(resizable ? resizable._minSizePx : undefined);
 	const ariaValueMax = $derived(
-		resizable && resizable._maxSizePx !== Infinity ? resizable._maxSizePx : undefined
+		resizable
+			? (getEffectiveMaxPx(resizable) ??
+					(resizable._maxSizePx !== Infinity ? resizable._maxSizePx : undefined))
+			: undefined
 	);
 	const ariaValueText = $derived(
 		resizable && isCollapsed ? t('@astryx.resizable.collapsed') : undefined
