@@ -6,6 +6,7 @@
 	import type { StandaloneBottomSheetProps } from './bottom-sheet.svelte';
 	import { bottomSheetDialogAttrs, bottomSheetPositionerAttrs } from './bottom-sheet.stylex.js';
 	import { focusPanel } from './focus-panel.js';
+	import { setBottomSheetEscape, useBottomSheetEscape } from './bottom-sheet-escape.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
@@ -38,6 +39,13 @@
 	}: StandaloneBottomSheetProps = $props();
 
 	let dialogEl = $state<HTMLDialogElement>();
+
+	// A sheet opened inside a popover's sheet starts from Escape on, whatever
+	// the popover's own `hasEscapeDismiss` says. Read the enclosing policy
+	// before replacing it for this sheet's content.
+	const escapeContext = useBottomSheetEscape();
+	const isEscapeAllowed = $derived(escapeContext?.isEscapeAllowed ?? true);
+	setBottomSheetEscape(() => true);
 
 	// Plain `let`s, mirroring upstream's refs: the panel element the hosts focus
 	// into, and the element focused when the sheet opened, for restoration on
@@ -75,7 +83,7 @@
 	);
 
 	function dismissOnEscape(): void {
-		if (purpose !== 'required') {
+		if (purpose !== 'required' && isEscapeAllowed) {
 			onOpenChange(false);
 		}
 	}

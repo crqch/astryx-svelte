@@ -106,9 +106,13 @@ export function popoverAnchorWrapperAttrs(): SvelteStyleAttrs {
 	return sx(styles.anchorWrapper);
 }
 
-/** The 0.7.13 sheet presentation's fallback close control. */
-export function popoverSheetFallbackCloseAttrs(): SvelteStyleAttrs {
-	return sx(styles.sheetFallbackClose);
+/**
+ * The sheet presentation's fallback close control. Upstream passes the style
+ * as the `Button`'s `xstyle`, on the button itself rather than a wrapper
+ * (architecture:component-style-authoring INV7).
+ */
+export function popoverSheetFallbackCloseXstyle(): StyleArg {
+	return styles.sheetFallbackClose;
 }
 
 /**

@@ -844,7 +844,11 @@ export type {
 // `PopoverLayer` has no upstream counterpart name — `usePopover.render` is a
 // function, not a component. A Svelte hook cannot return markup, so it is public
 // here, the same move `HoverCardLayer`/`TooltipLayer` made.
-export type { PopoverProps, PopoverTriggerRenderProps } from './components/popover/popover.svelte';
+export type {
+	PopoverPresentation,
+	PopoverProps,
+	PopoverTriggerRenderProps
+} from './components/popover/popover.svelte';
 export type { PopoverLayerProps } from './components/popover/popover-layer.svelte';
 export type {
 	ProgressBarMark,
