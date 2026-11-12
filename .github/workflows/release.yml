@@ -77,8 +77,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          # Writes an .npmrc that reads NODE_AUTH_TOKEN. Bun honours npm's
-          # config hierarchy, so `bun publish` picks the credential up from it.
+          # Writes an .npmrc at NPM_CONFIG_USERCONFIG. The auth line it writes
+          # is the literal `${NODE_AUTH_TOKEN}`, which Bun 1.3.14 does not
+          # expand; the next step replaces it with the resolved secret.
           #
           # NPM_TOKEN must be an **Automation** token (classic) or a **Granular
           # Access Token** with write access to the @astryx-sv scope. A
@@ -89,6 +90,14 @@ jobs:
           # when that happens, but it fails at the last possible step, after the
           # full gate has run.
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure npm authentication
+        run: |
+          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          printf '//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > "$npmrc"
+          printf 'registry=https://registry.npmjs.org/\n' >> "$npmrc"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Resolve the version being released
         id: version
