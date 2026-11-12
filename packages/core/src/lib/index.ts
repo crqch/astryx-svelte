@@ -626,7 +626,8 @@ export type { DrawerHeaderProps } from './components/drawer/drawer-header.svelte
 export type { DividerProps } from './components/divider/divider.svelte';
 export type {
 	DropdownMenuProps,
-	DropdownMenuButtonProps
+	DropdownMenuButtonProps,
+	DropdownMenuPresentation
 } from './components/dropdown-menu/dropdown-menu.svelte';
 export type { DropdownMenuItemProps } from './components/dropdown-menu/dropdown-menu-item.svelte';
 export type { DropdownMenuCheckboxItemProps } from './components/dropdown-menu/dropdown-menu-checkbox-item.svelte';

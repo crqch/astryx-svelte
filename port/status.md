@@ -465,8 +465,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 12761          |
-| Declared here              | 8636           |
-| **Short**                  | **4151**       |
+| Declared here              | 8649           |
+| **Short**                  | **4138**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -481,7 +481,7 @@ per connected group.
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
-| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 223      | 68   | 155   |
+| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 223      | 78   | 145   |
 | `SideNav/SideNav.test.tsx`                                                                                                                                                               | 252      | 116  | 136   |
 | `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
@@ -506,11 +506,11 @@ per connected group.
 | `Dialog/Dialog.test.tsx`                                                                                                                                                                 | 85       | 40   | 45    |
 | `Resizable/ResizeHandle.test.tsx`                                                                                                                                                        | 58       | 14   | 44    |
 | `Timestamp/Timestamp.test.tsx`                                                                                                                                                           | 118      | 74   | 44    |
-| `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 33   | 43    |
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
 | `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 20   | 42    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
+| `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 36   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 58   | 39    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
@@ -698,7 +698,7 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 30    | 5     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 48    | 7     |
 | `getByText` with a string, no `exact`                         | 1     | 1     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string
@@ -710,8 +710,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 727    |
-| **Pending** | **9**  |
+| Ported      | 731    |
+| **Pending** | **5**  |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a

@@ -2,11 +2,15 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { ButtonProps } from '../button/button.svelte';
+	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import type { LayerAlignment, LayerPlacement } from '../layer/use-layer.svelte.js';
 	import type { DropdownMenuOption } from './dropdown-menu-types.js';
 
 	/** The trigger button's props, minus its click handler (owned internally). */
 	export type DropdownMenuButtonProps = Omit<ButtonProps, 'onclick'>;
+
+	/** The menus' shared presentation policy. */
+	export type DropdownMenuPresentation = AdaptivePresentation;
 
 	export interface DropdownMenuProps extends BaseProps {
 		/** Props for the trigger `Button`. Defaults to a localized "Menu" label. */
@@ -52,6 +56,15 @@
 		 * button. See `header`.
 		 */
 		footer?: Snippet;
+		/**
+		 * Surface used to present the actions. Pass a value selected by product
+		 * policy (for example, a compact-touch media query) when the presentation
+		 * should adapt. Bottom-sheet presentation is intended for short action
+		 * sets. Omitted, the menu is the anchored popover. Compound children
+		 * support the popover only.
+		 * @default 'popover'
+		 */
+		presentation?: DropdownMenuPresentation;
 		/** Data mode: the menu items. Mutually exclusive with `children`. */
 		items?: DropdownMenuOption[];
 		/** Compound mode: `DropdownMenuItem`s and friends. Mutually exclusive with `items`. */
@@ -63,15 +76,21 @@
 	import { untrack } from 'svelte';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import Button from '../button/button.svelte';
+	import Heading from '../heading/heading.svelte';
 	import Icon from '../icon/icon.svelte';
 	import PopoverLayer from '../popover/popover-layer.svelte';
+	import MenuBottomSheet from './menu-bottom-sheet.svelte';
+	import MenuBottomSheetActionList from './menu-bottom-sheet-action-list.svelte';
 	import RenderDropdownItems from './render-dropdown-items.svelte';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { usePopover } from '../popover/use-popover.svelte.js';
+	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
+	import { useFocusReturnVisibility } from '../../hooks/use-focus-return-visibility.svelte.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
+	import { rtlStyles } from '../../utils/rtl.stylex.js';
 	import {
 		getInteractionModality,
 		trackInteractionModality
@@ -99,9 +118,20 @@
 		dropdownPopoverWidthStyle,
 		dropdownRegionAttrs,
 		dropdownRegionsFrameAttrs,
+		dropdownSheetTriggerXstyle,
 		dropdownSurfaceHostAttrs,
-		dropdownTriggerXstyle
+		dropdownTriggerXstyle,
+		dropdownBottomSheetContentAttrs,
+		dropdownBottomSheetHeaderAttrs,
+		dropdownBottomSheetRegionAttrs,
+		dropdownBottomSheetRootHeadingStyle,
+		dropdownBottomSheetViewHeadingStyle
 	} from './dropdown-menu.stylex.js';
+	import {
+		menuBottomSheetContentAttrs,
+		menuBottomSheetHeadingAloneStyle
+	} from './menu-bottom-sheet.stylex.js';
+	import type { DropdownMenuItemData } from './dropdown-menu-types.js';
 
 	/**
 	 * A dropdown menu of actionable items, ported from Astryx's `DropdownMenu`.
@@ -128,6 +158,7 @@
 		alignment = 'start',
 		header,
 		footer,
+		presentation = 'popover',
 		items,
 		children,
 		class: className,
@@ -140,6 +171,15 @@
 	const t = useTranslator();
 	const button = $derived(buttonFromProps ?? { label: t('@astryx.dropdownMenu.label') });
 
+	// Both presentations hang the menu off ONE control. Compound children are
+	// pinned to the popover, as upstream's compound props are.
+	const resolvedPresentation = useAdaptivePresentation(() =>
+		items !== undefined ? presentation : 'popover'
+	);
+	const usesBottomSheet = $derived(
+		resolvedPresentation.resolved === 'bottom-sheet' && items !== undefined
+	);
+
 	// Two ids, as upstream has two. `usePopover` here *requires* one for the layer
 	// (see `useLayer` for why the hook cannot mint it), where upstream's mints its
 	// own — so passing the menu's id through would point `aria-controls` at the
@@ -149,6 +189,7 @@
 	const uid = $props.id();
 	const layerId = uid;
 	const menuId = `${uid}-menu`;
+	const sheetId = `${uid}-sheet`;
 	const menuSize = $derived(button.size ?? 'md');
 
 	// A header or a footer makes the popover a dialog around the menu: those
@@ -165,9 +206,27 @@
 	let internalIsOpen = $state(false);
 	const isOpen = $derived(isControlled ? (controlledIsOpen as boolean) : internalIsOpen);
 
+	// The sheet view stack and the elements its focus moves read. The sheet's
+	// trigger and the popover's share `buttonEl`; the branches never coexist.
+	let submenuPath = $state<DropdownMenuItemData[]>([]);
+	let actionListEl = $state<HTMLElement | null>(null);
+	let viewHeadingEl = $state<HTMLElement | null>(null);
+	const currentSubmenu = $derived(submenuPath.at(-1));
+	const rootTitle = $derived(menuLabel ?? t('@astryx.dropdownMenu.label'));
+	const currentTitle = $derived(currentSubmenu?.label ?? rootTitle);
+	// A sheet's accessible name must be text; a snippet title falls back to the
+	// root title, as upstream's `sheetLabel` does.
+	const sheetLabel = $derived(typeof currentTitle === 'string' ? currentTitle : rootTitle);
+	const currentItems = $derived(currentSubmenu?.items ?? items ?? []);
+
+	// The trigger is the focus-return target, and a pointer return must not paint
+	// the keyboard ring.
+	const focusReturn = useFocusReturnVisibility({ readModality: getInteractionModality });
+
 	// The drill-in view stack for sub-menus on a phone, and the surface host a
-	// sub-menu with regions renders into. Both are owned here.
-	const drillIn = useMenuDrillIn(() => isOpen);
+	// sub-menu with regions renders into. Both are owned here. The sheet has its
+	// own view stack, so the popover's drill-in stays off while it shows.
+	const drillIn = useMenuDrillIn(() => isOpen && !usesBottomSheet);
 	let surfaceHostEl = $state<HTMLElement | null>(null);
 	let headerEl = $state<HTMLElement | null>(null);
 	let footerEl = $state<HTMLElement | null>(null);
@@ -180,6 +239,10 @@
 	// Suppress a trigger click that lands in the same tick as a light dismiss
 	// (iOS Safari fires pointerdown → hide before the click), which would re-open.
 	let lastHideTime = 0;
+	// A presentation change closes the popover while the menu stays open; that
+	// hide is not a dismissal, so it must not clear the open state or report it.
+	let isHidingPopoverForPresentationChange = false;
+	let isRestoringPopoverAfterPresentationChange = false;
 
 	// `onOpenChange` fires for BOTH modes, so an uncontrolled menu still reports a
 	// native open/close transition (light dismiss, Escape, the popover's own
@@ -187,6 +250,10 @@
 	// button click therefore reports twice — once optimistically from the click,
 	// once when the layer commits — which is upstream's behaviour as of 0.3.0.
 	function handleLayerHide(): void {
+		if (isHidingPopoverForPresentationChange) {
+			isHidingPopoverForPresentationChange = false;
+			return;
+		}
 		lastHideTime = Date.now();
 		// A submenu flyout is a nested popover, which the menu's own light dismiss
 		// never reaches; close it with the menu so it cannot reappear anchored to
@@ -197,6 +264,11 @@
 		buttonEl?.focus();
 	}
 	function handleLayerShow(): void {
+		if (isRestoringPopoverAfterPresentationChange) {
+			isRestoringPopoverAfterPresentationChange = false;
+			if (!isControlled) internalIsOpen = true;
+			return;
+		}
 		onOpenChange?.(true);
 		if (!isControlled) internalIsOpen = true;
 	}
@@ -218,6 +290,33 @@
 
 	function closeMenu(): void {
 		popover.hide();
+	}
+
+	/**
+	 * The sheet branch's open setter. It resets the view stack on every close and
+	 * carries the focus-return visibility through the sheet's exit.
+	 */
+	function setSheetOpen(nextIsOpen: boolean): void {
+		if (!nextIsOpen) {
+			submenuPath = [];
+			focusReturn.prepareFocusReturn();
+		} else {
+			focusReturn.resetFocusReturn();
+		}
+		onOpenChange?.(nextIsOpen);
+		if (!isControlled) {
+			internalIsOpen = nextIsOpen;
+		}
+	}
+
+	function handleSheetSelect(item: DropdownMenuItemData, _event: MouseEvent): void {
+		if (item.isDisabled) {
+			return;
+		}
+		item.onClick?.();
+		if (item.hasCloseOnSelect !== false) {
+			setSheetOpen(false);
+		}
 	}
 
 	const list = useListFocus(() => ({
@@ -256,7 +355,7 @@
 	const menuOverflow = useMenuOverflow({
 		menu: () => menuEl,
 		content: () => items ?? children,
-		isOpen: () => popover.isOpen
+		isOpen: () => popover.isOpen && !usesBottomSheet
 	});
 	const hasOverflow = $derived(menuOverflow());
 
@@ -269,9 +368,10 @@
 	// of the focus effect below.
 	let openModality: 'keyboard' | 'pointer' = 'keyboard';
 
-	// Sync controlled open state → popover.
+	// Sync controlled open state → popover. The sheet reads the controlled prop
+	// directly, so only the popover arm needs this.
 	$effect(() => {
-		if (!isControlled) return;
+		if (!isControlled || usesBottomSheet) return;
 		const open = controlledIsOpen;
 		untrack(() => {
 			if (open && !popover.isOpen) {
@@ -281,6 +381,76 @@
 				popover.hide();
 			}
 		});
+	});
+
+	// A presentation change while the menu is open keeps the menu open in the
+	// other surface: the popover closes without a dismissal, and the other way
+	// round reopens it. This is upstream's shared open state across its two
+	// presentation components.
+	let previousResolvedPresentation = resolvedPresentation.resolved;
+	$effect(() => {
+		const next = resolvedPresentation.resolved;
+		if (next === previousResolvedPresentation) return;
+		previousResolvedPresentation = next;
+		untrack(() => {
+			if (next === 'bottom-sheet' && items !== undefined) {
+				if (popover.isOpen) {
+					isHidingPopoverForPresentationChange = true;
+					popover.hide();
+				}
+			} else if (isOpen) {
+				isRestoringPopoverAfterPresentationChange = true;
+				popover.show();
+			}
+		});
+	});
+
+	// The sheet's initial focus follows how it was opened. A keyboard open waits
+	// a frame so the sheet's own open focus has run, then lands on the first
+	// action; a pointer open leaves focus on the sheet panel.
+	let sheetOpenModality: 'keyboard' | 'pointer' = 'pointer';
+
+	$effect(() => {
+		if (!usesBottomSheet || !isOpen || sheetOpenModality !== 'keyboard') return;
+		const findFirstAction = (): HTMLElement | null =>
+			actionListEl?.querySelector<HTMLElement>('button:not(:disabled), a[href]') ?? null;
+		let observer: MutationObserver | null = null;
+		let frame = requestAnimationFrame(() => {
+			const action = findFirstAction();
+			if (action != null) {
+				action.focus({ preventScroll: true });
+				return;
+			}
+			// The sheet's rows can arrive with the surface; wait for them, then
+			// focus a frame later so the sheet's own open-focus has already run.
+			observer = new MutationObserver(() => {
+				const loaded = findFirstAction();
+				if (loaded == null) return;
+				observer?.disconnect();
+				observer = null;
+				frame = requestAnimationFrame(() => loaded.focus({ preventScroll: true }));
+			});
+			observer.observe(document.body, { childList: true, subtree: true });
+		});
+		return () => {
+			cancelAnimationFrame(frame);
+			observer?.disconnect();
+		};
+	});
+
+	// A drilled-in view's heading takes focus as the view changes; the root view
+	// does not steal it on open.
+	let previousSubmenuDepth = 0;
+	$effect(() => {
+		if (!isOpen) {
+			previousSubmenuDepth = 0;
+			return;
+		}
+		const depth = submenuPath.length;
+		if (depth === previousSubmenuDepth) return;
+		previousSubmenuDepth = depth;
+		const frame = requestAnimationFrame(() => viewHeadingEl?.focus({ preventScroll: true }));
+		return () => cancelAnimationFrame(frame);
 	});
 
 	// Move focus into the menu only after the layer has committed open, honoring
@@ -334,6 +504,35 @@
 			e.preventDefault();
 			openAndFocus();
 		}
+	}
+
+	// The sheet trigger opens on click, as upstream's does, with the pointer and
+	// keyboard both reaching the same toggle. A controlled sheet reports the
+	// requested state; an uncontrolled one sets it.
+	function handleSheetButtonClick(e: MouseEvent): void {
+		if ((e.currentTarget as HTMLElement).matches(':disabled, [aria-disabled="true"]')) {
+			return;
+		}
+		onClick?.();
+		if (isControlled) {
+			onOpenChange?.(!isOpen);
+		} else {
+			setSheetOpen(!isOpen);
+		}
+	}
+
+	function handleSheetButtonKeyDown(e: KeyboardEvent): void {
+		if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+			sheetOpenModality = 'keyboard';
+		}
+	}
+
+	function handleSheetButtonPointerDown(): void {
+		sheetOpenModality = 'pointer';
+	}
+
+	function handleSheetFocus(): void {
+		focusReturn.onFocusReturnTargetFocus();
 	}
 
 	function moveDialogTab(e: KeyboardEvent, isFromFlyout = false): void {
@@ -404,6 +603,12 @@
 	};
 
 	const isIconOnly = $derived(button.isIconOnly === true);
+	const sheetTriggerAttachKey = createAttachmentKey();
+	const sheetTriggerAttach = {
+		[sheetTriggerAttachKey]: (el: HTMLElement) => {
+			buttonEl = el as HTMLButtonElement;
+		}
+	};
 
 	// Context for compound items, and the surface host a sub-menu with regions
 	// renders into.
@@ -446,7 +651,14 @@
 		})
 	);
 	const triggerXstyle = $derived(dropdownTriggerXstyle(isOpen, button.xstyle));
+	const sheetTriggerXstyle = $derived(
+		dropdownSheetTriggerXstyle(isOpen, focusReturn.isFocusRingSuppressed, button.xstyle)
+	);
 	const themeClass = themeProps('dropdown-menu', { presentation: 'popover' }).class;
+	const sheetTheme = themeProps('dropdown-menu', { presentation: 'bottom-sheet' });
+	const sheetContentAttrs = $derived(dropdownBottomSheetContentAttrs(xstyle));
+	const sheetHeaderAttrs = dropdownBottomSheetHeaderAttrs();
+	const sheetRegionAttrs = dropdownBottomSheetRegionAttrs();
 	const regionsFrameAttrs = $derived(dropdownRegionsFrameAttrs(resolvedMaxHeight));
 	const regionAttrs = dropdownRegionAttrs();
 	const surfaceHostAttrs = dropdownSurfaceHostAttrs();
@@ -461,6 +673,33 @@
 
 {#snippet chevron()}
 	<Icon icon="chevronDown" size="sm" color="inherit" />
+{/snippet}
+
+{#snippet backIcon()}
+	<Icon icon="chevronLeft" size="sm" xstyle={rtlStyles.mirror} />
+{/snippet}
+
+{#snippet sheetViewHeading()}
+	<Heading
+		{@attach (element: HTMLElement) => {
+			viewHeadingEl = element;
+		}}
+		level={3}
+		tabindex={-1}
+		xstyle={[
+			dropdownBottomSheetViewHeadingStyle,
+			currentSubmenu == null && [
+				dropdownBottomSheetRootHeadingStyle,
+				menuBottomSheetHeadingAloneStyle
+			]
+		]}
+	>
+		{#if typeof currentTitle === 'string'}
+			{currentTitle}
+		{:else}
+			{@render currentTitle()}
+		{/if}
+	</Heading>
 {/snippet}
 
 {#snippet menuElement()}
@@ -505,38 +744,120 @@
 	<div {...surfaceHostAttrs} data-astryx-submenu-host="" bind:this={surfaceHostEl}></div>
 {/snippet}
 
-<Button
-	{...button}
-	{...buttonAttach}
-	xstyle={triggerXstyle}
-	tooltip={isOpen ? undefined : button.tooltip}
-	endContent={button.endContent ?? (hasChevron && !isIconOnly ? chevron : undefined)}
-	onclick={handleButtonClick}
-	onkeydown={handleButtonKeyDown}
-	aria-haspopup={hasRegions ? 'dialog' : 'menu'}
-	aria-expanded={isOpen}
-	aria-controls={hasRegions ? layerId : menuId}
-	data-testid={testId}
-/>
+{#snippet sheetContent()}
+	<div
+		{...rest}
+		bind:this={actionListEl}
+		id={sheetId}
+		{...sheetTheme}
+		class={cx(sheetTheme.class, sheetContentAttrs.class, className)}
+		style={mergeStyle(sheetContentAttrs.style, styleProp as string | undefined)}
+	>
+		{#if currentSubmenu != null}
+			<div {...sheetHeaderAttrs}>
+				<Button
+					label={t('@astryx.dropdownMenu.back')}
+					variant="ghost"
+					size="sm"
+					icon={backIcon}
+					isIconOnly
+					onclick={() => (submenuPath = submenuPath.slice(0, -1))}
+				/>
+				{@render sheetViewHeading()}
+			</div>
+		{:else}
+			{@render sheetViewHeading()}
+		{/if}
+		{#if header}
+			<div {...sheetRegionAttrs}>
+				{@render header()}
+			</div>
+		{/if}
+		<MenuBottomSheetActionList
+			items={currentItems}
+			onSelect={handleSheetSelect}
+			onOpenSubmenu={(item) => (submenuPath = [...submenuPath, item])}
+		/>
+		{#if footer}
+			<div {...sheetRegionAttrs}>
+				{@render footer()}
+			</div>
+		{/if}
+	</div>
+{/snippet}
 
-<PopoverLayer {popover} {placement} {alignment} offset={dropdownMenuOffset} xstyle={layerXstyle}>
-	{#if hasRegions}
-		<div {...regionsFrameAttrs}>
-			{#if header}
-				<div bind:this={headerEl} onkeydown={handleRegionKeyDown} {...regionAttrs}>
-					{@render header()}
-				</div>
-			{/if}
+{#if usesBottomSheet}
+	<Button
+		{...button}
+		{...sheetTriggerAttach}
+		xstyle={sheetTriggerXstyle}
+		tooltip={isOpen ? undefined : button.tooltip}
+		endContent={button.endContent ?? (hasChevron && !isIconOnly ? chevron : undefined)}
+		onpointerdown={(event) => {
+			button.onpointerdown?.(
+				event as PointerEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+			handleSheetButtonPointerDown();
+		}}
+		onkeydown={(event) => {
+			button.onkeydown?.(
+				event as KeyboardEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+			handleSheetButtonKeyDown(event);
+		}}
+		onfocus={(event) => {
+			button.onfocus?.(event as FocusEvent & { currentTarget: EventTarget & HTMLButtonElement });
+			handleSheetFocus();
+		}}
+		onclick={handleSheetButtonClick}
+		aria-haspopup="dialog"
+		aria-expanded={isOpen}
+		aria-controls={sheetId}
+		data-testid={testId}
+	/>
+
+	<MenuBottomSheet
+		{isOpen}
+		onOpenChange={setSheetOpen}
+		finalFocusRef={() => buttonEl ?? null}
+		label={sheetLabel}
+	>
+		{@render sheetContent()}
+	</MenuBottomSheet>
+{:else}
+	<Button
+		{...button}
+		{...buttonAttach}
+		xstyle={triggerXstyle}
+		tooltip={isOpen ? undefined : button.tooltip}
+		endContent={button.endContent ?? (hasChevron && !isIconOnly ? chevron : undefined)}
+		onclick={handleButtonClick}
+		onkeydown={handleButtonKeyDown}
+		aria-haspopup={hasRegions ? 'dialog' : 'menu'}
+		aria-expanded={isOpen}
+		aria-controls={hasRegions ? layerId : menuId}
+		data-testid={testId}
+	/>
+
+	<PopoverLayer {popover} {placement} {alignment} offset={dropdownMenuOffset} xstyle={layerXstyle}>
+		{#if hasRegions}
+			<div {...regionsFrameAttrs}>
+				{#if header}
+					<div bind:this={headerEl} onkeydown={handleRegionKeyDown} {...regionAttrs}>
+						{@render header()}
+					</div>
+				{/if}
+				{@render menuElement()}
+				{#if footer}
+					<div bind:this={footerEl} onkeydown={handleRegionKeyDown} {...regionAttrs}>
+						{@render footer()}
+					</div>
+				{/if}
+				{@render surfaceHost()}
+			</div>
+		{:else}
 			{@render menuElement()}
-			{#if footer}
-				<div bind:this={footerEl} onkeydown={handleRegionKeyDown} {...regionAttrs}>
-					{@render footer()}
-				</div>
-			{/if}
 			{@render surfaceHost()}
-		</div>
-	{:else}
-		{@render menuElement()}
-		{@render surfaceHost()}
-	{/if}
-</PopoverLayer>
+		{/if}
+	</PopoverLayer>
+{/if}

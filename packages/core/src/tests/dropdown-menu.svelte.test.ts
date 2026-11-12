@@ -1,8 +1,11 @@
 /** PORTS: DropdownMenu/DropdownMenu.test.tsx */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createRawSnippet } from 'svelte';
 import { render } from 'vitest-browser-svelte';
 import DropdownMenu from '$lib/components/dropdown-menu/dropdown-menu.svelte';
+import menuBottomSheetSource from '$lib/components/dropdown-menu/menu-bottom-sheet.svelte?raw';
+import { stubMatchMedia } from './stub-match-media.js';
 import Compound from './fixtures/dropdown-menu-compound.svelte';
 import Controlled from './fixtures/dropdown-menu-controlled.svelte';
 import CopyRow from './fixtures/dropdown-menu-copy-row.svelte';
@@ -1026,5 +1029,243 @@ describe('DropdownMenu compound mode', () => {
 
 		expect(menuItem(screen.container, 'Always')).toBeInTheDocument();
 		expect(menuItem(screen.container, 'Conditional')).toBeInTheDocument();
+	});
+});
+
+describe('DropdownMenu bottom-sheet presentation', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	async function openSheet(screen: Awaited<ReturnType<typeof render>>, label = 'Project actions') {
+		const trigger = screen.getByRole('button', { name: new RegExp(label) }).element();
+		pointerOpen(trigger);
+		await expect.element(screen.getByRole('dialog', { name: label })).toBeInTheDocument();
+		return trigger;
+	}
+
+	it('renders data-driven actions in a bottom sheet when requested', async () => {
+		const onEdit = vi.fn();
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Project actions' },
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Edit project', onClick: onEdit }]
+			}
+		});
+
+		const trigger = screen.getByRole('button', { name: /Project actions/ }).element();
+		expect(trigger).toHaveAttribute('aria-haspopup', 'dialog');
+		expect(screen.container.querySelector('[role="menu"]')).toBeNull();
+
+		pointerOpen(trigger);
+		const dialog = (await screen
+			.getByRole('dialog', { name: 'Project actions' })
+			.element()) as HTMLDialogElement;
+		const editAction = screen.getByRole('button', { name: 'Edit project' }).element();
+		await vi.waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+		expect(editAction).not.toHaveFocus();
+
+		editAction.click();
+		expect(onEdit).toHaveBeenCalledTimes(1);
+		await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
+	});
+
+	it('renders nothing of the sheet at rest and keeps it through its exit', async () => {
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Project actions' },
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Edit project' }]
+			}
+		});
+		expect(screen.container.querySelector('dialog')).toBeNull();
+
+		const trigger = await openSheet(screen);
+		const dialog = screen.container.querySelector('dialog');
+		expect(dialog).not.toBeNull();
+		expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+		dialog!.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+		);
+		// Closed, the sheet stays until its dialog has closed (its exit).
+		expect(screen.container.querySelector('dialog')).toBe(dialog);
+
+		dialog!.removeAttribute('open');
+		dialog!.dispatchEvent(new Event('close'));
+		await vi.waitFor(() => expect(screen.container.querySelector('dialog')).toBeNull());
+	});
+
+	it('keeps bottom-sheet section groups inside semantic list items', async () => {
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'File actions' },
+				presentation: 'bottom-sheet',
+				items: [
+					{
+						type: 'section',
+						title: 'Create',
+						items: [{ label: 'New file' }]
+					}
+				]
+			}
+		});
+
+		await openSheet(screen, 'File actions');
+		const group = screen.getByRole('group', { name: 'Create' }).element();
+		expect(group.parentElement).toHaveRole('listitem');
+	});
+
+	it('drills into nested data items in bottom-sheet presentation', async () => {
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Project actions' },
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Move to project', items: [{ label: 'Apollo launch' }] }]
+			}
+		});
+
+		await openSheet(screen);
+		screen.getByRole('button', { name: 'Move to project' }).element().click();
+
+		const submenuHeading = screen.getByRole('heading', { name: 'Move to project' }).element();
+		expect(submenuHeading).toBeInTheDocument();
+		await vi.waitFor(() => expect(submenuHeading).toHaveFocus());
+		expect(screen.getByRole('button', { name: 'Apollo launch' }).element()).toBeInTheDocument();
+
+		const backButton = screen.getByRole('button', { name: 'Back' }).element();
+		expect(backButton).toHaveAttribute('aria-label', 'Back');
+		expect(backButton.textContent?.trim()).toBe('');
+		backButton.click();
+
+		const rootHeading = screen.getByRole('heading', { name: 'Project actions' }).element();
+		expect(rootHeading).toBeInTheDocument();
+		await vi.waitFor(() => expect(rootHeading).toHaveFocus());
+	});
+
+	it('renders the regions above and below the actions in the bottom sheet', async () => {
+		const header = createRawSnippet(() => ({
+			render: () => '<input aria-label="Filter labels" />'
+		}));
+		const footer = createRawSnippet(() => ({
+			render: () => '<button type="button">Create label</button>'
+		}));
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Labels' },
+				presentation: 'bottom-sheet',
+				header,
+				footer,
+				items: [{ label: 'Bug' }, { label: 'Feature' }]
+			}
+		});
+
+		await openSheet(screen, 'Labels');
+		const sheet = screen.getByRole('dialog', { name: 'Labels' }).element();
+		const field = screen.getByRole('textbox', { name: 'Filter labels' }).element();
+		const bug = screen.getByRole('button', { name: 'Bug' }).element();
+		const create = screen.getByRole('button', { name: 'Create label' }).element();
+		expect(sheet).toContainElement(field);
+		expect(sheet).toContainElement(create);
+		expect(field.compareDocumentPosition(bug) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(bug.compareDocumentPosition(create) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+	});
+
+	it('focuses the first action when a bottom sheet opens from the keyboard', async () => {
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Actions' },
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Edit' }, { label: 'Delete' }]
+			}
+		});
+
+		const trigger = screen.getByRole('button', { name: /Actions/ }).element();
+		trigger.focus();
+		trigger.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+		);
+		trigger.click();
+
+		await expect.element(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+	});
+
+	it('uses the BottomSheet for adaptive presentation on compact touch', async () => {
+		stubMatchMedia({ pointer: 'coarse', matches: true });
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Actions' },
+				presentation: 'adaptive',
+				items: [{ label: 'Edit' }]
+			}
+		});
+
+		await openSheet(screen, 'Actions');
+		expect(showPopover).not.toHaveBeenCalled();
+	});
+
+	it('keeps adaptive presentation anchored without compact touch', async () => {
+		stubMatchMedia({ pointer: 'fine', matches: false });
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const showModal = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Actions' },
+				presentation: 'adaptive',
+				items: [{ label: 'Edit' }]
+			}
+		});
+
+		pointerOpen(screen.getByRole('button', { name: /Actions/ }).element());
+		await vi.waitFor(() => expect(showPopover).toHaveBeenCalledOnce());
+		expect(showModal).not.toHaveBeenCalled();
+	});
+
+	it('preserves uncontrolled open state when adaptive presentation changes', async () => {
+		let matches = false;
+		const listeners = new Set<(event: MediaQueryListEvent) => void>();
+		vi.stubGlobal(
+			'matchMedia',
+			vi.fn((query: string) => ({
+				get matches() {
+					return matches;
+				},
+				media: query,
+				onchange: null,
+				addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) =>
+					listeners.add(listener),
+				removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) =>
+					listeners.delete(listener),
+				addListener: vi.fn(),
+				removeListener: vi.fn(),
+				dispatchEvent: vi.fn()
+			}))
+		);
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Actions' },
+				presentation: 'adaptive',
+				items: [{ label: 'Edit' }]
+			}
+		});
+
+		const trigger = screen.getByRole('button', { name: /Actions/ }).element();
+		pointerOpen(trigger);
+		await vi.waitFor(() => expect(showPopover).toHaveBeenCalledOnce());
+
+		matches = true;
+		listeners.forEach((listener) => listener({ matches: true } as MediaQueryListEvent));
+
+		await expect.element(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
+		expect(trigger).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	it('keeps content-hugging sheet geometry with no content padding of its own', () => {
+		expect(menuBottomSheetSource).toContain('height="hug"');
+		expect(menuBottomSheetSource).toContain('padding={0}');
+		expect(menuBottomSheetSource).toContain('purpose="info"');
 	});
 });

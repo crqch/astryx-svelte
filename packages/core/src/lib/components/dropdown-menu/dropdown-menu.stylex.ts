@@ -3,6 +3,7 @@ import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { menuTouchActionStyles } from './menu-touch-action.stylex.js';
+import { menuBottomSheetStyles } from './menu-bottom-sheet.stylex.js';
 import {
 	colorVars,
 	durationVars,
@@ -213,6 +214,22 @@ export function dropdownTriggerXstyle(isOpen: boolean, xstyle?: StyleArg): Style
 	return [styles.triggerPressable, isOpen && styles.triggerOpen, xstyle];
 }
 
+/**
+ * The sheet trigger's painting: the open background, the caller's own styles,
+ * and the shared ring suppression for a pointer-restored focus.
+ */
+export function dropdownSheetTriggerXstyle(
+	isOpen: boolean,
+	isFocusRingSuppressed: boolean,
+	xstyle?: StyleArg
+): StyleArg {
+	return [
+		isOpen && styles.triggerOpen,
+		xstyle,
+		isFocusRingSuppressed && focusOutlineStyles.suppressed
+	];
+}
+
 /** The frame holding the header, the menu and the footer under one cap. */
 export function dropdownRegionsFrameAttrs(menuMaxHeight?: string): SvelteStyleAttrs {
 	return sx(
@@ -282,11 +299,11 @@ export function dropdownPopoverWidthStyle(menuWidth?: number | string): StyleArg
  */
 export const dropdownMenuOffset = spacingVars['--spacing-1'];
 
-// The bottom-sheet presentation is a whole unported subsystem (it needs
-// BottomSheet's action list and view stack). Its declarations stay compiled so
-// the module matches upstream in full; no markup calls these attrs yet.
-export function dropdownBottomSheetContentAttrs(): SvelteStyleAttrs {
-	return sx(bottomSheetStyles.content);
+// The bottom-sheet presentation's own declarations, shared with `ContextMenu`.
+// `content` composes the shared menu content box and the caller's `xstyle`, the
+// same order upstream's call site does.
+export function dropdownBottomSheetContentAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
+	return sx(bottomSheetStyles.content, menuBottomSheetStyles.content, xstyle);
 }
 
 export function dropdownBottomSheetHeaderAttrs(): SvelteStyleAttrs {
@@ -300,6 +317,12 @@ export function dropdownBottomSheetRootHeadingAttrs(): SvelteStyleAttrs {
 export function dropdownBottomSheetViewHeadingAttrs(): SvelteStyleAttrs {
 	return sx(bottomSheetStyles.viewHeading);
 }
+
+/** The root view heading's inset to the spacious row's content edge. */
+export const dropdownBottomSheetRootHeadingStyle: StyleArg = bottomSheetStyles.rootHeading;
+
+/** The sub-menu view heading's outline reset. */
+export const dropdownBottomSheetViewHeadingStyle: StyleArg = bottomSheetStyles.viewHeading;
 
 export function dropdownBottomSheetRegionAttrs(): SvelteStyleAttrs {
 	return sx(bottomSheetStyles.region);

@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { ButtonSize, ButtonVariant } from '../button/button.stylex.js';
+	import type { DropdownMenuPresentation } from '../dropdown-menu/dropdown-menu.svelte';
 	import type { DropdownMenuOption } from '../dropdown-menu/dropdown-menu-types.js';
 	import type { LayerAlignment, LayerPlacement } from '../layer/use-layer.svelte.js';
 
@@ -47,6 +48,12 @@
 		alignment?: LayerAlignment;
 		/** Controlled open state for the menu. */
 		isMenuOpen?: boolean;
+		/**
+		 * Menu presentation policy, forwarded to `DropdownMenu`. `adaptive` uses a
+		 * BottomSheet on compact coarse-pointer viewports and an anchored popover
+		 * elsewhere.
+		 */
+		presentation?: DropdownMenuPresentation;
 		/** Fired when the menu visibility changes. */
 		onOpenChange?: (isOpen: boolean) => void;
 		/** Test ID for testing frameworks. */
@@ -79,6 +86,7 @@
 		isDisabled = false,
 		placement,
 		alignment,
+		presentation,
 		isMenuOpen,
 		onOpenChange,
 		xstyle,
@@ -105,6 +113,7 @@
 	{onOpenChange}
 	{placement}
 	{alignment}
+	{presentation}
 	button={{
 		label,
 		icon: icon ?? moreIcon.current,

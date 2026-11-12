@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
+import { menuBottomSheetStyles } from '../dropdown-menu/menu-bottom-sheet.stylex.js';
 import {
 	colorVars,
 	durationVars,
@@ -152,7 +153,7 @@ export function contextMenuPopoverXstyle(menuWidth: number | string | undefined)
 
 /** The bottom-sheet menu surface. */
 export function contextMenuSheetMenuAttrs(xstyle: StyleArg): SvelteStyleAttrs {
-	return sx(styles.sheetMenu, styles.sheetMenuInset, xstyle);
+	return sx(styles.sheetMenu, menuBottomSheetStyles.content, styles.sheetMenuInset, xstyle);
 }
 
 /** The sub-menu header row inside the sheet: back button plus heading. */
