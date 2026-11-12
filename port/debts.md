@@ -1106,33 +1106,6 @@ against a `tabindex="-1"` panel holding a `[data-autofocus]` input — all four 
 the panel, because the dialog focusing steps pick it as the first focusable area regardless. No
 observable difference, and it is what makes the trigger capture above load-bearing
 
-### Only three of upstream's locale catalogs are ported
-
-- **units:** i18n (locales)
-- **kind:** unported
-- **retires:** when the remaining catalogs are vendored
-
-Both packages declare the same `"./locales/*.json"` subpath, so the specifier shape matches — but
-upstream's `locales/` ships a catalog per supported language and this port vendors `en.json`,
-`fr-FR.json` and `pseudo.json` only. Every other specifier a consumer can write against upstream's
-documentation (`de-DE.json`, `ja-JP.json`, and the rest) resolves upstream and throws
-`ERR_MODULE_NOT_FOUND` here. The catalogs are vendored verbatim — `.prettierignore` excludes
-`src/lib/locales/` precisely so the upstream bytes survive — so closing this is copying, not
-translating. Surfaced by the 0.4.5 surface sweep; it had never been recorded anywhere
-
-### `./theme/tokens` and `./theme/tokens.stylex` are not exported, though the build already ships them
-
-- **units:** theme (exports map)
-- **kind:** api-divergence
-- **retires:** when the two `exports` keys are added
-
-Upstream exports both, from `theme/tokens.ts` and `theme/tokens.stylex.ts`. This port's `exports`
-map has neither, while `dist/styles/tokens.stylex.js` **is already in the tarball** — so the file a
-consumer needs ships, and only the door is missing. Two keys. It was measured during the 0.4.1
-tracking pass and written down in `port/upstream-diff.md`, whose own header says it is
-point-in-time analysis rather than spec, and no agent greps it; that is how a two-line fix stayed
-open across four batches. Recorded here so it is findable
-
 ### `BottomSheet`'s `height` and `snapPoints` doc types name their alias where upstream writes the members
 
 - **units:** BottomSheet (docs props table)

@@ -65,6 +65,16 @@
 			"svelte": "./dist/theme/syntax/index.js",
 			"default": "./dist/theme/syntax/index.js"
 		},
+		"./theme/tokens": {
+			"source": "./src/lib/theme/tokens.ts",
+			"types": "./dist/theme/tokens.d.ts",
+			"default": "./dist/theme/tokens.js"
+		},
+		"./theme/tokens.stylex": {
+			"source": "./src/lib/styles/tokens.stylex.ts",
+			"types": "./dist/styles/tokens.stylex.d.ts",
+			"default": "./dist/styles/tokens.stylex.js"
+		},
 		"./hooks": {
 			"source": "./src/lib/hooks/index.ts",
 			"types": "./dist/hooks/index.d.ts",
