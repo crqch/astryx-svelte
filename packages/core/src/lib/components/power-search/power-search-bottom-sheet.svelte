@@ -198,9 +198,10 @@
 	 * - **Row refs are DOM queries.** `ListItem` has no ref prop here; rows carry
 	 *   `data-filter-index` / `data-field-key` and the focus handlers query them,
 	 *   which is what upstream's `managerRowsRef`/`fieldRowsRef` maps hold.
-	 * - **`useAnnounce` has no modal routing in this port**, so every message goes
-	 *   to the shared polite region rather than into the open sheet's dialog.
-	 *   Recorded in the batch report rather than invented around.
+	 * - **`useAnnounce` routes into the open sheet**, as upstream's does: the
+	 *   `BottomSheet` that hosts this content publishes the modal scope, so a
+	 *   message made while the sheet is open reaches the sheet's own live region
+	 *   rather than the page channel behind it.
 	 * - **`editors` is not a prop.** Upstream splits the sheet into a lazily
 	 *   loaded chunk and takes the popover's editors as an injected object; a
 	 *   Svelte component has no lazy boundary here, so it imports them directly.

@@ -517,6 +517,7 @@
 		get hasScrim() {
 			return hasScrim;
 		},
+		getDialog: () => dialogEl ?? null,
 		onActiveSheetChange: (sheetId) => onActiveSheetChange(sheetId),
 		getSheetPhase,
 		getSheetAlignmentOffset,

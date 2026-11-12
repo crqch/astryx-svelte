@@ -43,6 +43,7 @@
 	import { bottomSheetPositionerAttrs } from './bottom-sheet.stylex.js';
 	import { focusPanel } from './focus-panel.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 
 	/**
 	 * Ported from the private `SwitcherBottomSheetItem` in Astryx's
@@ -215,27 +216,33 @@
 	const positionerAttrs = $derived(bottomSheetPositionerAttrs(!isPresented, isTopSheet));
 </script>
 
-<div
-	class={positionerAttrs.class}
-	style={positionerAttrs.style}
-	hidden={!isPresented}
-	aria-hidden={isInactive ? 'true' : undefined}
-	inert={isInactive ? true : undefined}
+<ModalAnnounceProvider
+	dialogRef={() => switcher().getDialog()}
+	isOpen={isPresented && switcher().hasScrim}
+	isScopeExposed={() => isTopSheet}
 >
-	<BottomSheetPanel
-		{...rest}
-		{panelState}
-		{height}
-		{label}
-		{snapPoints}
-		{xstyle}
-		{children}
-		isSwipeDismissAllowed={purpose === 'info'}
-		isPageScrollLocked={switcher().hasScrim}
-		onDismiss={dismissOnSwipe}
-		onScrimOpacity={handleScrimOpacity}
-		onElementChange={handlePanelElementChange}
-		onMotionStart={handleMotionStart}
-		onMotionComplete={handleMotionComplete}
-	/>
-</div>
+	<div
+		class={positionerAttrs.class}
+		style={positionerAttrs.style}
+		hidden={!isPresented}
+		aria-hidden={isInactive ? 'true' : undefined}
+		inert={isInactive ? true : undefined}
+	>
+		<BottomSheetPanel
+			{...rest}
+			{panelState}
+			{height}
+			{label}
+			{snapPoints}
+			{xstyle}
+			{children}
+			isSwipeDismissAllowed={purpose === 'info'}
+			isPageScrollLocked={switcher().hasScrim}
+			onDismiss={dismissOnSwipe}
+			onScrimOpacity={handleScrimOpacity}
+			onElementChange={handlePanelElementChange}
+			onMotionStart={handleMotionStart}
+			onMotionComplete={handleMotionComplete}
+		/>
+	</div>
+</ModalAnnounceProvider>

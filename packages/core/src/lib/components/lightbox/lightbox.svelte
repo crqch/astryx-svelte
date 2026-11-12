@@ -45,7 +45,8 @@
 	import Icon from '../icon/icon.svelte';
 	import IconButton from '../icon-button/icon-button.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
-	import { useAnnounce } from '../../hooks/use-announce.js';
+	import { announceInModal } from '../../hooks/use-announce.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
 	import { usePager } from '../../hooks/use-pager.svelte.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
@@ -137,9 +138,20 @@
 	}: LightboxProps = $props();
 
 	const t = useTranslator();
-	const announce = useAnnounce();
 
 	let dialogEl = $state<HTMLDialogElement | null>(null);
+	/**
+	 * While the modal viewer is open, a screen reader reads only messages inside
+	 * it, so the position and zoom messages go through the viewer's own region.
+	 * The owner cannot read its own modal scope from context — the provider is
+	 * rendered inside the dialog, below this component — so it names the dialog
+	 * directly, as upstream's `announceInModal(dialog, …)` does.
+	 */
+	function announce(message: string): void {
+		if (dialogEl != null) {
+			announceInModal(dialogEl, message);
+		}
+	}
 	// Upstream's `containerRef`. Not `$state`: written by `bind:this` and read
 	// only inside the click handler, so nothing should re-run when it lands.
 	// svelte-ignore non_reactive_update
@@ -718,170 +730,180 @@
 		{...rest}
 	>
 		<LayerDepthProvider>
-			<div bind:this={containerEl} class={container.class} style={container.style}>
-				<div class={chromeLayer.class} style={chromeLayer.style}>
-					{#if hasZoom}
-						<span class={closeBacking.class} style={closeBacking.style}>
+			<ModalAnnounceProvider dialogRef={() => dialogEl} {isOpen}>
+				<div bind:this={containerEl} class={container.class} style={container.style}>
+					<div class={chromeLayer.class} style={chromeLayer.style}>
+						{#if hasZoom}
+							<span class={closeBacking.class} style={closeBacking.style}>
+								<IconButton
+									icon={closeIcon}
+									label={t('@astryx.lightbox.close')}
+									variant="ghost"
+									onclick={handleClose}
+									xstyle={lightboxControlButtonStyle}
+								/>
+							</span>
+						{:else}
 							<IconButton
 								icon={closeIcon}
 								label={t('@astryx.lightbox.close')}
 								variant="ghost"
 								onclick={handleClose}
-								xstyle={lightboxControlButtonStyle}
+								xstyle={[lightboxCloseButtonStyle, lightboxControlButtonStyle]}
 							/>
-						</span>
-					{:else}
-						<IconButton
-							icon={closeIcon}
-							label={t('@astryx.lightbox.close')}
-							variant="ghost"
-							onclick={handleClose}
-							xstyle={[lightboxCloseButtonStyle, lightboxControlButtonStyle]}
-						/>
-					{/if}
+						{/if}
 
-					<!--
+						<!--
 						Gallery nav: prev — stays mounted and is disabled at the start of the
 						range so pressing/arrowing to the boundary doesn't unmount the focused
 						control and drop focus to <body>.
 					-->
-					{#if isGallery}
-						{#if hasZoom}
-							<span class={navPrevBacking.class} style={navPrevBacking.style}>
+						{#if isGallery}
+							{#if hasZoom}
+								<span class={navPrevBacking.class} style={navPrevBacking.style}>
+									<IconButton
+										icon={prevIcon}
+										label={t('@astryx.lightbox.previous')}
+										variant="ghost"
+										isDisabled={!canPrev}
+										onclick={goToPrev}
+										xstyle={lightboxControlButtonStyle}
+									/>
+								</span>
+							{:else}
 								<IconButton
 									icon={prevIcon}
 									label={t('@astryx.lightbox.previous')}
 									variant="ghost"
 									isDisabled={!canPrev}
 									onclick={goToPrev}
-									xstyle={lightboxControlButtonStyle}
+									xstyle={[
+										lightboxNavButtonStyle,
+										lightboxNavPrevStyle,
+										lightboxControlButtonStyle
+									]}
 								/>
-							</span>
-						{:else}
-							<IconButton
-								icon={prevIcon}
-								label={t('@astryx.lightbox.previous')}
-								variant="ghost"
-								isDisabled={!canPrev}
-								onclick={goToPrev}
-								xstyle={[lightboxNavButtonStyle, lightboxNavPrevStyle, lightboxControlButtonStyle]}
-							/>
+							{/if}
 						{/if}
-					{/if}
-				</div>
+					</div>
 
-				<!-- Media + caption group (centered together) -->
-				<div class={mediaGroup.class} style={mediaGroup.style}>
-					<!--
+					<!-- Media + caption group (centered together) -->
+					<div class={mediaGroup.class} style={mediaGroup.style}>
+						<!--
 						The wrapper is a keyboard-operable zoom toggle when zoom is enabled:
 						Enter/Space toggles, aria-pressed reflects state.
 					-->
-					<!--
+						<!--
 						`role` is conditional, so the compiler cannot see that the element
 						carrying `tabindex` is the one carrying `role="button"` — the two are
 						set by the same flag and never appear apart.
 					-->
-					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-					<div
-						bind:this={imageWrapperEl}
-						role={isZoomTarget ? 'button' : undefined}
-						tabindex={isZoomTarget ? 0 : undefined}
-						aria-pressed={isZoomTarget ? isZoomed : undefined}
-						aria-label={isZoomTarget ? t('@astryx.lightbox.zoom') : undefined}
-						data-zoom-dragging={isDragging ? '' : undefined}
-						class={imageWrapper.class}
-						style={imageWrapper.style}
-						ondblclick={isVideo ? undefined : handleDoubleClick}
-						onkeydown={isZoomTarget ? handleImageKeyDown : undefined}
-						onpointerdown={isVideo ? undefined : handlePointerDown}
-						onpointermove={isZoomTarget ? markPointerOverPhoto : undefined}
-						onpointerleave={isZoomTarget
-							? (e) => e.currentTarget.removeAttribute(OVER_PHOTO_ATTRIBUTE)
-							: undefined}
-					>
-						{#if isGallery}
-							<div bind:this={trackEl} class={trackAttrs.class} style={trackAttrs.style}>
-								{#each pageIndexes as i (i)}
-									{@const page = lightboxPageAttrs(i)}
-									<!--
+						<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+						<div
+							bind:this={imageWrapperEl}
+							role={isZoomTarget ? 'button' : undefined}
+							tabindex={isZoomTarget ? 0 : undefined}
+							aria-pressed={isZoomTarget ? isZoomed : undefined}
+							aria-label={isZoomTarget ? t('@astryx.lightbox.zoom') : undefined}
+							data-zoom-dragging={isDragging ? '' : undefined}
+							class={imageWrapper.class}
+							style={imageWrapper.style}
+							ondblclick={isVideo ? undefined : handleDoubleClick}
+							onkeydown={isZoomTarget ? handleImageKeyDown : undefined}
+							onpointerdown={isVideo ? undefined : handlePointerDown}
+							onpointermove={isZoomTarget ? markPointerOverPhoto : undefined}
+							onpointerleave={isZoomTarget
+								? (e) => e.currentTarget.removeAttribute(OVER_PHOTO_ATTRIBUTE)
+								: undefined}
+						>
+							{#if isGallery}
+								<div bind:this={trackEl} class={trackAttrs.class} style={trackAttrs.style}>
+									{#each pageIndexes as i (i)}
+										{@const page = lightboxPageAttrs(i)}
+										<!--
 										Only the current page is on screen at rest: the others stay
 										out of the tab order and the accessibility tree.
 									-->
-									<div
-										data-lightbox-page={i}
-										data-current={i === index ? '' : undefined}
-										inert={i !== index ? true : undefined}
-										aria-hidden={i !== index ? true : undefined}
-										class={page.class}
-										style={page.style}
-									>
 										<div
-											data-lightbox-page-media=""
-											class={pageMediaAttrs.class}
-											style={pageMediaAttrs.style}
+											data-lightbox-page={i}
+											data-current={i === index ? '' : undefined}
+											inert={i !== index ? true : undefined}
+											aria-hidden={i !== index ? true : undefined}
+											class={page.class}
+											style={page.style}
 										>
-											{@render lightboxMedia(mediaArray[i], i === index)}
-										</div>
-										{#if mediaArray[i].caption}
 											<div
-												data-lightbox-caption=""
-												class={captionAttrs.class}
-												style={captionAttrs.style}
+												data-lightbox-page-media=""
+												class={pageMediaAttrs.class}
+												style={pageMediaAttrs.style}
 											>
-												{@render lightboxCaption(mediaArray[i].caption)}
+												{@render lightboxMedia(mediaArray[i], i === index)}
 											</div>
-										{/if}
-									</div>
-								{/each}
-							</div>
-						{:else}
-							{@render lightboxMedia(currentItem, true)}
-							{#if currentItem.caption}
-								<div bind:this={captionEl} class={captionAttrs.class} style={captionAttrs.style}>
-									{@render lightboxCaption(currentItem.caption)}
+											{#if mediaArray[i].caption}
+												<div
+													data-lightbox-caption=""
+													class={captionAttrs.class}
+													style={captionAttrs.style}
+												>
+													{@render lightboxCaption(mediaArray[i].caption)}
+												</div>
+											{/if}
+										</div>
+									{/each}
 								</div>
+							{:else}
+								{@render lightboxMedia(currentItem, true)}
+								{#if currentItem.caption}
+									<div bind:this={captionEl} class={captionAttrs.class} style={captionAttrs.style}>
+										{@render lightboxCaption(currentItem.caption)}
+									</div>
+								{/if}
 							{/if}
-						{/if}
+						</div>
 					</div>
-				</div>
 
-				<div class={chromeLayer.class} style={chromeLayer.style}>
-					<!--
+					<div class={chromeLayer.class} style={chromeLayer.style}>
+						<!--
 						Gallery nav: next — see "prev" above; stays mounted and disabled at the
 						end of the range instead of unmounting.
 					-->
-					{#if isGallery}
-						{#if hasZoom}
-							<span class={navNextBacking.class} style={navNextBacking.style}>
+						{#if isGallery}
+							{#if hasZoom}
+								<span class={navNextBacking.class} style={navNextBacking.style}>
+									<IconButton
+										icon={nextIcon}
+										label={t('@astryx.lightbox.next')}
+										variant="ghost"
+										isDisabled={!canNext}
+										onclick={goToNext}
+										xstyle={lightboxControlButtonStyle}
+									/>
+								</span>
+							{:else}
 								<IconButton
 									icon={nextIcon}
 									label={t('@astryx.lightbox.next')}
 									variant="ghost"
 									isDisabled={!canNext}
 									onclick={goToNext}
-									xstyle={lightboxControlButtonStyle}
+									xstyle={[
+										lightboxNavButtonStyle,
+										lightboxNavNextStyle,
+										lightboxControlButtonStyle
+									]}
 								/>
-							</span>
-						{:else}
-							<IconButton
-								icon={nextIcon}
-								label={t('@astryx.lightbox.next')}
-								variant="ghost"
-								isDisabled={!canNext}
-								onclick={goToNext}
-								xstyle={[lightboxNavButtonStyle, lightboxNavNextStyle, lightboxControlButtonStyle]}
-							/>
+							{/if}
 						{/if}
-					{/if}
 
-					<!-- Gallery counter -->
-					{#if isGallery && mediaArray.length > 1}
-						<div class={counter.class} style={counter.style}>
-							{index + 1} / {mediaArray.length}
-						</div>
-					{/if}
+						<!-- Gallery counter -->
+						{#if isGallery && mediaArray.length > 1}
+							<div class={counter.class} style={counter.style}>
+								{index + 1} / {mediaArray.length}
+							</div>
+						{/if}
+					</div>
 				</div>
-			</div>
+			</ModalAnnounceProvider>
 		</LayerDepthProvider>
 	</dialog>
 {/if}

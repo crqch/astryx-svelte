@@ -60,6 +60,7 @@
 	import type { SpacingToken } from '../../internal/container.stylex.js';
 	import { overlayPaddingReset } from '../../internal/padding.stylex.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 	import { useFocusTrap } from '../../hooks/use-focus-trap.svelte.js';
 	import LayerContentBoundary from '../layer/layer-content-boundary.svelte';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
@@ -243,9 +244,11 @@
 	{@attach bindRef}
 	{@attach bindRef}
 >
-	<LayerDepthProvider>
-		<LayerContentBoundary>
-			{@render contentArea()}
-		</LayerContentBoundary>
-	</LayerDepthProvider>
+	<ModalAnnounceProvider dialogRef={() => dialogEl} isOpen={isOpen && hasScrim}>
+		<LayerDepthProvider>
+			<LayerContentBoundary>
+				{@render contentArea()}
+			</LayerContentBoundary>
+		</LayerDepthProvider>
+	</ModalAnnounceProvider>
 </dialog>

@@ -48,6 +48,13 @@ export interface BottomSheetSwitcherTransitionEvent {
 export interface BottomSheetSwitcherContextValue {
 	activeSheet: string | null;
 	hasScrim: boolean;
+	/**
+	 * The one native dialog every step renders inside. Upstream gives each step
+	 * its own dialog and registers it here; this port's switcher owns the
+	 * dialog, so the modal-announcement provider each step mounts reads it from
+	 * here.
+	 */
+	getDialog: () => HTMLDialogElement | null;
 	onActiveSheetChange: (sheetId: string | null) => void;
 	getSheetPhase: (sheetId: string) => BottomSheetSwitcherPhase;
 	getSheetAlignmentOffset: (sheetId: string) => number;

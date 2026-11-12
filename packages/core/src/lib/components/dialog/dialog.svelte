@@ -85,6 +85,7 @@
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
 	import { holdEntranceInput } from '../layer/hold-entrance-input.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
 	import { spacingStepToToken } from '../../internal/padding.stylex.js';
 	import type { SpacingToken } from '../../internal/container.stylex.js';
@@ -400,6 +401,8 @@
 		{...purpose === 'required' ? { role: 'alertdialog' } : {}}
 		{@attach syncDefaultLabel}
 	>
-		<LayerDepthProvider>{@render innerContent()}</LayerDepthProvider>
+		<ModalAnnounceProvider dialogRef={() => dialogEl ?? null} {isOpen}>
+			<LayerDepthProvider>{@render innerContent()}</LayerDepthProvider>
+		</ModalAnnounceProvider>
 	</dialog>
 {/if}

@@ -12,7 +12,12 @@
  * `__resetDevWarnings` (in `utils/dev-warning.ts`) has the same standing.
  */
 
-export { useAnnounce, type AnnounceFn, type AnnouncePoliteness } from './use-announce.js';
+export {
+	useAnnounce,
+	type AnnounceFn,
+	type AnnouncePoliteness,
+	type UseAnnounceOptions
+} from './use-announce.js';
 
 export {
 	useClickableContainer,
@@ -175,3 +180,19 @@ export {
 	type UseTypeaheadOptions,
 	type UseTypeaheadReturn
 } from './use-typeahead.js';
+
+export {
+	useMenuPress,
+	MENU_PRESS_MARKER,
+	isMenuPressActivation,
+	type UseMenuPressOptions,
+	type UseMenuPressReturn
+} from './use-menu-press.svelte.js';
+export { menuPressStep, MENU_PRESS_SETTLE_MS } from './menu-press-gesture.js';
+export type {
+	MenuPressEffect,
+	MenuPressEvent,
+	MenuPressGesture,
+	MenuPressPointerType,
+	MenuPressStep
+} from './menu-press-gesture.js';

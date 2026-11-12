@@ -166,6 +166,7 @@
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
+	import { useBusyAnnouncement } from '../../hooks/use-busy-announcement.svelte.js';
 	import { setCommandPaletteContext } from './command-palette-context.svelte.js';
 	import CommandPaletteList from './command-palette-list.svelte';
 	import CommandPaletteItem from './command-palette-item.svelte';
@@ -253,6 +254,15 @@
 	// search write and the async search itself.
 	const isBusy = $derived(optimisticSearch.isPending || optimisticResults.isPending);
 
+	// The busy start is announced one frame after it begins (`useBusyAnnouncement`,
+	// upstream's CommandPaletteInput), and the outcome settles it first, so a fast
+	// source says only the result count rather than "Loading <count>".
+	const settleBusyAnnouncement = useBusyAnnouncement(
+		() => isBusy,
+		() => t('@astryx.commandPalette.loading'),
+		() => null
+	);
+
 	// Upstream's `searchVersionRef`. A plain `let` — it is a ref, and nothing
 	// renders from it.
 	let searchVersion = 0;
@@ -325,14 +335,6 @@
 		// dependency — and `optimistic.run` writes before it awaits, so a tracked
 		// re-read would see the value it had just installed (the `ToggleButton`
 		// race).
-		// Loading started for a user query: tell screen-reader users the spinner
-		// appeared. The polite region coalesces rapid updates, so for fast sources
-		// the result-count announcement below simply replaces this instead of
-		// stacking one "Loading" per keystroke.
-		if (!isBootstrap) {
-			announce(t('@astryx.commandPalette.loading'));
-		}
-
 		const prior = untrack(() => searchResults);
 		const shouldFilter = !isBootstrap && prior.length > 0;
 		const lower = query.toLowerCase().trim();
@@ -346,6 +348,11 @@
 
 			if (searchVersion !== version) {
 				return;
+			}
+			// A busy start not yet exposed is withdrawn; a fast source then says
+			// only its outcome.
+			if (!isBootstrap) {
+				settleBusyAnnouncement();
 			}
 			// Commit query and results together
 			search = query;

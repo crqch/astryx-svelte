@@ -90,9 +90,9 @@
 	 *
 	 * Upstream splits the wrapper and the content so the content — search, rows,
 	 * footer, and every announcement about them — renders inside the sheet's
-	 * dialog. Svelte has no rule about announcements crossing a dialog boundary,
-	 * and this port's `useAnnounce` regions are page-level singletons, so one
-	 * file holds both halves.
+	 * dialog. The `BottomSheet` publishes the modal scope, so `useAnnounce` from
+	 * this content reaches the sheet's own region rather than the page channel.
+	 * One file still holds both halves because Svelte has no lazy boundary here.
 	 */
 	const {
 		isOpen,

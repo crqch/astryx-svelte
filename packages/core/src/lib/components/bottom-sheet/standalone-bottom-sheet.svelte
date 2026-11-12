@@ -12,6 +12,7 @@
 	import { focusForLastInput } from '../../utils/focus-return.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { trackInteractionModality } from '../../utils/interaction-modality.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 
 	/**
 	 * Ported from the private `StandaloneBottomSheet` in Astryx's
@@ -256,23 +257,25 @@
 	onclick={handleClick}
 	onkeydown={handleKeyDown}
 >
-	<div class={positionerAttrs.class} style={positionerAttrs.style}>
-		<BottomSheetPanel
-			{...rest}
-			{panelState}
-			{height}
-			{label}
-			{snapPoints}
-			{xstyle}
-			{children}
-			isSwipeDismissAllowed={purpose === 'info'}
-			isPageScrollLocked={shouldPresent && hasScrim}
-			onDismiss={dismissOnLightInteraction}
-			onScrimOpacity={handleScrimOpacity}
-			onElementChange={handlePanelElementChange}
-			onMotionComplete={handleMotionComplete}
-		/>
-	</div>
+	<ModalAnnounceProvider dialogRef={() => dialogEl ?? null} isOpen={isOpen && hasScrim}>
+		<div class={positionerAttrs.class} style={positionerAttrs.style}>
+			<BottomSheetPanel
+				{...rest}
+				{panelState}
+				{height}
+				{label}
+				{snapPoints}
+				{xstyle}
+				{children}
+				isSwipeDismissAllowed={purpose === 'info'}
+				isPageScrollLocked={shouldPresent && hasScrim}
+				onDismiss={dismissOnLightInteraction}
+				onScrimOpacity={handleScrimOpacity}
+				onElementChange={handlePanelElementChange}
+				onMotionComplete={handleMotionComplete}
+			/>
+		</div>
+	</ModalAnnounceProvider>
 	<!-- A modal sheet's `::backdrop` already answers Safari's edge sampler. -->
 	{#if !hasScrim}
 		<BottomSheetEdgeTint />
