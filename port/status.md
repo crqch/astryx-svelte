@@ -726,9 +726,9 @@ this port does not document are not counted as pending.
 | deliberate-divergence | 53      |
 | divergence            | 8       |
 | port-defect-fixed     | 1       |
-| unported              | 29      |
+| unported              | 28      |
 | unported cases        | 1       |
 | upstream bug          | 1       |
 | upstream-bug          | 1       |
 | upstream-lag          | 13      |
-| **total**             | **143** |
+| **total**             | **142** |

@@ -182,11 +182,9 @@ because the thing it types is. None was recorded before; none is a surface-polic
 - [x] **The two module-augmentation seams are present** — `CardVariantMap` backs
       `CardVariant = keyof CardVariantMap`, and `CustomTextTypes` backs
       `TextType = BuiltinTextType | keyof CustomTextTypes`. Both are published.
-- [ ] **`Selector`/`MultiSelector`'s `presentation` is documented and unimplemented.**
-      Upstream's `useSelectorPresentation` hook (`Selector/useSelectorPresentation.ts`) drives
-      `'popover' | 'bottom-sheet' | 'adaptive'`; this port renders the popover only, so the prop in
-      both `.doc.mjs` files is the emitter's fallback, not a declaration. The
-      `SelectorBottomSheet` example block stays unported until it lands
+- [x] **`Selector`/`MultiSelector`'s `presentation` is implemented.** The shared
+      `useSelectorPresentation` controller, the bottom-sheet surface and focus-return policy are
+      ported, and both `SelectorBottomSheet` and `MultiSelectorBottomSheet` examples are present.
 - [x] **`useCombobox` publishes upstream's helper props** — `getFieldProps()`,
       `getListboxProps()` and `getOptionProps()` are implemented, so the assign-to-field block can
       be transcribed.

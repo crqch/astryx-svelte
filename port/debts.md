@@ -2123,19 +2123,3 @@ DateTimeInput and Timestamp. The `InternationalizationProvider04Calendar` exampl
 block stays pending until it lands. Recorded here rather than approximated,
 because a substitute calendar would change what dates mean rather than how they
 look.
-
-### The menu/popover family's adaptive bottom-sheet presentation is not ported
-
-- **units:** DropdownMenu, ContextMenu, MoreMenu, Popover, BottomSheetSwitcher, useAdaptivePresentation
-- **kind:** unported
-- **retires:** when each component's `presentation`/adaptive resolution can render a bottom-sheet surface, sharing the Selector/MultiSelector controller
-
-Selector and MultiSelector are gaining the shared `presentationHold` controller and
-a sheet surface. The menu and popover family still renders the popover only:
-DropdownMenu, ContextMenu, MoreMenu and Popover have no sheet branch, and
-BottomSheetSwitcher's review/showcase flows likewise have no presentation to
-drive. The blocks stay pending rather than being approximated with a popover:
-`DropdownMenuBottomSheet`, `ContextMenuBottomSheet`, `MoreMenuBottomSheet`,
-`PopoverBottomSheetAlternative`, `BottomSheetSwitcherReviewFlow`,
-`BottomSheetSwitcherShowcase`, `SelectorBottomSheet`, `MultiSelectorBottomSheet`,
-and the `useMediaQuery` variant of `DropdownMenuBottomSheet`.
