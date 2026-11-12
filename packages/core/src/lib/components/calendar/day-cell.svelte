@@ -228,7 +228,6 @@
 			class={cx(buttonTheme.class, buttonAttrs.class)}
 			style={buttonAttrs.style}
 			aria-current={state.isToday ? 'date' : undefined}
-			disabled={isDisabled}
 			tabindex={isTabbable ? 0 : -1}
 			onclick={() => !state.effectivelyDisabled && onDayClick(day.date)}
 			onmouseenter={() => !state.effectivelyDisabled && onDayHover(day.date)}

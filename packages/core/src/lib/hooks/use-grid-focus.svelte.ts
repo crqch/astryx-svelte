@@ -86,11 +86,11 @@ export interface UseGridFocusOptions {
 	 */
 	onNavigateAfter?: (column: number, offset: number) => void;
 
-	/** Callback for Page Up key (e.g., previous month). */
-	onPageUp?: () => void;
+	/** Callback for Page Up key (e.g., previous month). Receives the key event, so `event.shiftKey` can select a larger step, such as a year. */
+	onPageUp?: (event: KeyboardEvent) => void;
 
-	/** Callback for Page Down key (e.g., next month). */
-	onPageDown?: () => void;
+	/** Callback for Page Down key (e.g., next month). Receives the key event, so `event.shiftKey` can select a larger step, such as a year. */
+	onPageDown?: (event: KeyboardEvent) => void;
 
 	/**
 	 * @deprecated Direction is auto-detected from the container's computed
@@ -296,6 +296,15 @@ export function useGridFocus(options: () => UseGridFocusOptions): UseGridFocusRe
 		const tabbable = current ?? targets[0];
 		for (const el of targets) {
 			setTabIndex(el, el === tabbable ? 0 : -1);
+		}
+		// A cell that stopped being focusable (an aria-disabled day, for example,
+		// which stays reachable by focus) can still hold the stop from earlier
+		// navigation; it never stays tabbable, so the grid keeps one Tab stop.
+		for (const cell of getCells()) {
+			const el = cellFocusable(cell) ? null : resolveFocusTarget(cell);
+			if (el != null) {
+				setTabIndex(el, -1);
+			}
 		}
 	}
 
@@ -545,11 +554,11 @@ export function useGridFocus(options: () => UseGridFocusOptions): UseGridFocusRe
 				break;
 
 			case 'PageUp':
-				onPageUp?.();
+				onPageUp?.(e);
 				break;
 
 			case 'PageDown':
-				onPageDown?.();
+				onPageDown?.(e);
 				break;
 
 			default:

@@ -13,7 +13,7 @@
 	export interface MonthGridProps {
 		month: CalendarMonth;
 		calendar: CalendarSystem;
-		value: ISODateString | DateRange | undefined;
+		value: ISODateString | DateRange | null | undefined;
 		mode: 'single' | 'range';
 		rangeSelectionStart: ISODateString | null;
 		hoveredDate: ISODateString | null;
@@ -29,8 +29,16 @@
 		onDayClick: (date: PlainDate) => void;
 		onDayHover: (date: PlainDate | null) => void;
 		today: PlainDate;
-		onNavigatePrevious?: (focusedDate: ISODateString, offset: number) => void;
-		onNavigateNext?: (focusedDate: ISODateString, offset: number) => void;
+		onNavigatePrevious?: (
+			focusedDate: ISODateString,
+			offset: number,
+			unit?: 'days' | 'months' | 'years'
+		) => void;
+		onNavigateNext?: (
+			focusedDate: ISODateString,
+			offset: number,
+			unit?: 'days' | 'months' | 'years'
+		) => void;
 	}
 </script>
 
@@ -48,12 +56,14 @@
 		plainDateGetWeekNumber,
 		plainDateIsBefore,
 		plainDateIsEqual,
-		plainDateToISO
+		plainDateToISO,
+		plainDateWeekFieldName
 	} from '../../utils/plain-date.js';
 	import { computeDayNeighborContinuity } from './day-cell-utils.js';
 	import { useCalendarConstraints } from './use-calendar-constraints.svelte.js';
 	import { useCalendarDays } from './use-calendar-days.svelte.js';
 	import DayCell from './day-cell.svelte';
+	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import {
 		dayNameAttrs,
 		daysGridAttrs,
@@ -183,17 +193,17 @@
 		}
 	}
 
-	function handlePageUp(): void {
+	function handlePageUp(event: KeyboardEvent): void {
 		const focusedDate = getFocusedDate();
 		if (focusedDate) {
-			onNavigatePrevious?.(focusedDate, 7);
+			onNavigatePrevious?.(focusedDate, 1, event.shiftKey ? 'years' : 'months');
 		}
 	}
 
-	function handlePageDown(): void {
+	function handlePageDown(event: KeyboardEvent): void {
 		const focusedDate = getFocusedDate();
 		if (focusedDate) {
-			onNavigateNext?.(focusedDate, 7);
+			onNavigateNext?.(focusedDate, 1, event.shiftKey ? 'years' : 'months');
 		}
 	}
 
@@ -213,7 +223,8 @@
 	const gridFocus = useGridFocus(() => ({
 		columns: 7,
 		cellSelector: '[role="gridcell"]',
-		isCellFocusable: (cell: HTMLElement) => cell.querySelector('button:not([disabled])') !== null,
+		isCellFocusable: (cell: HTMLElement) =>
+			cell.querySelector('button:not([disabled]):not([aria-disabled="true"])') !== null,
 		getFocusTarget: (cell: HTMLElement) => cell.querySelector<HTMLElement>('button'),
 		hasRovingTabIndex: true,
 		onNavigateBefore: handleNavigatePrevious,
@@ -303,9 +314,18 @@
 		-->
 		<div role="row" class={rowAttrs.class} style={rowAttrs.style}>
 			{#if hasWeekNumbers}
-				<div class={numberHeaderAttrs.class} style={numberHeaderAttrs.style}></div>
+				<!--
+					The corner above the week-number column is a header cell like the
+					weekday names beside it (APG grid: every cell in a row is a
+					gridcell, columnheader or rowheader). Its name is the locale's own
+					word for the week field, as visually hidden text so the column stays
+					blank and the header is not empty to axe.
+				-->
+				<div role="columnheader" class={numberHeaderAttrs.class} style={numberHeaderAttrs.style}>
+					<VisuallyHidden>{plainDateWeekFieldName(locale())}</VisuallyHidden>
+				</div>
 			{/if}
-			{#each grid.dayNames as name (name)}
+			{#each grid.dayNames as name, index ((weekStartsOn + index) % 7)}
 				<div role="columnheader" class={nameAttrs.class} style={nameAttrs.style}>{name}</div>
 			{/each}
 		</div>
