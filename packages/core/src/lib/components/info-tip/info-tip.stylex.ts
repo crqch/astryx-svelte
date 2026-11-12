@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { touchHitAreaStyles } from '../../internal/touch-hit-area.stylex.js';
 import {
 	colorVars,
 	durationVars,
@@ -13,10 +14,9 @@ import {
  * Ported from Astryx's `InfoTip/InfoTip.tsx`.
  *
  * The trigger is the whole surface: a transparent, round button sized by the
- * icon it contains. The hit-area expansion upstream applies from
- * `touchHitArea` is not ported yet — it belongs to a shared 0.7.x module this
- * port has not brought over, and recording the absence is required by the
- * parity rule.
+ * icon it contains. Under a coarse pointer its `::after` is the shared touch
+ * hit band, which `useTouchHitArea` grows toward a 44 px target as far as its
+ * neighbours allow.
  */
 const styles = stylex.create({
 	trigger: {
@@ -48,5 +48,5 @@ const styles = stylex.create({
 });
 
 export function infoTipTriggerAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
-	return sx(focusOutlineStyles.focusVisible, styles.trigger, xstyle);
+	return sx(focusOutlineStyles.focusVisible, styles.trigger, touchHitAreaStyles.layer, xstyle);
 }

@@ -13,26 +13,55 @@ import InfoTipI18nProbe from './fixtures/info-tip-i18n-probe.svelte';
 /**
  * Ported from Astryx's `InfoTip/InfoTip.test.tsx` at the **0.7.13** pin.
  *
- * Four cases are not here, each named rather than silently dropped:
+ * One case is not here, named rather than silently dropped:
  *
  * - `takes no open-state, placement, or trigger props (FR3)` is a compile-time
  *   assertion in React (`@ts-expect-error`). Svelte's component props are
  *   checked by `svelte-check`, not by a runtime render, so the case moves to the
  *   type checker rather than being restated here.
- * - Both `touch hit area (AR1)` cases cover `useTouchHitArea`, the shared
- *   0.7.x hit-area module this port has not brought over. The absence is
- *   recorded on `info-tip.stylex.ts`; the trigger still has its 2px padding.
- * - `closes on a tap outside` needs the tooltip's outside-press dismissal.
- *   Upstream's `useTooltip` acquired it with the shared layer dismissal stack;
- *   this port's `use-tooltip.svelte.ts` still has only the touch-trigger's
- *   outside tap, which does not cover a pinned help. The case returns when the
- *   outside-press module is ported.
+ *
+ * The two `touch hit area (AR1)` cases observe upstream's `hitAreaWatches`
+ * test seam. This port's `useTouchHitArea` exposes no seam, so they assert the
+ * same contract through the real `(pointer: coarse)` query and the
+ * `--astryx-hit-inset-*` properties the shared band reads: the watch grows the
+ * button toward 44 px, and a stopped watch clears the insets.
  *
  * Upstream's jsdom Popover and `:focus-visible` stubs are gone: these run in
  * real Chromium, which implements both. The layer is found by its
  * `role="tooltip"` element in the render container, and "shown" is
  * `:popover-open`, as the local Tooltip suite already does.
  */
+
+/**
+ * Drives `(pointer: coarse)` from a test, as `coarse-pointer.svelte.test.ts`
+ * does. Upstream's AR1 cases read `hitAreaWatches` instead; this port has no
+ * test seam, so the real query drives the same watch.
+ */
+function pointerQuery(initial: boolean) {
+	let matches = initial;
+	const listeners = new Set<() => void>();
+	const original = window.matchMedia;
+	window.matchMedia = ((query: string) => ({
+		media: query,
+		get matches() {
+			return matches;
+		},
+		addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+		removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+		addListener: (listener: () => void) => listeners.add(listener),
+		removeListener: (listener: () => void) => listeners.delete(listener),
+		dispatchEvent: () => false
+	})) as unknown as typeof window.matchMedia;
+	return {
+		set(value: boolean) {
+			matches = value;
+			for (const listener of [...listeners]) listener();
+		},
+		restore() {
+			window.matchMedia = original;
+		}
+	};
+}
 
 const content = () => createRawSnippet(() => ({ render: () => '<span>Helpful context</span>' }));
 
@@ -296,6 +325,73 @@ describe('InfoTip', () => {
 			await vi.waitFor(() => expect(isOpen(layer)).toBe(true));
 			tap(trigger);
 			await vi.waitFor(() => expect(isOpen(layer)).toBe(false));
+		});
+
+		it('closes on a tap outside', async () => {
+			const screen = await render(InfoTip, { props: { content: content() } });
+			const elsewhere = document.createElement('button');
+			elsewhere.textContent = 'Elsewhere';
+			screen.container.append(elsewhere);
+			const trigger = triggerIn(screen.container);
+			const layer = layerIn(screen.container);
+
+			tap(trigger);
+			await vi.waitFor(() => expect(isOpen(layer)).toBe(true));
+
+			// The tap outside counts when the finger lifts.
+			elsewhere.dispatchEvent(
+				new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true })
+			);
+			elsewhere.dispatchEvent(
+				new PointerEvent('pointerup', { pointerType: 'touch', bubbles: true })
+			);
+
+			await vi.waitFor(() => expect(isOpen(layer)).toBe(false));
+		});
+	});
+
+	describe('touch hit area (AR1)', () => {
+		it('grows the button toward 44 px as far as the shared hit area allows', async () => {
+			const pointer = pointerQuery(true);
+			try {
+				const screen = await render(InfoTip, { props: { content: content() } });
+				const trigger = triggerIn(screen.container);
+
+				// The icon button is 20 px square (a 16 px icon plus 2 px of
+				// padding), so the free sides grow by 12 px toward the 44 px
+				// target and write the band's insets.
+				await vi.waitFor(() =>
+					expect(trigger.style.getPropertyValue('--astryx-hit-inset-top')).toBe('12px')
+				);
+				expect(trigger.style.getPropertyValue('--astryx-hit-inset-left')).toBe('12px');
+
+				screen.unmount();
+				await vi.waitFor(() =>
+					expect(trigger.style.getPropertyValue('--astryx-hit-inset-top')).toBe('0px')
+				);
+			} finally {
+				pointer.restore();
+			}
+		});
+
+		it('clears the button’s insets when its watch stops', async () => {
+			const pointer = pointerQuery(true);
+			try {
+				const screen = await render(InfoTip, { props: { content: content() } });
+				const trigger = triggerIn(screen.container);
+
+				await vi.waitFor(() =>
+					expect(trigger.style.getPropertyValue('--astryx-hit-inset-top')).toBe('12px')
+				);
+
+				screen.unmount();
+				await vi.waitFor(() => {
+					expect(trigger.style.getPropertyValue('--astryx-hit-inset-top')).toBe('0px');
+					expect(trigger.style.getPropertyValue('--astryx-hit-inset-left')).toBe('0px');
+				});
+			} finally {
+				pointer.restore();
+			}
 		});
 	});
 });

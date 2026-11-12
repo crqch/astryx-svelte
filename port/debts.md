@@ -1860,44 +1860,6 @@ Ported once, per this file's own rule that upstream bugs are documented rather t
 consequence is arithmetic: the case delta for this suite counts upstream's 136 declarations against
 ours, so it cannot reach zero while five of upstream's are copies.
 
-### `InfoTip` is missing the shared 44 px touch hit area
-
-- **units:** InfoTip
-- **kind:** unported
-- **retires:** when `useTouchHitArea` / `hitArea` are ported
-
-Upstream's InfoTip grows its button toward a 44 px target through the shared
-`utils/touchHitArea` module (1,517 lines including its `hitArea` measurements and
-`sharedMutationObserver` dependency). The port's trigger keeps its 2 px padding, so it is visually
-correct but its coarse-pointer target is smaller than upstream's. Two upstream AR1 cases are
-unported with it. The trigger still has an accessible name, a focus ring and the full pin
-interaction.
-
-### `InfoTip` pins do not close on an outside press
-
-- **units:** InfoTip
-- **kind:** unported
-- **retires:** when the tooltip's outside-press dismissal lands
-
-Upstream's `useTooltip` joined the shared layer dismissal stack at 0.7.x, so a pinned InfoTip closes
-on a press outside, on a scroll that starts outside, and when focus moves outside. This port's
-`use-tooltip.svelte.ts` still has only the touch-trigger's outside tap; a pinned help therefore
-stays open until Escape or a second press on the trigger. The upstream case `closes on a tap
-outside` is named in `info-tip.svelte.test.ts` and returns when the outside-press module does.
-
-### `Drawer` does not hold a finger's entrance tap
-
-- **units:** Drawer
-- **kind:** unported
-- **retires:** when the shared input-hold stack (`holdEntranceInput`, `inputHold`, `inputStream`, `flatTree`, `coarsePointer`) is ported
-
-Upstream's `Drawer/DrawerTouchEntrance.test.tsx` (4 cases) and
-`DrawerTouchEntrance.interaction.browser.spec.ts` (7 Playwright specs) prove that a non-modal drawer holds a
-finger's tap while it slides in, lets the hold go when the slide ends or the drawer closes mid-slide, and never
-holds a mouse click. That behavior lives in `Layer/holdEntranceInput` plus the ~1,900-line `inputHold`/
-`inputStream`/`flatTree`/`coarsePointer` stack. This port presents and dismisses the drawer correctly but does
-not hold entrance input, so the four unit cases are unported and listed in `port/status.md`.
-
 ### A server-open `Drawer` animates its slide-in after hydration
 
 - **units:** Drawer

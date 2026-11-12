@@ -213,6 +213,15 @@ export interface TooltipReturn {
 
 	/** Schedule a hide, after `hideDelay` or the hover-bridge grace period. */
 	scheduleHide: () => void;
+
+	/**
+	 * Open the tip as a held (pinned) one — upstream's `show()`. Arms the
+	 * outside dismissal a held tip owes the user, unlike a hover preview.
+	 */
+	show: () => void;
+
+	/** Close a held tip — upstream's `hide()`. */
+	hide: () => void;
 }
 
 /**
@@ -328,6 +337,27 @@ export function useTooltip(options: () => TooltipOptions): TooltipReturn {
 		show: showNow,
 		hide: hideNow
 	}));
+
+	/**
+	 * A held tip opens through the hook, not the layer: a hold owes the user
+	 * the outside dismissal, so arm it with the same listener a tap-open gets.
+	 * Upstream's `show()` (`Tooltip/useTooltip.tsx`).
+	 */
+	function showHeld(): void {
+		if (!(options().isEnabled ?? true)) {
+			return;
+		}
+		clearTimeouts();
+		touch.armOutsideDismiss();
+		layer.show();
+	}
+
+	/** Upstream's `hide()`: close a held tip and leave no tap-open behind. */
+	function hideHeld(): void {
+		clearTimeouts();
+		touch.clearTapOpen();
+		layer.hide();
+	}
 
 	// Schedule show with delay (suppressed when isOpen is false)
 	function scheduleShow(): void {
@@ -595,6 +625,8 @@ export function useTooltip(options: () => TooltipOptions): TooltipReturn {
 			return xstyle;
 		},
 		cancelHide,
-		scheduleHide
+		scheduleHide,
+		show: showHeld,
+		hide: hideHeld
 	};
 }

@@ -197,6 +197,13 @@ export interface UseTouchTriggerReturn {
 
 	/** Forget a tap-open. Call from every other close path (Escape, controlled). */
 	clearTapOpen: () => void;
+
+	/**
+	 * Arms the outside dismissal a tap-open gets: a press outside the trigger
+	 * and the layer hides it. A held (pinned) layer arms it too — upstream's
+	 * internal `armOutsideDismiss`, which `useTooltip`'s `show()` calls.
+	 */
+	armOutsideDismiss: () => void;
 }
 
 /**
@@ -348,6 +355,7 @@ export function useTouchTrigger(options: () => UseTouchTriggerOptions): UseTouch
 		isTouchInteraction,
 		handlePointerEnter,
 		handlePointerDown,
-		clearTapOpen: disarmOutsideDismiss
+		clearTapOpen: disarmOutsideDismiss,
+		armOutsideDismiss
 	};
 }

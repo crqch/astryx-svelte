@@ -35,6 +35,7 @@
 	import Icon from '../icon/icon.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
+	import { useTouchHitArea } from '../../utils/touch-hit-area.svelte.js';
 	import { infoTipTriggerAttrs } from './info-tip.stylex.js';
 
 	/**
@@ -64,6 +65,14 @@
 
 	const t = useTranslator();
 	const tooltipId = $props.id();
+
+	// Under a coarse pointer, grow the 20 px icon button toward the shared
+	// 44 px target. The watch writes `--astryx-hit-inset-*` on the button,
+	// where the `::after` band reads them.
+	useTouchHitArea(
+		() => ref,
+		() => true
+	);
 
 	// Whether a press pinned the help. A hover or focus preview is not pinned.
 	let isPinned = $state(false);
@@ -102,7 +111,7 @@
 		if (event.button !== 0 || event.pointerType === 'touch' || isPinned || !isShown) {
 			return;
 		}
-		tooltip.layer.show();
+		tooltip.show();
 	}
 
 	// A click, tap, Enter, or Space pins the help, and the next one closes it.
@@ -112,12 +121,12 @@
 		event.stopPropagation();
 		event.preventDefault();
 		if (isPinned || wasPinnedAtPointerDown) {
-			tooltip.layer.hide();
+			tooltip.hide();
 			isPinned = false;
 			wasPinnedAtPointerDown = false;
 			return;
 		}
-		tooltip.layer.show();
+		tooltip.show();
 		isPinned = true;
 		wasPinnedAtPointerDown = false;
 	}
