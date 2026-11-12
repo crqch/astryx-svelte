@@ -133,8 +133,9 @@ them.
 5. **The CLI backlog.** `blog`, `components.lock.json` with per-file hashes, the codemod runner and
    the template assets — see Open work → CLI.
 6. **The docs site.** The remaining routes (`/docs/core`, `/docs/cli`, `/changelog`, `/blog`,
-   `/themes`, `/playground`, `/mcp`), the two landing bento tiles, and the deferred `.doc.mjs`
-   examples. The **icon registry expansion** is the cross-cutting piece here: seven demo debts name
+   `/playground`, `/mcp`), the two landing bento tiles, and the deferred `.doc.mjs` examples.
+   `/themes` is implemented: the upstream `ThemePackagePage` with the live theme-showcase
+   template, picker art, mobile carousel and `?theme=` deep links. The **icon registry expansion** is the cross-cutting piece here: seven demo debts name
    it as their retirement condition, because upstream's stories use Heroicons the registry has no
    match for.
 
@@ -234,7 +235,7 @@ deviation, not a task.
 - [ ] `/docs/core`, `/docs/cli`, `/changelog` — no longer blocked on a component (`Markdown` +
       `parseOutlineFromMarkdown` landed); needs a package registry in the generator, a ported
       `PackageStubPage`, and a route branch that doesn't 404
-- [ ] `/blog` (mdsvex) and a `/themes` browser
+- [ ] `/blog` (mdsvex)
 - [ ] `/playground` — `svelte/compiler` in a Web Worker + CodeMirror 6. Deliberately last: a
       different problem in Svelte than upstream's `ts.transpileModule`
 - [ ] `/mcp` — `@modelcontextprotocol/sdk` in a `+server.ts`, over the existing content registries
