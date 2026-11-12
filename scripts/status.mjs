@@ -143,8 +143,10 @@ const invented = ours.filter((o) => !theirsCanon.has(canon(o)));
 // backtick-quoted `it.each` in prose match all over again, exactly the way the
 // bare form used to. In code nothing precedes `it` with a backtick; in prose
 // that is precisely what does.
+// `skipIf` is a declaration like `skip`: the case exists and its runtime guard
+// decides whether it runs, so it still counts toward the parity delta.
 const testCase =
-	/(?<![\w.`])(?:it|test)(?:\.(?:each|skip|only|todo|fails|concurrent|for))?\s*\(|(?<![\w.`])(?:it|test)\.(?:each|for)\s*`/g;
+	/(?<![\w.`])(?:it|test)(?:\.(?:each|skip|skipIf|only|todo|fails|concurrent|for))?\s*\(|(?<![\w.`])(?:it|test)\.(?:each|for)\s*`/g;
 const withoutCommentLines = (text) =>
 	text
 		.split('\n')
@@ -661,7 +663,7 @@ if (examples) {
 } else {
 	push(
 		'Not derivable in this run: the count comes from the docs generator, which reads core’s',
-		"built `dist/`. Run `bun run build` first.",
+		'built `dist/`. Run `bun run build` first.',
 		''
 	);
 }

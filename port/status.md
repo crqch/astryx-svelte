@@ -437,8 +437,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 13371          |
-| Declared here              | 9616           |
-| **Short**                  | **3787**       |
+| Declared here              | 9617           |
+| **Short**                  | **3786**       |
 | Over, across 8 groups      | +32            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -449,7 +449,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (209)</summary>
+<details><summary>Suites short of upstream (208)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -660,7 +660,6 @@ per connected group.
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 96   | 1     |
 | `Toast/useToast.test.tsx`                                                                                                                                                                | 5        | 4    | 1     |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 116  | 1     |
-| `utils/calendarDateParser.roundtrip.test.ts`                                                                                                                                             | 5        | 4    | 1     |
 | `utils/dateParser.test.ts`                                                                                                                                                               | 39       | 38   | 1     |
 
 </details>
