@@ -678,7 +678,21 @@ export const liquidGlassTheme = defineTheme({
 			}
 		},
 
-		'toggle-button': { base: squircle(FULL) },
+		// A toggled button changes its fill and label ink. Core does not declare a
+		// transition for ToggleButton, so the shared one keeps a press or a
+		// programmatic `isPressed` change from snapping.
+		'toggle-button': {
+			base: {
+				...squircle(FULL),
+				...STATE_TRANSITION
+			}
+		},
+		// Checkbox and radio rows change their field/row fill on hover, focus and
+		// selection. Their style modules declare no transition, and neither
+		// component is in the per-component list above, so the shared one keeps
+		// a check or a selection change from snapping.
+		'checkbox-input': { base: { ...STATE_TRANSITION } },
+		'radio-list-item': { base: { ...STATE_TRANSITION } },
 		// An interactive Token is a chip: it paints its hover/pressed state from
 		// the shared overlay, and core's own transition there only names
 		// `background-image`. The shared state transition covers the colour and
