@@ -28,20 +28,6 @@ alone. Contrast `nativePicker`, which is deliberately **not** intercepted: no up
 destructures it and it is a string, so `nativepicker="touch"` on the wrapper is byte-identical to
 what React renders. That is parity, not a leak.
 
-### `BlogCoverArt` is not ported, so a non-release post with no `coverImage` has no cover
-
-- **units:** BlogCoverArt
-- **kind:** unported
-- **retires:** when a second blog post lands without a `coverImage`
-
-Upstream's generative default cover (210 lines, deterministic from post `type` + `slug`) is the
-one piece of the blog surface this port skipped. It is not exercised today — every current post is
-a release post, so `release-cover-art.svelte` (ported) is what renders — but the gap is real the
-moment a `guide` or `perspective` post lands without artwork. `blog-card.svelte` and
-`blog-feature-card.svelte` fall through to the muted field rather than collapsing, so the failure
-is a blank cover and not a broken grid. Port it before the next non-release post, or that post
-needs a `coverImage`
-
 ### The docs top nav sizes its end-content icons at 16px; upstream's are 20px
 
 - **units:** shell/top-nav.svelte

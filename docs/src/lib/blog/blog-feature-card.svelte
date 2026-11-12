@@ -3,6 +3,7 @@
 	import type { BlogPost } from './schema.js';
 	import { parseReleaseVersion } from './release.js';
 	import AuthorByline from './author-byline.svelte';
+	import BlogCoverArt from './blog-cover-art.svelte';
 	import ReleaseCoverArt from './release-cover-art.svelte';
 
 	/**
@@ -16,9 +17,9 @@
 	 * carrying a visually-hidden label.
 	 *
 	 * The cover has the same three arms as `BlogCard`: authored `coverImage`,
-	 * `ReleaseCoverArt` when the title carries a version, otherwise upstream's
-	 * generative `BlogCoverArt` — which this port has not built (see
-	 * port/debts.md), leaving the muted field and nothing on it.
+	 * `ReleaseCoverArt` when the title carries a version, otherwise the
+	 * generative `BlogCoverArt`, seeded from the post slug in its denser
+	 * feature layout.
 	 */
 	interface Props {
 		post: BlogPost;
@@ -36,6 +37,8 @@
 			<img class="cover-img" src={post.coverImage} alt={post.coverAlt ?? ''} />
 		{:else if releaseVersion}
 			<ReleaseCoverArt version={releaseVersion} packageName={post.releasePackage ?? undefined} />
+		{:else}
+			<BlogCoverArt seed={post.slug} feature />
 		{/if}
 	</AspectRatio>
 	<VStack gap={3}>

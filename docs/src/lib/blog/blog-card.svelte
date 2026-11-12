@@ -3,6 +3,7 @@
 	import type { BlogPost } from './schema.js';
 	import { parseReleaseVersion } from './release.js';
 	import AuthorByline from './author-byline.svelte';
+	import BlogCoverArt from './blog-cover-art.svelte';
 	import ReleaseCoverArt from './release-cover-art.svelte';
 
 	/**
@@ -12,10 +13,8 @@
 	 *
 	 * The cover has three arms, in upstream's order: an authored `coverImage`
 	 * wins; otherwise a title carrying a version renders `release-cover-art`;
-	 * otherwise upstream falls through to its generative `BlogCoverArt`, **which
-	 * this port has not yet built** — see port/todo.md. Until it does, a non-release
-	 * post with no `coverImage` gets the muted field and nothing on it, so the
-	 * card still lays out rather than collapsing.
+	 * otherwise the generative `blog-cover-art` seeds a decorative cover from
+	 * the post slug, so every post has artwork without an authored image.
 	 *
 	 * The hover treatment is a plain scoped rule, as upstream's `BlogCard.module.css`
 	 * is — it reaches through the card link to tint the cover and promote the
@@ -45,6 +44,8 @@
 							version={releaseVersion}
 							packageName={post.releasePackage ?? undefined}
 						/>
+					{:else}
+						<BlogCoverArt seed={post.slug} />
 					{/if}
 				</AspectRatio>
 			</div>
