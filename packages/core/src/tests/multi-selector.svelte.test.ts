@@ -9,6 +9,10 @@ import Fixture from './fixtures/multi-selector-fixture.svelte';
 import { __resetLiveRegionsForTest } from '$lib/hooks/use-announce.js';
 import { defineTheme } from '$lib/theme/define-theme.js';
 import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
+import { sx } from '$lib/internal/sx.js';
+import { selectorPresentationStyles } from '$lib/components/selector/selector-presentation.stylex.js';
+import { selectorPresentationProbe } from './fixtures/selector-presentation-probe.stylex.js';
+import { stubMatchMedia } from './stub-match-media.js';
 
 /**
  * Astryx's `MultiSelector/MultiSelector.test.tsx`, ported case for case — **111
@@ -402,6 +406,150 @@ describe('MultiSelector', () => {
 		await expect.element(trigger).toHaveAttribute('aria-haspopup', 'listbox');
 		await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
 		await expect.element(trigger).toHaveAttribute('aria-required', 'true');
+	});
+
+	describe('presentation', () => {
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		/** Upstream's `fireEvent.pointerDown(el, {pointerType: 'touch'})`. */
+		function touchDown(element: HTMLElement): void {
+			element.dispatchEvent(
+				new PointerEvent('pointerdown', {
+					pointerType: 'touch',
+					bubbles: true,
+					cancelable: true
+				})
+			);
+		}
+
+		/** Upstream's `fireEvent.click(el, {detail: 1})`. */
+		function pointerClick(element: HTMLElement): void {
+			element.dispatchEvent(
+				new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true })
+			);
+		}
+
+		it('uses a bottom sheet and stays open while toggling options', async () => {
+			const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+			const onChange = vi.fn();
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange,
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			await userEvent.click(screen.getByRole('combobox'));
+
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			expect(showPopover).not.toHaveBeenCalled();
+
+			const option = screen
+				.getByRole('option', { name: 'Banana', exact: true })
+				.element() as HTMLElement;
+			option.click();
+			expect(onChange).toHaveBeenCalledWith(['Banana']);
+			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
+		});
+
+		it('uses a bottom sheet for adaptive presentation on compact touch', async () => {
+			stubMatchMedia({ pointer: 'coarse', matches: true });
+			const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'adaptive'
+				}
+			});
+
+			await userEvent.click(screen.getByRole('combobox'));
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			expect(showPopover).not.toHaveBeenCalled();
+		});
+
+		it('moves keyboard focus into a bottom-sheet listbox', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			trigger.focus();
+			await userEvent.keyboard('{Enter}');
+
+			await expect.element(screen.getByRole('listbox')).toHaveFocus();
+		});
+
+		it('restores touch focus without painting a trigger focus ring', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			touchDown(trigger);
+			pointerClick(trigger);
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			const dialog = screen.getByRole('dialog', { name: 'Fruit' }).element() as HTMLDialogElement;
+			touchDown(dialog);
+			pointerClick(dialog);
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+
+			trigger.focus();
+			expect(trigger).toHaveFocus();
+			const wrapper = trigger.parentElement!;
+			for (const cls of sx(selectorPresentationStyles.pointerRestoredFocus).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(true);
+			}
+		});
+
+		it('shows no disabled focus ring after a pointer pick (spec:AST-085 FR6)', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			touchDown(trigger);
+			pointerClick(trigger);
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			const dialog = screen.getByRole('dialog', { name: 'Fruit' }).element() as HTMLDialogElement;
+			touchDown(dialog);
+			pointerClick(dialog);
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+			await screen.rerender({ isDisabled: true });
+
+			const wrapper = screen.getByRole('combobox').element()!.parentElement!;
+			for (const cls of sx(selectorPresentationStyles.pointerRestoredFocus).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(true);
+			}
+			for (const cls of sx(selectorPresentationProbe.ring).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(false);
+			}
+		});
 	});
 
 	it('renders listbox with aria-multiselectable', async () => {

@@ -9,6 +9,7 @@
 		MarkdownInlinePlugin,
 		MarkdownSource
 	} from './markdown-types.js';
+	import type { MarkdownPluginEntry } from './plugins/protocol.js';
 
 	export interface MarkdownProps extends BaseProps<HTMLElement> {
 		children: string;
@@ -62,6 +63,14 @@
 		contentAlign?: 'start' | 'center';
 		components?: Partial<MarkdownComponents>;
 		/**
+		 * Ordered Markdown extensions. This port's parser has no generic plugin
+		 * protocol yet, so the entry this accepts is
+		 * `createMarkdownHeadingLinks()`: it gives built-in h1–h6 a stable identity
+		 * and an inline sibling copy button. Omitted or empty preserves the
+		 * released Markdown output.
+		 */
+		plugins?: ReadonlyArray<MarkdownPluginEntry>;
+		/**
 		 * Plugins that transform text patterns into custom elements.
 		 * Applied to text nodes after parsing — code blocks and inline code
 		 * are unaffected. Patterns are matched in order; first match wins
@@ -103,6 +112,9 @@
 	import TableHeaderCell from '../table/table-header-cell.svelte';
 	import TableRow from '../table/table-row.svelte';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
+	import HeadingLinksRenderer from './plugins/heading-links-renderer.svelte';
+	import { projectMarkdownHeadings } from './heading-projection.js';
+	import { prepareMarkdownPlugins, reportMarkdownPluginFailure } from './plugins/protocol.js';
 	import { useStreamingText } from '../../hooks/use-streaming-text.svelte.js';
 	import { useTheme } from '../../theme/use-theme.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
@@ -137,6 +149,9 @@
 		markdownFadeInAttrs,
 		markdownHeaderCellXstyle,
 		markdownHeadingAttrs,
+		markdownHeadingBlockSpacingStyle,
+		markdownHeadingLinksHeadingAttrs,
+		markdownHeadingTextStyle,
 		markdownHrAttrs,
 		markdownImageAttrs,
 		markdownImageBlockAttrs,
@@ -186,6 +201,7 @@
 		contentWidth = 680,
 		contentAlign = 'start',
 		components,
+		plugins,
 		inlinePlugins,
 		autolink,
 		xstyle,
@@ -249,6 +265,26 @@
 		const input = isStreaming ? trimStreamingArtifacts(smoothed.current) : children;
 		return parseInline(input, parseOptions);
 	});
+
+	// Upstream prepares the plugin registry in a `useMemo` and catches a
+	// malformed list once, falling back to the released no-plugin output for the
+	// whole document. Same shape: validate before projecting anything.
+	const preparedPlugins = $derived.by(() => {
+		if (plugins == null) {
+			return undefined;
+		}
+		try {
+			return prepareMarkdownPlugins(plugins);
+		} catch (error) {
+			reportMarkdownPluginFailure('configuration', 'transform', error);
+			return undefined;
+		}
+	});
+
+	// One projection per parse, keyed by node identity. Root headings get ids in
+	// the released output; the heading-links entry widens the allocator to every
+	// depth and adds permalink URLs.
+	const headingProjection = $derived(projectMarkdownHeadings(blocks, preparedPlugins));
 
 	// Track recent boundaries for stacked fade-in animation.
 	// The number of spans needed = ceil(animationDuration / tickInterval).
@@ -485,20 +521,57 @@
 	{@const ctx = blockCtx(node, index, blockCount)}
 	{#if node.type === 'heading'}
 		{@const level = Math.min(node.level + headingLevelStart - 1, 6) as 1 | 2 | 3 | 4 | 5 | 6}
+		{@const headingId = headingProjection.ids.get(node)}
+		{@const headingLabel = headingProjection.labels.get(node) ?? ''}
+		{@const permalinkUrl = headingProjection.permalinkUrls.get(node)}
 		{#if components?.heading}
 			{@const HeadingComp = components.heading}
-			<HeadingComp {level}>{@render inlineFragment(node.children)}</HeadingComp>
-		{:else}
+			<HeadingComp {level} id={headingId}>{@render inlineFragment(node.children)}</HeadingComp>
+		{:else if permalinkUrl == null || headingId == null}
+			<!--
+				The released path. Root headings carry the generated id an Outline
+				item names; a nested heading stays id-less unless the heading-links
+				plugin widens the allocator to every depth.
+			-->
 			{@const attrs = markdownHeadingAttrs(ctx, level)}
 			{@const headingTheme = themeProps('markdown-heading', { density, level })}
 			<svelte:element
 				this={`h${level}`}
+				id={headingId}
 				{...headingTheme}
 				class={cx(headingTheme.class, attrs.class)}
 				style={attrs.style}
 			>
 				{@render inlineFragment(node.children)}
 			</svelte:element>
+		{:else}
+			<!--
+				The heading-links row owns the prose column and block spacing; the
+				heading element keeps only its own typography plus the module's
+				flex/min-width/margin reset, and the copy control is a sibling so it
+				can align to the heading's baseline without nesting inside it.
+			-->
+			{@const headingTheme = themeProps('markdown-heading', { density, level })}
+			{@const attrs = markdownHeadingLinksHeadingAttrs(level)}
+			<HeadingLinksRenderer
+				{headingId}
+				{headingLabel}
+				{permalinkUrl}
+				contentWidth={contentWidthValue}
+				{contentAlign}
+				headingTextStyle={markdownHeadingTextStyle(level)}
+				blockSpacingStyle={markdownHeadingBlockSpacingStyle(ctx)}
+			>
+				<svelte:element
+					this={`h${level}`}
+					id={headingId}
+					{...headingTheme}
+					class={cx(headingTheme.class, attrs.class)}
+					style={attrs.style}
+				>
+					{@render inlineFragment(node.children)}
+				</svelte:element>
+			</HeadingLinksRenderer>
 		{/if}
 	{:else if node.type === 'paragraph'}
 		{#if components?.paragraph}

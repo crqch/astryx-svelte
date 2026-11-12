@@ -74,6 +74,12 @@
 		isOpen: boolean;
 		onOpenChange: (isOpen: boolean) => void;
 		hasScrim?: boolean;
+		/**
+		 * Element that receives focus after the sheet closes. Upstream's
+		 * `RefObject<HTMLElement | null>`; a getter here, read when the exit
+		 * completes. Without one, focus returns to whatever opened the sheet.
+		 */
+		finalFocusRef?: () => HTMLElement | null;
 		sheetId?: never;
 	}
 

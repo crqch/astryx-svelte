@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { AnimatedLayout } from '../../motion/animated-layout.js';
+	import type { Reorderable } from '../../reorderable/create-reorderable.js';
 	import type { ListDensity, ListEdge, ListMarkerStyle } from './list-context.svelte.js';
 
 	export interface ListProps extends BaseProps<HTMLUListElement | HTMLOListElement> {
@@ -18,6 +19,30 @@
 		 * neighbours stays above them while it moves.
 		 */
 		animatedLayout?: AnimatedLayout;
+		/**
+		 * Makes the rows reorderable, with the object `createReorderable` makes.
+		 * Each `ListItem` with an `itemKey` gets a reorder handle at its end. One
+		 * the object's `isReorderable` rejects keeps its place. Each committed
+		 * move calls its `onReorder` once with the row's key and its index after
+		 * the move. Apply it by rendering the rows in their new order. A drop on
+		 * the starting place, a cancel, or a move the order does not take changes
+		 * nothing.
+		 *
+		 * On a touch screen, a finger held still on a handle for a moment picks
+		 * up its row. A flick on it still scrolls. The row stays in its place,
+		 * dimmed, while a copy of it follows the finger. An accent line marks
+		 * where it would land. The other rows stay still, the list scrolls near
+		 * the edges, and on release the rows rearrange. A mouse drags a handle at
+		 * once, the same way.
+		 *
+		 * Without a drag, activating a handle (a click, Space or Enter) turns on
+		 * reorder mode for its row. Each arrow key moves it a place at once,
+		 * reported and announced with its place and neighbours. Escape or another
+		 * activation ends the mode, keeping the moves. While it is on, a hint
+		 * anchored to the handle shows the moves and Done as buttons, so taps
+		 * alone can reorder.
+		 */
+		reorderable?: Reorderable;
 		/**
 		 * Whether to show dividers between list items.
 		 * @default false
@@ -67,6 +92,8 @@
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { setListContext } from './list-context.svelte.js';
 	import { listAttrs, listHeaderAttrs, listRootAttrs } from './list.stylex.js';
+	import ListReorderHost from './list-reorder-host.svelte';
+	import { useReorderCommit, useReorderSession } from './list-reorder-context.svelte.js';
 
 	/**
 	 * A vertical list for rendering collections of items.
@@ -91,6 +118,7 @@
 		children,
 		density = 'balanced',
 		animatedLayout,
+		reorderable,
 		hasDividers = false,
 		edge: edgeProp,
 		edgeCompensation,
@@ -105,6 +133,23 @@
 	}: ListProps = $props();
 
 	const headerId = $props.id();
+	let listEl = $state<HTMLUListElement | HTMLOListElement | null>(null);
+	// The reorder's machinery comes with the object. The handles' instructions
+	// take the header's id with a suffix.
+	const { session: reorderSession, options: reorderOptions } = useReorderSession(
+		() => reorderable,
+		() => listEl,
+		`${headerId}h`
+	);
+	const reorderValue = $derived(
+		reorderSession != null && reorderOptions != null
+			? { session: reorderSession, options: reorderOptions }
+			: undefined
+	);
+	// After the layout updates, so a drop's commit is the reorder's. The port's
+	// row layout updates (`List/listLayoutUpdates.ts`) are not here; when they
+	// land, they read `session.ownsCommit()` to leave this commit alone.
+	useReorderCommit(() => reorderSession);
 	const isOrdered = $derived(listStyle === 'decimal');
 	// Plain use of the deprecated prop is reported by its @deprecated type;
 	// development warns only when the two names conflict.
@@ -117,7 +162,14 @@
 	const edge = $derived(edgeProp ?? (edgeCompensation === 'inline' ? 'outset' : 'padded'));
 	const hasHeader = $derived(header != null);
 
-	setListContext(() => ({ density, hasDividers, edge, listStyle, animatedLayout }));
+	setListContext(() => ({
+		density,
+		hasDividers,
+		edge,
+		listStyle,
+		animatedLayout,
+		reorder: reorderValue
+	}));
 
 	const theme = $derived(themeProps('list', { density, listStyle }));
 	const attrs = $derived(
@@ -129,6 +181,7 @@
 			hasHeader,
 			listStyle,
 			start,
+			hasReorder: reorderSession != null,
 			xstyle
 		})
 	);
@@ -151,6 +204,7 @@
 	-->
 	<svelte:element
 		this={isOrdered ? 'ol' : 'ul'}
+		bind:this={listEl}
 		{...rest}
 		data-testid={testId}
 		{...hasHeader ? { 'aria-labelledby': headerId } : {}}
@@ -178,4 +232,8 @@
 		</div>
 		{@render listElement()}
 	</div>
+{/if}
+
+{#if reorderValue != null}
+	<ListReorderHost reorder={reorderValue} />
 {/if}

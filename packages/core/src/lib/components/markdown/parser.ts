@@ -1699,3 +1699,34 @@ export function parseMarkdownIncremental(
 
 	return mergeSettledBlocks(settledBlocks, unsettledBlocks);
 }
+
+// ---------------------------------------------------------------------------
+// Heading slugs
+// ---------------------------------------------------------------------------
+
+/**
+ * The released (no-plugin) heading slug, matching `parseOutlineFromMarkdown`.
+ * ASCII-only on purpose: it is a legacy outline id, and changing it would move
+ * every existing fragment. Heading-links permalinks use the Unicode-aware
+ * `headingSlug` instead.
+ */
+export function slugify(value: string): string {
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/['"]/g, '')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '');
+}
+
+/**
+ * Disambiguate repeated slugs with a numeric suffix (`setup`, `setup-1`, …).
+ * Empty slugs fall back to `section`. The caller owns the counts map so one
+ * document shares a single numbering sequence.
+ */
+export function uniqueSlug(baseSlug: string, counts: Map<string, number>): string {
+	const fallbackSlug = baseSlug || 'section';
+	const count = counts.get(fallbackSlug) ?? 0;
+	counts.set(fallbackSlug, count + 1);
+	return count === 0 ? fallbackSlug : `${fallbackSlug}-${count}`;
+}

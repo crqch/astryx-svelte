@@ -3,6 +3,7 @@ import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { borderVars, colorVars, spacingVars, typeScaleVars } from '../../styles/tokens.stylex.js';
 import { rowPressLayerStyles } from '../../private-attributes/press.stylex.js';
 import { travellingStyles } from '../../private-attributes/travelling.stylex.js';
+import { reorderRowStyle } from './list-reorder-handle.stylex.js';
 import type { ListEdge } from './list-context.svelte.js';
 
 /**
@@ -254,6 +255,8 @@ export interface ListItemXstyleOptions {
 	isTouchTarget: boolean;
 	/** The row is inside a List, where the list isolates its rows. */
 	isInList: boolean;
+	/** The row ends with a reorder handle: its focus ring is the handle's. */
+	hasReorderHandle: boolean;
 	edge: ListEdge;
 	xstyle: StyleArg;
 }
@@ -269,6 +272,7 @@ export function listItemXstyle(options: ListItemXstyleOptions): StyleArg {
 		isTouchTarget,
 		isInList,
 		edge,
+		hasReorderHandle,
 		xstyle
 	} = options;
 
@@ -290,6 +294,9 @@ export function listItemXstyle(options: ListItemXstyleOptions): StyleArg {
 		edge === 'flush' && styles.edgeFlush,
 		edge === 'outset' && styles.edgeOutset,
 		edge === 'bleed' && styles.edgeBleed,
+		// A focused handle rings itself; the row's focus-within ring stays
+		// off for it (two rings, and the list clips the row's sides).
+		hasReorderHandle && reorderRowStyle,
 		xstyle
 	];
 }

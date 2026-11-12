@@ -26,6 +26,7 @@ import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { focusWithinOwner } from '../../private-attributes/focus-owner.stylex.js';
 import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { selectorPresentationStyles } from './selector-presentation.stylex.js';
 
 /**
  * Ported from Astryx's `Selector/Selector.tsx`, where the styles are inline in
@@ -517,6 +518,7 @@ export function selectorTriggerContainerAttrs(
 	isReadOnly: boolean,
 	hasSelectedItem: boolean,
 	inGroup: boolean,
+	isFocusRingSuppressed: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
@@ -532,12 +534,14 @@ export function selectorTriggerContainerAttrs(
 		// A borderless trigger has no bordered wrapper of its own, so the shared
 		// ring is what makes its keyboard focus visible (#4935/#4973).
 		// `focusWithinOwner` rings only the marked trigger, so a clear or status
-		// button inside does not light the row.
-		variant !== 'input' && focusWithinOwner,
+		// button inside does not light the row. A pointer-returned focus keeps the
+		// suppressed arm below instead.
+		variant !== 'input' && !isFocusRingSuppressed && focusWithinOwner,
+		isFocusRingSuppressed && selectorPresentationStyles.pointerRestoredFocus,
 		isDisabled && inputWrapperStyles.disabled,
 		// The shared disabled style drops the focus ring; restore it while the
 		// trigger, a direct child, has keyboard focus (`spec:AST-085` FR6).
-		variant === 'input' && isDisabled && inputDisabledFocusStyles.ring,
+		variant === 'input' && isDisabled && !isFocusRingSuppressed && inputDisabledFocusStyles.ring,
 		isReadOnly && styles.triggerReadOnly,
 		variant !== 'input' && isDisabled && styles.triggerGhostDisabled,
 		variant !== 'input' && isReadOnly && styles.triggerGhostReadOnly,

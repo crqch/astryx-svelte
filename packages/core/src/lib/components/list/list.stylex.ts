@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { spacingVars } from '../../styles/tokens.stylex.js';
 import type { ListEdge, ListMarkerStyle } from './list-context.svelte.js';
+import { reorderListStyle } from './list-reorder-handle.stylex.js';
 
 /**
  * Ported from Astryx's `List/List.tsx` styles.
@@ -142,6 +143,8 @@ export interface ListAttrsOptions {
 	hasHeader: boolean;
 	listStyle: ListMarkerStyle;
 	start: number | undefined;
+	/** The list carries a reorder session: its insertion line. */
+	hasReorder: boolean;
 	xstyle: StyleArg;
 }
 
@@ -151,8 +154,17 @@ export interface ListAttrsOptions {
  * `::before` reads it.
  */
 export function listAttrs(options: ListAttrsOptions): SvelteStyleAttrs {
-	const { hasAnimatedLayout, isOrdered, hasDividers, edge, hasHeader, listStyle, start, xstyle } =
-		options;
+	const {
+		hasAnimatedLayout,
+		isOrdered,
+		hasDividers,
+		edge,
+		hasHeader,
+		listStyle,
+		start,
+		hasReorder,
+		xstyle
+	} = options;
 	const reachesContainerPadding = edge === 'outset' || edge === 'bleed';
 
 	return sx(
@@ -164,6 +176,7 @@ export function listAttrs(options: ListAttrsOptions): SvelteStyleAttrs {
 		edge === 'bleed' && !hasHeader && styles.bleedCorners,
 		listStyle !== 'none' &&
 			(start != null && start !== 1 ? dynamicStyles.counterStart(start - 1) : styles.withCounter),
+		hasReorder && reorderListStyle,
 		xstyle
 	);
 }

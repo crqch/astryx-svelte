@@ -3,8 +3,15 @@ import { container, type SpacingToken } from '../../internal/container.stylex.js
 import {
 	containerPaddingBlockEndVarStyles,
 	containerPaddingBlockStartVarStyles,
+	containerPaddingInlineEndVarStyles,
+	containerPaddingInlineStartVarStyles,
 	containerPaddingInlineVarStyles,
+	paddingBlockEndStyles,
+	paddingBlockStartStyles,
 	paddingBlockStyles,
+	paddingInlineEndStyles,
+	paddingInlineStartStyles,
+	paddingInlineStyles,
 	paddingStyles,
 	sectionPaddingPropagationStyles,
 	spacingStepToToken
@@ -143,7 +150,12 @@ export function sectionOuterAttrs(
 export interface SectionInnerOptions {
 	variant: SectionVariant;
 	padding?: SpacingStep;
+	paddingInline?: SpacingStep;
+	paddingInlineStart?: SpacingStep;
+	paddingInlineEnd?: SpacingStep;
 	paddingBlock?: SpacingStep;
+	paddingBlockStart?: SpacingStep;
+	paddingBlockEnd?: SpacingStep;
 	dividers?: SectionDivider[];
 }
 
@@ -155,7 +167,12 @@ export interface SectionInnerOptions {
 export function sectionInnerAttrs({
 	variant,
 	padding,
+	paddingInline,
+	paddingInlineStart,
+	paddingInlineEnd,
 	paddingBlock,
+	paddingBlockStart,
+	paddingBlockEnd,
 	dividers
 }: SectionInnerOptions): SvelteStyleAttrs {
 	// No explicit padding → cascade from the theme's `--astryx-section-*` tokens.
@@ -186,9 +203,23 @@ export function sectionInnerAttrs({
 		// No `!== 4` guard: even explicit `padding={4}` publishes the propagation
 		// token so nested theme-default sections inherit it.
 		!useThemeDefault && sectionPaddingPropagationStyles[effectivePadding],
+		paddingInline != null && paddingInlineStyles[paddingInline],
+		paddingInline != null && containerPaddingInlineVarStyles[paddingInline],
 		paddingBlock != null && paddingBlockStyles[paddingBlock],
 		paddingBlock != null && containerPaddingBlockStartVarStyles[paddingBlock],
 		paddingBlock != null && containerPaddingBlockEndVarStyles[paddingBlock],
+		// Per-edge overrides come last so they win over `paddingBlock` and
+		// `padding` on their own edge. The matching container var is updated
+		// alongside so bleed children compensate against the padding actually
+		// applied.
+		paddingBlockStart != null && paddingBlockStartStyles[paddingBlockStart],
+		paddingBlockStart != null && containerPaddingBlockStartVarStyles[paddingBlockStart],
+		paddingBlockEnd != null && paddingBlockEndStyles[paddingBlockEnd],
+		paddingBlockEnd != null && containerPaddingBlockEndVarStyles[paddingBlockEnd],
+		paddingInlineStart != null && paddingInlineStartStyles[paddingInlineStart],
+		paddingInlineStart != null && containerPaddingInlineStartVarStyles[paddingInlineStart],
+		paddingInlineEnd != null && paddingInlineEndStyles[paddingInlineEnd],
+		paddingInlineEnd != null && containerPaddingInlineEndVarStyles[paddingInlineEnd],
 		variantStyles[variant],
 		dividers?.includes('top') && dividerStyles.top,
 		dividers?.includes('bottom') && dividerStyles.bottom,

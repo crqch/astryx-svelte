@@ -12,6 +12,7 @@ import {
 	typographyVars
 } from '../../styles/tokens.stylex.js';
 import type { BlockNode } from './parser.js';
+import { headingLinksHeadingStyle } from './plugins/heading-links.stylex.js';
 
 /**
  * Ported from the styles declared in Astryx's `Markdown/Markdown.tsx`.
@@ -412,6 +413,29 @@ export function markdownHeadingAttrs(
 		...proseStyles(ctx),
 		...edgeStyles(ctx)
 	);
+}
+
+/**
+ * The heading's own text style, for the plugin-owned row. The row carries the
+ * spacing, prose width and alignment, so the heading element takes only its
+ * base and level typography.
+ */
+export function markdownHeadingTextStyle(level: 1 | 2 | 3 | 4 | 5 | 6): StyleArg[] {
+	return [styles.headingBase, headingStyles[level]];
+}
+
+/** The block spacing and first/last edge, applied to the plugin-owned row. */
+export function markdownHeadingBlockSpacingStyle(ctx: BlockStyleContext): StyleArg[] {
+	return [getElementSpacing(ctx.node, ctx.density), ...edgeStyles(ctx)];
+}
+
+/**
+ * The `h1`–`h6` element while the heading-links module owns its row: upstream
+ * adds `headingLinksHeadingStyle`'s flex/min-width/margin reset, and the row
+ * takes the prose column instead.
+ */
+export function markdownHeadingLinksHeadingAttrs(level: 1 | 2 | 3 | 4 | 5 | 6): SvelteStyleAttrs {
+	return sx(styles.headingBase, headingLinksHeadingStyle, headingStyles[level]);
 }
 
 /** The `<div role="paragraph">` a markdown paragraph renders as. */

@@ -190,6 +190,14 @@ export interface UsePopoverReturn {
 	readonly attachContent: Attachment<HTMLElement>;
 
 	/**
+	 * The popover content container while it is mounted, else null. Upstream's
+	 * `contentRef.current`, exposed as the element because Svelte has no ref
+	 * object; `Selector`'s presentation controller reads it to tell focus still
+	 * inside an open list from focus that moved elsewhere.
+	 */
+	readonly contentRef: HTMLElement | null;
+
+	/**
 	 * The CSS anchor name to use for positioning.
 	 * Use when you need to set anchorName manually (e.g., display:contents wrapper).
 	 */
@@ -301,6 +309,22 @@ export function usePopover(options: () => UsePopoverOptions): UsePopoverReturn {
 				: undefined
 	}));
 
+	// Upstream's `contentRef`: the focus-trap container, read by callers that
+	// need to tell focus still inside the popup from focus that moved away.
+	let contentEl = $state<HTMLElement | null>(null);
+	const attachContent: Attachment<HTMLElement> = (element) => {
+		contentEl = element;
+		const cleanup = trap.attachContainer(element);
+		return () => {
+			if (contentEl === element) {
+				contentEl = null;
+			}
+			if (typeof cleanup === 'function') {
+				cleanup();
+			}
+		};
+	};
+
 	// Auto-focus first element when popover opens (unless skipped). Upstream's
 	// effect is keyed `[layer.isOpen, hasAutoFocus, focusFirst]`; we track only
 	// `layer.isOpen` and read the rest untracked at the transition, so a stray
@@ -361,7 +385,10 @@ export function usePopover(options: () => UsePopoverOptions): UsePopoverReturn {
 
 	return {
 		attachTrigger: layer.attachTrigger,
-		attachContent: trap.attachContainer,
+		attachContent,
+		get contentRef() {
+			return contentEl;
+		},
 		get anchorId() {
 			return layer.anchorId;
 		},

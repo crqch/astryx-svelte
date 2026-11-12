@@ -9,6 +9,7 @@
 	// wrapper size style keys — the arrangement `TextInput`/`Selector` use.
 	import type { TypeaheadSize } from './typeahead.stylex.js';
 	import type { SearchableItem, SearchSource } from './types.js';
+	import type { BaseTypeaheadHandle, BaseTypeaheadMenu } from './base-typeahead.svelte';
 
 	// `TypeaheadSize` is not re-exported from here — the barrel publishes it
 	// straight from `typeahead.stylex.ts`, the arrangement `NumberInputSize` uses.
@@ -137,6 +138,12 @@
 		/** Callback when the dropdown opens or closes. */
 		onOpenChange?: (isOpen: boolean) => void;
 		/**
+		 * What the menu shows: the result list, optionally with information around
+		 * it, or content that takes focus. Forwarded to `BaseTypeahead`; see
+		 * {@link BaseTypeaheadMenu}.
+		 */
+		menu?: BaseTypeaheadMenu;
+		/**
 		 * Key handler. Runs after the built-in key handling, so it observes every
 		 * key and cannot cancel navigation, selection, or token editing. It
 		 * receives keys on the combobox input and on the field's other controls
@@ -224,6 +231,7 @@
 		debounceMs,
 		onChangeQuery,
 		onOpenChange,
+		menu,
 		onKeyDown,
 		width,
 		xstyle,
@@ -263,6 +271,21 @@
 
 	let wrapperEl = $state<HTMLDivElement | null>(null);
 	let inputEl = $state<HTMLInputElement | null>(null);
+	let baseTypeahead = $state<BaseTypeaheadHandle | null>(null);
+
+	/**
+	 * Upstream forwards `handleRef` to `BaseTypeahead`, whose handle opens and
+	 * closes the menu. In this port the handle is the instance itself, so these
+	 * are exports reached with `bind:this` — see `BaseTypeaheadHandle`.
+	 */
+	export function open(): void {
+		baseTypeahead?.open();
+	}
+
+	/** Closes the menu; see `open()`. */
+	export function close(): void {
+		baseTypeahead?.close();
+	}
 
 	// Disabled-reason tooltip. Disabled controls swallow pointer events, so the
 	// tooltip listeners attach to the input wrapper (which already exists) and the
@@ -486,6 +509,7 @@
 				/>
 			{/if}
 			<BaseTypeahead
+				bind:this={baseTypeahead}
 				{@attach captureInput}
 				{searchSource}
 				{value}
@@ -503,6 +527,7 @@
 				ariaLabelledBy={aria.ariaLabelledBy}
 				{onChangeQuery}
 				{onOpenChange}
+				{menu}
 				{debounceMs}
 				anchorEl={wrapperEl}
 				onKeyDown={handleKeyDown}

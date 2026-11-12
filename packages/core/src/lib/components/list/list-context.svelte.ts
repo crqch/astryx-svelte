@@ -1,5 +1,6 @@
 import { Context } from '../../internal/context.js';
 import type { AnimatedLayout } from '../../motion/animated-layout.js';
+import type { ListReorderContextValue } from './list-reorder-context.svelte.js';
 
 /**
  * Svelte equivalent of Astryx's `List/ListContext.tsx`. A `ListItem` reads the
@@ -65,6 +66,11 @@ export interface ListContextValue {
 	isOutsideNumberColumns?: boolean;
 	/** The list's `animatedLayout` handle, for its rows. */
 	animatedLayout?: AnimatedLayout;
+	/**
+	 * The reorder session and the options of the object that runs it; internal.
+	 * Absent on a List without `reorderable`.
+	 */
+	reorder?: ListReorderContextValue;
 }
 
 const ListContext = new Context<() => ListContextValue>('astryx.list');

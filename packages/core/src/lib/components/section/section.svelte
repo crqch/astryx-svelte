@@ -26,10 +26,40 @@
 		 */
 		padding?: SpacingStep;
 		/**
+		 * Inline (horizontal) padding override. When set, overrides only the inline
+		 * axis padding while preserving block padding from `padding` or the
+		 * container theme default.
+		 */
+		paddingInline?: SpacingStep;
+		/**
+		 * Inline-start padding override. Logical: the left edge in LTR, the right
+		 * edge in RTL. Takes precedence over `paddingInline` and `padding` on that
+		 * edge only; every other edge is left alone.
+		 */
+		paddingInlineStart?: SpacingStep;
+		/**
+		 * Inline-end padding override. Logical: the right edge in LTR, the left
+		 * edge in RTL. Takes precedence over `paddingInline` and `padding` on that
+		 * edge only; every other edge is left alone.
+		 */
+		paddingInlineEnd?: SpacingStep;
+		/**
 		 * Block (vertical) padding override. Overrides only the block axis, leaving
 		 * inline padding from `padding` or the theme default in place.
 		 */
 		paddingBlock?: SpacingStep;
+		/**
+		 * Block-start (top) padding override. Takes precedence over `paddingBlock`
+		 * and `padding` on that edge only; the block-end edge and both inline edges
+		 * are left alone.
+		 */
+		paddingBlockStart?: SpacingStep;
+		/**
+		 * Block-end (bottom) padding override. Takes precedence over `paddingBlock`
+		 * and `padding` on that edge only; the block-start edge and both inline
+		 * edges are left alone.
+		 */
+		paddingBlockEnd?: SpacingStep;
 		children?: Snippet;
 	}
 </script>
@@ -56,7 +86,12 @@
 		minHeight,
 		dividers,
 		padding,
+		paddingInline,
+		paddingInlineStart,
+		paddingInlineEnd,
 		paddingBlock,
+		paddingBlockStart,
+		paddingBlockEnd,
 		children,
 		class: className,
 		style: styleProp,
@@ -65,7 +100,19 @@
 	}: SectionProps = $props();
 
 	const outer = $derived(sectionOuterAttrs({ width, height, maxWidth, minHeight }, xstyle));
-	const inner = $derived(sectionInnerAttrs({ variant, padding, paddingBlock, dividers }));
+	const inner = $derived(
+		sectionInnerAttrs({
+			variant,
+			padding,
+			paddingInline,
+			paddingInlineStart,
+			paddingInlineEnd,
+			paddingBlock,
+			paddingBlockStart,
+			paddingBlockEnd,
+			dividers
+		})
+	);
 	const theme = $derived(themeProps('section', { variant }));
 </script>
 

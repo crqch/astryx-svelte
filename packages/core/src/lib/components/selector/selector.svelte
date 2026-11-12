@@ -5,6 +5,7 @@
 	import type { IconName } from '../icon/icon-registry.js';
 	import type { IndicatorPosition } from '../indicator/types.js';
 	import type { LayerPlacement } from '../layer/use-layer.svelte.js';
+	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	// `SelectorSize` is published from `selector.stylex.ts`, derived from the size
 	// style keys — the arrangement `TextInput`/`NumberInput` use. `SelectorVariant`
@@ -19,6 +20,9 @@
 
 	/** The three status flavours a selector can carry. */
 	export type SelectorStatusType = 'warning' | 'error' | 'success';
+
+	/** How the option list is presented. */
+	export type SelectorPresentation = AdaptivePresentation;
 
 	export interface SelectorStatus {
 		/** The type of status to display. */
@@ -204,6 +208,14 @@
 		 */
 		placement?: LayerPlacement;
 		/**
+		 * How the option list is presented.
+		 * - `'popover'`: anchored to the trigger
+		 * - `'bottom-sheet'`: modal sheet suited to compact touch screens
+		 * - `'adaptive'`: bottom sheet on compact coarse-pointer screens, otherwise popover
+		 * @default 'popover'
+		 */
+		presentation?: SelectorPresentation;
+		/**
 		 * Whether the dropdown starts open on mount.
 		 * Useful for showcases and previews.
 		 * @default false
@@ -306,7 +318,10 @@
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { getInputARIA } from '../../utils/input-aria.js';
 	import { warnOnce } from '../../utils/dev-warning.js';
-	import { getInteractionModality } from '../../utils/interaction-modality.js';
+	import {
+		getInteractionModality,
+		trackInteractionModality
+	} from '../../utils/interaction-modality.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { useKeyboardHighlight } from '../../hooks/use-keyboard-highlight.svelte.js';
 	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
@@ -321,17 +336,18 @@
 	import { useIndicator } from '../indicator/use-indicator.svelte.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import PopoverLayer from '../popover/popover-layer.svelte';
-	import { usePopover } from '../popover/use-popover.svelte.js';
 	import Spinner from '../spinner/spinner.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
 	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
+	import SelectorBottomSheet from './selector-bottom-sheet.svelte';
 	import SelectorOption from './selector-option.svelte';
 	import SelectorRowLayoutProvider from './selector-row-layout-provider.svelte';
 	import type { SelectorRowLayout } from './selector-row-layout-context.svelte.js';
 	import { useCombobox } from './use-combobox.svelte.js';
+	import { useSelectorPresentation } from './use-selector-presentation.svelte.js';
 	import { useSelectedItemOffset } from './use-selected-item-offset.svelte.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import { focusOwnerProps } from '../../private-attributes/focus-owner.stylex.js';
@@ -421,9 +437,11 @@
 		hasSearch = false,
 		searchPlaceholder: searchPlaceholderFromProps,
 		placement,
+		presentation = 'popover',
 		isDefaultOpen = false,
 		'data-testid': testId,
 		width,
+		onfocus,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -496,6 +514,10 @@
 	// open and compares against a key event's target.
 	let searchEl = $state<HTMLInputElement | null>(null);
 	let listboxEl = $state<HTMLDivElement | null>(null);
+	// The trigger may name the active option only once the listbox holding it is
+	// in the document. The bottom sheet loads its surface on first open, so the
+	// trigger expands a moment before its options exist.
+	const isListboxMounted = $derived(listboxEl != null);
 
 	/**
 	 * A guess, confirmed by the open measure: more options than this overflow the
@@ -609,22 +631,49 @@
 		// Clear any lingering result count when the popover closes so stale status
 		// text does not linger in the a11y tree.
 		announce('');
-		triggerEl?.focus();
 	}
 
-	const popover = usePopover(() => ({
-		id: popoverId,
+	function handleLayerShow(): void {
+		if (hasSearch) {
+			requestAnimationFrame(() => {
+				const input = searchEl;
+				if (input) {
+					input.focus();
+					// When typing seeded the query, place the caret after it so the
+					// user keeps typing where they left off.
+					input.setSelectionRange(input.value.length, input.value.length);
+				}
+			});
+		}
+	}
+
+	const surface = useSelectorPresentation(() => ({
+		presentation: () => presentation,
 		onHide: handleLayerHide,
-		hasLightDismiss: true,
-		hasCloseButton: false,
-		hasAutoFocus: false,
-		// The popup's own role="listbox" is the exposed semantics; the trigger
-		// keeps DOM focus, so wrapping it in a modal dialog would misrepresent it.
-		role: 'none' as const,
-		// The theme target belongs on the SURFACE that paints the popup, which
-		// `usePopover` owns — not on the scrolling list inside it.
-		surfaceTarget: 'selector-popup'
+		onShow: handleLayerShow,
+		triggerRef: () => triggerEl,
+		triggerModality: { readModality: getInteractionModality },
+		popoverOptions: () => ({
+			id: popoverId,
+			hasLightDismiss: true,
+			hasCloseButton: false,
+			hasAutoFocus: false,
+			// The popup's own role="listbox" is the exposed semantics; the trigger
+			// keeps DOM focus, so wrapping it in a modal dialog would misrepresent it.
+			role: 'none' as const,
+			// The theme target belongs on the SURFACE that paints the popup, which
+			// `usePopover` owns — not on the scrolling list inside it.
+			surfaceTarget: 'selector-popup'
+		})
 	}));
+	const popover = surface.popover;
+
+	// The focus-return policy reads the last interaction modality, which has no
+	// listeners until a consumer starts tracking. One document-level pair for the
+	// component, as MultiSelector already does.
+	$effect(() => {
+		trackInteractionModality();
+	});
 
 	// A list longer than the most rows that can fit cannot fit, so it starts as
 	// a scroll container and the open measure only confirms it. A fitting list
@@ -633,7 +682,7 @@
 	const listboxHasOverflow = useMenuOverflow({
 		menu: () => listboxEl,
 		content: () => filteredItems,
-		isOpen: () => popover.isOpen,
+		isOpen: () => surface.isOpen,
 		expectedOverflow: () => filteredItems.length > MOST_ROWS_THAT_FIT
 	});
 
@@ -642,15 +691,16 @@
 	const showOnMount = untrack(() => isDefaultOpen);
 	$effect(() => {
 		if (showOnMount && untrack(() => !isEffectivelyReadOnly)) {
-			untrack(() => popover.show());
+			untrack(() => surface.show());
 		}
 	});
 
 	// Read-only is controlled by caller policy, so an already-open surface must
-	// close when that policy changes.
+	// close when that policy changes. The presentation controller keeps a sheet
+	// mounted through its exit and lets BottomSheet return final focus.
 	$effect(() => {
-		if (isEffectivelyReadOnly && popover.isOpen) {
-			popover.hide();
+		if (isEffectivelyReadOnly && surface.isOpen) {
+			surface.hide();
 		}
 	});
 
@@ -738,23 +788,10 @@
 		// already replaced.
 		value: optimistic.current,
 		isDisabled: isDisabled || isEffectivelyReadOnly,
-		isOpen: popover.isOpen,
+		isOpen: surface.isOpen,
 		hasSearch,
-		onOpen: () => {
-			popover.show();
-			if (hasSearch) {
-				requestAnimationFrame(() => {
-					const input = searchEl;
-					if (input) {
-						input.focus();
-						// When typing seeded the query, place the caret after it so the
-						// user keeps typing where they left off.
-						input.setSelectionRange(input.value.length, input.value.length);
-					}
-				});
-			}
-		},
-		onClose: popover.hide,
+		onOpen: () => surface.show(),
+		onClose: surface.hide,
 		onSelect: selectValue,
 		onClear: hasClear ? clearValue : undefined,
 		onSearchSeed: appendSearchQuery,
@@ -803,10 +840,10 @@
 		// when closed — the optimistic one, so a pending changeAction cannot strand
 		// cycling on the first match. -1 means nothing is selected or highlighted,
 		// which the hook reads as "search from the top".
-		getCurrentIndex: () => (popover.isOpen ? combobox.highlightedIndex : selectedItemIndex),
+		getCurrentIndex: () => (surface.isOpen ? combobox.highlightedIndex : selectedItemIndex),
 		onMatch: (index: number) => {
 			const item = selectableItems[index];
-			if (popover.isOpen) {
+			if (surface.isOpen) {
 				combobox.setHighlightedIndex(index);
 			} else if (item.value !== optimistic.current) {
 				selectValue(item.value);
@@ -833,7 +870,7 @@
 	// listbox is a fixed-height scroll container, so without this the virtual
 	// cursor walks off-screen once navigation passes the visible window.
 	$effect(() => {
-		const isOpen = popover.isOpen;
+		const isOpen = surface.isOpen;
 		const index = combobox.highlightedIndex;
 		if (!isOpen || index < 0) {
 			return;
@@ -972,6 +1009,7 @@
 			isEffectivelyReadOnly,
 			selectedItem != null,
 			inputGroup != null,
+			surface.isTriggerFocusRingSuppressed,
 			xstyle
 		)
 	);
@@ -990,7 +1028,7 @@
 	// sizes it to whatever that draws. `inputGroup` is resolved once at init, so
 	// this is a plain constant rather than a `$derived`.
 	const rowLayout: SelectorRowLayout = inputGroup ? 'inline' : 'stacked';
-	const chevronXstyle = $derived(selectorChevronXstyle(popover.isOpen));
+	const chevronXstyle = $derived(selectorChevronXstyle(surface.isOpen));
 	const statusButtonAttrs = selectorStatusButtonAttrs();
 	// `dropdownHidden` rides `!isPositioned`, which the search branch can never
 	// reach (`shouldOverlaySelectedItem` is false whenever `hasSearch` is set, so
@@ -1195,12 +1233,116 @@
 		bind:this={listboxEl}
 		id={listboxId}
 		role="listbox"
-		aria-labelledby={triggerId}
+		aria-label={surface.activePresentation === 'bottom-sheet' ? label : undefined}
+		aria-labelledby={surface.activePresentation === 'bottom-sheet' ? undefined : triggerId}
+		aria-activedescendant={surface.activePresentation === 'bottom-sheet' &&
+		surface.isOpen &&
+		!hasSearch &&
+		combobox.highlightedIndex >= 0
+			? combobox.getItemId(combobox.highlightedIndex)
+			: undefined}
+		tabindex={surface.activePresentation === 'bottom-sheet' && !hasSearch ? 0 : undefined}
+		onkeydown={surface.activePresentation === 'bottom-sheet' && !hasSearch
+			? handleTriggerKeyDown
+			: undefined}
 		class={dropdownAttrs.class}
 		style={dropdownAttrs.style}
 	>
 		{@render options_()}
 	</div>
+{/snippet}
+
+{#snippet panelContent()}
+	{#if hasSearch}
+		<div class={searchPanelAttrs.class} style={searchPanelAttrs.style}>
+			<!--
+			The search row is the panel's header: a magnifier, a borderless input,
+			and the shared clear (✕) button. It deliberately does NOT render a
+			bordered `TextInput` — the popup is already a bordered surface, and a
+			field inside it drew a second box within that box.
+
+			When hasSearch is set, focus moves into this input on open, so it — not
+			the trigger — must be the combobox that reports the highlighted option
+			via aria-activedescendant (comboboxes-4). A bare searchbox left the
+			highlight silent to screen readers. `role` + `aria-*` pass through to
+			the underlying `<input>`.
+		-->
+			<PanelSearchInput
+				bind:ref={searchEl}
+				id={searchId}
+				label={t('@astryx.selector.searchOptions')}
+				clearLabel={t('@astryx.textInput.clearLabel', {
+					label: t('@astryx.selector.searchOptions')
+				})}
+				class={searchTheme.class}
+				xstyle={searchRowXstyle}
+				role="combobox"
+				aria-expanded={surface.isOpen}
+				aria-controls={listboxId}
+				aria-autocomplete="list"
+				aria-activedescendant={surface.isOpen && combobox.highlightedIndex >= 0
+					? combobox.getItemId(combobox.highlightedIndex)
+					: undefined}
+				value={searchQuery}
+				onValueChange={handleSearchChange}
+				onContainerKeyDown={(e) => {
+					// The clear (✕) button lives inside the row, after the input in DOM
+					// order. When it is focused and the user tabs forward there is
+					// nothing else in the popup, so dismiss it (Shift+Tab returns to the
+					// input natively). Key events originating on the input are handled on
+					// the input below; ignore them here so we don't double-dismiss.
+					if (e.target === searchEl) {
+						return;
+					}
+					if (e.key === 'Tab' && !e.shiftKey) {
+						keyboardHighlight.onKeyDown(e);
+					}
+				}}
+				onkeydown={(e) => {
+					// An in-progress IME composition uses these same keys (Enter to
+					// commit the candidate, Escape/Arrows to navigate the candidate
+					// window); the composing keydown fires before compositionend, so
+					// without this guard a Korean/Japanese/Chinese user committing a
+					// syllable with Enter would instead select the highlighted option.
+					// See utils/ime.ts.
+					if (isImeKeyEvent(e)) {
+						return;
+					}
+					// Arrow keys navigate options; Enter selects; Escape closes.
+					// Home/End are left to the input for caret movement (APG editable
+					// combobox); PageUp/PageDown are the sanctioned substitute for
+					// jumping to the first/last option.
+					if (
+						e.key === 'ArrowDown' ||
+						e.key === 'ArrowUp' ||
+						e.key === 'PageUp' ||
+						e.key === 'PageDown' ||
+						e.key === 'Enter' ||
+						e.key === 'Escape'
+					) {
+						keyboardHighlight.onKeyDown(e);
+						return;
+					}
+					// Tab: when a query is showing the clear (✕) button, forward-tab
+					// moves focus to it (keeping the popup open) so the affordance is
+					// keyboard-reachable. Every other Tab dismisses the popup as usual.
+					if (e.key === 'Tab' && (e.shiftKey || !hasQuery)) {
+						keyboardHighlight.onKeyDown(e);
+					}
+				}}
+				placeholder={searchPlaceholder}
+			/>
+			<!--
+			Separates the header from the options and spans the panel: the search
+			row and the listbox each hold their own inline padding, the line does
+			not, so it reads as the panel's own edge.
+		-->
+			<Divider />
+			{@render listbox()}
+		</div>
+	{:else}
+		{@render listbox()}
+	{/if}
 {/snippet}
 
 {#snippet selectorContent()}
@@ -1239,13 +1381,18 @@
 			type="button"
 			role={isEffectivelyReadOnly || !hasSearch ? 'combobox' : undefined}
 			{...rest}
-			aria-haspopup={isEffectivelyReadOnly ? undefined : 'listbox'}
-			aria-expanded={isEffectivelyReadOnly ? false : popover.isOpen}
+			aria-haspopup={isEffectivelyReadOnly
+				? undefined
+				: surface.activePresentation === 'bottom-sheet'
+					? 'dialog'
+					: 'listbox'}
+			aria-expanded={isEffectivelyReadOnly ? false : surface.isOpen}
 			aria-controls={isEffectivelyReadOnly ? undefined : listboxId}
 			aria-readonly={isEffectivelyReadOnly || undefined}
 			aria-activedescendant={!isEffectivelyReadOnly &&
 			!hasSearch &&
-			popover.isOpen &&
+			surface.isOpen &&
+			isListboxMounted &&
 			combobox.highlightedIndex >= 0
 				? combobox.getItemId(combobox.highlightedIndex)
 				: undefined}
@@ -1256,6 +1403,10 @@
 			aria-busy={isBusy || undefined}
 			disabled={isDisabled && !showsDisabledMessage}
 			aria-disabled={showsDisabledMessage ? 'true' : undefined}
+			onfocus={(event) => {
+				onfocus?.(event);
+				surface.onTriggerFocus(event);
+			}}
 			onkeydown={handleTriggerKeyDown}
 			tabindex={isDisabled && !showsDisabledMessage ? -1 : 0}
 			class={triggerAttrs.class}
@@ -1338,13 +1489,25 @@
 				color="secondary"
 				xstyle={chevronXstyle}
 				{...themeProps('selector-indicator-icon', {
-					state: popover.isOpen ? 'expanded' : 'collapsed'
+					state: surface.isOpen ? 'expanded' : 'collapsed'
 				})}
 			/>
 		{/if}
 	</div>
 
-	{#if !isEffectivelyReadOnly}
+	{#if surface.activePresentation === 'bottom-sheet'}
+		{#if !isEffectivelyReadOnly || surface.isSheetPresented}
+			<SelectorBottomSheet
+				isOpen={surface.isSheetOpen}
+				onOpenChange={surface.onSheetOpenChange}
+				finalFocusRef={() => triggerEl}
+				initialFocusRef={() => (hasSearch ? searchEl : listboxEl)}
+				{label}
+			>
+				{@render panelContent()}
+			</SelectorBottomSheet>
+		{/if}
+	{:else if !isEffectivelyReadOnly}
 		<PopoverLayer
 			{popover}
 			placement={popoverPlacement}
@@ -1353,96 +1516,7 @@
 			xstyle={layerXstyle}
 			style={popoverOffsetStyle}
 		>
-			{#if hasSearch}
-				<div class={searchPanelAttrs.class} style={searchPanelAttrs.style}>
-					<!--
-					The search row is the panel's header: a magnifier, a borderless input,
-					and the shared clear (✕) button. It deliberately does NOT render a
-					bordered `TextInput` — the popup is already a bordered surface, and a
-					field inside it drew a second box within that box.
-
-					When hasSearch is set, focus moves into this input on open, so it — not
-					the trigger — must be the combobox that reports the highlighted option
-					via aria-activedescendant (comboboxes-4). A bare searchbox left the
-					highlight silent to screen readers. `role` + `aria-*` pass through to
-					the underlying `<input>`.
-				-->
-					<PanelSearchInput
-						bind:ref={searchEl}
-						id={searchId}
-						label={t('@astryx.selector.searchOptions')}
-						clearLabel={t('@astryx.textInput.clearLabel', {
-							label: t('@astryx.selector.searchOptions')
-						})}
-						class={searchTheme.class}
-						xstyle={searchRowXstyle}
-						role="combobox"
-						aria-expanded={popover.isOpen}
-						aria-controls={listboxId}
-						aria-autocomplete="list"
-						aria-activedescendant={popover.isOpen && combobox.highlightedIndex >= 0
-							? combobox.getItemId(combobox.highlightedIndex)
-							: undefined}
-						value={searchQuery}
-						onValueChange={handleSearchChange}
-						onContainerKeyDown={(e) => {
-							// The clear (✕) button lives inside the row, after the input in DOM
-							// order. When it is focused and the user tabs forward there is
-							// nothing else in the popup, so dismiss it (Shift+Tab returns to the
-							// input natively). Key events originating on the input are handled on
-							// the input below; ignore them here so we don't double-dismiss.
-							if (e.target === searchEl) {
-								return;
-							}
-							if (e.key === 'Tab' && !e.shiftKey) {
-								keyboardHighlight.onKeyDown(e);
-							}
-						}}
-						onkeydown={(e) => {
-							// An in-progress IME composition uses these same keys (Enter to
-							// commit the candidate, Escape/Arrows to navigate the candidate
-							// window); the composing keydown fires before compositionend, so
-							// without this guard a Korean/Japanese/Chinese user committing a
-							// syllable with Enter would instead select the highlighted option.
-							// See utils/ime.ts.
-							if (isImeKeyEvent(e)) {
-								return;
-							}
-							// Arrow keys navigate options; Enter selects; Escape closes.
-							// Home/End are left to the input for caret movement (APG editable
-							// combobox); PageUp/PageDown are the sanctioned substitute for
-							// jumping to the first/last option.
-							if (
-								e.key === 'ArrowDown' ||
-								e.key === 'ArrowUp' ||
-								e.key === 'PageUp' ||
-								e.key === 'PageDown' ||
-								e.key === 'Enter' ||
-								e.key === 'Escape'
-							) {
-								keyboardHighlight.onKeyDown(e);
-								return;
-							}
-							// Tab: when a query is showing the clear (✕) button, forward-tab
-							// moves focus to it (keeping the popup open) so the affordance is
-							// keyboard-reachable. Every other Tab dismisses the popup as usual.
-							if (e.key === 'Tab' && (e.shiftKey || !hasQuery)) {
-								keyboardHighlight.onKeyDown(e);
-							}
-						}}
-						placeholder={searchPlaceholder}
-					/>
-					<!--
-					Separates the header from the options and spans the panel: the search
-					row and the listbox each hold their own inline padding, the line does
-					not, so it reads as the panel's own edge.
-				-->
-					<Divider />
-					{@render listbox()}
-				</div>
-			{:else}
-				{@render listbox()}
-			{/if}
+			{@render panelContent()}
 		</PopoverLayer>
 	{/if}
 

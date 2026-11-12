@@ -31,6 +31,7 @@
 		height = 'capped',
 		snapPoints,
 		hasScrim = true,
+		finalFocusRef,
 		purpose = 'info',
 		xstyle,
 		...rest
@@ -142,7 +143,12 @@
 				dialogEl.close();
 			}
 			isPresented = false;
-			triggerEl?.focus();
+			// The sheet's exit has settled, so the element it held can take focus
+			// back. An explicit target wins over the opener — an adaptive
+			// presentation's trigger may not be the focused element that opened
+			// the sheet.
+			const focusTarget = finalFocusRef?.() ?? triggerEl;
+			focusTarget?.focus();
 			triggerEl = null;
 		});
 	}

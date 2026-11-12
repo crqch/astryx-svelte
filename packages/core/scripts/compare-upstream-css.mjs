@@ -67,30 +67,6 @@ const SKIP = [
 	{ class: 'xk50ysn', rule: '{font-weight:500}', reason: 'Badge.test-violations fixture' },
 	{ class: 'x1s688f', rule: '{font-weight:600}', reason: 'Badge.test-violations fixture' },
 	{
-		class: 'x12oqio5',
-		rule: '{border-radius:4px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1r8ssgc',
-		rule: '{margin-block:-7px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xam6yil',
-		rule: '{margin-inline:var(--spacing-3)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xaz6w31',
-		rule: '{align-items:last baseline}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
 		class: 'xxbepff',
 		rule: '{border-start-end-radius:var(--radius-element)}',
 		reason:
@@ -103,86 +79,14 @@ const SKIP = [
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},
 	{
-		class: 'xewm6nw',
-		rule: '{margin-inline-end:calc(-1 * min(8px,var(--_item-inset-inline,8px)))}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x17lnmll',
-		rule: '{margin-inline-start:var(--spacing-1-5)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
 		class: 'xsshixw',
 		rule: '{mask-image:linear-gradient(to bottom,rgb(0 0 0 / .7),rgb(0 0 0) 50%,rgb(0 0 0 / .7))}',
 		reason:
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},
 	{
-		class: 'x1wsdtp1',
-		rule: '{background-color:var(--color-overlay-pressed)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xx1nkik',
-		rule: '{color:var(--color-icon-disabled)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1io8s0o',
-		rule: '{color:var(--color-icon-secondary)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1594u6p',
-		rule: '{cursor:grabbing}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1vjmz92',
-		rule: '{forced-color-adjust:none}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xf6o5tz',
-		rule: '{outline-color:var(--focus-outline-color)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x7dehhw',
-		rule: '{outline-offset:var(--focus-outline-offset)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1kcvfb1',
-		rule: '{outline-style:var(--focus-outline-style)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1f8uy6n',
-		rule: '{outline-width:var(--focus-outline-width)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
 		class: 'x1u5z0ei',
 		rule: '{height:240px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x5a2k6a',
-		rule: '{margin-top:calc((var(--text-body-leading) - 28px) / 2)}',
 		reason:
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},
@@ -199,98 +103,8 @@ const SKIP = [
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},
 	{
-		class: 'xgd8bvy',
-		rule: '{width:28px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1eypnu7',
-		rule: '{border-radius:1px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xgad8h8',
-		rule: '{border-radius:1px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x15h7rrt',
-		rule: '{background-color:currentColor}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xs88s87',
-		rule: '{background-color:var(--color-accent)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xeu7nsz',
-		rule: '{box-shadow:0 -6px currentColor,0 6px currentColor}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
 		class: 'x1536ba8',
 		rule: '{content:var(--x-16m2d0h)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1fgarty',
-		rule: '{display:block}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xmdev28',
-		rule: '{inset-inline-start:var(--astryx-reorder-line-start,0px)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1wyoj89',
-		rule: '{translate:0 var(--astryx-reorder-line-y,0px)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1jg531d',
-		rule: '{z-index:2}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x3cntg4',
-		rule: '{height:2px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'xuuc98b',
-		rule: '{height:2px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1j6c3ea',
-		rule: '{width:20px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1fooi66',
-		rule: '{width:var(--astryx-reorder-line-size,0px)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1mh6n7o',
-		rule: '{display:block}',
 		reason:
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	}

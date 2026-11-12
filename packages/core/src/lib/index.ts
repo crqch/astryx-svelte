@@ -203,6 +203,12 @@ export { default as LinkProvider } from './components/link/link-provider.svelte'
 export { default as List } from './components/list/list.svelte';
 export { default as Markdown } from './components/markdown/markdown.svelte';
 export { default as ListItem } from './components/list/list-item.svelte';
+export { createReorderable } from './reorderable/create-reorderable.js';
+export type {
+	Reorderable,
+	ReorderableOptions,
+	ReorderMove
+} from './reorderable/create-reorderable.js';
 export { default as MediaTheme } from './theme/media-theme.svelte';
 // `SyntaxTheme` is surfaced at the root for the same reason `MediaTheme` is —
 // both are theme *components*, and upstream's root `export * from './theme'`
@@ -723,6 +729,7 @@ export type {
 	UseLinkifyOptions
 } from './components/link/use-linkify.js';
 export type { ListProps } from './components/list/list.svelte';
+export type { ListItemProps } from './components/list/list-item.svelte';
 // `ListStyle` is upstream's public alias for the internal `ListMarkerStyle`;
 // `ListContext` itself stays module-private, as upstream keeps it.
 export type {
@@ -730,7 +737,6 @@ export type {
 	ListEdge,
 	ListMarkerStyle as ListStyle
 } from './components/list/list-context.svelte.js';
-export type { ListItemProps } from './components/list/list-item.svelte';
 // Markdown. Upstream's `Markdown/index.ts` publishes the component, its four
 // types, and the four parser entry points; `trimStreamingArtifacts` is
 // deliberately absent from it (it reaches consumers only through the
@@ -775,6 +781,7 @@ export type { MoreMenuProps } from './components/more-menu/more-menu.svelte';
 // hook's option and return types stay module-private — upstream's `hooks.ts`
 // declares both without `export`.
 export type {
+	MultiSelectorPresentation,
 	MultiSelectorProps,
 	MultiSelectorStatusType
 } from './components/multi-selector/multi-selector.svelte';
@@ -883,6 +890,7 @@ export type { SelectableCardProps } from './components/selectable-card/selectabl
 // in `SelectorOption.tsx`, the same standing `SyntaxThemeProps` has — so it is
 // exported from the component module but not re-exported here.
 export type {
+	SelectorPresentation,
 	SelectorProps,
 	SelectorStatus,
 	SelectorStatusType
@@ -981,6 +989,8 @@ export type { TableHeaderCellProps } from './components/table/table-header-cell.
 export type { TableHeaderProps } from './components/table/table-header.svelte';
 export type { TableBodyProps } from './components/table/table-body.svelte';
 export type { TableFooterProps } from './components/table/table-footer.svelte';
+export { default as TableSelectionToolbar } from './components/table/table-selection-toolbar.svelte';
+export type { TableSelectionToolbarProps } from './components/table/table-selection-toolbar.svelte';
 export { TableContext, type TableContextValue } from './components/table/table-context.svelte.js';
 export { resolveContextActions } from './components/table/table-context-menu.svelte';
 export {
@@ -1003,6 +1013,7 @@ export {
 } from './components/table/plugins/selection/use-table-selection.js';
 export {
 	useTableSelectionState,
+	type TableSelectionState,
 	type UseTableSelectionStateConfig,
 	type UseTableSelectionStateResult
 } from './components/table/plugins/selection/use-table-selection-state.svelte.js';
@@ -1292,6 +1303,12 @@ export type { TooltipLayerProps } from './components/tooltip/tooltip-layer.svelt
 export type { SearchableItem, SearchSource } from './components/typeahead/types.js';
 export type { CreateStaticSourceOptions } from './components/typeahead/create-static-source.js';
 export type { BaseTypeaheadProps } from './components/typeahead/base-typeahead.svelte';
+export type {
+	BaseTypeaheadDialogMenuInfo,
+	BaseTypeaheadHandle,
+	BaseTypeaheadListboxMenuInfo,
+	BaseTypeaheadMenu
+} from './components/typeahead/base-typeahead.svelte';
 export type {
 	TypeaheadProps,
 	TypeaheadStatus,

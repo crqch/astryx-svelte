@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		useContainerReveal,
+		type ContentRevealOptions,
 		type UseContainerRevealOptions,
 		type UseContainerRevealReturn
 	} from '$lib/hooks/use-container-reveal.svelte.js';
@@ -23,13 +24,15 @@
 	 */
 	interface Props {
 		options?: () => UseContainerRevealOptions;
+		/** Options for the revealed child; defaults exercise the bare getter. */
+		contentOptions?: () => ContentRevealOptions;
 	}
 
-	const { options }: Props = $props();
+	const { options, contentOptions }: Props = $props();
 
 	export const reveal: UseContainerRevealReturn = useContainerReveal(() => options?.() ?? {});
 </script>
 
 <div data-reveal-container {...reveal.getContainerProps()}>
-	<span data-reveal-content {...reveal.getContentRevealProps()}></span>
+	<span data-reveal-content {...reveal.getContentRevealProps(contentOptions?.() ?? {})}></span>
 </div>

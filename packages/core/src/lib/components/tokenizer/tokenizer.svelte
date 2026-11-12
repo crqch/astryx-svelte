@@ -6,6 +6,7 @@
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { IconName } from '../icon/icon-registry.js';
 	import type { SearchableItem, SearchSource } from '../typeahead/types.js';
+	import type { BaseTypeaheadHandle, BaseTypeaheadMenu } from '../typeahead/base-typeahead.svelte';
 	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	// `TokenizerSize` is published from `tokenizer.stylex.ts`, derived from the
 	// size style keys — the arrangement `Typeahead`/`Selector` use.
@@ -64,6 +65,13 @@
 		focus(): void;
 		/** Blur the typeahead input. */
 		blur(): void;
+		/**
+		 * Open the menu (see `BaseTypeaheadHandle.open`). The sheet presentation
+		 * ignores it.
+		 */
+		open(): void;
+		/** Close the menu. The sheet presentation ignores it. */
+		close(): void;
 	}
 
 	/**
@@ -247,6 +255,19 @@
 		hasCreate?: boolean;
 		/** Query change callback. */
 		onChangeQuery?: (query: string) => void;
+		/**
+		 * What the menu shows: the result list, optionally with information around
+		 * it, or content that takes focus. Forwarded to `BaseTypeahead`; see
+		 * `BaseTypeaheadMenu`. The sheet presentation keeps its own sheet and
+		 * ignores it.
+		 */
+		menu?: BaseTypeaheadMenu;
+		/**
+		 * Called when the inline menu opens or closes. It reports changes only;
+		 * drive the menu with the handle's `open()`/`close()`. Not called by the
+		 * sheet presentation.
+		 */
+		onOpenChange?: (isOpen: boolean) => void;
 		// `onfocusin`/`onfocusout` are upstream's `onFocus`/`onBlur` props. React's
 		// synthetic pair *bubbles*, which the native `focus`/`blur` do not — the
 		// correction `useListFocus`, `Toolbar` and `Typeahead` already record — so
@@ -354,6 +375,8 @@
 		debounceMs,
 		hasCreate = false,
 		onChangeQuery,
+		menu,
+		onOpenChange,
 		presentation = 'adaptive',
 		minQueryLength = 1,
 		onfocusin: onFocusProp,
@@ -387,6 +410,7 @@
 	let sheetFieldEl = $state<HTMLDivElement | null>(null);
 	let sheetTriggerEl = $state<HTMLButtonElement | null>(null);
 	let sheetLaneEl = $state<HTMLDivElement | null>(null);
+	let baseTypeahead = $state<BaseTypeaheadHandle | null>(null);
 
 	// `adaptive` resolves through the policy the selection controls share. An
 	// open sheet keeps its presentation until it closes: a resolution change
@@ -471,6 +495,16 @@
 
 	export function blur(): void {
 		(isSheetPresentation ? sheetTriggerEl : inputEl)?.blur();
+	}
+
+	/** Opens the inline menu; the sheet presentation ignores it. */
+	export function open(): void {
+		baseTypeahead?.open();
+	}
+
+	/** Closes the inline menu; the sheet presentation ignores it. */
+	export function close(): void {
+		baseTypeahead?.close();
 	}
 
 	// Focus-within state for overflow truncation
@@ -1006,6 +1040,8 @@
 						['hasClear', hasClear || undefined],
 						['hasEntriesOnFocus', hasEntriesOnFocus || undefined],
 						['menuWidth', menuWidth],
+						['menu', menu],
+						['onOpenChange', onOpenChange],
 						['tokenOverflowBehavior', tokenOverflowBehavior],
 						['hasAutoFocus', hasAutoFocus || undefined]
 					] as const
@@ -1116,6 +1152,7 @@
 			{/each}
 		{/if}
 		<BaseTypeahead
+			bind:this={baseTypeahead}
 			{@attach captureInput}
 			searchSource={isAtMax ? emptySource : filteredSource}
 			value={null}
@@ -1132,6 +1169,8 @@
 			{inputId}
 			{ariaDescribedBy}
 			{onChangeQuery}
+			{menu}
+			{onOpenChange}
 			{debounceMs}
 			onKeyDown={handleKeyDown}
 			anchorEl={wrapperEl}

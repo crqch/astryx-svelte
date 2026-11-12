@@ -410,6 +410,54 @@
   "@astryx.lightbox.next": {
     "defaultMessage": "⟦Ñéẋţ⟧"
   },
+  "@astryx.list.reorderHandle": {
+    "defaultMessage": "⟦Řéóřðéř {label}⟧"
+  },
+  "@astryx.list.reorderHandleVerb": {
+    "defaultMessage": "⟦Řéóřðéř⟧"
+  },
+  "@astryx.list.reorderHandleAt": {
+    "defaultMessage": "⟦Řéóřðéř íţéɱ {position, number}⟧"
+  },
+  "@astryx.list.reorderHint": {
+    "defaultMessage": "⟦Ðřàĝ ţó ɱóṽé ţĥíš íţéɱ, óř þřéšš Šþàçé óř Éñţéř, ţĥéñ ţĥé àřřóŵ ķéýš ţó ɱóṽé íţ óñé þłàçé àţ à ţíɱé. Þřéšš Éšçàþé ŵĥéñ ýóú àřé ðóñé.⟧"
+  },
+  "@astryx.list.reorderPlace": {
+    "defaultMessage": "⟦{label}, þóšíţíóñ {position, number} óƒ {total, number}, àƒţéř {previous}, ƀéƒóřé {next}⟧"
+  },
+  "@astryx.list.reorderPlaceTop": {
+    "defaultMessage": "⟦{label}, þóšíţíóñ {position, number} óƒ {total, number}, àţ ţĥé ţóþ, ƀéƒóřé {next}⟧"
+  },
+  "@astryx.list.reorderPlaceEnd": {
+    "defaultMessage": "⟦{label}, þóšíţíóñ {position, number} óƒ {total, number}, àƒţéř {previous}, àţ ţĥé éñð⟧"
+  },
+  "@astryx.list.reorderRefused": {
+    "defaultMessage": "⟦Çàñ'ţ ɱóṽé þàšţ {label}⟧"
+  },
+  "@astryx.list.reorderItemAt": {
+    "defaultMessage": "⟦Íţéɱ {position, number}⟧"
+  },
+  "@astryx.list.reorderMoveUp": {
+    "defaultMessage": "⟦Ṁóṽé úþ⟧"
+  },
+  "@astryx.list.reorderMoveDown": {
+    "defaultMessage": "⟦Ṁóṽé ðóŵñ⟧"
+  },
+  "@astryx.list.reorderDone": {
+    "defaultMessage": "⟦Ðóñé⟧"
+  },
+  "@astryx.list.reorderModeDone": {
+    "defaultMessage": "⟦Ðóñé, {label} àţ þóšíţíóñ {position, number} óƒ {total, number}⟧"
+  },
+  "@astryx.list.reorderPickedUp": {
+    "defaultMessage": "⟦Þíçķéð úþ, þóšíţíóñ {position, number} óƒ {total, number}.⟧"
+  },
+  "@astryx.list.reorderDropped": {
+    "defaultMessage": "⟦Ðřóþþéð, þóšíţíóñ {position, number} óƒ {total, number}⟧"
+  },
+  "@astryx.list.reorderCancelled": {
+    "defaultMessage": "⟦Řéóřðéř çàñçéłłéð, ƀàçķ ţó þóšíţíóñ {position, number} óƒ {total, number}⟧"
+  },
   "@astryx.listInput.emptyTitle": {
     "defaultMessage": "⟦Ñó {itemName}š ýéţ⟧"
   },
@@ -461,6 +509,12 @@
   "@astryx.markdown.table": {
     "defaultMessage": "⟦Ţàƀłé⟧"
   },
+  "@astryx.markdownHeadingLinks.copied": {
+    "defaultMessage": "⟦Łíñķ çóþíéð⟧"
+  },
+  "@astryx.markdownHeadingLinks.copy": {
+    "defaultMessage": "⟦Çóþý łíñķ ţó {heading}⟧"
+  },
   "@astryx.mobileNav.closeNavigation": {
     "defaultMessage": "⟦Çłóšé ñàṽíĝàţíóñ⟧"
   },
@@ -511,6 +565,15 @@
   },
   "@astryx.table.filter.apply": {
     "defaultMessage": "⟦Àþþłý⟧"
+  },
+  "@astryx.table.selection.bulkActionsLabel": {
+    "defaultMessage": "⟦Ɓúłķ àçţíóñš⟧"
+  },
+  "@astryx.table.selection.clearAll": {
+    "defaultMessage": "⟦Úñšéłéçţ Àłł⟧"
+  },
+  "@astryx.table.selection.selectedCount": {
+    "defaultMessage": "⟦{count, number} šéłéçţéð⟧"
   },
   "@astryx.table.selection.selectAllRows": {
     "defaultMessage": "⟦Šéłéçţ àłł řóŵš⟧"

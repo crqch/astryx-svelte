@@ -55,6 +55,14 @@
 		 * @default false
 		 */
 		isSelected?: boolean;
+		/**
+		 * The row's item key, a string or a number from the data (the shape
+		 * Table's `idKey` returns). It is the row's identity for the list's
+		 * animated layout, and in a reorderable List it is the key the
+		 * reorderable object's `onReorder` reports and `isReorderable` is asked
+		 * about. A row without one has no reorder handle and keeps its place.
+		 */
+		itemKey?: string | number;
 	}
 </script>
 
@@ -63,8 +71,13 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import Item from '../item/item.svelte';
 	import { setItemMarkerColumns } from '../item/item-marker-columns-context.svelte.js';
+	import { setItemLabelNeeded } from '../item/item-label-context.svelte.js';
+	import { setItemTrailing } from '../item/item-trailing-context.svelte.js';
 	import CheckboxInput from '../checkbox-input/checkbox-input.svelte';
 	import { useList } from './list-context.svelte.js';
+	import ListReorderHandle from './list-reorder-handle.svelte';
+	import ListReorderRowName from './list-reorder-row-name.svelte';
+	import { reorderRowStyle } from './list-reorder-handle.stylex.js';
 	import {
 		listItemXstyle,
 		markerCircleAttrs,
@@ -102,6 +115,7 @@
 		rel,
 		isDisabled = false,
 		isSelected = false,
+		itemKey,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -133,6 +147,26 @@
 		(onclick != null || href != null || interactiveRef != null) && !isDisabled
 	);
 
+	// The row's element, which a row without a handle names for the reorder.
+	let rowEl = $state<HTMLElement | null>(null);
+	// In a reorderable List: a trailing handle, or a row that stays put.
+	const reorder = $derived(ctx?.reorder ?? null);
+	const hasHandle = $derived(
+		reorder != null && itemKey != null && (reorder.options.isReorderable?.(itemKey) ?? true)
+	);
+	// The handle is the one element reordering adds to a row. With end content
+	// it joins the end slot. Without, it is the row's own child
+	// (ItemTrailingContext), since an end slot of its own would be a second
+	// element.
+	const isHandleInRow = $derived(hasHandle && endContent == null);
+	const rowLabel = $derived(rest['aria-label'] ?? undefined);
+	const rowLabelledBy = $derived(rest['aria-labelledby'] ?? undefined);
+	const rowAlign = $derived(isHandleInRow ? (align ?? 'center') : undefined);
+	// The handle is named after the row's label, and a row without one still
+	// has a name for the announcements of the moves beside it.
+	setItemLabelNeeded(() => hasHandle);
+	setItemTrailing(() => (isHandleInRow ? reorderHandleSnippet : null));
+
 	// Upstream wraps numbered rows in `ItemMarkerColumnsContext`; the Item reads
 	// this getter and renders its content as one cell beside the marker.
 	setItemMarkerColumns(() => usesNumberColumns);
@@ -152,6 +186,17 @@
 	const squareAttrs = markerSquareAttrs();
 	const taskContainerAttrs = taskMarkerContainerAttrs();
 </script>
+
+{#snippet reorderHandleSnippet()}
+	{#if hasHandle && itemKey != null}
+		<ListReorderHandle {label} {itemKey} {isDisabled} {rowLabel} {rowLabelledBy} {rowAlign} />
+	{/if}
+{/snippet}
+
+{#snippet itemEndContent()}
+	{#if endContent != null}{@render endContent()}{/if}
+	{#if hasHandle && !isHandleInRow}{@render reorderHandleSnippet()}{/if}
+{/snippet}
 
 {#snippet marker()}
 	{#if task != null}
@@ -180,13 +225,14 @@
 {/snippet}
 
 <Item
+	data-astryx-item-key={itemKey == null ? undefined : String(itemKey)}
 	{...itemRest}
 	as="li"
 	marker={hasMarkers ? marker : undefined}
 	{startContent}
 	{label}
 	{description}
-	{endContent}
+	endContent={hasHandle && !isHandleInRow ? itemEndContent : endContent}
 	{align}
 	{onclick}
 	{interactiveRef}
@@ -205,8 +251,14 @@
 		isTouchTarget,
 		isInList,
 		edge,
+		hasReorderHandle: hasHandle,
 		xstyle
 	})}
 	class={cx(theme.class, className)}
 	style={styleProp}
+	bind:ref={rowEl}
 />
+
+{#if reorder != null && !hasHandle}
+	<ListReorderRowName row={() => rowEl} {label} />
+{/if}

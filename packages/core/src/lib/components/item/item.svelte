@@ -21,6 +21,11 @@
 	 */
 	export interface ItemProps extends Omit<BaseProps<HTMLElement>, 'onclick'> {
 		/**
+		 * The root element, for a caller that measures or names the row.
+		 * Upstream's `ref`; bindable here, as `InfoTip`'s and `Drawer`'s are.
+		 */
+		ref?: HTMLElement | null;
+		/**
 		 * What the root renders as: an HTML element, or a component for a caller
 		 * that needs the root to be something else. A menu row that navigates
 		 * passes the application's link component here, so the row's root IS the
@@ -222,6 +227,12 @@
 		itemStartContentAttrs
 	} from './item.stylex.js';
 	import { useItemMarkerColumns } from './item-marker-columns-context.svelte.js';
+	import {
+		setItemLabel,
+		setItemLabelNeeded,
+		useItemLabelNeeded
+	} from './item-label-context.svelte.js';
+	import { setItemTrailing, useItemTrailing } from './item-trailing-context.svelte.js';
 	import ItemMarkerColumnsScope from './item-marker-columns-scope.svelte';
 	import type { ItemSwipeBridge } from './item-swipe-layer.svelte';
 
@@ -242,6 +253,7 @@
 	 */
 	let {
 		as = 'div',
+		ref = $bindable(null),
 		marker,
 		startContent,
 		label,
@@ -270,10 +282,23 @@
 		...rest
 	}: ItemProps = $props();
 
+	const labelElementId = $props.id();
+	// A control the row adds after the slots, unwrapped
+	// (`ItemTrailingContext`): a List row's reorder handle when the row has no
+	// end content. Read before Item resets the context for what it renders.
+	const needsLabelId = useItemLabelNeeded();
+	const trailing = useItemTrailing();
+
 	const resolveLink = useLinkComponent();
 	const linkResolved = $derived(resolveLink());
 
 	let rootEl = $state<HTMLElement | null>(null);
+	// The root element, published through the bindable `ref`.
+	$effect(() => {
+		if (ref !== rootEl) {
+			ref = rootEl;
+		}
+	});
 	/** The row's own invisible action, so a press on it keeps the row's press. */
 	let actionButton = $state<HTMLElement | null>(null);
 	let actionLink = $state<HTMLElement | null>(null);
@@ -383,6 +408,14 @@
 	// there — a snippet description cannot wrap the row open. With no description
 	// there is nothing to inline, so the layout falls back to stacked.
 	const isInline = $derived(layout === 'inline' && description != null);
+	// Only a row with a control that is named after its label gives the label
+	// element an id (ItemLabelNeededContext).
+	const publishedLabelID = $derived(needsLabelId() && label != null ? labelElementId : null);
+	// Item resets these for what it renders, so a nested Item never inherits
+	// its parent's trailing control or label id.
+	setItemLabel(() => publishedLabelID);
+	setItemLabelNeeded(() => false);
+	setItemTrailing(() => null);
 	const labelAttrs = $derived(itemLabelAttrs(labelLines, isStringLabel, isInline));
 	const descAttrs = $derived(itemDescriptionAttrs(descriptionLines, isStringDescription, isInline));
 	const contentAttrs = $derived(itemContentAttrs(isDisabled, isInline));
@@ -539,7 +572,7 @@
 </script>
 
 {#snippet labelAndDescription()}
-	<span class={labelAttrs.class} style={labelAttrs.style}>
+	<span id={publishedLabelID ?? undefined} class={labelAttrs.class} style={labelAttrs.style}>
 		{#if typeof label === 'function'}{@render label()}{:else}{label}{/if}
 	</span>
 	{#if description != null}
@@ -586,6 +619,11 @@
 
 	{#if endContent != null}
 		<span class={endAttrs.class} style={endAttrs.style}>{@render endContent()}</span>
+	{/if}
+
+	{@const tail = trailing()}
+	{#if tail != null}
+		{@render tail()}
 	{/if}
 {/snippet}
 

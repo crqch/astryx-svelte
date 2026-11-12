@@ -22,6 +22,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { selectorPresentationStyles } from '../selector/selector-presentation.stylex.js';
 import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 
 /**
@@ -463,6 +464,7 @@ export function multiSelectorTriggerContainerAttrs(
 	isReadOnly: boolean,
 	isEmpty: boolean,
 	inGroup: boolean,
+	isFocusRingSuppressed: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
@@ -480,10 +482,11 @@ export function multiSelectorTriggerContainerAttrs(
 		// `focusWithin` is `:has(:focus-visible)`, so a pointer click does not draw
 		// it.
 		variant !== 'input' && focusOutlineStyles.focusWithin,
+		isFocusRingSuppressed && selectorPresentationStyles.pointerRestoredFocus,
 		isDisabled && inputWrapperStyles.disabled,
 		// The shared disabled style drops the focus ring; restore it while the
 		// trigger, a direct child, has keyboard focus (`spec:AST-085` FR6).
-		variant === 'input' && isDisabled && inputDisabledFocusStyles.ring,
+		variant === 'input' && isDisabled && !isFocusRingSuppressed && inputDisabledFocusStyles.ring,
 		isReadOnly && styles.triggerReadOnly,
 		variant !== 'input' && isDisabled && styles.triggerGhostDisabled,
 		variant !== 'input' && isReadOnly && styles.triggerGhostReadOnly,

@@ -1,4 +1,7 @@
-import { parseOutlineFromMarkdown } from './parse-outline-from-markdown.js';
+import {
+	parseOutlineFromMarkdown,
+	type ParseOutlineFromMarkdownOptions
+} from './parse-outline-from-markdown.js';
 import type { OutlineItem } from './types.js';
 
 /**
@@ -11,6 +14,10 @@ import type { OutlineItem } from './types.js';
  * markdown as a **getter** (the port's convention, and what gives the derived
  * something to track) and returns the live array as `items`, the shape
  * `useOutlineFromDOM` already established.
+ *
+ * Plugins arrive the same way, as a getter: passing the same
+ * `createMarkdownHeadingLinks()` entry to Markdown and to this hook makes the
+ * outline's ids resolve to the headings the document renders, at every depth.
  */
 export interface OutlineFromMarkdownState {
 	/** The extracted headings, in document order. */
@@ -18,8 +25,11 @@ export interface OutlineFromMarkdownState {
 }
 
 /** Extract a stable outline from a Markdown string. */
-export function useOutlineFromMarkdown(markdown: () => string): OutlineFromMarkdownState {
-	const items = $derived(parseOutlineFromMarkdown(markdown()));
+export function useOutlineFromMarkdown(
+	markdown: () => string,
+	options: () => ParseOutlineFromMarkdownOptions = () => ({})
+): OutlineFromMarkdownState {
+	const items = $derived(parseOutlineFromMarkdown(markdown(), options()));
 
 	return {
 		get items() {

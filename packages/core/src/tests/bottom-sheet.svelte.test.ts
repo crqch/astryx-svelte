@@ -8,6 +8,7 @@ import BottomSheet from '$lib/components/bottom-sheet/bottom-sheet.svelte';
 import ExitHarness from './fixtures/bottom-sheet-exit-harness.svelte';
 import SwitcherHarness from './fixtures/bottom-sheet-switcher-harness.svelte';
 import FocusRestoreHarness from './fixtures/bottom-sheet-focus-restore-harness.svelte';
+import FinalFocusHarness from './fixtures/bottom-sheet-final-focus-harness.svelte';
 import { stubMatchMedia } from './stub-match-media.js';
 
 /**
@@ -2199,6 +2200,40 @@ describe('BottomSheet', () => {
 			await endTransform();
 
 			expect(document.activeElement).toBe(opener);
+		});
+
+		it('always focuses finalFocusRef on close, even when focus had left the sheet', async () => {
+			await render(FinalFocusHarness, { props: { hasScrim: false } });
+			const buttons = [...document.querySelectorAll('button')];
+			const opener = buttons.find((button) => button.textContent === 'Open sheet')!;
+			const target = buttons.find((button) => button.textContent === 'Adaptive trigger')!;
+			const closeFromPage = buttons.find((button) => button.textContent === 'Close from page')!;
+
+			click(opener);
+			await flush();
+
+			// The page stayed live: the person moved on, then a page control closed
+			// the sheet. The explicit target still receives focus.
+			closeFromPage.focus();
+			click(closeFromPage);
+			await endTransform();
+
+			expect(document.activeElement).toBe(target);
+		});
+
+		it('prefers an explicit final focus target', async () => {
+			await render(FinalFocusHarness, { props: {} });
+			const buttons = [...document.querySelectorAll('button')];
+			const opener = buttons.find((button) => button.textContent === 'Open sheet')!;
+			const target = buttons.find((button) => button.textContent === 'Adaptive trigger')!;
+			const done = buttons.find((button) => button.textContent === 'Done')!;
+
+			click(opener);
+			await flush();
+			click(done);
+			await endTransform();
+
+			expect(document.activeElement).toBe(target);
 		});
 	});
 

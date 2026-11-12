@@ -66,6 +66,24 @@ export function devError(component: string, message: string, ...args: unknown[])
 	console.error(formatDevMessage(component, message), ...args);
 }
 
+/**
+ * A set of development warnings that each fire once, for a long-lived object
+ * such as a reorder session that outlives a render.
+ *
+ * Ported from Astryx's `createDevWarnings`. The key defaults to the message,
+ * so two different messages from one instance both reach the console.
+ */
+export function createDevWarnings(): (component: string, message: string, key?: string) => void {
+	const warned = new Set<string>();
+	return (component: string, message: string, key: string = message): void => {
+		if (!isDev || warned.has(key)) {
+			return;
+		}
+		warned.add(key);
+		console.warn(formatDevMessage(component, message));
+	};
+}
+
 const warnedKeys = new Set<string>();
 
 /**

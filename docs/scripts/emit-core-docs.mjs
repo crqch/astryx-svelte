@@ -468,6 +468,7 @@ const UPSTREAM_EXAMPLES_NOT_PORTED = new Set([
 	'Section',
 	'SegmentedControl',
 	'Tab',
+	'TableSelectionToolbar',
 	'Timer',
 	'useResizable',
 	'useTableRowExpansion',
