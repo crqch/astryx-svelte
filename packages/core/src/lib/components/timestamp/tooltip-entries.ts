@@ -12,6 +12,7 @@
 import { devWarn } from '../../utils/dev-warning.js';
 import { formatInstant } from './format-instant.js';
 import type { InstantFormat } from './format-instant.js';
+import type { CalendarSystem } from '../../utils/calendar-system.js';
 import type { Locale } from '../../i18n/types.js';
 
 /**
@@ -170,15 +171,17 @@ function shouldShowZoneName(
 }
 
 /**
- * Renders one tooltip line per entry, in the order given.
+ * Renders one tooltip line per entry, in the order given, with dates in
+ * `calendar`.
  *
  * Pure: the same `date` and `entries` always produce the same lines for a given
- * host zone and locale.
+ * host zone, locale, and calendar.
  */
 export function formatTooltipLines(
 	date: Date,
 	entries: ReadonlyArray<TimestampTooltipEntry>,
-	locale: Locale
+	locale: Locale,
+	calendar: CalendarSystem = 'gregory'
 ): ReadonlyArray<TimestampTooltipLine> {
 	const resolved = entries.map((entry) => resolveTimezoneID(entry.timezoneID));
 	const hasMultipleZones = new Set(resolved.map(zoneKey)).size > 1;
@@ -192,6 +195,7 @@ export function formatTooltipLines(
 			isCopyable: entry.isCopyable ?? false,
 			value: formatInstant(date, format, locale, {
 				timeZone,
+				calendar,
 				isTimezoneShown: shouldShowZoneName(format, hasMultipleZones, timeZone !== undefined)
 			})
 		};

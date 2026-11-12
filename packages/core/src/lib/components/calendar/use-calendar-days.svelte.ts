@@ -5,11 +5,12 @@ import {
 } from '../../i18n/internationalization-context.svelte.js';
 import { getWeekdayHeaderNames } from './get-weekday-header-names.js';
 import {
-	getDaysInMonth,
-	plainDateAddDays,
-	plainDateDayOfWeek,
-	plainDateToISO
-} from '../../utils/plain-date.js';
+	calendarDayOfMonth,
+	calendarMonthFromYearMonth,
+	type CalendarSystem
+} from '../../utils/calendar-system.js';
+import { resolveShownCalendar } from '../../i18n/use-calendar-system.svelte.js';
+import { plainDateAddDays, plainDateDayOfWeek, plainDateToISO } from '../../utils/plain-date.js';
 
 /**
  * Ported from Astryx's `Calendar/hooks/useCalendarDays.ts`.
@@ -49,6 +50,15 @@ export interface UseCalendarDaysOptions {
 	weekStartsOn?: DayOfWeek;
 	/** Use variable rows per month vs. fixed 6-row grid */
 	hasVariableRowCount?: boolean;
+	/**
+	 * The calendar system that numbers `year`, `month`, and each `dayNumber`.
+	 * Each day keeps its Gregorian `date` and `iso`. The hook never reads the
+	 * InternationalizationProvider calendar. Calendars other than gregory,
+	 * iso8601, buddhist, roc, and japanese need Temporal; without it, the hook
+	 * reads Gregorian numbers and warns once in development.
+	 * @default 'gregory'
+	 */
+	calendar?: CalendarSystem;
 }
 
 /** Return type for the `useCalendarDays` hook. */
@@ -92,13 +102,17 @@ export function useCalendarDays(options: () => UseCalendarDaysOptions): UseCalen
 		messages: {}
 	}));
 	const hasVariableRowCount = $derived(options().hasVariableRowCount ?? false);
+	const calendar = $derived(
+		resolveShownCalendar(options().calendar ?? 'gregory', 'useCalendarDays')
+	);
 
 	// Grid structure.
 	const gridInfo = $derived.by(() => {
-		const totalDaysInMonth = getDaysInMonth(year, month);
+		const calendarMonth = calendarMonthFromYearMonth(calendar, { year, month });
+		const totalDaysInMonth = calendarMonth.length;
 
 		// Starting offset based on weekStartsOn.
-		let startingDayOfWeek = plainDateDayOfWeek({ year, month, day: 1 }) - weekStartsOn;
+		let startingDayOfWeek = plainDateDayOfWeek(calendarMonth.start) - weekStartsOn;
 		if (startingDayOfWeek < 0) {
 			startingDayOfWeek += 7;
 		}
@@ -107,7 +121,12 @@ export function useCalendarDays(options: () => UseCalendarDaysOptions): UseCalen
 		const totalRows = hasVariableRowCount ? Math.ceil(totalDays / 7) : 6;
 		const totalCells = totalRows * 7;
 
-		return { daysInMonth: totalDaysInMonth, startingDayOfWeek, totalCells };
+		return {
+			first: calendarMonth.start,
+			daysInMonth: totalDaysInMonth,
+			startingDayOfWeek,
+			totalCells
+		};
 	});
 
 	// Generated strings avoid `Date` anchors, so weekday headers cannot shift with
@@ -116,18 +135,20 @@ export function useCalendarDays(options: () => UseCalendarDaysOptions): UseCalen
 	const dayNames = $derived(getWeekdayHeaderNames(intl().locale, weekStartsOn));
 
 	const days = $derived.by(() => {
-		const { daysInMonth: totalDaysInMonth, startingDayOfWeek, totalCells } = gridInfo;
-		const firstOfMonth: PlainDate = { year, month, day: 1 };
+		const { first, daysInMonth: totalDaysInMonth, startingDayOfWeek, totalCells } = gridInfo;
 		const result: CalendarDay[] = [];
 
 		for (let i = 0; i < totalCells; i++) {
-			const dayOffset = i - startingDayOfWeek + 1;
-			const isOutside = dayOffset < 1 || dayOffset > totalDaysInMonth;
-			const pd: PlainDate = isOutside
-				? plainDateAddDays(firstOfMonth, dayOffset - 1)
-				: { year, month, day: dayOffset };
+			const offset = i - startingDayOfWeek;
+			const pd = plainDateAddDays(first, offset);
+			const isOutside = offset < 0 || offset >= totalDaysInMonth;
 
-			result.push({ date: pd, iso: plainDateToISO(pd), isOutside, dayNumber: pd.day });
+			result.push({
+				date: pd,
+				iso: plainDateToISO(pd),
+				isOutside,
+				dayNumber: isOutside ? calendarDayOfMonth(calendar, pd) : offset + 1
+			});
 		}
 
 		return result;

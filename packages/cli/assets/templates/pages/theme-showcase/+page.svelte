@@ -727,7 +727,13 @@
 											>
 												{p.description}
 											</Text>
-											<HStack gap={2} vAlign="center" hAlign="center">
+											<HStack
+												gap={2}
+												vAlign="center"
+												hAlign="center"
+												wrap="wrap"
+												width="100%"
+											>
 												<NumberInput
 													label="Quantity"
 													isLabelHidden
@@ -736,14 +742,13 @@
 													min={1}
 													max={99}
 													size="sm"
-													style={styles.quantityInput}
+													width={72}
 												/>
 												<Button
 													label="Add to cart"
 													variant="secondary"
 													size="sm"
 													href="#"
-													style={styles.cartButton}
 												/>
 											</HStack>
 										</VStack>
@@ -1176,7 +1181,7 @@
 					value=""
 					onChange={() => {}}
 					startIcon={searchIcon16}
-					style={styles.searchInput}
+					width={240}
 				/>
 				<OverflowList
 					gap={2}

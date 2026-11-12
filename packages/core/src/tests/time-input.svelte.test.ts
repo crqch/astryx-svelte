@@ -4,11 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import { createAttachmentKey } from 'svelte/attachments';
-import TimeInput from '$lib/components/time-input/time-input.svelte';
+import TimeInput, { type TimeInputProps } from '$lib/components/time-input/time-input.svelte';
 import type { ISOTimeString } from '$lib/utils/time-parser.js';
 import { __resetLiveRegionsForTest } from '$lib/hooks/use-announce.js';
 import TimeInputGroupProbe from './fixtures/time-input-group-probe.svelte';
 import TimeInputI18n from './fixtures/time-input-i18n.svelte';
+import HorizontalLabelsProbe from './fixtures/horizontal-labels-probe.svelte';
 
 /**
  * Astryx's `TimeInput/TimeInput.test.tsx`, ported case for case — **44 of
@@ -837,5 +838,127 @@ describe('TimeInput disabled theme state', () => {
 		});
 		const root = screen.container.querySelector('.astryx-time-input');
 		expect(root).not.toHaveAttribute('data-disabled');
+	});
+});
+
+/**
+ * `TimeInput/TimeInput.fr10.test.tsx`'s shared render cases, at the surface this
+ * port added: `container*` reaches the Field box, `control*` reaches the
+ * bordered control box, root styling is dropped with a warning, and
+ * `container*` is dropped where no Field box renders. Upstream's type-level
+ * `expectFieldInputProps` case has no runtime counterpart; the props are
+ * declared through `FieldInputBaseProps`.
+ *
+ * Upstream runs the shared suite once per presentation (`typed`, `native`,
+ * `touch`). This port ships the typed field only — the same limitation the
+ * `TimeInput` suite above records — so those three runs collapse to one.
+ * The suite's separate per-surface details are not ported for the same reason;
+ * their subject (a presentation's own control locator and aria wiring) has no
+ * native or touch surface here.
+ *
+ * Not ported from the shared suite, and why:
+ * - `forwards base props, ref, and handlers to the primary semantic control` —
+ *   the attachment case above is the counterpart for rest-prop forwarding;
+ *   Svelte has no `ref` prop, and a caller `id` is not forwarded (the component
+ *   mints its control id), so that clause has no port either.
+ * - `keeps a caller aria-describedby alongside the field description` — a
+ *   separate gap in this port's input-ARIA path: the control's own
+ *   `aria-describedby` is composed only from field-owned ids, so a caller's
+ *   value is replaced rather than joined.
+ */
+describe('TimeInput field parts (FR10)', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('styles the Field box with container* and the control box with control*', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(TimeInput, {
+			props: {
+				label: 'Start',
+				onChange: noop,
+				containerClassName: 'fr10-container',
+				containerStyle: 'margin-top: 7px',
+				controlClassName: 'fr10-control',
+				controlStyle: 'margin-bottom: 9px'
+			}
+		});
+		const control = inputIn(screen.container);
+		const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+		const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+		expect(fieldBox).not.toBeNull();
+		expect(controlBox).not.toBeNull();
+		expect(fieldBox.getAttribute('style')).toContain('margin-top: 7px');
+		expect(controlBox.getAttribute('style')).toContain('margin-bottom: 9px');
+		expect(fieldBox).toContainElement(controlBox);
+		expect(fieldBox).not.toBe(controlBox);
+		expect(controlBox).not.toBe(control);
+		expect(controlBox).toContainElement(control);
+		expect(screen.container.querySelectorAll('.fr10-container')).toHaveLength(1);
+		expect(screen.container.querySelectorAll('.fr10-control')).toHaveLength(1);
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	it('drops untyped root styling and warns in development', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		// Root `class`/`style` are not props any more. Spread rather than name
+		// them, so they arrive the way an untyped caller's rest object does at
+		// runtime without defeating the type-level rejection.
+		const legacyRootStyling: Record<string, unknown> = {
+			class: 'fr10-root',
+			style: 'outline-color: red'
+		};
+		const screen = await render(TimeInput, {
+			props: {
+				...legacyRootStyling,
+				label: 'Start',
+				onChange: noop
+			} as unknown as TimeInputProps
+		});
+		expect(screen.container.querySelector('.fr10-root')).toBeNull();
+		const control = inputIn(screen.container);
+		expect(control.getAttribute('style') ?? '').not.toContain('outline-color');
+		// The old path applied root styling to the control box, not the control, so
+		// a clean native control alone would not have caught it coming back.
+		expect(screen.container.querySelector('[style*="outline-color"]')).toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).startsWith('TimeInput:'))).toBe(true);
+	});
+
+	it('ignores container* and warns in a horizontal-labels FormLayout', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(HorizontalLabelsProbe, {
+			props: {
+				component: TimeInput,
+				rest: {
+					label: 'Start',
+					onChange: noop,
+					containerClassName: 'fr10-container'
+				}
+			}
+		});
+		expect(screen.container.querySelector('.fr10-container')).toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).includes('no Field box renders'))).toBe(
+			true
+		);
+	});
+
+	it('ignores container* and warns inside InputGroup, keeping control*', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(TimeInputGroupProbe, {
+			props: {
+				group: { label: 'Times' },
+				timeInput: {
+					label: 'Start',
+					onChange: noop,
+					containerClassName: 'fr10-container',
+					controlClassName: 'fr10-control'
+				}
+			}
+		});
+		expect(screen.container.querySelector('.fr10-container')).toBeNull();
+		expect(screen.container.querySelector('.fr10-control')).not.toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).includes('no Field box renders'))).toBe(
+			true
+		);
 	});
 });

@@ -7,6 +7,7 @@
 		DayOfWeekName,
 		ISODateString
 	} from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 
 	// Upstream's `Calendar.tsx` re-exports `ISODateString`/`DayOfWeek`/
 	// `DayOfWeekName`/`DateRange` from `utils/dateTypes`, and `Calendar/index.ts`
@@ -109,6 +110,16 @@
 		 * composed onto the root element; upstream names it `onKeyDown`.
 		 */
 		onkeydown?: KeyboardEventHandler<HTMLDivElement>;
+		/**
+		 * The calendar system the grid shows, such as `'persian'` or `'hebrew'`.
+		 * It sets the months, their names, and month and year navigation. `value`,
+		 * `min`, `max`, `focusDate`, and every callback stay Gregorian ISO dates.
+		 * Calendars other than `gregory`, `iso8601`, `buddhist`, `roc`, and
+		 * `japanese` need `Temporal`; where the runtime lacks it, the grid shows
+		 * Gregorian months and warns once in development.
+		 * @default the InternationalizationProvider calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
 	}
 
 	interface CalendarSingleProps extends CalendarBaseProps {
@@ -149,15 +160,18 @@
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { normalizeDayOfWeek, type PlainDate } from '../../utils/date-types.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
+		calendarAddMonths,
+		calendarMonthOf,
+		formatCalendarDate,
+		formatCalendarMonthLabel
+	} from '../../utils/calendar-system.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
+	import {
 		DATE_FORMAT_WITH_WEEKDAY,
 		plainDateAddDays,
-		plainDateAddMonths,
-		plainDateFormat,
 		plainDateFromISO,
 		plainDateIsBefore,
 		plainDateIsEqual,
-		plainDateSetFirstOfMonth,
 		plainDateToDate,
 		plainDateToISO,
 		plainDateToday
@@ -199,6 +213,7 @@
 		hasWeekNumbers = false,
 		hasVariableRowCount = false,
 		weekStartsOn: weekStartsOnProp = 0,
+		calendar: calendarProp,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -208,6 +223,7 @@
 
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(() => calendarProp, 'Calendar');
 
 	// Normalize `weekStartsOn` (number or three-letter day name) to a numeric
 	// DayOfWeek so all downstream date math keeps working with an index.
@@ -274,7 +290,8 @@
 			min,
 			max,
 			numberOfMonths,
-			today
+			today,
+			calendar: calendar()
 		})
 	);
 
@@ -301,23 +318,18 @@
 		}
 	}
 
-	// Base month (first day of focus month).
-	const baseMonth = $derived(plainDateSetFirstOfMonth(focusDate));
+	// Base month (first day of the focus month in the shown calendar).
+	const baseMonth = $derived(calendarMonthOf(calendar(), focusDate));
 
 	const visibleMonths = $derived(
-		Array.from({ length: numberOfMonths }, (_, i) => plainDateAddMonths(baseMonth, i))
+		Array.from({ length: numberOfMonths }, (_, i) => calendarAddMonths(calendar(), baseMonth, i))
 	);
 
 	const monthYearLabel = $derived.by(() => {
 		if (!isMonthKnown) {
 			return '';
 		}
-		if (numberOfMonths === 1) {
-			return plainDateFormat(visibleMonths[0], DATE_FORMAT_MONTH_YEAR, locale());
-		}
-		return visibleMonths
-			.map((m) => plainDateFormat(m, DATE_FORMAT_MONTH_YEAR, locale()))
-			.join(' – ');
+		return visibleMonths.map((m) => formatCalendarMonthLabel(calendar(), m, locale())).join(' – ');
 	});
 
 	let monthsContainer = $state<HTMLDivElement | null>(null);
@@ -418,11 +430,10 @@
 		}
 		const minDate = plainDateFromISO(min);
 		// Can't go back if min is in the current focus month.
-		return (
-			minDate.year < baseMonth.year ||
-			(minDate.year === baseMonth.year && minDate.month < baseMonth.month)
-		);
+		return plainDateIsBefore(minDate, baseMonth.start);
 	});
+
+	const lastVisibleMonth = $derived(visibleMonths[visibleMonths.length - 1]);
 
 	const canNavigateNext = $derived.by(() => {
 		if (!isMonthKnown) {
@@ -433,15 +444,11 @@
 		}
 		const maxDate = plainDateFromISO(max);
 		// Check against the last visible month, not just baseMonth.
-		const lastVisibleMonth = plainDateAddMonths(baseMonth, numberOfMonths - 1);
-		return (
-			maxDate.year > lastVisibleMonth.year ||
-			(maxDate.year === lastVisibleMonth.year && maxDate.month > lastVisibleMonth.month)
-		);
+		return plainDateIsBefore(lastVisibleMonth.end, maxDate);
 	});
 
 	function navigateMonth(delta: number, focusedDate?: ISODateString, offset?: number): void {
-		const newPd = plainDateAddMonths(baseMonth, delta);
+		const newPd = calendarAddMonths(calendar(), baseMonth, delta).start;
 		const newISO = plainDateToISO(newPd);
 
 		// Target focus date, when a focused date was provided.
@@ -497,7 +504,7 @@
 				rangeSelectionStart = iso;
 				announce(
 					t('@astryx.calendar.rangeStartAnnounce', {
-						date: plainDateFormat(date, DATE_FORMAT_WITH_WEEKDAY, locale())
+						date: formatCalendarDate(calendar(), date, DATE_FORMAT_WITH_WEEKDAY, locale())
 					})
 				);
 			} else {
@@ -514,7 +521,7 @@
 					rangeSelectionStart = null;
 					announce(
 						t('@astryx.calendar.rangeClearedAnnounce', {
-							date: plainDateFormat(date, DATE_FORMAT_WITH_WEEKDAY, locale())
+							date: formatCalendarDate(calendar(), date, DATE_FORMAT_WITH_WEEKDAY, locale())
 						})
 					);
 					return;
@@ -540,8 +547,18 @@
 				// swapped {start, end} above even for a reverse pick).
 				announce(
 					t('@astryx.calendar.rangeCompleteAnnounce', {
-						start: plainDateFormat(plainDateFromISO(start), DATE_FORMAT_WITH_WEEKDAY, locale()),
-						end: plainDateFormat(plainDateFromISO(end), DATE_FORMAT_WITH_WEEKDAY, locale())
+						start: formatCalendarDate(
+							calendar(),
+							plainDateFromISO(start),
+							DATE_FORMAT_WITH_WEEKDAY,
+							locale()
+						),
+						end: formatCalendarDate(
+							calendar(),
+							plainDateFromISO(end),
+							DATE_FORMAT_WITH_WEEKDAY,
+							locale()
+						)
 					})
 				);
 			}
@@ -618,9 +635,10 @@
 		class={monthsAttrs.class}
 		style={monthsAttrs.style}
 	>
-		{#each visibleMonths as month (`${month.year}-${month.month}`)}
+		{#each visibleMonths as month (plainDateToISO(month.start))}
 			<MonthGrid
 				{month}
+				calendar={calendar()}
 				value={effectiveValue}
 				{mode}
 				{rangeSelectionStart}

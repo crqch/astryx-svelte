@@ -1,7 +1,7 @@
 <script lang="ts" module>
-	import type { BaseProps } from '../../base-props.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { ISOTimeString } from '../../utils/time-parser.js';
 	// `TimeInputSize` is published from `time-input.stylex.ts`, derived from the
@@ -29,7 +29,7 @@
 	 * nothing is re-added under a lowercase name here; adding one would invent API.
 	 */
 	export interface TimeInputProps extends Omit<
-		BaseProps<HTMLInputElement>,
+		FieldInputBaseProps<HTMLInputElement>,
 		'onchange' | 'defaultValue' | 'oninput' | 'onfocus' | 'onblur' | 'onkeydown'
 	> {
 		/** Label text for the input (required for accessibility). */
@@ -139,7 +139,8 @@
 		/**
 		 * Width of the field. Numbers are treated as pixels, strings are used as-is
 		 * (e.g. `'100%'`). Sizes the whole field (label, control, and status) so they
-		 * stay aligned, unlike setting width via `xstyle`/`class`/`style`.
+		 * stay aligned, unlike setting width via
+		 * `controlXstyle`/`controlClassName`/`controlStyle`.
 		 */
 		width?: SizeValue;
 		/** Tooltip text to display in an info icon at the end of the label. */
@@ -168,6 +169,7 @@
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
 	import Spinner from '../spinner/spinner.svelte';
@@ -225,11 +227,26 @@
 		statusVariant = 'attached',
 		labelTooltip,
 		width,
-		xstyle,
-		class: className,
-		style: styleProp,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		...rest
 	}: TimeInputProps = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout/InputGroup decision
+	// reactive.
+	const field = useFieldInputStyling('TimeInput', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -372,8 +389,9 @@
 	 * which is React's controlled-input rule and the reason upstream does not
 	 * clobber partially-typed text. `NumberInput` documents why this has to be an
 	 * attachment rather than a `value={…}` attribute: the `<input>` carries
-	 * `{...rest}`, and any spread routes every attribute through `set_attributes`,
-	 * which compares against the previously *rendered* string rather than the DOM.
+	 * `{...fieldRest}`, and any spread routes every attribute through
+	 * `set_attributes`, which compares against the previously *rendered* string
+	 * rather than the DOM.
 	 *
 	 * Attachments do not run during SSR, hence the server-only `value` spread on
 	 * the element: the server still emits the attribute React emits, hydration's
@@ -506,7 +524,7 @@
 		})
 	);
 	const wrapperAttrs = $derived(
-		timeInputWrapperAttrs(size, status?.type, isDisabled, inputGroup != null, xstyle)
+		timeInputWrapperAttrs(size, status?.type, isDisabled, inputGroup != null, controlXstyle)
 	);
 	const iconAttrs = timeInputIconAttrs();
 	const controlAttrs = $derived(timeInputAttrs(isDisabled, !isInputValid));
@@ -518,8 +536,8 @@
 		{...inputContainer}
 		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
-		class={cx(theme.class, wrapperAttrs.class, className)}
-		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, wrapperAttrs.class, controlClassName)}
+		style={mergeStyle(wrapperAttrs.style, controlStyle)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		<div class={iconAttrs.class} style={iconAttrs.style}>
@@ -540,7 +558,7 @@
 		{/if}
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
-			{...rest}
+			{...fieldRest}
 			{...isServer ? { value: displayValue } : undefined}
 			bind:this={input}
 			{id}
@@ -608,6 +626,9 @@
 		{statusVariant}
 		{labelTooltip}
 		{width}
+		xstyle={fieldContainer.xstyle}
+		class={fieldContainer.className}
+		style={fieldContainer.style}
 	>
 		{@render inputWrapper()}
 		{#if showsDisabledMessage && disabledMessage}

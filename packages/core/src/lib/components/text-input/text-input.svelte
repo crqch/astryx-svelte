@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { KeyboardEventHandler } from 'svelte/elements';
-	import type { BaseProps } from '../../base-props.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
@@ -18,13 +18,16 @@
 	export type TextInputStatusType = InputStatusType;
 
 	/**
-	 * `BaseProps` is parameterised to `HTMLInputElement` so `rest` spreads onto the
-	 * `<input>`. `oninput` and `onkeydown` are omitted so the redeclarations below
-	 * replace rather than conflict — `oninput` is bound to the change handler, and
-	 * `onkeydown` is composed with `onEnter`.
+	 * `FieldInputBaseProps` is parameterised to `HTMLInputElement` so `rest`
+	 * spreads onto the `<input>`, and it carries the Field-composed styling
+	 * contract: no root `xstyle`/`class`/`style`, `container*` for the Field box
+	 * and `control*` for the bordered control box. `oninput` and `onkeydown` are
+	 * omitted so the redeclarations below replace rather than conflict —
+	 * `oninput` is bound to the change handler, and `onkeydown` is composed with
+	 * `onEnter`.
 	 */
 	export interface TextInputProps extends Omit<
-		BaseProps<HTMLInputElement>,
+		FieldInputBaseProps<HTMLInputElement>,
 		'oninput' | 'onkeydown'
 	> {
 		/**
@@ -146,6 +149,7 @@
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Spinner from '../spinner/spinner.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
@@ -198,11 +202,26 @@
 		htmlName,
 		onEnter,
 		onkeydown,
-		class: className,
-		style: styleProp,
-		xstyle,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		...rest
 	}: TextInputProps = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout/InputGroup decision
+	// reactive.
+	const field = useFieldInputStyling('TextInput', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -334,7 +353,7 @@
 		})
 	);
 	const wrapperAttrs = $derived(
-		textInputWrapperAttrs(size, status?.type, isDisabled, inputGroup != null, xstyle)
+		textInputWrapperAttrs(size, status?.type, isDisabled, inputGroup != null, controlXstyle)
 	);
 	const controlAttrs = $derived(textInputAttrs(isDisabled));
 </script>
@@ -345,8 +364,8 @@
 		{...inputContainer}
 		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
-		class={cx(theme.class, wrapperAttrs.class, className)}
-		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, wrapperAttrs.class, controlClassName)}
+		style={mergeStyle(wrapperAttrs.style, controlStyle)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		{#if startIcon}{@render startIcon()}{/if}
@@ -355,7 +374,7 @@
 		{/if}
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
-			{...rest}
+			{...fieldRest}
 			bind:this={input}
 			{id}
 			name={isDisabled ? undefined : htmlName}
@@ -413,6 +432,9 @@
 		{statusVariant}
 		{labelTooltip}
 		{width}
+		xstyle={fieldContainer.xstyle}
+		class={fieldContainer.className}
+		style={fieldContainer.style}
 	>
 		{@render inputWrapper()}
 		{#if showsDisabledMessage && disabledMessage}

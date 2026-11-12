@@ -183,14 +183,18 @@ export const collapsibleChevronStartStyle = styles.chevronStart;
 export const collapsibleChevronStartOpenStyle = styles.chevronStartOpen;
 export const collapsibleChevronStartClosedStyle = styles.chevronStartClosed;
 
-/** The content region, hidden when collapsed, with optional density padding. */
+/**
+ * The content region, with optional density padding. It stays rendered, and
+ * visible, while a close plays its exit; `isShown` is the open state or the
+ * exit's hold, never the open state alone.
+ */
 export function collapsibleContentAttrs(
 	density: CollapsibleGroupDensity | null,
-	isOpen: boolean
+	isShown: boolean
 ): SvelteStyleAttrs {
 	return sx(
 		styles.content,
 		density != null && contentDensity[density],
-		!isOpen && styles.contentHidden
+		!isShown && styles.contentHidden
 	);
 }

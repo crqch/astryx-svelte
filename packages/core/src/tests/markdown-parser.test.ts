@@ -1,7 +1,14 @@
 /** PORTS: Markdown/parser.test.ts */
 
 import { describe, expect, it } from 'vitest';
-import { parseInline, parseMarkdown, type InlineNode } from '$lib/components/markdown/parser.js';
+import {
+	createIncrementalState,
+	parseInline,
+	parseMarkdown,
+	parseMarkdownIncremental,
+	type BlockNode,
+	type InlineNode
+} from '$lib/components/markdown/parser.js';
 
 /**
  * Astryx's `Markdown/parser.test.ts`, ported case for case.
@@ -9,44 +16,34 @@ import { parseInline, parseMarkdown, type InlineNode } from '$lib/components/mar
  * The count is the contract: upstream declares **122** `it` cases at the
  * **0.5.0** pin, across five top-level describe blocks (24 `parseInline`, 32
  * `parseMarkdown`, 38 `citation parsing`, 19 `link reference definitions`, 9
- * `sourceRanges`), and **107** are here. The 107 are ported with their
+ * `sourceRanges`), and **116** are here. The 116 are ported with their
  * assertions unchanged — `parser.ts` is a pure, framework-free module
  * transcribed verbatim from upstream, so there is nothing to translate.
  *
- * **The 15 that are not here all arrived at 0.5.0**, and they are named rather
+ * **The 6 that are not here all arrived at 0.5.0**, and they are named rather
  * than left as a bare shortfall:
  *
- * - **The whole 9-case `sourceRanges` describe** — the option off by default, a
- *   block addressed by named start/end offsets, every top-level block carrying
- *   the source it came from, offsets into the input rather than into the
- *   link-definition-stripped text, absolute offsets under incremental parsing,
- *   the blank lines an unterminated fence owns, a slice that re-parses to the
- *   same block, a re-parse when the caller flips the option on existing state,
- *   and a span across both halves of a list the incremental parser merged.
  * - **Six URL-scheme XSS cases** — five in `parseInline` (`javascript:` links,
  *   `javascript:` with mixed case and whitespace, `vbscript:` links,
  *   `data:text/html` image `src`, and the paired allow-case for normal
  *   http/https) and one in `citation parsing > autolink (gfm)`
  *   (`<javascript:…>` angle-bracket autolinks).
  *
- * Both gaps are **module** gaps and not only test gaps, in different ways:
- *
- * - `parser.ts` here does not implement `sourceRanges` at all, so those 9 have
- *   nothing to run against.
- * - The 6 XSS cases assert at a layer this port does not guard at. Upstream
- *   0.5.0 rejects the scheme **in the parser** — a `javascript:` link is never
- *   minted as a link node, and `parseInline` returns the raw source as `text`.
- *   This port still mints the node and neutralises it **at render**, through
- *   `sanitizeUrl` in `markdown-render-plan.ts` (applied to link `href` and to
- *   both image `src` sites in `markdown.svelte`), which drops the element and
- *   renders the children as plain text instead. The rendered output is
- *   therefore safe on both sides, but a case written against `parseInline`'s
- *   return value cannot pass here, which is why porting these six is a
- *   component change rather than a test change. Two divergences to settle when
- *   it happens, both recorded here rather than fixed in a documentation pass:
- *   the layer, and the scheme list — upstream blocks `data:text/html` only,
- *   while `DANGEROUS_URL_PATTERN` here blocks every `data:` URL, so a
- *   `data:image/*` inline image that renders upstream does not render here.
+ * The gap is a **module** gap and not only a test gap: the 6 XSS cases assert
+ * at a layer this port does not guard at. Upstream 0.5.0 rejects the scheme
+ * **in the parser** — a `javascript:` link is never minted as a link node, and
+ * `parseInline` returns the raw source as `text`. This port still mints the
+ * node and neutralises it **at render**, through `sanitizeUrl` in
+ * `markdown-render-plan.ts` (applied to link `href` and to both image `src`
+ * sites in `markdown.svelte`), which drops the element and renders the children
+ * as plain text instead. The rendered output is therefore safe on both sides,
+ * but a case written against `parseInline`'s return value cannot pass here,
+ * which is why porting these six is a component change rather than a test
+ * change. Two divergences to settle when it happens, both recorded here rather
+ * than fixed in a documentation pass: the layer, and the scheme list —
+ * upstream blocks `data:text/html` only, while `DANGEROUS_URL_PATTERN` here
+ * blocks every `data:` URL, so a `data:image/*` inline image that renders
+ * upstream does not render here.
  *
  * No DOM is touched, so this is a plain `.test.ts` and runs in the **server**
  * project; a `.svelte.test.ts` would boot Chromium for nothing.
@@ -1175,5 +1172,136 @@ describe('link reference definitions', () => {
 		const { links, blocks } = paragraphLinks('an array like [1, 2, 3] here');
 		expect(links).toEqual([]);
 		expect(blocks[0].type).toBe('paragraph');
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Source ranges
+// ---------------------------------------------------------------------------
+
+describe('sourceRanges', () => {
+	const slice = (source: string, block: BlockNode) =>
+		block.range == null ? null : source.slice(block.range.start, block.range.end);
+
+	it('is off by default', () => {
+		const [block] = parseMarkdown('# Title');
+		expect(block.range).toBeUndefined();
+	});
+
+	it('addresses a block with named start and end offsets', () => {
+		const source = 'One.\n\nTwo.';
+		const [, second] = parseMarkdown(source, { sourceRanges: true });
+		expect(second.range).toEqual({ start: 6, end: 10 });
+	});
+
+	it('gives every top-level block the source it came from', () => {
+		const source = [
+			'# Title',
+			'',
+			'A paragraph that',
+			'wraps onto two lines.',
+			'',
+			'- one',
+			'- two',
+			'',
+			'```js',
+			'const x = 1;',
+			'```',
+			'',
+			'| a | b |',
+			'| --- | --- |',
+			'| 1 | 2 |',
+			'',
+			'> quoted',
+			'',
+			'---'
+		].join('\n');
+		const blocks = parseMarkdown(source, { sourceRanges: true });
+		expect(blocks.map((b) => slice(source, b))).toEqual([
+			'# Title',
+			'A paragraph that\nwraps onto two lines.',
+			'- one\n- two',
+			'```js\nconst x = 1;\n```',
+			'| a | b |\n| --- | --- |\n| 1 | 2 |',
+			'> quoted',
+			'---'
+		]);
+	});
+
+	it('reports offsets into the input, not into the link-definition-stripped text', () => {
+		// The definition lines are removed before the block loop runs, so a naive
+		// offset would drift by their length for everything after them.
+		const source = [
+			'[ref]: https://example.com',
+			'',
+			'See [the docs][ref].',
+			'',
+			'Another paragraph.'
+		].join('\n');
+		const blocks = parseMarkdown(source, { sourceRanges: true });
+		expect(blocks.map((b) => slice(source, b))).toEqual([
+			'See [the docs][ref].',
+			'Another paragraph.'
+		]);
+	});
+
+	it('reports absolute offsets when the document is parsed incrementally', () => {
+		const source = ['# Title', '', 'One.', '', 'Two.', '', 'Three.'].join('\n');
+		const state = createIncrementalState();
+		let blocks: BlockNode[] = [];
+		for (let end = 1; end <= source.length; end++) {
+			blocks = parseMarkdownIncremental(source.slice(0, end), state, {
+				sourceRanges: true
+			});
+		}
+		expect(blocks.map((b) => slice(source, b))).toEqual(['# Title', 'One.', 'Two.', 'Three.']);
+	});
+
+	it('keeps the blank lines an unterminated fence owns', () => {
+		// Mid-stream the closing fence has not arrived, and the blank lines are
+		// part of the code, not spacing between blocks.
+		const source = '```\ncode\n\n';
+		const [block] = parseMarkdown(source, { sourceRanges: true });
+		// The whole thing: the fence consumed those lines as code.
+		expect(slice(source, block)).toBe(source);
+	});
+
+	it('slices to something that re-parses to the same block', () => {
+		// The property a consumer actually needs, and the one that says the
+		// offsets are right: what the range points at is the block.
+		const check = (source: string) => {
+			for (const block of parseMarkdown(source, { sourceRanges: true })) {
+				const { range: _range, ...node } = block;
+				expect(parseMarkdown(slice(source, block)!)).toEqual([node]);
+			}
+		};
+		check('# Title\n\nA paragraph.\n\n- one\n- two\n\n> quoted');
+		// CRLF: the parser keeps the `\r` in its own content, so the range does
+		// too rather than slicing to text that parses differently.
+		check('# Title\r\n\r\nA paragraph.\r\n');
+	});
+
+	it('re-parses when the caller flips the option on an existing state', () => {
+		const source = 'One.\n\nTwo.\n\nThree.';
+		const state = createIncrementalState();
+		const without = parseMarkdownIncremental(source, state);
+		expect(without.every((b) => b.range == null)).toBe(true);
+		const with_ = parseMarkdownIncremental(source, state, {
+			sourceRanges: true
+		});
+		expect(with_.map((b) => slice(source, b))).toEqual(['One.', 'Two.', 'Three.']);
+		const back = parseMarkdownIncremental(source, state);
+		expect(back.every((b) => b.range == null)).toBe(true);
+	});
+
+	it('spans both halves of a list the incremental parser merged', () => {
+		const source = '1. one\n\n1. two';
+		const state = createIncrementalState();
+		parseMarkdownIncremental('1. one\n\n', state, { sourceRanges: true });
+		const blocks = parseMarkdownIncremental(source, state, {
+			sourceRanges: true
+		});
+		expect(blocks).toHaveLength(1);
+		expect(slice(source, blocks[0])).toBe(source);
 	});
 });

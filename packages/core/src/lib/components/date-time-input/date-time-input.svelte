@@ -3,6 +3,7 @@
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
 	import type { DayOfWeek, DayOfWeekName } from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 	import type { DateTimeInputSize } from './date-time-input.stylex.js';
 
 	/**
@@ -175,11 +176,21 @@
 		 * @default 0
 		 */
 		weekStartsOn?: DayOfWeek | DayOfWeekName;
+		/**
+		 * The calendar the date segment reads and writes typed dates in, and the
+		 * calendar its popover and bottom sheet show. `value`, `onChange`, `min`,
+		 * and `max` stay Gregorian ISO datetimes. Calendars other than `gregory`,
+		 * `iso8601`, `buddhist`, `roc`, and `japanese` need `Temporal`; without it
+		 * the field shows Gregorian dates.
+		 * @default the InternationalizationProvider's calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
 	}
 </script>
 
 <script lang="ts">
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import PointerDateTimeField from './pointer-date-time-field.svelte';
 	import TouchDateTimeField from './touch-date-time-field.svelte';
 
@@ -216,10 +227,13 @@
 	const props: DateTimeInputProps = $props();
 
 	const isTouch = useMediaQuery(() => TOUCH_POINTER_QUERY);
+	const calendar = useCalendarSystem(() => props.calendar, 'DateTimeInput');
 </script>
 
 {#if isTouch.matches}
-	<TouchDateTimeField {...props} />
+	{#key calendar()}
+		<TouchDateTimeField {...props} />
+	{/key}
 {:else}
 	<PointerDateTimeField {...props} />
 {/if}

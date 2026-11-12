@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
+	import type { AnimatedLayout } from '../../motion/animated-layout.js';
 
 	export interface CollapsibleProps extends BaseProps<HTMLDivElement> {
 		/**
@@ -24,6 +25,12 @@
 		/** Called when the open state changes. */
 		onOpenChange?: (isOpen: boolean) => void;
 		/**
+		 * The handle from `useAnimatedLayout({ container })`. With it, opening and
+		 * closing glides the content after this Collapsible, up to that container,
+		 * instead of jumping, and the chevron turns on the same timing.
+		 */
+		animatedLayout?: AnimatedLayout;
+		/**
 		 * Logical position of the disclosure chevron.
 		 *
 		 * - `end` (default): a trailing indicator that points down when collapsed
@@ -42,9 +49,25 @@
 </script>
 
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import Icon from '../icon/icon.svelte';
+	import {
+		applyLayoutChangeTransition,
+		holdLayoutExit,
+		playLayoutChange,
+		releaseLayoutExit,
+		reportLayoutChange
+	} from '../../motion/animated-layout.js';
+	import { useLayoutChangeSnapshot } from '../../motion/layout-change-snapshot.svelte.js';
+	import {
+		moveFocusLeftBehind,
+		noteFocusWithin,
+		type FocusWithin
+	} from '../../utils/focus-return.js';
+	import { trackInteractionModality } from '../../utils/interaction-modality.js';
+	import { useFocusLeavingChange } from '../../utils/use-focus-leaving-change.svelte.js';
 	import {
 		setCollapsibleGroupPresentationContext,
 		useCollapsibleGroupPresentationContext,
@@ -82,6 +105,7 @@
 		isOpen: controlledIsOpen,
 		isDisabled = false,
 		onOpenChange,
+		animatedLayout,
 		chevronPosition,
 		value,
 		xstyle,
@@ -99,6 +123,137 @@
 				: { defaultIsOpen: defaultIsOpen ?? true, onOpenChange },
 		value
 	}));
+
+	// With an `animatedLayout` handle, the content's size change animates: the
+	// content after this Collapsible, up to the handle's container, glides, and
+	// the revealed content plays its own entrance on the same timing
+	// (`architecture:react-component-runtime` INV12). Without one, nothing
+	// changes.
+	let contentEl = $state<HTMLDivElement | null>(null);
+	let triggerEl = $state<HTMLButtonElement | null>(null);
+	const layoutChange = $derived(reportLayoutChange(animatedLayout, () => contentEl));
+
+	// A close with a handle keeps the content rendered while it plays its exit:
+	// the exit makes it inert and gives up its space, then the component hides
+	// it (`spec:AST-105` FR4). Derived in a pre effect, from the open state as
+	// it changes, so the closing commit already keeps it.
+	let isExiting = $state(false);
+	let renderedIsOpen = collapsible.isOpen;
+	$effect.pre(() => {
+		const isOpen = collapsible.isOpen;
+		untrack(() => {
+			if (renderedIsOpen === isOpen) {
+				return;
+			}
+			renderedIsOpen = isOpen;
+			isExiting = !isOpen && animatedLayout != null;
+		});
+	});
+
+	function endExit(): void {
+		// holdLayoutExit decides from layout read in the closing commit (the
+		// content's place in the area's visible part, Reduce Motion and the
+		// pointer, and whether an end margin frees its space); an exit it does
+		// not hold hides the content before the frame paints.
+		isExiting = false;
+	}
+
+	function chevronElement(): HTMLElement | null {
+		return triggerEl?.querySelector<HTMLElement>(':scope > .astryx-icon') ?? null;
+	}
+
+	function measureChange(): void {
+		// The chevron (the trigger's Icon, its `icon` theming target) turns on
+		// the glide's motion too.
+		applyLayoutChangeTransition(animatedLayout, chevronElement());
+		layoutChange.measureBefore();
+	}
+
+	// Focus inside the content when it closes would be lost to the page once
+	// the content hides or turns inert. It moves to the trigger that closes it
+	// (AR4); focus anywhere else is not moved. The trigger's own document's
+	// last input decides the moved focus's ring.
+	$effect(() => {
+		trackInteractionModality();
+	});
+	const noteClosingFocus = useFocusLeavingChange<boolean, FocusWithin | null>(
+		() => collapsible.isOpen,
+		(wasOpen) => (wasOpen ? noteFocusWithin(contentEl) : null),
+		(focus) => {
+			moveFocusLeftBehind(focus, triggerEl, contentEl);
+		}
+	);
+
+	// Every open-state change, whatever caused it (a click, an owner-set
+	// `isOpen`, a group's value), is measured before it lands (`spec:AST-105`
+	// FR1).
+	useLayoutChangeSnapshot(
+		() => collapsible.isOpen,
+		(wasOpen) => {
+			noteClosingFocus(wasOpen);
+			if (animatedLayout != null) {
+				measureChange();
+			}
+		}
+	);
+
+	// Commit the change: report it, play the entrance, or hold the exit.
+	let wasOpen = collapsible.isOpen;
+	$effect(() => {
+		const isOpen = collapsible.isOpen;
+		const exiting = isExiting;
+		const handle = animatedLayout;
+		const change = layoutChange;
+		const content = contentEl;
+		untrack(() => {
+			if (wasOpen === isOpen) {
+				return;
+			}
+			wasOpen = isOpen;
+			if (content == null) {
+				return;
+			}
+			// A change that was not measured (no handle) lands at once, entrance
+			// and exit included, so the content and what follows stay in step.
+			const isMeasured = change.animate();
+			if (isOpen) {
+				// Opened again mid-exit: the content takes its place in flow.
+				releaseLayoutExit(content);
+				if (isMeasured) {
+					playLayoutChange(handle, content);
+				}
+				return;
+			}
+			const isHeld = exiting && isMeasured && holdLayoutExit(handle, content, endExit);
+			if (exiting && !isHeld) {
+				// An exit holdLayoutExit did not hold (unmeasured, out of view,
+				// Reduce Motion with a fine pointer, or no margin frees its
+				// space): hide the content before this frame paints.
+				endExit();
+			}
+		});
+	});
+	$effect(() => {
+		const isOpen = collapsible.isOpen;
+		const exiting = isExiting;
+		const content = contentEl;
+		untrack(() => {
+			if (!isOpen && !exiting && content != null) {
+				// Hidden again after its exit: drop the exit's inline values.
+				releaseLayoutExit(content);
+			}
+		});
+	});
+	// Without a handle the chevron keeps the theme's own turn: a spring a
+	// handle set stays only while it is passed (`spec:AST-105` FR2).
+	$effect(() => {
+		const handle = animatedLayout;
+		untrack(() => {
+			if (handle == null) {
+				applyLayoutChangeTransition(null, chevronElement());
+			}
+		});
+	});
 
 	// Read the group's presentation (dividers/density) from the ancestor, then
 	// reset it to null for our own descendants so nested collapsibles stay
@@ -137,7 +292,7 @@
 	const pressable = usePressFeedback();
 	const triggerAttrs = $derived(collapsibleTriggerAttrs(density, isDisabled));
 	const triggerLabelAttrs = collapsibleTriggerLabelAttrs();
-	const contentAttrs = $derived(collapsibleContentAttrs(density, collapsible.isOpen));
+	const contentAttrs = $derived(collapsibleContentAttrs(density, collapsible.isOpen || isExiting));
 </script>
 
 <!--
@@ -153,6 +308,7 @@
 	{...rest}
 >
 	<button
+		bind:this={triggerEl}
 		type="button"
 		onclick={handleToggle}
 		aria-disabled={isDisabled || undefined}
@@ -192,11 +348,18 @@
 		{/if}
 	</button>
 	<div
+		bind:this={contentEl}
 		id={contentId}
 		{...contentTheme}
 		class={cx(contentTheme.class, contentAttrs.class)}
 		style={contentAttrs.style}
 	>
-		{@render children?.()}
+		<!--
+			One box holds the content, so an opening or closing slides it under
+			the region's clip: a translation cannot move bare text.
+		-->
+		<div>
+			{@render children?.()}
+		</div>
 	</div>
 </div>

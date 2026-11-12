@@ -38,6 +38,15 @@ import {
  *   **restated** to check the property its own last comment names ("we don't
  *   show partial pipe syntax"), which is also what its title claims.
  *
+ * **The incremental `sourceRanges` matrix is not ported.** Upstream's
+ * `nested display math` and `unmatched display math` tables run every case
+ * under `it.each([false, true])` with `math: true`, and their sourceRanges
+ * variants only differ from the default ones in that option. This port has no
+ * `math` option and no display-math block node, so those trees cannot be
+ * produced at all; the shortfall they represent is math's, not sourceRanges'.
+ * The option itself is ported and exercised through the incremental parser in
+ * `markdown-parser.test.ts`'s `sourceRanges` describe.
+ *
  * No DOM is touched, so this is a plain `.test.ts` and runs in the **server**
  * project; a `.svelte.test.ts` would boot Chromium for nothing.
  */

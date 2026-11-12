@@ -4,6 +4,7 @@
 	import type { InputStatus, InputStatusType } from '../field/types.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { DayOfWeek, DayOfWeekName, ISODateString } from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 	import type { TimestampFormat } from '../timestamp/timestamp-format.js';
 	// `DateInputSize` is published from `date-input.stylex.ts`, derived from the
 	// size style keys — the arrangement `TextInput`/`NumberInput`/`TimeInput` use.
@@ -198,6 +199,17 @@
 		 * ```
 		 */
 		format?: DateInputFormat | ((value: ISODateString) => string);
+		/**
+		 * The calendar the text field reads and writes dates in, and the calendar
+		 * its popover and bottom sheet show. `value`, `onChange`, `min`, and `max`
+		 * stay Gregorian ISO dates. Calendars other than `gregory`, `iso8601`,
+		 * `buddhist`, `roc`, and `japanese` need `Temporal`; without it the field
+		 * shows Gregorian dates. With a calendar other than `gregory` or `iso8601`,
+		 * a surface that would show the native date control uses the Astryx picker
+		 * instead, because the native control is Gregorian.
+		 * @default the InternationalizationProvider's calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
 
 		/**
 		 * When date picking is handed to the browser/OS instead of Astryx's own
@@ -237,6 +249,9 @@
 
 <script lang="ts">
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
+	import { isGregorianCalendar } from '../../utils/calendar-system.js';
+	import { warnOnce } from '../../utils/dev-warning.js';
 	import NativeDateField from './native-date-field.svelte';
 	import PointerDateField from './pointer-date-field.svelte';
 	import TouchDateField from './touch-date-field.svelte';
@@ -308,17 +323,33 @@
 
 	const isTouch = useMediaQuery(() => TOUCH_POINTER_QUERY);
 	const nativePicker = $derived(props.nativePicker ?? 'touch');
+	const calendar = useCalendarSystem(() => props.calendar, 'DateInput');
+	const isNativeCalendar = $derived(isGregorianCalendar(calendar()));
 	// The platform's picker, where the consumer asked for it — see the
-	// `nativePicker` prop for what that trades away.
+	// `nativePicker` prop for what that trades away. The native control is
+	// Gregorian by specification, so a non-Gregorian field falls back to the
+	// Astryx surface on both pointers.
 	const usesNativePicker = $derived(
-		nativePicker === 'always' || (nativePicker === 'touch' && isTouch.matches)
+		isNativeCalendar && (nativePicker === 'always' || (nativePicker === 'touch' && isTouch.matches))
 	);
+	$effect(() => {
+		if (nativePicker === 'always' && !isNativeCalendar) {
+			warnOnce(
+				`presentation-native-calendar:DateInput:${calendar()}`,
+				'DateInput',
+				`nativePicker="always" shows the Astryx picker in the "${calendar()}" ` +
+					'calendar, because the native date control shows only Gregorian dates.'
+			);
+		}
+	});
 </script>
 
 {#if usesNativePicker}
 	<NativeDateField {...props} />
 {:else if isTouch.matches}
-	<TouchDateField {...props} />
+	{#key calendar()}
+		<TouchDateField {...props} />
+	{/key}
 {:else}
 	<PointerDateField {...props} />
 {/if}

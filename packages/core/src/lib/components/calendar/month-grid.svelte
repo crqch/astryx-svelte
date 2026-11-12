@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { DateRange, DayOfWeek, ISODateString, PlainDate } from '../../utils/date-types.js';
+	import type { CalendarMonth, CalendarSystem } from '../../utils/calendar-system.js';
 
 	/**
 	 * Props for the private `MonthGrid`.
@@ -10,7 +11,8 @@
 	 * declaration.
 	 */
 	export interface MonthGridProps {
-		month: PlainDate;
+		month: CalendarMonth;
+		calendar: CalendarSystem;
 		value: ISODateString | DateRange | undefined;
 		mode: 'single' | 'range';
 		rangeSelectionStart: ISODateString | null;
@@ -36,8 +38,12 @@
 	import { useGridFocus } from '../../hooks/use-grid-focus.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
-		plainDateFormat,
+		calendarYearMonthOf,
+		formatCalendarMonthLabel,
+		isInCalendarMonth
+	} from '../../utils/calendar-system.js';
+	import {
+		plainDateFormatDayNumber,
 		plainDateFromISO,
 		plainDateGetWeekNumber,
 		plainDateIsBefore,
@@ -59,6 +65,7 @@
 
 	let {
 		month,
+		calendar,
 		value,
 		mode,
 		rangeSelectionStart,
@@ -80,11 +87,12 @@
 	}: MonthGridProps = $props();
 
 	const locale = useLocale();
-	const year = $derived(month.year);
+	const yearMonth = $derived(calendarYearMonthOf(calendar, month));
 
 	const grid = useCalendarDays(() => ({
-		year,
-		month: month.month,
+		year: yearMonth.year,
+		month: yearMonth.month,
+		calendar,
 		weekStartsOn,
 		hasVariableRowCount
 	}));
@@ -120,14 +128,13 @@
 	// enabled) > today (if visible and enabled) > first enabled in-month day.
 	const seedTabbableIso = $derived.by((): ISODateString | null => {
 		if (selectedDateForTabindex) {
-			const isSelectedInMonth =
-				selectedDateForTabindex.year === year && selectedDateForTabindex.month === month.month;
+			const isSelectedInMonth = isInCalendarMonth(selectedDateForTabindex, month);
 			if (isSelectedInMonth && !constraints.isDateDisabled(selectedDateForTabindex)) {
 				return plainDateToISO(selectedDateForTabindex);
 			}
 		}
 
-		const isTodayInMonth = today.year === year && today.month === month.month;
+		const isTodayInMonth = isInCalendarMonth(today, month);
 		if (isTodayInMonth && !constraints.isDateDisabled(today)) {
 			return plainDateToISO(today);
 		}
@@ -262,7 +269,7 @@
 
 	// Month label for announcements — this pane's own month, not the combined
 	// header label.
-	const monthLabel = $derived(plainDateFormat(month, DATE_FORMAT_MONTH_YEAR, locale()));
+	const monthLabel = $derived(formatCalendarMonthLabel(calendar, month, locale()));
 
 	const rootAttrs = monthGridAttrs();
 	const gridAttrs = $derived(daysGridAttrs(hasWeekNumbers));
@@ -308,7 +315,7 @@
 			<div role="row" class={rowAttrs.class} style={rowAttrs.style}>
 				{#if hasWeekNumbers}
 					<div role="rowheader" class={numberAttrs.class} style={numberAttrs.style}>
-						{plainDateGetWeekNumber(weekDate)}
+						{plainDateFormatDayNumber(plainDateGetWeekNumber(weekDate), locale())}
 					</div>
 				{/if}
 				{#each week as day, dayIndex (day.iso)}
@@ -336,6 +343,7 @@
 						})}
 						isTabbable={day.iso === seedTabbableIso}
 						isRangeSelectionInProgress={rangeSelectionStart !== null}
+						{calendar}
 						{onDayClick}
 						{onDayHover}
 					/>

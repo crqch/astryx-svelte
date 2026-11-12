@@ -2,6 +2,8 @@
 	import type { DayOfWeek, ISODateString, PlainDate } from '../../utils/date-types.js';
 
 	export interface MonthScrollerProps {
+		/** The calendar's months, by index. */
+		monthModel: MonthModel;
 		/** First reachable month, as a month index. */
 		minMonthIndex: number;
 		/** Last reachable month, as a month index. */
@@ -46,7 +48,7 @@
 	import { useOwnScrollGesture } from './use-own-scroll-gesture.svelte.js';
 	import { useScrollSettle } from './use-scroll-settle.svelte.js';
 	import {
-		monthIndexOf,
+		type MonthModel,
 		paneWindow,
 		rowAtScrollOffset,
 		rowsIn,
@@ -69,6 +71,7 @@
 	 * keeps it out of `DateInput/index.ts`.
 	 */
 	let {
+		monthModel,
 		minMonthIndex,
 		maxMonthIndex,
 		initialMonthIndex,
@@ -413,13 +416,13 @@
 	// by month is PageUp/PageDown; everything else is the APG grid vocabulary.
 	function moveFocus(from: PlainDate, deltaDays: number): void {
 		const next = plainDateAddDays(from, deltaDays);
-		const nextIndex = monthIndexOf(next);
+		const nextIndex = monthModel.indexOf(next);
 		if (nextIndex < minMonthIndex || nextIndex > maxMonthIndex) {
 			return;
 		}
 		shouldRestoreFocus = true;
 		focusedDate = next;
-		if (nextIndex !== monthIndexOf(from)) {
+		if (nextIndex !== monthModel.indexOf(from)) {
 			scrollToMonth(nextIndex, 'smooth');
 		}
 	}
@@ -502,6 +505,7 @@
 		{#if paneSize > 0}
 			{#each rowsIn(visibleRows) as row (row)}
 				<MonthPane
+					{monthModel}
 					monthIndex={minMonthIndex + row}
 					insetInlineStart={row * paneSize}
 					inlineSize={paneSize}

@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { PlainDate } from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 	import type { DayNeighborContinuity } from './day-cell-utils.js';
 	import type { CalendarDay } from './use-calendar-days.svelte.js';
 
@@ -42,6 +43,8 @@
 		 * pick is in progress, and as both once the range is committed.
 		 */
 		isRangeSelectionInProgress: boolean;
+		/** The calendar system that writes the day's accessible name. */
+		calendar: CalendarSystem;
 		onDayClick: (date: PlainDate) => void;
 		onDayHover: (date: PlainDate | null) => void;
 	}
@@ -53,7 +56,8 @@
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
-	import { DATE_FORMAT_WITH_WEEKDAY, plainDateFormat } from '../../utils/plain-date.js';
+	import { formatCalendarDate } from '../../utils/calendar-system.js';
+	import { DATE_FORMAT_WITH_WEEKDAY, plainDateFormatDayNumber } from '../../utils/plain-date.js';
 	import {
 		computeDayCellState,
 		computePreviewRounding,
@@ -77,6 +81,7 @@
 		neighbors,
 		isTabbable,
 		isRangeSelectionInProgress,
+		calendar,
 		onDayClick,
 		onDayHover
 	}: DayCellProps = $props();
@@ -104,7 +109,9 @@
 	// by the cell's background alone (WCAG 1.3.1). A range still being picked
 	// (rangeStart === rangeEnd) reads as "range start" only; a completed one-day
 	// range reads as both start and end.
-	const dateLabel = $derived(plainDateFormat(day.date, DATE_FORMAT_WITH_WEEKDAY, locale()));
+	const dateLabel = $derived(
+		formatCalendarDate(calendar, day.date, DATE_FORMAT_WITH_WEEKDAY, locale())
+	);
 	const dayLabel = $derived(
 		state.isSelected
 			? t('@astryx.calendar.daySelected', { date: dateLabel })
@@ -227,7 +234,7 @@
 			onmouseenter={() => !state.effectivelyDisabled && onDayHover(day.date)}
 			onmouseleave={() => onDayHover(null)}
 		>
-			{day.dayNumber}
+			{plainDateFormatDayNumber(day.dayNumber, locale())}
 		</button>
 	</div>
 {/if}

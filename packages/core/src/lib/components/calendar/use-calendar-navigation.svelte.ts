@@ -1,12 +1,16 @@
 import { useLocale } from '../../i18n/use-locale.svelte.js';
 import type { ISODateString, PlainDate } from '../../utils/date-types.js';
 import {
-	DATE_FORMAT_MONTH_YEAR,
+	calendarAddMonths,
+	calendarMonthOf,
+	calendarYearMonthOf,
+	formatCalendarMonthLabel,
+	type CalendarSystem
+} from '../../utils/calendar-system.js';
+import { resolveShownCalendar } from '../../i18n/use-calendar-system.svelte.js';
+import {
 	plainDateAddDays,
-	plainDateAddMonths,
-	plainDateFormat,
 	plainDateFromISO,
-	plainDateSetFirstOfMonth,
 	plainDateToISO,
 	plainDateToday
 } from '../../utils/plain-date.js';
@@ -40,6 +44,15 @@ export interface UseCalendarNavigationOptions {
 	onFocusDateChange?: (focusDate: ISODateString) => void;
 	/** Number of months to display */
 	numberOfMonths?: 1 | 2;
+	/**
+	 * The calendar system whose months the hook steps and labels. Dates stay
+	 * Gregorian ISO. The hook never reads the InternationalizationProvider
+	 * calendar. Calendars other than gregory, iso8601, buddhist, roc, and
+	 * japanese need Temporal; without it, the hook steps Gregorian months and
+	 * warns once in development.
+	 * @default 'gregory'
+	 */
+	calendar?: CalendarSystem;
 }
 
 /** Return type for the `useCalendarNavigation` hook. */
@@ -48,6 +61,11 @@ export interface UseCalendarNavigationReturn {
 	readonly baseMonth: PlainDate;
 	/** Array of visible months to render as PlainDates */
 	readonly visibleMonths: PlainDate[];
+	/**
+	 * The year and month numbers of each visible month in `calendar`, as
+	 * `useCalendarDays` reads them with the same `calendar`.
+	 */
+	readonly visibleCalendarMonths: { year: number; month: number }[];
 	/** Formatted label for the month header */
 	readonly monthYearLabel: string;
 	/** Navigate to previous/next month */
@@ -98,26 +116,29 @@ export function useCalendarNavigation(
 		return isControlledFocus ? plainDateFromISO(focusDateProp) : internalFocusDate;
 	});
 
+	const calendar = $derived(
+		resolveShownCalendar(options().calendar ?? 'gregory', 'useCalendarNavigation')
+	);
+
+	const shownMonths = $derived.by(() => {
+		const numberOfMonths = options().numberOfMonths ?? 1;
+		const first = calendarMonthOf(calendar, focusDate);
+		return Array.from({ length: numberOfMonths }, (_, i) => calendarAddMonths(calendar, first, i));
+	});
+
 	// Base month (first day of focus month).
-	const baseMonth = $derived(plainDateSetFirstOfMonth(focusDate));
+	const baseMonth = $derived(shownMonths[0].start);
+	const visibleMonths = $derived(shownMonths.map((month) => month.start));
+	const visibleCalendarMonths = $derived(
+		shownMonths.map((month) => calendarYearMonthOf(calendar, month))
+	);
 
-	const visibleMonths = $derived.by(() => {
-		const numberOfMonths = options().numberOfMonths ?? 1;
-		return Array.from({ length: numberOfMonths }, (_, i) => plainDateAddMonths(baseMonth, i));
-	});
-
-	const monthYearLabel = $derived.by(() => {
-		const numberOfMonths = options().numberOfMonths ?? 1;
-		if (numberOfMonths === 1) {
-			return plainDateFormat(visibleMonths[0], DATE_FORMAT_MONTH_YEAR, locale());
-		}
-		return visibleMonths
-			.map((m) => plainDateFormat(m, DATE_FORMAT_MONTH_YEAR, locale()))
-			.join(' – ');
-	});
+	const monthYearLabel = $derived(
+		shownMonths.map((month) => formatCalendarMonthLabel(calendar, month, locale())).join(' – ')
+	);
 
 	function navigateMonth(delta: number, focusedDate?: ISODateString, offset?: number): void {
-		const newMonth = plainDateAddMonths(baseMonth, delta);
+		const newMonth = calendarAddMonths(calendar, shownMonths[0], delta).start;
 		const newISO = plainDateToISO(newMonth);
 
 		// Target focus date, when one was provided.
@@ -147,6 +168,9 @@ export function useCalendarNavigation(
 		},
 		get visibleMonths() {
 			return visibleMonths;
+		},
+		get visibleCalendarMonths() {
+			return visibleCalendarMonths;
 		},
 		get monthYearLabel() {
 			return monthYearLabel;

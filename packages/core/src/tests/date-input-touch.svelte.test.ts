@@ -486,15 +486,17 @@ describe('DateInput — surface selection', () => {
 			max: iso('2026-04-30')
 		});
 		expect(field()).toHaveValue('21 de marzo de 2026');
-		expect(monthTitle()).toHaveTextContent('marzo de 2026');
-		expect(pane('marzo de 2026')).toBeInTheDocument();
+		// The sheet's month heading and each month pane's name stand alone, so
+		// they start with a capital (Calendar FR1). Upstream asserts the same.
+		expect(monthTitle()).toHaveTextContent('Marzo de 2026');
+		expect(pane('Marzo de 2026')).toBeInTheDocument();
 
 		const nextButton = document.querySelector<HTMLButtonElement>(
 			'[data-arrows="months"] button:last-child'
 		);
 		expect(nextButton).not.toBeNull();
 		await click(nextButton!);
-		await vi.waitFor(() => expect(monthTitle()).toHaveTextContent('abril de 2026'));
+		await vi.waitFor(() => expect(monthTitle()).toHaveTextContent('Abril de 2026'));
 	});
 
 	it('forwards ref to the input on both surfaces', async () => {

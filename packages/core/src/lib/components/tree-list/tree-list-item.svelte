@@ -29,6 +29,12 @@
 		isLast: boolean;
 		ancestorsIsLast: ReadonlyArray<boolean>;
 		isExpanded: boolean;
+		/**
+		 * The row collapsed and its child group is playing its exit: the group
+		 * stays rendered (the exit makes it inert) until it ends, and its rows
+		 * leave the tree's keyboard order at once.
+		 */
+		isExiting?: boolean;
 		onToggle?: (id: string) => void;
 		density: TreeListDensity;
 		/**
@@ -99,6 +105,7 @@
 		isLast,
 		ancestorsIsLast,
 		isExpanded,
+		isExiting = false,
 		onToggle,
 		density,
 		variant,
@@ -348,8 +355,13 @@
 			</div>
 		</div>
 	</div>
-	{#if isExpanded && renderedChildren != null}
-		<ul role="group" class={childGroupAttrs.class} style={childGroupAttrs.style}>
+	{#if (isExpanded || isExiting) && renderedChildren != null}
+		<ul
+			role="group"
+			data-tree-exiting={isExiting ? '' : undefined}
+			class={childGroupAttrs.class}
+			style={childGroupAttrs.style}
+		>
 			{@render renderedChildren()}
 		</ul>
 	{/if}

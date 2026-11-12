@@ -10,10 +10,9 @@
 	import { getInputARIA } from '../../utils/input-aria.js';
 	import { isFocusDetached } from '../../utils/focus-return.js';
 	import { stableClassName } from '../../internal/naming.js';
-	import { parseDateInput } from '../../utils/date-parser.js';
-	import { formatSharedDate, plainDateFromISO, plainDateToISO } from '../../utils/plain-date.js';
+	import { plainDateToISO } from '../../utils/plain-date.js';
+	import { useTypedDate } from './use-typed-date.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
-	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import Calendar from '../calendar/calendar.svelte';
 	import type { CalendarHandle } from '../calendar/calendar.svelte';
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
@@ -47,8 +46,9 @@
 	 * nested in an `InputGroup`, a bare control that borrows the group's label and
 	 * collapses its border into the row.
 	 *
-	 * Typing is free-form and parsed on every keystroke by `parseDateInput`, which
-	 * is locale-aware (it reads whether the runtime formats day-first). An entry
+	 * Typing is free-form and parsed on every keystroke by the calendar-aware
+	 * typed-date parser, which reads the locale's own field order and month and
+	 * era names. An entry
 	 * that parses *and* passes `min`/`max`/`dateConstraints` commits immediately
 	 * and scrolls the calendar to that month; anything else is held in a pending
 	 * buffer, dims the text, announces itself and reverts on blur. ArrowDown (and
@@ -86,6 +86,7 @@
 		// state the same fact twice, in the file that does not decide it.
 		weekStartsOn,
 		format = 'date_long',
+		calendar: calendarProp,
 		width,
 		xstyle,
 		class: className,
@@ -102,7 +103,6 @@
 	});
 
 	const t = useTranslator();
-	const locale = useLocale();
 	const placeholder = $derived(placeholderFromProps ?? t('@astryx.dateInput.placeholder'));
 	const resolveSize = useSize();
 	const size = $derived(resolveSize(sizeProp, 'md'));
@@ -154,6 +154,16 @@
 
 	// Constraint checking for text input validation (reuses the calendar logic).
 	const constraints = useCalendarConstraints(() => ({ min, max, dateConstraints }));
+
+	// Typed dates read and write in the field's calendar; values stay Gregorian.
+	const typedDate = useTypedDate(() => ({
+		source: 'DateInput',
+		calendar: calendarProp,
+		format,
+		min,
+		max,
+		isDateDisabled: constraints.isDateDisabled
+	}));
 
 	const groupValue = $derived(inputGroup ? inputGroup() : null);
 	const aria = $derived(
@@ -225,9 +235,7 @@
 	// mapping. Applies ONLY to the committed value, never to in-progress typed
 	// input.
 	function formatCommittedValue(iso: ISODateString): string {
-		return typeof format === 'function'
-			? format(iso)
-			: formatSharedDate(plainDateFromISO(iso), format, locale());
+		return typedDate.formatCommitted(iso);
 	}
 
 	// Display value: the pending text while typing, otherwise the formatted
@@ -245,11 +253,13 @@
 	// and the live region. A blank pending value is *not* invalid. Note this is
 	// parse-only: a date that parses but fails a constraint is not "invalid" here,
 	// it simply never commits.
-	const isInputValid = $derived(
-		pendingInput === null || !pendingInput.trim()
-			? true
-			: parseDateInput(pendingInput, locale()) !== null
-	);
+	const isInputValid = $derived.by(() => {
+		if (pendingInput === null || !pendingInput.trim()) {
+			return true;
+		}
+		const result = typedDate.parse(pendingInput);
+		return result.kind !== 'unreadable' && result.kind !== 'nonexistent';
+	});
 
 	const popover = usePopover(() => ({
 		id: popoverID,
@@ -320,14 +330,17 @@
 		const newValue = (e.target as HTMLInputElement).value;
 		pendingInput = newValue;
 
-		// If the input is valid and passes constraints, update immediately.
-		const parsed = parseDateInput(newValue, locale());
-		if (parsed && plainDateToISO(parsed) !== value && !constraints.isDateDisabled(parsed)) {
-			const parsedISO = plainDateToISO(parsed);
-			lastFiredValue = parsedISO;
-			fireChange(parsedISO);
-			// Navigate the calendar to the parsed date's month.
-			calendar?.navigateTo(parsedISO);
+		// Report a date once more typing cannot change it. A constraint rejection
+		// stays pending until Enter or blur, as upstream's typed entry does.
+		const result = typedDate.parse(newValue);
+		if (result.kind === 'value' && result.isComplete) {
+			const parsedISO = plainDateToISO(result.date);
+			if (parsedISO !== value && !constraints.isDateDisabled(result.date)) {
+				lastFiredValue = parsedISO;
+				fireChange(parsedISO);
+				// Navigate the calendar to the parsed date's month.
+				calendar?.navigateTo(parsedISO);
+			}
 		}
 	}
 
@@ -345,9 +358,9 @@
 			return;
 		}
 
-		const parsed = parseDateInput(pendingInput, locale());
-		if (parsed && !constraints.isDateDisabled(parsed)) {
-			const parsedISO = plainDateToISO(parsed);
+		const result = typedDate.parse(pendingInput);
+		if (result.kind === 'value') {
+			const parsedISO = plainDateToISO(result.date);
 			if (parsedISO !== value) {
 				fireChange(parsedISO);
 			}
@@ -444,6 +457,7 @@
 			role="combobox"
 			value={displayValue}
 			oninput={handleInputChange}
+			onfocus={typedDate.prepare}
 			onblur={commitPendingInput}
 			onclick={handleInputClick}
 			onkeydown={handleInputKeyDown}
@@ -493,6 +507,7 @@
 				mode="single"
 				value={optimistic.current}
 				onChange={handleDateSelect}
+				calendar={typedDate.calendar}
 				{min}
 				{max}
 				{dateConstraints}

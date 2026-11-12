@@ -768,6 +768,7 @@ export type {
 	BlockNode,
 	InlineNode,
 	ListItemNode,
+	SourceRange,
 	TableCellNode,
 	TableAlignment,
 	IncrementalState as IncrementalParseState
@@ -1713,6 +1714,7 @@ export {
 	useDirection,
 	useLocale,
 	useTranslator,
+	type CalendarSystem,
 	type InternationalizationProviderProps,
 	type Catalog,
 	type InternationalizationContextValue,

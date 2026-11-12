@@ -21,5 +21,6 @@ export { useLocale } from './use-locale.svelte.js';
 export { useCollator } from './use-collator.svelte.js';
 export { useDirection } from './use-direction.svelte.js';
 export { getLocaleDirection } from './get-locale-direction.js';
+export type { CalendarSystem } from '../utils/calendar-system.js';
 export type { Translator } from './translator.js';
 export type { Catalog, Locale, MessageEntry, MessagesByLocale, Overrides } from './types.js';

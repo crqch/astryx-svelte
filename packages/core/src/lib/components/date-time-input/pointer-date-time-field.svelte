@@ -50,7 +50,7 @@
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
 	import { useInputContainer } from '../../hooks/use-input-container.svelte.js';
-	import { parseDateInput } from '../../utils/date-parser.js';
+	import { useTypedDate } from '../date-input/use-typed-date.svelte.js';
 	import {
 		adjustTime,
 		formatDisplayTime12h,
@@ -60,14 +60,8 @@
 		parseISOTime,
 		parseTimeInput
 	} from '../../utils/time-parser.js';
-	import {
-		DATE_FORMAT_LONG,
-		plainDateFormat,
-		plainDateFromISO,
-		plainDateToISO
-	} from '../../utils/plain-date.js';
+	import { plainDateToISO } from '../../utils/plain-date.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
-	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { isFocusDetached } from '../../utils/focus-return.js';
 	import Calendar from '../calendar/calendar.svelte';
@@ -149,6 +143,7 @@
 		// Deliberately no default: it is forwarded raw, and `Calendar` owns both the
 		// `= 0` fallback and the name→number normalisation.
 		weekStartsOn,
+		calendar: calendarProp,
 		width,
 		xstyle,
 		class: className,
@@ -165,7 +160,6 @@
 	});
 
 	const t = useTranslator();
-	const locale = useLocale();
 	// Speaks arrow-key stepping results through the persistent live regions:
 	// stepping programmatically rewrites a plain textbox's value, which screen
 	// readers do not announce on their own (WCAG 4.1.2).
@@ -248,6 +242,16 @@
 		dateConstraints
 	}));
 
+	// Typed dates read and write in the field's calendar; values stay Gregorian.
+	const typedDate = useTypedDate(() => ({
+		source: 'DateTimeInput',
+		calendar: calendarProp,
+		format: 'date_long',
+		min: calendarMin,
+		max: calendarMax,
+		isDateDisabled: constraints.isDateDisabled
+	}));
+
 	// Time constraints only bite on the boundary days themselves: a 09:00 minimum
 	// on 1 March constrains 1 March and no other date.
 	const timeMin = $derived.by(() => {
@@ -294,16 +298,16 @@
 			return datePendingInput;
 		}
 		const d = valueParts.date;
-		return d && /^\d{4}-\d{2}-\d{2}$/.test(d)
-			? plainDateFormat(plainDateFromISO(d), DATE_FORMAT_LONG, locale())
-			: '';
+		return d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? typedDate.formatCommitted(d) : '';
 	});
 
-	const isDateInputValid = $derived(
-		datePendingInput === null || !datePendingInput.trim()
-			? true
-			: parseDateInput(datePendingInput, locale()) !== null
-	);
+	const isDateInputValid = $derived.by(() => {
+		if (datePendingInput === null || !datePendingInput.trim()) {
+			return true;
+		}
+		const result = typedDate.parse(datePendingInput);
+		return result.kind !== 'unreadable' && result.kind !== 'nonexistent';
+	});
 
 	// --- Time input state ---
 	let timePendingInput = $state<string | null>(null);
@@ -457,16 +461,14 @@
 		const text = (e.target as HTMLInputElement).value;
 		datePendingInput = text;
 
-		const parsed = parseDateInput(text, locale());
-		if (
-			parsed &&
-			plainDateToISO(parsed) !== valueParts.date &&
-			!constraints.isDateDisabled(parsed)
-		) {
-			const parsedISO = plainDateToISO(parsed);
-			lastFiredDate = parsedISO;
-			handleDateChange(parsedISO, 'input');
-			calendar?.navigateTo(parsedISO);
+		const result = typedDate.parse(text);
+		if (result.kind === 'value' && result.isComplete) {
+			const parsedISO = plainDateToISO(result.date);
+			if (parsedISO !== valueParts.date && !constraints.isDateDisabled(result.date)) {
+				lastFiredDate = parsedISO;
+				handleDateChange(parsedISO, 'input');
+				calendar?.navigateTo(parsedISO);
+			}
 		}
 	}
 
@@ -483,9 +485,9 @@
 			return;
 		}
 
-		const parsed = parseDateInput(datePendingInput, locale());
-		if (parsed && !constraints.isDateDisabled(parsed)) {
-			const parsedISO = plainDateToISO(parsed);
+		const result = typedDate.parse(datePendingInput);
+		if (result.kind === 'value') {
+			const parsedISO = plainDateToISO(result.date);
 			if (parsedISO !== valueParts.date) {
 				handleDateChange(parsedISO, 'input');
 			}
@@ -1014,6 +1016,7 @@
 				role="combobox"
 				value={dateDisplayValue}
 				oninput={handleDateInputChange}
+				onfocus={typedDate.prepare}
 				onblur={commitDatePendingInput}
 				onclick={handleDateInputClick}
 				onkeydown={handleDateKeyDown}
@@ -1119,6 +1122,7 @@
 			mode="single"
 			value={valueParts.date}
 			onChange={(d: ISODateString) => handleDateChange(d, 'calendar')}
+			calendar={typedDate.calendar}
 			min={calendarMin}
 			max={calendarMax}
 			{dateConstraints}

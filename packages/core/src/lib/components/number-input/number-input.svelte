@@ -5,9 +5,9 @@
 		HTMLInputAttributes,
 		KeyboardEventHandler
 	} from 'svelte/elements';
-	import type { BaseProps } from '../../base-props.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	// `NumberInputSize` is published from `number-input.stylex.ts`, derived from
 	// the size style keys — the arrangement `TextInput`/`TextArea` use.
@@ -43,7 +43,7 @@
 	 * own. Ours makes it a compile error instead of a silent drop.)
 	 */
 	interface NumberInputPropsBase extends Omit<
-		BaseProps<HTMLInputElement>,
+		FieldInputBaseProps<HTMLInputElement>,
 		'onchange' | 'defaultValue' | 'oninput' | 'onfocus' | 'onblur' | 'onkeydown'
 	> {
 		/** Label text for the input (always rendered for accessibility). */
@@ -354,6 +354,7 @@
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
@@ -441,11 +442,26 @@
 		onEnter,
 		onkeydown,
 		width,
-		xstyle,
-		class: className,
-		style: styleProp,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		...rest
 	}: NumberInputProps = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout/InputGroup decision
+	// reactive.
+	const field = useFieldInputStyling('NumberInput', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -566,10 +582,11 @@
 	 * value) node.value = …`).
 	 *
 	 * It is an attachment rather than a `value={…}` attribute because the
-	 * `<input>` carries `{...rest}`: any spread routes *every* attribute through
-	 * `set_attributes`, whose guard compares against the previously **rendered**
-	 * string and then assigns `element.value` unconditionally. Svelte's non-spread
-	 * `set_value` does carry the DOM compare — the spread is what loses it.
+	 * `<input>` carries `{...fieldRest}`: any spread routes *every* attribute
+	 * through `set_attributes`, whose guard compares against the previously
+	 * **rendered** string and then assigns `element.value` unconditionally.
+	 * Svelte's non-spread `set_value` does carry the DOM compare — the spread is
+	 * what loses it.
 	 *
 	 * **Defensive, not currently load-bearing.** Under `type="number"` this fixed a
 	 * live bug (a `badInput` field reports `value === ''` while showing `1e`, so the
@@ -765,9 +782,9 @@
 	 * (`utils.js`'s `PASSIVE_EVENTS`), so that half does not apply here.
 	 *
 	 * The reason ours is still an attachment is the other half: the `<input>`
-	 * carries `{...rest}`, and an `onwheel={…}` attribute placed after the spread
-	 * would silently **shadow** a consumer's own `onwheel` rather than run beside
-	 * it. (What "beside it" means differs from upstream — see the note on
+	 * carries `{...fieldRest}`, and an `onwheel={…}` attribute placed after the
+	 * spread would silently **shadow** a consumer's own `onwheel` rather than run
+	 * beside it. (What "beside it" means differs from upstream — see the note on
 	 * `onwheel` in the props interface above.)
 	 *
 	 * Only `isWheelEnabled` is read synchronously, so that is the one prop whose
@@ -835,7 +852,7 @@
 			isDisabled,
 			inputGroup != null,
 			hasNumberSteppers,
-			xstyle
+			controlXstyle
 		)
 	);
 	const controlAttrs = $derived(numberInputAttrs(isDisabled, !isInputValid));
@@ -855,8 +872,8 @@
 		{...inputContainer}
 		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
-		class={cx(theme.class, wrapperAttrs.class, className)}
-		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, wrapperAttrs.class, controlClassName)}
+		style={mergeStyle(wrapperAttrs.style, controlStyle)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		{#if startIcon}{@render startIcon()}{/if}
@@ -865,7 +882,7 @@
 		{/if}
 		<!-- svelte-ignore a11y_autofocus -->
 		<input
-			{...rest}
+			{...fieldRest}
 			{...isServer ? { value: displayValue } : undefined}
 			bind:this={input}
 			{id}
@@ -992,6 +1009,9 @@
 		{statusVariant}
 		{labelTooltip}
 		{width}
+		xstyle={fieldContainer.xstyle}
+		class={fieldContainer.className}
+		style={fieldContainer.style}
 	>
 		{@render inputWrapper()}
 		{#if showsDisabledMessage && disabledMessage}

@@ -100,6 +100,7 @@
 
 <script lang="ts">
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
@@ -154,6 +155,7 @@
 
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(undefined, 'Timestamp');
 
 	// The reference clock everything relative is measured against. Captured once
 	// at render, then advanced on a timer when `isLive` is set.
@@ -181,7 +183,10 @@
 				: effectiveFormat === 'relative_short'
 					? getRelativeTimeShortString(date, now)
 					: isAbsoluteFormat(effectiveFormat)
-						? formatInstant(date, effectiveFormat, locale(), { isTimezoneShown })
+						? formatInstant(date, effectiveFormat, locale(), {
+								isTimezoneShown,
+								calendar: calendar()
+							})
 						: ''
 	);
 	/** Full absolute text, for the accessible name and the card's default row. */
@@ -189,9 +194,16 @@
 	// abbreviation) and for the AT-facing aria-label, which spells the timezone
 	// out in full: abbreviations like "PST" or "GMT+2" are unexpanded
 	// abbreviations to a screen-reader user (WCAG 3.1.4).
-	const fullAbsoluteText = $derived(isValidDate ? formatInstant(date, 'full', locale()) : '');
+	const fullAbsoluteText = $derived(
+		isValidDate ? formatInstant(date, 'full', locale(), { calendar: calendar() }) : ''
+	);
 	const ariaLabelText = $derived(
-		isValidDate ? formatInstant(date, 'full', locale(), { timeZoneNameStyle: 'long' }) : ''
+		isValidDate
+			? formatInstant(date, 'full', locale(), {
+					timeZoneNameStyle: 'long',
+					calendar: calendar()
+				})
+			: ''
 	);
 
 	// An empty array is not a second way to spell "off" — `hasTooltip` stays the
@@ -221,7 +233,7 @@
 	const lines = $derived<ReadonlyArray<TimestampTooltipLine>>(
 		entries === undefined
 			? [{ value: fullAbsoluteText, isCopyable: true }]
-			: formatTooltipLines(date, entries, locale())
+			: formatTooltipLines(date, entries, locale(), calendar())
 	);
 
 	$effect(() => {
