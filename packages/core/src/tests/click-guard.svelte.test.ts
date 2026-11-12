@@ -20,21 +20,13 @@
  * project: the cases count native window listeners and need real event
  * propagation, and this repo has no jsdom environment.
  *
- * Two mechanical translations:
- * - the module is `utils/click-guard.ts` here;
- * - `MENU_PRESS_STRAY_CLICK_MS` (a re-export in upstream's
- *   `hooks/useMenuPress.ts`, which this port does not have) is replaced by
- *   its source, `UIKIT_CLICK.strayClickWindow`. Upstream's constant is
- *   literally `CLICK_GUARD_WINDOW_MS`, so the case's claim — one guard and
- *   one window shared by the menu press model and the gesture host — is
- *   asserted against the configured value rather than a tautological
- *   re-export.
+ * One mechanical translation: the module is `utils/click-guard.ts` here.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GestureHost } from '$lib/gestures/gesture-host.js';
 import { TapGestureRecognizer } from '$lib/gestures/tap-gesture-recognizer.js';
-import { UIKIT_CLICK } from '$lib/motion/uikit/gestures.js';
+import { MENU_PRESS_STRAY_CLICK_MS } from '$lib/hooks/use-menu-press.svelte.js';
 import { markHapticSwitch } from '$lib/private-attributes/haptic-switch.js';
 import {
 	__resetClickGuardForTest,
@@ -278,7 +270,7 @@ describe('clickGuard', () => {
 		// A phone: the host attaches only where the primary pointer is coarse.
 		const restorePointer = coarsePrimaryPointer();
 		try {
-			expect(UIKIT_CLICK.strayClickWindow.value).toBe(CLICK_GUARD_WINDOW_MS);
+			expect(MENU_PRESS_STRAY_CLICK_MS).toBe(CLICK_GUARD_WINDOW_MS);
 			// A tap the host's recognizer claims arms the shared guard for the
 			// browser's click.
 			const host = new GestureHost(document);

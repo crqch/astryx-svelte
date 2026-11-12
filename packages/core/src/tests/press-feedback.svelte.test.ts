@@ -23,8 +23,6 @@ import { pressGroupItemProps } from '$lib/private-attributes/press-group-item.st
  * - the scroll brake and its clock table (`a scroll takes it away…`, `it is a
  *   brake, not a press…`): they stub `scrollTop`/momentum, and Chromium's own
  *   scroll handling makes a synthetic scroll indistinguishable from a real one.
- * - the menu press cases: `hooks/useMenuPress.ts` is not ported, so no element
- *   carries the menu root marker.
  * - the theme-token cases (`the release clock on the pressed element`): they
  *   read `--duration-exit` off a hand-built element; the browser's computed
  *   style resolves the same token through the theme, which is the sheet's own
@@ -173,6 +171,39 @@ describe('the press reaches the surface the finger landed on', () => {
 	it('leaves a mouse press to `:active` where the primary pointer is fine', () => {
 		press(rows[0], 'pointerdown', 5, 5, 'mouse');
 		expect(rows[0].hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+	});
+});
+
+describe('a menu row press', () => {
+	it('a menu row in a menu that cannot scroll highlights at once (DEC-14)', () => {
+		// A menu whose rows fit: overflow set, but nothing to scroll.
+		const menu = document.createElement('div');
+		menu.setAttribute('role', 'menu');
+		menu.style.overflowY = 'auto';
+		Object.defineProperty(menu, 'clientHeight', { configurable: true, value: 200 });
+		Object.defineProperty(menu, 'scrollHeight', { configurable: true, value: 200 });
+		const row = pressable();
+		row.setAttribute('role', 'menuitem');
+		menu.appendChild(row);
+		document.body.appendChild(menu);
+		coarsePrimaryPointer();
+		press(row, 'pointerdown', 10, 10);
+		expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
+	});
+
+	it('a menu row in a menu that can scroll waits the content-touch delay (DEC-14)', () => {
+		const menu = document.createElement('div');
+		menu.setAttribute('role', 'menu');
+		makeScroller(menu);
+		const row = pressable();
+		row.setAttribute('role', 'menuitem');
+		menu.appendChild(row);
+		document.body.appendChild(menu);
+		coarsePrimaryPointer();
+		press(row, 'pointerdown', 10, 10);
+		expect(row.hasAttribute(PRESSED_ATTRIBUTE)).toBe(false);
+		vi.advanceTimersByTime(PRESS_ONSET_MS);
+		expect(row.getAttribute(PRESSED_ATTRIBUTE)).toBe('on');
 	});
 });
 

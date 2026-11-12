@@ -36,6 +36,7 @@
 	import { usePopover } from '../popover/use-popover.svelte.js';
 	import { MENU_ITEM_SELECTOR } from '../dropdown-menu/menu-item-roles.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
+	import { useMenuPress } from '../../hooks/use-menu-press.svelte.js';
 	import { useTabListContext } from './tab-list-context.svelte.js';
 	import {
 		tabMenuChevronAttrs,
@@ -94,6 +95,7 @@
 	const menuId = `${uid}-menu`;
 
 	let buttonEl = $state<HTMLButtonElement>();
+	let menuEl = $state<HTMLElement | null>(null);
 
 	const popover = usePopover(() => ({
 		id: uid,
@@ -117,6 +119,15 @@
 		// '[role="menuitem"]' selector would not match.
 		itemSelector: MENU_ITEM_SELECTOR,
 		onEscape: () => popover.hide()
+	}));
+
+	// A press that slides across the options picks the one it lifts on, the
+	// highlight following the pointer, as DropdownMenu's does
+	// (`family:action-groups` FR1-FR3, FR5); a mouse released outside closes it.
+	const menuPress = useMenuPress(() => ({
+		menu: () => menuEl,
+		itemSelector: MENU_ITEM_SELECTOR,
+		onDismiss: () => popover.hide()
 	}));
 
 	function handleToggle(): void {
@@ -227,9 +238,11 @@
 <PopoverLayer {popover} placement="below" alignment="start">
 	<div
 		{@attach list.attachList}
+		bind:this={menuEl}
 		id={menuId}
 		role="menu"
 		aria-label={label}
+		{...menuPress.menuProps}
 		onkeydown={handleMenuKeyDown}
 		onfocusin={list.handleFocus}
 		{...dropdownTheme}

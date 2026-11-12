@@ -90,6 +90,7 @@
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { useLayer } from '../layer/use-layer.svelte.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
+	import { useMenuPress } from '../../hooks/use-menu-press.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
 	import { isRtlElement } from '../../hooks/is-rtl-element.js';
 	import {
@@ -346,6 +347,18 @@
 			triggerEl?.focus();
 		}
 	}
+
+	// The press model for this flyout: the row under a release acts, the
+	// highlight follows a held pointer. A mouse released outside every level
+	// dismisses the whole menu; a finger leaves it open.
+	const menuPress = useMenuPress(() => ({
+		menu: () => menuEl,
+		itemSelector: MENU_ITEM_SELECTOR,
+		onDismiss: () => {
+			close({ focusTrigger: false });
+			menuCtx()?.closeMenu();
+		}
+	}));
 
 	// The pushed view has just shown: land focus as the open asked.
 	$effect(() => {
@@ -672,7 +685,8 @@
 		onfocus={handleMenuFocus}
 		onblur={handleMenuBlur}
 		data-testid={menuDataTestId}
-		data-astryx-menu-press={rootSurface?.ownerId ?? ''}
+		{...menuPress.menuProps}
+		data-astryx-menu-press-surface={rootSurface?.ownerId}
 		class={menuAttrs.class}
 		style={menuAttrs.style}
 	>
@@ -729,7 +743,7 @@
 		inert={!isTopView}
 		onkeydown={handleContentKeyDown}
 		data-testid={menuDataTestId}
-		data-astryx-menu-press=""
+		{...menuPress.menuProps}
 		class={listAttrs.class}
 		style={listAttrs.style}
 	>
@@ -821,7 +835,7 @@
 			onmouseenter={menuHover.contentProps.onmouseenter}
 			onmouseleave={menuHover.contentProps.onmouseleave}
 			data-testid={menuDataTestId}
-			data-astryx-menu-press=""
+			{...menuPress.menuProps}
 			{...flyoutTheme}
 			class={cx(flyoutTheme.class, flyoutAttrs.class, endAnimationAttrs.class)}
 			style={flyoutAttrs.style}

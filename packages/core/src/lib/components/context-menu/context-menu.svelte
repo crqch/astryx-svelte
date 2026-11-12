@@ -87,6 +87,7 @@
 		MENU_ITEM_SELECTOR
 	} from '../dropdown-menu/menu-item-roles.js';
 	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
+	import { useMenuPress } from '../../hooks/use-menu-press.svelte.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { useLayer } from '../layer/use-layer.svelte.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
@@ -240,6 +241,17 @@
 			getMenuItems().findIndex(
 				(el) => el === document.activeElement || el.contains(document.activeElement)
 			)
+	}));
+
+	// The press model: the row under a release acts, the highlight follows a
+	// held pointer, a mouse released outside dismisses and a finger leaves the
+	// menu open. The sheet is modal and has its own press path, so the model is
+	// off there.
+	const menuPress = useMenuPress(() => ({
+		menu: () => menuEl,
+		itemSelector: MENU_ITEM_SELECTOR,
+		onDismiss: closeMenu,
+		isEnabled: !usesBottomSheet
 	}));
 
 	// Dismiss on any click outside the menu. The layer is `popover="manual"`, not
@@ -442,6 +454,7 @@
 		aria-label={label}
 		data-autofocus={usesBottomSheet ? '' : undefined}
 		tabindex={usesBottomSheet ? 0 : -1}
+		{...menuPress.menuProps}
 		onkeydown={listKeyDown}
 		oncontextmenu={(e) => e.preventDefault()}
 		{...theme}

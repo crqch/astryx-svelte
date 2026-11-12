@@ -5,6 +5,7 @@ import { tick } from 'svelte';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import { PRESS_FADE_MS } from '$lib/utils/press-gesture.js';
+import { __resetMenuPressForTest } from '$lib/hooks/use-menu-press.svelte.js';
 import { durationDefaults } from '$lib/styles/tokens.stylex.js';
 import TabListFixture from './fixtures/tab-list-fixture.svelte';
 import ControlledTabList from './fixtures/tab-list-controlled-fixture.svelte';
@@ -15,12 +16,12 @@ import { cssIn } from './forced-colors.js';
  * Astryx's `TabList/TabList.test.tsx`, ported case for case at the **0.7.13**
  * pin, the version this port targets.
  *
- * One case is not here, named rather than silently dropped:
- * `picks the option a press slid across the menu lifts on, once
- * (family:action-groups FR1, FR2, FR5)`. Its subject is the `useMenuPress`
- * slide-to-select press model, which this port has not ported — `TabMenu` here
- * selects on click only. `hooks/useMenuPress.test.tsx` is unported for the same
- * reason. Client (real Chromium) project.
+ * All of upstream's cases are here, the `useMenuPress` slide-to-select one
+ * included now that the press model is ported. It is restated by mechanics,
+ * noted at the case: Chromium really hides a dismissed popover, where jsdom
+ * leaves it in the accessibility tree, so the menu is reopened before each
+ * pointer's slide instead of sliding both pointers through one open menu.
+ * Client (real Chromium) project.
  *
  * Standing translations:
  *
@@ -951,11 +952,61 @@ describe('TabMenu', () => {
 		expect(menuItem(screen.container, 'Reports')).toHaveAttribute('aria-checked', 'false');
 	});
 
-	// NOT PORTED, named rather than dropped: `picks the option a press slid
-	// across the menu lifts on, once (family:action-groups FR1, FR2, FR5)`.
-	// It asserts the `useMenuPress` slide-to-select press model, which this port
-	// has no counterpart for (the hook's own suite is unported too); `TabMenu`
-	// here selects on click only, so there is no behaviour to drive.
+	// RESTATED mechanics, assertions unchanged: Chromium hides a dismissed
+	// popover for real, where jsdom leaves it in the DOM and the accessibility
+	// tree (`{hidden: true}` made it queryable). So each pointer's slide starts
+	// from a freshly opened menu instead of both sliding through one open menu.
+	it('picks the option a press slid across the menu lifts on, once (family:action-groups FR1, FR2, FR5)', async () => {
+		__resetMenuPressForTest();
+		const handleChange = vi.fn();
+		const screen = await render(TabListFixture, {
+			props: { ...withMenu, tabList: { value: 'home', onChange: handleChange } }
+		});
+		const trigger = screen.getByRole('button', { name: 'More', exact: true });
+		const option = (name: string) => menuItem(screen.container, name);
+		const centreOf = (element: HTMLElement) => {
+			const rect = element.getBoundingClientRect();
+			return { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+		};
+		for (const pointer of [
+			{ pointerType: 'touch', pointerId: 1 },
+			{ pointerType: 'mouse', pointerId: 2, button: 0 }
+		]) {
+			await userEvent.click(trigger);
+			handleChange.mockClear();
+			const from = option('Analytics');
+			const to = option('Reports');
+			from.dispatchEvent(
+				new PointerEvent('pointerdown', {
+					...pointer,
+					...centreOf(from),
+					bubbles: true,
+					cancelable: true,
+					composed: true
+				})
+			);
+			to.dispatchEvent(
+				new PointerEvent('pointermove', {
+					...pointer,
+					...centreOf(to),
+					bubbles: true,
+					cancelable: true,
+					composed: true
+				})
+			);
+			to.dispatchEvent(
+				new PointerEvent('pointerup', {
+					...pointer,
+					...centreOf(to),
+					bubbles: true,
+					cancelable: true,
+					composed: true
+				})
+			);
+			expect(handleChange).toHaveBeenCalledTimes(1);
+			expect(handleChange).toHaveBeenCalledWith('reports');
+		}
+	});
 });
 
 describe('TabMenu host attributes', () => {

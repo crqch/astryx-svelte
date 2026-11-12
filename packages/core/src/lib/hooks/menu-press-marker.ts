@@ -5,9 +5,9 @@
  * @input None.
  * @output Exports MENU_PRESS_MARKER, the private mark on a menu press root.
  * @position Owner of the menu-press root marker. The menu press model
- *   (hooks/useMenuPress.ts) writes it, and the press controller
+ *   (hooks/use-menu-press.svelte.ts) writes it, and the press controller
  *   (utils/pressFeedback.ts) reads it to leave a menu's own highlight alone.
- *   No package entry exports it.
+ *   Published from the hooks entry point, as upstream publishes it.
  */
 
 export const MENU_PRESS_MARKER = 'data-astryx-menu-press';

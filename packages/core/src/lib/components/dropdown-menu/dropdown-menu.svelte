@@ -87,8 +87,12 @@
 	import { usePopover } from '../popover/use-popover.svelte.js';
 	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import { useFocusReturnVisibility } from '../../hooks/use-focus-return-visibility.svelte.js';
+	import { useDropdownMenuPress } from '../../hooks/use-menu-press.svelte.js';
+	import type { MenuPressPointerType } from '../../hooks/menu-press-gesture.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
+	import { claimPress } from '../layer/gesture-counter.js';
+	import { focusForLastInput } from '../../utils/focus-return.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { rtlStyles } from '../../utils/rtl.stylex.js';
 	import {
@@ -158,7 +162,7 @@
 		alignment = 'start',
 		header,
 		footer,
-		presentation = 'popover',
+		presentation,
 		items,
 		children,
 		class: className,
@@ -174,11 +178,15 @@
 	// Both presentations hang the menu off ONE control. Compound children are
 	// pinned to the popover, as upstream's compound props are.
 	const resolvedPresentation = useAdaptivePresentation(() =>
-		items !== undefined ? presentation : 'popover'
+		items !== undefined ? (presentation ?? 'popover') : 'popover'
 	);
 	const usesBottomSheet = $derived(
 		resolvedPresentation.resolved === 'bottom-sheet' && items !== undefined
 	);
+	// How a finger's press runs, on every device: UIMenu's, unless the caller
+	// pins `presentation="popover"`. The omitted presentation is the anchored
+	// popover visually but keeps the handoff, as upstream's does.
+	const pressTouchModel = $derived(presentation === 'popover' ? 'pointer' : 'uikit');
 
 	// Two ids, as upstream has two. `usePopover` here *requires* one for the layer
 	// (see `useLayer` for why the hook cannot mint it), where upstream's mints its
@@ -263,6 +271,8 @@
 			isHidingPopoverForPresentationChange = false;
 			return;
 		}
+		// Whatever closed the menu, a press it was tracking ends with it.
+		menuPress.cancel();
 		lastHideTime = Date.now();
 		// A submenu flyout is a nested popover, which the menu's own light dismiss
 		// never reaches; close it with the menu so it cannot reappear anchored to
@@ -491,13 +501,89 @@
 		});
 	});
 
-	function openAndFocus(modality: 'keyboard' | 'pointer' = 'keyboard'): void {
+	function openAndFocus(modality: 'keyboard' | 'pointer' = 'keyboard'): boolean {
+		// An unavailable trigger never opens the menu. Button keeps an
+		// aria-disabled trigger focusable for its tooltip and swallows only
+		// Enter and Space, so the arrow keys, a press and a click would still
+		// arrive here; a custom trigger may be natively disabled instead.
+		if (buttonEl?.matches(':disabled, [aria-disabled="true"]') === true) {
+			return false;
+		}
 		openModality = modality;
 		shouldFocusOnOpen = true;
 		popover.show();
+		return true;
 	}
 
+	// A mouse opens on press-down; a finger held on the trigger opens after
+	// the long-press delay. Pressing the trigger of an open menu closes it, and
+	// the click of that same gesture — reported by `isTriggerClickFromPress` —
+	// neither toggles nor reopens.
+	function handleTriggerPress(pointerType: MenuPressPointerType): boolean {
+		if (popover.isOpen) {
+			if (pointerType !== 'mouse') {
+				// A finger's tap toggles through its click, as it always did.
+				return false;
+			}
+			onClick?.();
+			if (isControlled) {
+				onOpenChange?.(false);
+			} else {
+				popover.hide();
+			}
+			return false;
+		}
+		// The press opens the menu before the browser's own mousedown has
+		// focused the trigger (a held finger never does), so the popover would
+		// remember whatever was focused BEFORE the press as the element to hand
+		// focus back to when it closes. Focusing the trigger first gives the
+		// popover the state a click-open already has: the trigger is where
+		// Escape or a pick returns focus (the APG menu-button pattern). A
+		// finger's press shows no ring here.
+		if (buttonEl != null) {
+			focusForLastInput(buttonEl, { preventScroll: true });
+		}
+		if (isControlled) {
+			openModality = 'pointer';
+			onOpenChange?.(true);
+			claimOpeningPress(pointerType);
+			return true;
+		}
+		const didOpen = openAndFocus('pointer');
+		if (didOpen) {
+			claimOpeningPress(pointerType);
+		}
+		return didOpen;
+	}
+
+	// A mouse can release away from the trigger, or the trigger can move away
+	// under it. So the layer claims a mouse's press, and that release lands on
+	// the layer; over the trigger, the trigger keeps it.
+	function claimOpeningPress(pointerType: MenuPressPointerType): void {
+		if (pointerType !== 'mouse') {
+			return;
+		}
+		const layer = menuEl?.closest('[popover]');
+		if (layer instanceof HTMLElement) {
+			claimPress(layer, { releaseTarget: buttonEl });
+		}
+	}
+
+	const menuPress = useDropdownMenuPress(() => ({
+		menu: () => menuEl,
+		trigger: () => buttonEl ?? null,
+		itemSelector: MENU_ITEM_SELECTOR,
+		onTriggerPress: handleTriggerPress,
+		onDismiss: closeMenu,
+		// Under a finger, on every device, the opening finger picks as UIMenu's
+		// does. `presentation="popover"` pins the pointer model.
+		touchModel: pressTouchModel,
+		isEnabled: !usesBottomSheet
+	}));
+
 	function handleButtonClick(e: MouseEvent): void {
+		// The press already opened or closed the menu; its click is spent.
+		if (menuPress.isTriggerClickFromPress()) return;
 		if (Date.now() - lastHideTime < 50) return;
 		onClick?.();
 		// `detail === 0` marks a synthesized click (screen reader / AT activation):
@@ -638,7 +724,7 @@
 		host: {
 			getElement: () => surfaceHostEl
 		},
-		ownerId: layerId,
+		ownerId: menuId,
 		menuMaxHeight: resolvedMaxHeight
 	}));
 	setDropdownMenuRootOpenContext(() => isOpen);
@@ -732,7 +818,7 @@
 		role="menu"
 		tabindex={hasOverflow || hasRegions ? 0 : -1}
 		aria-label={button.label}
-		data-astryx-menu-press=""
+		{...menuPress.menuProps}
 		onkeydown={listKeyDown}
 		onfocus={handleMenuFocus}
 		onblur={handleMenuBlur}
@@ -848,6 +934,18 @@
 		tooltip={isOpen ? undefined : button.tooltip}
 		endContent={button.endContent ?? (hasChevron && !isIconOnly ? chevron : undefined)}
 		onclick={handleButtonClick}
+		onpointerdown={(event) => {
+			button.onpointerdown?.(
+				event as PointerEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+			menuPress.triggerProps.onpointerdown(event);
+		}}
+		oncontextmenu={(event) => {
+			button.oncontextmenu?.(
+				event as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
+			);
+			menuPress.triggerProps.oncontextmenu(event);
+		}}
 		onkeydown={handleButtonKeyDown}
 		aria-haspopup={hasRegions ? 'dialog' : 'menu'}
 		aria-expanded={isOpen}

@@ -36,10 +36,12 @@
 	 * divider or a titled section is a structural `<li>` around the row or the
 	 * nested list, so the list keeps a semantic child structure.
 	 *
-	 * Upstream's `useMenuPress` press model has no Svelte counterpart in this
-	 * port (the menu rows use native click and focus), so the rows act on click
-	 * and the pointer blur mirrors the visible half: a pointer activation does
-	 * not leave a focus ring on the row.
+	 * Upstream runs its `useMenuPress` press model over this list. This port
+	 * does not wire it here: `List` owns its root `<ul>`, so there is no element
+	 * to spread `menuProps` on without a wrapper that changes the sheet's
+	 * layout. The rows act on click and the pointer blur mirrors the visible
+	 * half: a pointer activation does not leave a focus ring on the row. The
+	 * popover presentations carry the press model.
 	 */
 	const { items, onSelect, onOpenSubmenu }: MenuBottomSheetActionListProps = $props();
 
