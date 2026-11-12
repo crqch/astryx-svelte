@@ -156,7 +156,7 @@ export default {
 		},
 		{
 			name: 'size',
-			type: "48 | 32 | 'sm' | 'md' | 'lg' | 20 | 'xl' | 40 | 'xsm' | 16 | 24 | 36 | 60 | 64 | 72 | 96 | 128 | 144 | 180",
+			type: "48 | 32 | 'sm' | 'md' | 'lg' | 40 | 20 | 'xl' | 'xsm' | 24 | 16 | 36 | 60 | 64 | 72 | 96 | 128 | 144 | 180",
 			description:
 				"Avatar size: named sizes are 'xsm' (20px), 'sm' (24px), 'md' (36px), 'lg' (48px), and 'xl' (128px); numeric sizes must be one of the pixel values listed in the type. Inside an AvatarGroup, the group's size always overrides this prop, including when the group uses its default size.",
 			default: "'md'"

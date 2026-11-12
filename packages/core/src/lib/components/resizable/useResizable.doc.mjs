@@ -24,7 +24,7 @@ export default {
 	params: [
 		{
 			name: 'defaultSize',
-			type: 'number | string',
+			type: 'ResizableSize | SizeValue',
 			description:
 				'Initial size. Numbers, exact "Npx", and pixel(value) are pixels. Exact "N%" has no additional pixel bound. percent(value, {min: pixel(value)}) or percent(value, {max: pixel(value)}) adds one pixel floor or ceiling. A percentage resolves ONCE into pixels — against containerRef when supplied, against the viewport otherwise — and does not track its basis afterwards. The released broad number | string type remains compatible; runtime validation is authoritative.',
 			default: '250'
@@ -45,7 +45,7 @@ export default {
 		},
 		{
 			name: 'containerRef',
-			type: 'HTMLElement | null',
+			type: '{ readonly current: HTMLElement | null; }',
 			description:
 				'The element a percentage is a share of. Caller-owned: the hook never infers one. Omitted, percentages use the viewport, which is the released behaviour. The ref may point at a different element over time — the basis follows it. Until that element is actually laid out (not yet mounted, display:none, detached) percentages use a temporary 1200px basis rather than its zero measurement, and nothing is persisted from it.'
 		},

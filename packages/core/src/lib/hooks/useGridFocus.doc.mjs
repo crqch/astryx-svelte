@@ -66,13 +66,13 @@ export default {
 		},
 		{
 			name: 'options.onPageUp',
-			type: '() => void',
+			type: '(event: KeyboardEvent) => void',
 			description:
 				'Callback for Page Up key (e.g., navigate to previous month in calendars). Receives the key event, so `event.shiftKey` can select a larger step, such as a year.'
 		},
 		{
 			name: 'options.onPageDown',
-			type: '() => void',
+			type: '(event: KeyboardEvent) => void',
 			description:
 				'Callback for Page Down key (e.g., navigate to next month in calendars). Receives the key event, so `event.shiftKey` can select a larger step, such as a year.'
 		},

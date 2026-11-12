@@ -265,14 +265,14 @@ export default {
 		},
 		{
 			name: 'timeIncrement',
-			type: '1 | 5 | 10 | 15 | 30',
+			type: '30 | 1 | 5 | 10 | 15',
 			description:
 				"Minute step for arrow keys in Astryx's typed time field. A non-default value keeps the Astryx time field in nativePicker modes because iOS treats native step as validation, not picker cadence. Ignored by the Astryx touch sheet, which uses wheels.",
 			default: '1'
 		},
 		{
 			name: 'timeOptionInterval',
-			type: '5 | 10 | 60 | 15 | 30',
+			type: '30 | 5 | 10 | 60 | 15',
 			description:
 				"Minute cadence for the preset-time combobox on Astryx's fine-pointer time field. Setting it keeps that Astryx time field even in nativePicker modes because the OS picker has no equivalent preset list. The Astryx touch sheet uses wheels."
 		},
