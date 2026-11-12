@@ -141,9 +141,8 @@ them.
    On the examples: batch 038 ported the `Stepper` and `Step` blocks, and every icon they reach for
    already resolves, so they opened no new demo debt. The `ComplexSelector`, `ChatDictation`,
    `AvatarGroup`, `ChatMessageBubble`, `Dialog` and `SelectorOptionDescriptions` blocks are now
-   ported. What remains are `SelectorBottomSheet` and `useComboboxHookUsage`, both blocked on
-   unimplemented component APIs recorded under Open work → Missing implementation (`presentation`
-   and the `useCombobox` helper props). These are ports, not authored demos — the source is
+   ported. What remains is `SelectorBottomSheet`, blocked on the selector's `presentation`
+   controller under Open work → Missing implementation. These are ports, not authored demos — the source is
    `@astryxdesign/cli`'s `assets/templates/blocks/components/<Name>/`, resolved by `exampleFor` in
    the block's `.doc.mjs`, so the parity rule applies to them exactly as it does to a component.
 
@@ -191,11 +190,10 @@ because the thing it types is. None was recorded before; none is a surface-polic
 - [x] **`useCombobox` publishes upstream's helper props** — `getFieldProps()`,
       `getListboxProps()` and `getOptionProps()` are implemented, so the assign-to-field block can
       be transcribed.
-- [ ] **`ComplexSelector` is missing upstream's field-styling seam.**
-      `containerXstyle`/`containerClassName`/`containerStyle` and
-      `controlXstyle`/`controlClassName`/`controlStyle` are documented in `ComplexSelector.doc.mjs`
-      and implemented upstream through `useFieldInputStyling`; our component has neither the props
-      nor the hook. The ported example blocks use `width` as the closest available equivalent
+- [x] **`ComplexSelector` now has upstream's field-styling seam.** The shared
+      `FieldInputBaseProps`/`useFieldInputStyling` module is ported, the component accepts
+      `container*` and `control*` and rejects root styling, and the FR10 field-part cases cover the
+      targets.
 
 ### Core / build
 

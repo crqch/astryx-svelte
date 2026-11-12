@@ -2065,30 +2065,6 @@ The suite's two-row `it.each` under `the reusable Combobox contract` calls
 package's absence is the only blocker — the field props it inspects are
 implemented.
 
-### The List reorder subsystem is not ported
-
-- **units:** List/ListReorderHandle, List/listReorderEngine, privateAttributes/reordering, privateAttributes/reorderLine, privateAttributes/ownRing
-- **kind:** unported
-- **retires:** when `ListReorderHandle`, `listReorderEngine`, `reordering`, `reorderLine` and `ownRing` are ported
-
-Upstream's `reorderable` List draws a drag handle, an insertion line, a grabbing
-cursor and its own focus ring. None of that has a renderer here, so the CSS
-oracle skips the 28 atomic classes those modules emit (handle geometry and
-paint, press/disabled states, `:is([data-astryx-reordering] *)`, the forced-colors
-arms, and the `--_item-inset-inline` pull-in). The skips are class/rule pairs in
-`compare-upstream-css.mjs`; they retire when the subsystem lands, not by editing
-the list.
-
-### Markdown heading permalinks are not ported
-
-- **units:** Markdown/plugins/HeadingLinksRenderer, Markdown/createMarkdownHeadingLinks
-- **kind:** unported
-- **retires:** when the heading-links renderer is ported
-
-Upstream wraps each heading in a permalink anchor with a `margin-inline-start`
-and an `align-items: last baseline` row. This port's Markdown renders headings
-without that plugin, so the CSS oracle skips its two atomic classes.
-
 ### Avatar draws generated initials as text, not through the pseudo-element
 
 - **units:** Avatar
