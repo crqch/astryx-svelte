@@ -824,7 +824,11 @@ describe('Typeahead disabledMessage', () => {
 			}
 		});
 
-		const container = comboboxIn(screen.container).parentElement as HTMLElement;
+		// The field itself, by its own class: the input no longer sits directly
+		// inside it — it is in the content lane that bounds the value — and
+		// `mouseenter` does not bubble, so the hover has to land on the element
+		// the tooltip is actually bound to.
+		const container = screen.container.querySelector('.astryx-typeahead') as HTMLElement;
 		const tooltip = tooltipIn(screen.container);
 		expect(tooltip).toHaveTextContent('You need the Editor role');
 

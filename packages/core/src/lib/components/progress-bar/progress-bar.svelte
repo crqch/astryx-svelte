@@ -64,6 +64,10 @@
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { formatMotionRoleValue } from '../../motion/roles.js';
+	import { resolveMotion } from '../../motion/resolve-motion.js';
+	import { progressBar } from '../../motion/uikit/progressBar.js';
+	import { timing } from '../../motion/uikit/timing.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import {
 		progressBarContainerAttrs,
@@ -72,8 +76,10 @@
 		progressBarLabelAttrs,
 		progressBarMarkAttrs,
 		progressBarTrackAttrs,
+		progressBarTrackContainerAttrs,
 		progressBarValueLabelAttrs
 	} from './progress-bar.stylex.js';
+	import { useProgressBarTouch } from './use-progress-bar-touch.svelte.js';
 
 	/**
 	 * Determinate or indeterminate progress.
@@ -136,6 +142,23 @@
 	const showValueLabel = $derived(hasValueLabel && !isIndeterminate);
 	const fillVariant = $derived(isDisabled ? 'disabled' : variant);
 
+	// Under a finger the fill moves as UIProgressView's does and draws at least
+	// 16px; what that needs from script is the touch layer (ProgressBarTouch).
+	const touch = useProgressBarTouch(
+		() => percentage,
+		() => !isIndeterminate && (marks?.length ?? 0) > 0
+	);
+	// The reduced-motion pulse plays the `progress.reducedMotionPulseMs` role on
+	// the `timing.curves.move` curve, down to the progress table's floor.
+	const pulseStyle = mergeStyle(
+		`--_progress-bar-pulse:${resolveMotion(null, progressBar, 'reducedMotionPulseMs')}ms`,
+		`--_progress-bar-pulse-curve:${formatMotionRoleValue(
+			'curve',
+			resolveMotion(null, timing.curves.move)
+		)}`,
+		`--_progress-bar-pulse-floor:${progressBar.reducedMotionPulseFloor}`
+	);
+
 	// Marks make no sense without a determinate value, so they are only drawn in
 	// determinate mode. Non-finite mark values are dropped; the rest are clamped
 	// to the track edges, matching the bar's own `clampedValue`.
@@ -157,7 +180,7 @@
 							value: mark.value,
 							label: mark.label,
 							pct,
-							isOnFill: percentage > 0 && pct <= percentage
+							isOnFill: percentage > 0 && pct <= touch.drawnPercentage
 						};
 					})
 			: []
@@ -165,10 +188,20 @@
 
 	const container = $derived(progressBarContainerAttrs(xstyle));
 	const header = progressBarHeaderAttrs();
-	const track = $derived(progressBarTrackAttrs(isIndeterminate));
+	const trackContainer = progressBarTrackContainerAttrs();
+	const track = progressBarTrackAttrs();
 	const labelAttrs = $derived(progressBarLabelAttrs(isLabelHidden, isDisabled));
 	const valueLabelAttrs = $derived(progressBarValueLabelAttrs(isDisabled));
-	const fill = $derived(progressBarFillAttrs(fillVariant, isIndeterminate));
+	const fill = $derived(
+		progressBarFillAttrs(fillVariant, isIndeterminate, !isIndeterminate && percentage === 0)
+	);
+	const fillStyle = $derived(
+		mergeStyle(
+			fill.style,
+			`--_progress-bar-fill:${percentage}%`,
+			...Object.entries(touch.fillVars).map(([name, value]) => `${name}:${value}`)
+		)
+	);
 
 	// `progressbar` ran the compound name together; themes styling it keep
 	// working until the next major.
@@ -191,7 +224,7 @@
 	the fill's variant for the same reason. Both are per-mark, so they are resolved
 	here rather than once in the `<script>`.
 -->
-{#snippet markTick(pct: number, isOnFill: boolean)}
+{#snippet markTick(pct: number, isOnFill: boolean, label: string)}
 	{@const markTheme = themeProps(
 		'progress-bar-mark',
 		{ variant: fillVariant, placement: isOnFill ? 'fill' : 'track' },
@@ -200,12 +233,14 @@
 	{@const markAttrs = progressBarMarkAttrs(fillVariant, isOnFill, isDisabled)}
 	<!--
 		Focusable and never `aria-hidden`: a mark always stands for something
-		meaningful, and the tab stop is how a keyboard user reveals its label. The
-		name comes from the tooltip's `aria-describedby`, so the progressbar's own
-		a11y subtree gains no labelled child.
+		meaningful, and the tab stop is how a keyboard user reveals its label. It
+		is a named image of its own, and the tooltip's `aria-describedby` adds the
+		same label as a description.
 	-->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<span
+		role="img"
+		aria-label={label}
 		tabindex="0"
 		{...markTheme}
 		class={cx(markTheme.class, markAttrs.class)}
@@ -231,31 +266,44 @@
 	{/if}
 
 	<!--
-		The progress track — the `role="progressbar"` element, holding the fill and
-		the marks as its children. It no longer clips (`overflow` is visible), so a
-		themed taller mark can overhang it; the fill preserves its rounded shape via
-		its own `border-radius`.
+		The in-flow track determines this container's actual height. Marks share
+		its geometry without depending on the label row's height or entering the
+		progressbar's presentational subtree.
 	-->
-	<div
-		{...trackTheme}
-		class={cx(trackTheme.class, track.class)}
-		style={track.style}
-		role="progressbar"
-		aria-valuenow={isIndeterminate ? undefined : clampedValue}
-		aria-valuemin={isIndeterminate ? undefined : 0}
-		aria-valuemax={isIndeterminate ? undefined : safeMax}
-		aria-valuetext={isIndeterminate ? undefined : valueText}
-		aria-labelledby={labelId}
-	>
-		<div
-			{...fillTheme}
-			class={cx(fillTheme.class, fill.class)}
-			style={mergeStyle(fill.style, !isIndeterminate && `width:${percentage}%`)}
-		></div>
+	<div class={trackContainer.class} style={trackContainer.style}>
 		<!--
-			Target marks — children of the progressbar element, layered above the fill
-			so they show whether progress is below or past them. Each mark is
-			labelled, so it is a focusable tooltip trigger.
+			The semantic rail — the `role="progressbar"` element. It holds only the
+			fill, so the focusable marks stay outside its presentational subtree, and
+			it clips the fill to the rounded rail: the determinate fill slides in
+			from the inline-start side and the indeterminate one overshoots both
+			ends.
+		-->
+		<div
+			{...trackTheme}
+			class={cx(trackTheme.class, track.class)}
+			style={track.style}
+			role="progressbar"
+			aria-valuenow={isIndeterminate ? undefined : clampedValue}
+			aria-valuemin={isIndeterminate ? undefined : 0}
+			aria-valuemax={isIndeterminate ? undefined : safeMax}
+			aria-valuetext={isIndeterminate ? undefined : valueText}
+			aria-labelledby={labelId}
+			{@attach touch.attachTrack}
+		>
+			{#if isIndeterminate}
+				<div
+					{...fillTheme}
+					class={cx(fillTheme.class, fill.class)}
+					style={mergeStyle(fill.style, pulseStyle)}
+				></div>
+			{:else}
+				<div {...fillTheme} class={cx(fillTheme.class, fill.class)} style={fillStyle}></div>
+			{/if}
+		</div>
+		<!--
+			Target marks — siblings of the semantic rail, layered above the fill so
+			they show whether progress is below or past them. Each mark is labelled,
+			so it is a focusable tooltip trigger.
 
 			The tooltip is loaded lazily, as upstream's `lazy()` + `Suspense` does, so
 			a consumer that only renders mark-less ProgressBars never pulls `Tooltip`
@@ -272,10 +320,10 @@
 		-->
 		{#each resolvedMarks as mark, index (index)}
 			{#await import('./progress-bar-mark-tooltip.svelte')}
-				{@render markTick(mark.pct, mark.isOnFill)}
+				{@render markTick(mark.pct, mark.isOnFill, mark.label)}
 			{:then { default: ProgressBarMarkTooltip }}
 				<ProgressBarMarkTooltip content={mark.label}>
-					{@render markTick(mark.pct, mark.isOnFill)}
+					{@render markTick(mark.pct, mark.isOnFill, mark.label)}
 				</ProgressBarMarkTooltip>
 			{/await}
 		{/each}

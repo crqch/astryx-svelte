@@ -10,6 +10,12 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { rowPressLayerStyles } from '../../private-attributes/press.stylex.js';
+
+/** The travel a drag writes on the row root, in physical px (see use-swipe-action). */
+const SWIPE_TRAVEL = 'var(--_item-swipe-travel, 0px)';
+/** The settle clock, `0s` while the finger drives the row. */
+const SWIPE_DURATION = 'var(--_item-swipe-duration, 0s)';
 
 /**
  * Ported from Astryx's `Item/Item.tsx`.
@@ -26,14 +32,58 @@ const styles = stylex.create({
 		display: 'flex',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
-		paddingInline: spacingVars['--spacing-2'],
+		// The inline inset is published as --_item-inset-inline and the padding
+		// derives from it, so consumers that need to compensate for the inset
+		// (List's edge treatments) read the var instead of mirroring the values.
+		'--_item-inset-inline': spacingVars['--spacing-2'],
+		paddingInline: 'var(--_item-inset-inline)',
 		position: 'relative',
 		boxSizing: 'border-box',
 		textAlign: 'start',
 		borderRadius: radiusVars['--radius-element']
 	},
+	// One content cell beside the marker. Its slots retain the row's flex
+	// alignment and gap, including first-line alignment and tall start content.
+	// A numbered List can then subgrid the row into marker/content columns.
+	markerContent: {
+		display: 'flex',
+		flex: 1,
+		minWidth: 0,
+		alignItems: 'inherit',
+		alignSelf: 'stretch',
+		gap: 'inherit'
+	},
+	markerContentFirstLine: {
+		// A tall start/end slot moves the first text baseline down. The marker
+		// must follow that baseline, not the stretched group's top edge.
+		alignSelf: 'baseline'
+	},
 	alignStart: {
 		alignItems: 'flex-start'
+	},
+	// `first-line`: the row aligns its children on their first baselines. The
+	// label's first baseline is its first line's; each slot gets the same
+	// baseline from its strut (below), which the slot centers against its
+	// content. So each slot's center lands on the first line's center for any
+	// slot height, and a taller slot pushes the text down instead of leaving
+	// the row. Pure CSS: no measurement.
+	alignFirstLine: {
+		alignItems: 'baseline'
+	},
+	// A zero-width line of label text inside the slot: same size and leading as
+	// the label, so its line box is the label's first line box. The slot centers
+	// it against the slot's content, and the row's baseline alignment puts it on
+	// the label's first line. Its content carries empty alternative text so
+	// assistive technology reads nothing from it.
+	firstLineSlot: {
+		alignItems: 'center',
+		'::before': {
+			content: stylex.firstThatWorks('"\\200B" / ""', '"\\200B"'),
+			inlineSize: 0,
+			overflow: 'hidden',
+			fontSize: typeScaleVars['--text-body-size'],
+			lineHeight: typeScaleVars['--text-body-leading']
+		}
 	},
 	interactive: {
 		cursor: {
@@ -54,16 +104,19 @@ const styles = stylex.create({
 		cursor: 'default',
 		pointerEvents: 'none'
 	},
+	// A row whose root is the link: the browser's anchor paint stays out of it.
+	linkRoot: {
+		color: 'inherit',
+		textDecoration: 'none'
+	},
 	disabledContent: {
 		opacity: 0.5
 	},
 	invisibleButton: {
-		all: 'unset',
 		cursor: {
 			default: 'inherit',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		font: 'inherit',
 		color: 'inherit',
 		display: 'flex',
 		flexDirection: 'column',
@@ -73,12 +126,10 @@ const styles = stylex.create({
 		outline: 'none'
 	},
 	invisibleAnchor: {
-		all: 'unset',
 		cursor: {
 			default: 'inherit',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		font: 'inherit',
 		color: 'inherit',
 		display: 'flex',
 		flexDirection: 'column',
@@ -155,6 +206,19 @@ const styles = stylex.create({
 		flex: '0 0 auto',
 		display: 'flex',
 		marginInlineStart: 'auto'
+	},
+	// Swipe actions. The root translates by the drag's travel and settles on
+	// the clock the gesture writes; `pan-y` lets the browser keep scrolling the
+	// list while the row owns horizontal movement, and `pinch-zoom` leaves a
+	// two-finger pinch that starts on the row to the browser, so the page stays
+	// zoomable (WCAG 1.4.4). The hover transition keeps its own clock beside
+	// the transform's.
+	swipeRoot: {
+		touchAction: 'pan-y pinch-zoom',
+		transform: `translate3d(${SWIPE_TRAVEL}, 0, 0)`,
+		transitionProperty: 'background-color, transform',
+		transitionDuration: `${durationVars['--duration-fast-min']}, ${SWIPE_DURATION}`,
+		transitionTimingFunction: `${easeVars['--ease-standard']}, ease-out`
 	}
 });
 
@@ -173,11 +237,11 @@ const densityStyles = stylex.create({
 	},
 	spacious: {
 		paddingBlock: spacingVars['--spacing-3'],
-		paddingInline: spacingVars['--spacing-3']
+		'--_item-inset-inline': spacingVars['--spacing-3']
 	}
 });
 
-export type ItemAlign = 'center' | 'start';
+export type ItemAlign = 'center' | 'start' | 'first-line';
 export type ItemLayout = 'stacked' | 'inline';
 export type ItemDensity = keyof typeof densityStyles;
 
@@ -187,28 +251,59 @@ export interface ItemRootFlags {
 	isHighlighted: boolean;
 	isSelected: boolean;
 	isDisabled: boolean;
+	/** A state fill (highlighted or selected) is already the row's background. */
+	hasStateFill: boolean;
 	/** A caller-provided `role` means a parent handles keyboard — skip the disabled dim. */
 	hasParentRole: boolean;
+	/** The caller's root component is itself the link, so the anchor paint is reset. */
+	isLinkRoot: boolean;
+	/** The row serves swipe actions, so it translates and is a stacking context. */
+	hasSwipe: boolean;
 }
 
 /** The item row. */
 export function itemRootAttrs(
 	density: ItemDensity,
 	align: ItemAlign,
-	{ isInteractive, isHighlighted, isSelected, isDisabled, hasParentRole }: ItemRootFlags,
+	{
+		isInteractive,
+		isHighlighted,
+		isSelected,
+		isDisabled,
+		hasStateFill,
+		hasParentRole,
+		isLinkRoot,
+		hasSwipe
+	}: ItemRootFlags,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
 		styles.root,
 		densityStyles[density],
 		align === 'start' && styles.alignStart,
+		align === 'first-line' && styles.alignFirstLine,
 		isInteractive && styles.interactive,
-		// Upstream 0.5.1: hover/pressed background moved to the shared module.
-		isInteractive && interactionOverlayStyles.backgroundColor,
+		// Upstream 0.5.1: hover/pressed background moved to the shared module. A
+		// row with a state fill keeps the fill as its background colour, so its
+		// overlay paints as an image layer over the fill.
+		isInteractive &&
+			(hasStateFill
+				? interactionOverlayStyles.backgroundImage
+				: interactionOverlayStyles.backgroundColor),
+		// The touch press on a compositor layer (after the overlay, whose own
+		// touch paint it turns off): the release keeps fading while script runs.
+		isInteractive && rowPressLayerStyles.cell,
+		// A highlighted row's fill is already the hover tone, so it shows only
+		// its press. A selected row also shows its hover.
+		isInteractive &&
+			hasStateFill &&
+			(isSelected ? rowPressLayerStyles.cellOnImage : rowPressLayerStyles.cellOnImagePressOnly),
 		isInteractive && focusOutlineStyles.focusWithin,
+		isLinkRoot && styles.linkRoot,
 		isHighlighted && styles.highlighted,
 		isSelected && styles.selected,
 		isDisabled && !hasParentRole && styles.disabled,
+		hasSwipe && styles.swipeRoot,
 		xstyle
 	);
 }
@@ -286,11 +381,23 @@ export function itemInvisibleAnchorAttrs(isDisabled: boolean, isInline: boolean)
 }
 
 /** The leading slot wrapper. */
-export function itemStartContentAttrs(): SvelteStyleAttrs {
-	return sx(styles.startContent);
+export function itemStartContentAttrs(align: ItemAlign): SvelteStyleAttrs {
+	return sx(styles.startContent, align === 'first-line' && styles.firstLineSlot);
+}
+
+/**
+ * The wrapper holding every content slot beside a numbered List row's marker,
+ * so the row can subgrid into the List's marker/content columns.
+ */
+export function itemMarkerContentAttrs(align: ItemAlign): SvelteStyleAttrs {
+	return sx(styles.markerContent, align === 'first-line' && styles.markerContentFirstLine);
 }
 
 /** The trailing slot wrapper. */
-export function itemEndContentAttrs(isDisabled: boolean): SvelteStyleAttrs {
-	return sx(styles.endContent, isDisabled && styles.disabledContent);
+export function itemEndContentAttrs(isDisabled: boolean, align: ItemAlign): SvelteStyleAttrs {
+	return sx(
+		styles.endContent,
+		align === 'first-line' && styles.firstLineSlot,
+		isDisabled && styles.disabledContent
+	);
 }

@@ -16,10 +16,11 @@
 		 * Lets the component size the child, so the child does not have to declare
 		 * `width`/`height`/`object-fit` itself. Omitted, the child is left alone.
 		 *
-		 * `cover` and `contain` ship as zero-specificity baseline rules in
-		 * `base.css` keyed on `data-astryx-aspect-ratio-override`, so anything the
-		 * child sets for itself still wins. `fit` is structural rather than
-		 * visual, so it is not part of the theming surface.
+		 * `cover`/`contain` size the child from the component's own styles, in the
+		 * `astryx-base` cascade layer. Styles in a later layer (Tailwind utilities,
+		 * `astryx-theme`), unlayered CSS, and inline styles on the child still win.
+		 * `fit` is structural rather than visual, so it is not part of the theming
+		 * surface.
 		 */
 		fit?: AspectRatioFit;
 		children: Snippet;
@@ -63,9 +64,9 @@
 </script>
 
 <div {...rest} {...theme} class={cx(theme.class, container.class, className)} style={rootStyle}>
-	<!-- The marker attribute carries the fit value so the base.css child sizing
-	     can use direct-child selectors on this wrapper — the child's actual
-	     parent — without depending on AspectRatio's internal structure. -->
+	<!-- The marker attribute carries the fit value. No Astryx style keys on it
+	     any more, but earlier releases documented it, so product CSS may still
+	     target it. -->
 	<div {...{ [dataAttr('aspect-ratio-override')]: fit }} class={child.class} style={child.style}>
 		{@render children()}
 	</div>

@@ -86,6 +86,7 @@
 
 <script lang="ts">
 	import { useTranslator } from '../../i18n/index.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useAppShellMobile } from '../app-shell/app-shell-mobile-context.svelte.js';
@@ -101,8 +102,11 @@
 		useSideNavCollapse
 	} from './side-nav-collapse-context.svelte.js';
 	import SideNavCollapseScope from './side-nav-collapse-scope.svelte';
+	import { useSideNavItemDepth } from './side-nav-item-depth-context.svelte.js';
+	import SideNavItemDepthScope from './side-nav-item-depth-scope.svelte';
 	import {
 		sideNavItemChevronExpandedStyle,
+		sideNavItemChevronInRowStyle,
 		sideNavItemChevronStyle,
 		sideNavItemChildrenAttrs,
 		sideNavItemChildrenInnerAttrs,
@@ -237,6 +241,11 @@
 	// When collapsible *and* a primary action (href or onclick) are both set, the
 	// action and the toggle are independent: the label navigates, the chevron
 	// expands.
+	// How deep this item sits: 0 at the top level, 1 inside one parent, and so
+	// on. Each row draws its own indent from this, so nested rows stay full
+	// width and their hover/selected fill lines up with the rows above.
+	const depth = useSideNavItemDepth();
+
 	const hasPrimaryAction = $derived(!!href || !!onclick);
 	const hasIndependentToggle = $derived(isItemCollapsible && hasPrimaryAction && !isCollapsed);
 	const hasActions = $derived(!!actions);
@@ -307,6 +316,8 @@
 			disabled: isDisabled ? 'disabled' : null
 		})
 	);
+	// The row (or, collapsed, the trigger/link/button) is the pressable.
+	const pressable = usePressFeedback();
 	const rootAttrs = $derived(sideNavItemRootAttrs(xstyle));
 	// Three shapes of the same row appearance: `rowAttrs` for the row-wrapper path
 	// without actions, where the row is a plain <div> container and its children
@@ -317,7 +328,9 @@
 	// match, and matching any descendant instead would light the whole row around
 	// the chevron's or an action's own ring.
 	const rowAttrs = $derived(sideNavItemRowAttrs(size, isSelected, isDisabled));
-	const focusableRowAttrs = $derived(sideNavItemFocusableRowAttrs(size, isSelected, isDisabled));
+	const focusableRowAttrs = $derived(
+		sideNavItemFocusableRowAttrs(size, isSelected, isDisabled, depth)
+	);
 	const actionsRowAttrs = $derived(sideNavItemActionsRowAttrs(size, isSelected, isDisabled));
 	const collapsedAttrs = $derived(sideNavItemCollapsedAttrs(size, isSelected, isDisabled));
 	const labelAttrs = sideNavItemLabelAttrs();
@@ -328,9 +341,16 @@
 		sideNavItemChevronStyle,
 		!isItemCollapsed && sideNavItemChevronExpandedStyle
 	]);
+	// Inside a whole-row toggle the chevron takes its 1em glyph's height, so
+	// the row's height comes from its label rather than the chevron's box.
+	const chevronInRowXstyle = $derived([
+		sideNavItemChevronStyle,
+		sideNavItemChevronInRowStyle,
+		!isItemCollapsed && sideNavItemChevronExpandedStyle
+	]);
 	const expandToggleAttrs = sideNavItemExpandToggleAttrs();
-	const splitActionAttrs = sideNavItemSplitActionAttrs();
-	const splitActionSuppressedAttrs = sideNavItemSplitActionSuppressedAttrs();
+	const splitActionAttrs = sideNavItemSplitActionAttrs(depth);
+	const splitActionSuppressedAttrs = sideNavItemSplitActionSuppressedAttrs(depth);
 	const actionsAttrs = sideNavItemActionsAttrs();
 	const popoverSurfaceAttrs = sideNavItemPopoverSurfaceAttrs();
 	const popoverHeaderAttrs = sideNavItemPopoverHeaderAttrs();
@@ -392,7 +412,7 @@
 		</span>
 	{/if}
 	{#if !isCollapsed && isItemCollapsible && !hasIndependentToggle}
-		<Icon icon="chevronDown" size="lg" color="inherit" xstyle={chevronXstyle} />
+		<Icon icon="chevronDown" size="lg" color="inherit" xstyle={chevronInRowXstyle} />
 	{/if}
 {/snippet}
 
@@ -420,6 +440,7 @@
 			onmouseleave={menuHover.triggerProps.onmouseleave}
 			aria-label={label}
 			data-testid={testId}
+			{...pressable}
 			{...popover.triggerProps}
 			{...collapsedItemAttrs}
 		>
@@ -435,7 +456,10 @@
 			>
 				<div class={popoverHeaderAttrs.class} style={popoverHeaderAttrs.style}>{label}</div>
 				<SideNavCollapseScope state={EXPANDED_COLLAPSE_STATE}>
-					{#if children}{@render children()}{/if}
+					<!-- A flyout lists its parent's children as its own top level. -->
+					<SideNavItemDepthScope depth={0}>
+						{#if children}{@render children()}{/if}
+					</SideNavItemDepthScope>
 				</SideNavCollapseScope>
 			</div>
 		</PopoverLayer>
@@ -458,6 +482,7 @@
 				'aria-disabled': isDisabled || undefined,
 				'aria-label': label,
 				'data-testid': testId,
+				...pressable,
 				...collapsedItemAttrs
 			}}
 		>
@@ -477,7 +502,7 @@
 				slot as siblings inside a <div> carrying the nav-item styling, because
 				a <button> cannot be nested inside an <a>.
 			-->
-			<div data-testid={testId} {...hasActions ? actionsRowItemAttrs : rowItemAttrs}>
+			<div data-testid={testId} {...pressable} {...hasActions ? actionsRowItemAttrs : rowItemAttrs}>
 				<NavItemElement
 					{href}
 					{as}
@@ -501,6 +526,7 @@
 							: t('@astryx.sideNavItem.collapse', { label })}
 						aria-expanded={!isItemCollapsed}
 						aria-controls="{id}-children"
+						{...pressable}
 						class={expandToggleAttrs.class}
 						style={expandToggleAttrs.style}
 					>
@@ -526,6 +552,7 @@
 					'aria-expanded': isItemCollapsible ? !isItemCollapsed : undefined,
 					'aria-controls': isItemCollapsible ? `${id}-children` : undefined,
 					'data-testid': testId,
+					...pressable,
 					...focusableRowItemAttrs
 				}}
 			>
@@ -545,7 +572,9 @@
 			>
 				<div class={childrenInnerAttrs.class} style={childrenInnerAttrs.style}>
 					<span id="{id}-label" hidden>{label}</span>
-					{#if children}{@render children()}{/if}
+					<SideNavItemDepthScope depth={depth + 1}>
+						{#if children}{@render children()}{/if}
+					</SideNavItemDepthScope>
 				</div>
 			</div>
 		{/if}

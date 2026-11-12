@@ -175,6 +175,7 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import {
 		timeInputAttrs,
@@ -515,6 +516,7 @@
 	<div
 		bind:this={container}
 		{...inputContainer}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, className)}
 		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}

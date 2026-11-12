@@ -21,18 +21,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import ToastSurface from './toast-surface.svelte';
+	import ToastRow from './toast-row.svelte';
 	import { setToastContext, type ToastContextValue } from './toast-context.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { INTERACTIVE_SELECTORS } from '../../hooks/use-clickable-container.svelte.js';
 	import { mergeStyle } from '../../internal/sx.js';
 	import type { ToastEntry, ToastDismissReason, ToastContent } from './types.js';
-	import {
-		toastViewportAttrs,
-		toastWrapperAttrs,
-		toastWrapperInnerAttrs
-	} from './toast-viewport.stylex.js';
+	import { toastRootOutletAttrs, toastViewportAttrs } from './toast-viewport.stylex.js';
 
 	/**
 	 * Container that renders and manages toast notifications. Place at the root
@@ -348,12 +344,12 @@
 		return parts.length > 0 ? parts.join(';') : undefined;
 	});
 
-	const viewport = $derived(toastViewportAttrs(position));
-	const wrapperInner = toastWrapperInnerAttrs();
+	const viewport = $derived(toastViewportAttrs(position, hasToasts));
+	const rootOutlet = toastRootOutletAttrs();
 
 	// A stack anchored to the top edge leaves upward, so its swipe-to-dismiss
-	// direction is inverted. Upstream derives the same flag for the wrapper's
-	// stacking styles, which `toastWrapperAttrs` resolves from `position` itself.
+	// direction is inverted. The row resolves the same flag for the wrapper's
+	// stacking styles and its gesture direction.
 	const isReversed = $derived(position === 'topEnd' || position === 'topStart');
 </script>
 
@@ -369,51 +365,15 @@
 	style={mergeStyle(viewport.style, insetStyle)}
 >
 	{#each visibleToasts as entry (entry.id)}
-		{@const options = entry.options}
-		{@const type = options.type ?? 'info'}
-		{@const isAutoHide = options.isAutoHide ?? (type === 'error' ? false : true)}
-		{@const isExiting = exitingIds.has(entry.id)}
-		{@const wrapper = toastWrapperAttrs(position, isExiting)}
-		<div
-			data-toast-id={entry.id}
-			class={wrapper.class}
-			style={wrapper.style}
-			ontransitionend={(e: TransitionEvent) => {
-				// Upstream conditions the *handler* on `isExiting`
-				// (`ToastViewport.tsx:518`). Svelte evaluates that ternary at **event
-				// time**, not at render time, so writing it that way re-reads the
-				// `{@const isExiting}` above — a derived owned by this `{#each}`
-				// branch, which `handleExited` has just destroyed.
-				//
-				// It runs twice per dismissal: the card's `opacity` and `transform`
-				// transitions end on the same frame as the wrapper's
-				// `grid-template-rows` and bubble to this now-detached node, whose
-				// listener Svelte leaves attached. React never sees them — it
-				// delegates `transitionend` at the root container, which a detached
-				// subtree cannot reach. Each read logged `derived_inert`, and that
-				// warning is not dev-gated: it reached consumers' consoles.
-				//
-				// `exitingIds.has()` is a plain source read — correct after the
-				// branch is gone, and non-tracking because a DOM handler runs outside
-				// any reaction.
-				if (e.propertyName === 'grid-template-rows' && exitingIds.has(entry.id)) {
-					handleExited(entry.id);
-				}
-			}}
-		>
-			<div class={wrapperInner.class} style={wrapperInner.style}>
-				<ToastSurface
-					{type}
-					body={options.body}
-					endContent={options.endContent}
-					{isAutoHide}
-					autoHideDuration={options.autoHideDuration ?? 5000}
-					{isExiting}
-					gestureDirection={isReversed ? -1 : 1}
-					onDismiss={(reason) => removeToast(entry.id, reason)}
-					renderContent={options.renderContent}
-				/>
-			</div>
-		</div>
+		<ToastRow
+			{entry}
+			isExiting={exitingIds.has(entry.id)}
+			{isReversed}
+			{exitingIds}
+			onExited={handleExited}
+			onDismiss={removeToast}
+		/>
 	{/each}
 </div>
+<!-- The modal host's mount point; empty until that subsystem lands. -->
+<div class={rootOutlet.class} style={rootOutlet.style}></div>

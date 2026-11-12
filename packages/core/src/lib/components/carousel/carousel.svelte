@@ -143,6 +143,7 @@
 		carouselRootAttrs,
 		carouselScrollerAttrs
 	} from './carousel.stylex.js';
+	import { focusOwnerProps } from '../../private-attributes/focus-owner.stylex.js';
 
 	/**
 	 * A horizontal scroll container with fade-edge overflow indication and
@@ -529,6 +530,7 @@
 	<div
 		bind:this={scrollEl}
 		{@attach overflow.attach}
+		{...focusOwnerProps}
 		tabindex="0"
 		onwheel={handleWheel}
 		{...scrollerTheme}

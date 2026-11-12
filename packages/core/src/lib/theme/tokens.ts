@@ -1,5 +1,6 @@
 import type { DefinedTheme, TokenValue } from './define-theme.js';
 import { formatColor, parseColor } from '../utils/color.js';
+import { dataTokenDefaults } from './domain-tokens/data-tokens.js';
 import {
 	borderDefaults,
 	colorDefaults,
@@ -28,13 +29,14 @@ import {
  * plain Node throws, and `define-theme.ts` is on the theme build's plain-Node
  * import path. See the note at that file's head.
  *
- * Upstream also folds in its whole `domainTokens/` group — syntax *and* data-viz
- * — and this port folds in neither, so `useTheme().token('--color-syntax-…')`
- * and `--color-data-…` both come back empty here where upstream resolves them.
- * That is one gap over both halves, recorded against the group in
- * `port/ledger/009-batch-8.md`, and it is independent of the CSS those tokens
- * emit: `--color-syntax-*` reaches a document from a theme's `syntax` preset and
- * `--color-data-*` from `generateDataTokenDefaultsCSS`, neither through this map.
+ * Upstream folds its whole `domainTokens/` group into this map. The data-viz
+ * half is folded here too, so `useTheme().token('--color-data-…')` resolves the
+ * same way it does upstream — the values themselves are unchanged and remain
+ * declared once in `domain-tokens/data-tokens.ts`. The syntax half stays out:
+ * its tokens reach a document from a `SyntaxTheme` preset's `@scope` block, and
+ * upstream's default stylesheet (`astryx.css`) carries no `--color-syntax-*`
+ * defaults block either. That half is recorded against the group in
+ * `port/ledger/009-batch-8.md` and remains a separate decision.
  *
  * It **used to omit `borderDefaults`** — which it ships and publishes a
  * `BorderVarName` type for — and this port recorded that as an upstream bug
@@ -57,7 +59,8 @@ export const tokenDefaults: Record<string, string> = {
 	...typographyDefaults,
 	...textSizeDefaults,
 	...fontWeightDefaults,
-	...typeScaleDefaults
+	...typeScaleDefaults,
+	...dataTokenDefaults
 };
 
 /**

@@ -27,9 +27,8 @@ import {
  *   than folded into conditionals — the element stays `open` through the
  *   transition with the open styles already removed.
  *
- * `border: 'none'` on the dialog emits nothing (StyleX drops the shorthand); the
- * reset's universal `border-width: 0` is what actually removes the UA's 3px
- * `<dialog>` border. See port/todo.md → Phase 0.
+ * The dialog clears its UA border with `borderWidth`/`borderStyle`; StyleX
+ * drops the `border` shorthand.
  */
 const styles = stylex.create({
 	dialog: {
@@ -37,7 +36,8 @@ const styles = stylex.create({
 		position: 'fixed',
 		margin: 0,
 		padding: 0,
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		maxWidth: 'none',
 		maxHeight: 'none',
 		// Full viewport overlay — the dialog itself is the full-screen container
@@ -56,8 +56,10 @@ const styles = stylex.create({
 		// on it being a scroll container.
 		overflow: 'clip',
 		overscrollBehavior: 'contain',
-		// Prevent touch gestures (pull-to-refresh, background scroll) passing through
-		touchAction: 'none',
+		// Stop pans passing through (pull-to-refresh, background scroll), but
+		// leave pinch to the browser: the open nav covers the whole viewport, and
+		// pinch-zoom is how phone readers resize text (WCAG 1.4.4).
+		touchAction: 'pinch-zoom',
 		outline: 'none',
 		// Native <dialog> uses display:none when closed.
 		// Open state applied via isOpen prop to avoid :where([open]) specificity issues.
@@ -81,8 +83,8 @@ const styles = stylex.create({
 	// ::backdrop is provided by the browser's top layer
 	backdrop: {
 		'::backdrop': {
+			// No backdrop-filter: a full-viewport blur is costly to repaint.
 			backgroundColor: colorVars['--color-overlay'],
-			backdropFilter: 'blur(2px)',
 			opacity: 0,
 			transitionProperty: 'opacity',
 			transitionDuration: durationVars['--duration-medium'],
@@ -170,7 +172,10 @@ const styles = stylex.create({
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		height: spacingVars['--spacing-12'],
+		// At least one bar high, and taller for header content that needs it (a
+		// stacked title and search, or a title wrapped at a larger text size), so
+		// it never runs into the first item below.
+		minHeight: spacingVars['--spacing-12'],
 		paddingInline: spacingVars['--spacing-2'],
 		flexShrink: 0,
 		borderBlockEndWidth: borderVars['--border-width'],
@@ -188,18 +193,21 @@ const styles = stylex.create({
 		overflowY: 'auto',
 		overflowX: 'hidden',
 		overscrollBehavior: 'contain',
-		// Re-enable vertical touch scrolling inside the drawer content
-		// (dialog root has touch-action: none to block pull-to-refresh)
-		touchAction: 'pan-y',
+		// Re-enable vertical touch scrolling inside the drawer content (the
+		// dialog root allows only pinch-zoom, to block pull-to-refresh)
+		touchAction: 'pan-y pinch-zoom',
 		paddingInline: spacingVars['--spacing-2'],
 		paddingBlock: spacingVars['--spacing-2']
 	}
 });
 
 const dynamicStyles = stylex.create({
+	// The requested width, never more than 85 % of the viewport: on a narrow
+	// phone a strip of the page stays visible beside the drawer, as a target
+	// for the tap that closes it.
 	width: (w: number) => ({
-		width: '100vw',
-		maxWidth: `${w}px`
+		width: `${w}px`,
+		maxWidth: '85vw'
 	})
 });
 

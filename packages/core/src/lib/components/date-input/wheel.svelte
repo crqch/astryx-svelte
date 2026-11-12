@@ -322,7 +322,6 @@
 	const columnAttrs = wheelColumnAttrs();
 	const bandAttrs = wheelBandAttrs();
 	const scrollerAttrs = wheelScrollerAttrs();
-	const itemInnerAttrs = wheelItemInnerAttrs();
 </script>
 
 <div class={columnAttrs.class} style={columnAttrs.style}>
@@ -339,6 +338,7 @@
 	>
 		{#each options as option, index (option.value)}
 			{@const attrs = wheelItemAttrs(index === activeIndex, option.isDisabled === true)}
+			{@const innerAttrs = wheelItemInnerAttrs(option.isDisabled === true)}
 			<!--
 				The listbox is ONE tab stop and tracks the active row with
 				`aria-activedescendant`, which is the APG pattern and upstream's; giving
@@ -356,7 +356,7 @@
 				class={attrs.class}
 				style={attrs.style}
 			>
-				<span class={itemInnerAttrs.class} style={itemInnerAttrs.style}>{option.label}</span>
+				<span class={innerAttrs.class} style={innerAttrs.style}>{option.label}</span>
 			</div>
 		{/each}
 	</div>

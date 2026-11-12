@@ -23,6 +23,19 @@
 		isDisabled?: boolean;
 		/** Called when the open state changes. */
 		onOpenChange?: (isOpen: boolean) => void;
+		/**
+		 * Logical position of the disclosure chevron.
+		 *
+		 * - `end` (default): a trailing indicator that points down when collapsed
+		 *   and up when expanded.
+		 * - `start`: a leading disclosure arrow ahead of the label, pointing inward
+		 *   toward the content when collapsed (mirrored under RTL) and down when
+		 *   expanded.
+		 *
+		 * Inside a `CollapsibleGroup` this defaults to the group's
+		 * `chevronPosition`. @default 'end'
+		 */
+		chevronPosition?: CollapsibleChevronPosition;
 		/** Identifier for coordination within a `CollapsibleGroup`. */
 		value?: string;
 	}
@@ -34,12 +47,17 @@
 	import Icon from '../icon/icon.svelte';
 	import {
 		setCollapsibleGroupPresentationContext,
-		useCollapsibleGroupPresentationContext
+		useCollapsibleGroupPresentationContext,
+		type CollapsibleChevronPosition
 	} from './collapsible-group-context.svelte.js';
 	import { useCollapsible } from './use-collapsible.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import {
 		collapsibleChevronClosedStyle,
 		collapsibleChevronOpenStyle,
+		collapsibleChevronStartClosedStyle,
+		collapsibleChevronStartOpenStyle,
+		collapsibleChevronStartStyle,
 		collapsibleChevronStyle,
 		collapsibleContentAttrs,
 		collapsibleRootAttrs,
@@ -64,6 +82,7 @@
 		isOpen: controlledIsOpen,
 		isDisabled = false,
 		onOpenChange,
+		chevronPosition,
 		value,
 		xstyle,
 		class: className,
@@ -90,6 +109,10 @@
 	const presentation = $derived(presentationGetter());
 	const isDivided = $derived(presentation?.hasDividers ?? false);
 	const density = $derived(presentation?.density ?? null);
+	// The item wins over the group so a single row can differ, but the group is
+	// the level this is normally set at — mixed sides in one list read as a bug.
+	const position = $derived(chevronPosition ?? presentation?.chevronPosition ?? 'end');
+	const isChevronAtStart = $derived(position === 'start');
 
 	function handleToggle(): void {
 		if (isDisabled) {
@@ -109,6 +132,9 @@
 	const triggerTheme = $derived(
 		themeProps('collapsible-trigger', { density: density ?? undefined })
 	);
+	// The trigger is the pressable: it has no hover surface, so its pressed
+	// overlay is the only background it paints.
+	const pressable = usePressFeedback();
 	const triggerAttrs = $derived(collapsibleTriggerAttrs(density, isDisabled));
 	const triggerLabelAttrs = collapsibleTriggerLabelAttrs();
 	const contentAttrs = $derived(collapsibleContentAttrs(density, collapsible.isOpen));
@@ -133,22 +159,37 @@
 		aria-expanded={collapsible.isOpen}
 		aria-controls={contentId}
 		tabindex={isDisabled ? -1 : undefined}
+		{...isDisabled ? undefined : pressable}
 		{...triggerTheme}
 		class={cx(triggerTheme.class, triggerAttrs.class)}
 		style={triggerAttrs.style}
 	>
+		{#if isChevronAtStart}
+			<Icon
+				icon="chevronRight"
+				size="sm"
+				color="secondary"
+				xstyle={[
+					collapsibleChevronStyle,
+					collapsibleChevronStartStyle,
+					collapsible.isOpen ? collapsibleChevronStartOpenStyle : collapsibleChevronStartClosedStyle
+				]}
+			/>
+		{/if}
 		<span class={triggerLabelAttrs.class} style={triggerLabelAttrs.style}>
 			{#if typeof trigger === 'function'}{@render trigger()}{:else}{trigger}{/if}
 		</span>
-		<Icon
-			icon="chevronDown"
-			size="sm"
-			color="secondary"
-			xstyle={[
-				collapsibleChevronStyle,
-				collapsible.isOpen ? collapsibleChevronOpenStyle : collapsibleChevronClosedStyle
-			]}
-		/>
+		{#if !isChevronAtStart}
+			<Icon
+				icon="chevronDown"
+				size="sm"
+				color="secondary"
+				xstyle={[
+					collapsibleChevronStyle,
+					collapsible.isOpen ? collapsibleChevronOpenStyle : collapsibleChevronClosedStyle
+				]}
+			/>
+		{/if}
 	</button>
 	<div
 		id={contentId}

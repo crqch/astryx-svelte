@@ -61,6 +61,7 @@
 		textAttrs,
 		truncationTooltipContentAttrs
 	} from './text.stylex.js';
+	import { TextClampContext } from './text-clamp-context.svelte.js';
 
 	/**
 	 * Semantic text. `type` selects size, weight and line-height from the theme's
@@ -96,6 +97,11 @@
 	const resolvedDisplay = $derived(maxLines > 0 || hasCapsize ? 'block' : display);
 
 	const truncation = useTruncation(() => maxLines);
+
+	// A capsize block removes a multi-line clamp.
+	const isClamped = $derived(maxLines === 1 || (maxLines > 1 && !hasCapsize));
+	const inheritedClamp = TextClampContext.getOr(() => false);
+	TextClampContext.set(() => isClamped || inheritedClamp());
 
 	const tooltipPlacement = $derived<LayerPlacement>(
 		typeof hasTruncateTooltip === 'string' ? hasTruncateTooltip : 'above'

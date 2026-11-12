@@ -158,7 +158,15 @@
 	const isFixed = $derived(p.layer.attachTrigger === undefined);
 
 	const attrs = $derived(
-		layerAttrs(isFixed, p.xstyle, p.offset, p.positioning ?? 'anchor', p.placement ?? 'above')
+		layerAttrs(
+			isFixed,
+			p.xstyle,
+			p.offset,
+			p.positioning ?? 'anchor',
+			p.placement ?? 'above',
+			p.alignment ?? 'center',
+			p.layer.keepsAnchorClear
+		)
 	);
 
 	const positionStyle = $derived(

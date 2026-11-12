@@ -472,7 +472,7 @@
 
 	const theme = $derived(themeProps('file-input', { mode, status: status?.type ?? null }));
 	const triggerAttrs = $derived(
-		fileInputTriggerAttrs(isDropzone, isDisabled, isDragOver, status?.type, xstyle)
+		fileInputTriggerAttrs(isDropzone, isDisabled, isDragOver, isLoading, status?.type, xstyle)
 	);
 	const hiddenInputAttrs = fileInputHiddenInputAttrs();
 	const fileNameDropzoneAttrs = fileInputFileNameDropzoneAttrs();

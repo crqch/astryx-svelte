@@ -54,7 +54,7 @@ export default {
 		},
 		{
 			name: 'mode',
-			type: "'system' | 'dark' | 'light'",
+			type: "'light' | 'dark' | 'system'",
 			description: 'Color mode. System follows OS preference.',
 			default: "'system'"
 		},

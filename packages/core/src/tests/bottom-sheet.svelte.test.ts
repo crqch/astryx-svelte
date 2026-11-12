@@ -548,7 +548,7 @@ describe('BottomSheet', () => {
 		expect(onclick).toHaveBeenCalledTimes(1);
 	});
 
-	it('keeps consumer content as the last scroll-body child', async () => {
+	it('keeps consumer content first and last inside the observed content box', async () => {
 		await render(BottomSheet, {
 			props: {
 				isOpen: true,
@@ -561,7 +561,10 @@ describe('BottomSheet', () => {
 		const consumer = document.querySelector('[data-testid="consumer-content"]')!;
 
 		expect(body.children).toHaveLength(1);
-		expect(body.lastElementChild).toBe(consumer);
+		const content = body.lastElementChild;
+		expect(content).toHaveAttribute('data-scroll-content');
+		expect(content?.lastElementChild).toBe(consumer);
+		expect(consumer.matches(':first-child')).toBe(true);
 		expect(consumer.matches(':last-child')).toBe(true);
 	});
 

@@ -1334,10 +1334,13 @@ export function createPager(initial: PagerOptions, environment: PagerEnvironment
 }
 
 export interface UsePagerOptions extends PagerOptions {
-	/** The gesture surface: the clipped box the pages show through. */
-	viewportRef: { current: HTMLElement | null };
-	/** The row of pages the pager translates. */
-	trackRef: { current: HTMLElement | null };
+	/**
+	 * The gesture surface: the clipped box the pages show through. A getter,
+	 * because the element is a `bind:this` target and is null at call time.
+	 */
+	viewportRef: () => HTMLElement | null;
+	/** The row of pages the pager translates. A getter, as `viewportRef`. */
+	trackRef: () => HTMLElement | null;
 	/**
 	 * Controlled target page; a change animates to it (reason 'controlled'),
 	 * and a page the pager reports that the owner does not take returns it
@@ -1355,15 +1358,15 @@ export interface UsePagerOptions extends PagerOptions {
 }
 
 /**
- * A pager on two elements. Callbacks are read through a ref, so passing new
- * functions each render costs nothing; a gesture never renders.
+ * A pager on two elements. Callbacks are read through the option getter, so
+ * passing new functions each render costs nothing; a gesture never renders.
  *
  * @example
  * ```
- * const pager = usePager({viewportRef, trackRef, count: photos.length, gap: 40,
- *   onIndexChange: setCounter});
- * <div ref={viewportRef} style={{overflow: 'hidden'}}>
- *   <div ref={trackRef} style={{display: 'flex', gap: 40}}>…pages…</div>
+ * const pager = usePager(() => ({viewportRef: () => viewport, trackRef: () => track,
+ *   count: photos.length, gap: 40, onIndexChange: setCounter}));
+ * <div bind:this={viewport} style="overflow: hidden">
+ *   <div bind:this={track} style="display: flex; gap: 40px">…pages…</div>
  * </div>
  * ```
  */

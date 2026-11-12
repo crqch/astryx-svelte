@@ -138,6 +138,18 @@
 	const paddingToken = $derived<SpacingToken>(spacingStepToToken[effectivePadding]);
 	const isFullscreen = $derived(variant === 'fullscreen');
 
+	// A dialog open on the server was present on page load, so it opens settled,
+	// with no entry motion; its later opens animate as usual (spec:AST-013 FR13).
+	// Upstream's `useSettledOpen`; the latch ends on the first close.
+	// svelte-ignore state_referenced_locally
+	let opensSettled = $state(isOpen && !isInline);
+
+	$effect(() => {
+		if (!isOpen) {
+			opensSettled = false;
+		}
+	});
+
 	// Derive dismissal behavior from purpose.
 	const allowEscape = $derived(purpose !== 'required');
 	const allowBackdropClick = $derived(purpose === 'info');
@@ -335,7 +347,9 @@
 	}
 
 	const theme = $derived(themeProps('dialog', { variant }));
-	const root = $derived(dialogAttrs({ isOpen, isFullscreen, standardSizing, position, xstyle }));
+	const root = $derived(
+		dialogAttrs({ isOpen, isFullscreen, standardSizing, position, opensSettled, xstyle })
+	);
 	const inlineRoot = $derived(dialogInlineAttrs({ isFullscreen, standardSizing, xstyle }));
 	const inner = $derived(
 		dialogInnerAttrs({

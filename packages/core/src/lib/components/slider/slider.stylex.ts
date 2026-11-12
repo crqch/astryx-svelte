@@ -15,11 +15,16 @@ import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 /**
  * `Slider`'s styles, ported from Astryx's `Slider/Slider.tsx`.
  *
- * Every positional value — thumb offset, filled-track extent, mark placement —
- * is a plain inline `style`, not a StyleX dynamic style, so this module only
- * carries the static geometry. There is no `defineMarker` either: the thumb's
- * hover and focus rules are element-local (`:hover` / `:focus-visible`), unlike
- * `Switch`/`CheckboxInput`, whose rules key off an ancestor row.
+ * Every positional value — thumb progress, filled-track extent, mark
+ * placement — is a plain inline style, not a StyleX dynamic style, so this
+ * module only carries the static geometry. There is no `defineMarker` either:
+ * the thumb's hover and focus rules are element-local (`:hover` /
+ * `:focus-visible`), unlike `Switch`/`CheckboxInput`, whose rules key off an
+ * ancestor row.
+ *
+ * The filled range is a full-length bar moved into place inside two clips, so
+ * it travels by `translate` alone. The thumbs travel the same way, from the
+ * `--_slider-progress` custom property each one publishes inline.
  */
 
 const TRACK_SIZE = 4;
@@ -30,6 +35,21 @@ const TRACK_SIZE = 4;
  * down twice.
  */
 export const THUMB_SIZE = 20;
+/** Half a thumb: the inset of the thumb's travel at each end of the track. */
+const THUMB_INSET_PX = THUMB_SIZE / 2;
+
+/** The private property a thumb and the fill parts publish inline. */
+export const THUMB_PROGRESS = '--_slider-progress';
+/** The filled range's ends as progress, written inline on the fill parts. */
+export const FILL_START = '--_slider-fill-start';
+export const FILL_END = '--_slider-fill-end';
+/** A thumb's touch-target insets under a finger, which its `::before` draws. */
+export const HIT_INSET = {
+	top: '--_slider-hit-top',
+	bottom: '--_slider-hit-bottom',
+	inlineStart: '--_slider-hit-start',
+	inlineEnd: '--_slider-hit-end'
+} as const;
 
 const styles = stylex.create({
 	sliderRow: {
@@ -42,9 +62,45 @@ const styles = stylex.create({
 		display: 'flex',
 		alignItems: 'center',
 		flexGrow: 1,
-		touchAction: 'none',
+		// Under a finger (a coarse primary pointer) the control leaves the browser
+		// its pans, so a swipe from the track or across a thumb scrolls the page.
+		// `useSliderTouch`'s gesture host narrows that per element from the
+		// recognizers attached to it (a thumb's pan keeps its own axis) and never
+		// widens it. A mouse or a trackpad keeps the control's `none`.
+		touchAction: {
+			default: 'none',
+			'@media (pointer: coarse)': 'manipulation'
+		},
+		// The control's text is never selectable. WebKit applies only the
+		// prefixed property, so both are written.
+		WebkitUserSelect: 'none',
 		userSelect: 'none',
 		isolation: 'isolate'
+	},
+	// Every part of the control sits in this box, which fills the control's
+	// padding box. The thumbs and the fill travel in container units of it
+	// (`cqi` / `cqb`). Its size never depends on its content.
+	travelBox: {
+		position: 'absolute',
+		inset: 0,
+		containerType: 'size'
+	},
+	// Where layout places a thumb at its value: the value tooltip's position
+	// anchor. CSS anchor positioning reads the anchor's layout box, which the
+	// thumb's `translate` does not move in every engine.
+	valueAnchor: {
+		position: 'absolute',
+		width: THUMB_SIZE,
+		height: THUMB_SIZE,
+		pointerEvents: 'none'
+	},
+	valueAnchorHorizontal: {
+		top: `calc(50% - ${THUMB_SIZE / 2}px)`,
+		insetInlineStart: `calc(var(${THUMB_PROGRESS}) * (100cqi - ${THUMB_SIZE}px))`
+	},
+	valueAnchorVertical: {
+		insetInlineStart: `calc(50% - ${THUMB_SIZE / 2}px)`,
+		bottom: `calc(var(${THUMB_PROGRESS}) * (100cqb - ${THUMB_SIZE}px))`
 	},
 	trackContainerHorizontal: {
 		height: THUMB_SIZE,
@@ -104,18 +160,88 @@ const styles = stylex.create({
 		bottom: 0,
 		width: TRACK_SIZE
 	},
-	filledTrack: {
+	// The filled range is a full-length bar moved into place inside two
+	// clips, so it travels by translate alone. The clip has the track's shape
+	// and rounds the start of a single slider's fill. The mover's start edge
+	// cuts the fill at the range's start, and the fill's own end sits at the
+	// range's end. Both ends of a range hide under its thumbs.
+	fillClip: {
 		position: 'absolute',
-		backgroundColor: colorVars['--color-accent'],
-		borderRadius: radiusVars['--radius-full']
+		overflow: 'hidden',
+		borderRadius: radiusVars['--radius-full'],
+		pointerEvents: 'none'
 	},
-	filledTrackHorizontal: {
+	fillClipHorizontal: {
+		insetInlineStart: 0,
+		insetInlineEnd: 0,
 		height: TRACK_SIZE,
 		top: '50%',
 		transform: 'translateY(-50%)'
 	},
-	filledTrackVertical: {
+	fillClipVertical: {
+		top: 0,
+		bottom: 0,
 		width: TRACK_SIZE
+	},
+	fillMover: {
+		position: 'absolute',
+		inset: 0,
+		overflow: 'hidden'
+	},
+	// A range's start is round, like the track's ends (the clip already
+	// rounds a single slider's start). It shows through a disabled thumb's
+	// translucent fill.
+	fillMoverRangeStartHorizontal: {
+		borderStartStartRadius: radiusVars['--radius-full'],
+		borderEndStartRadius: radiusVars['--radius-full']
+	},
+	fillMoverRangeStartVertical: {
+		borderEndStartRadius: radiusVars['--radius-full'],
+		borderEndEndRadius: radiusVars['--radius-full']
+	},
+	fillMoverRangeHorizontal: {
+		translate: {
+			default: `calc(${THUMB_INSET_PX}px + var(${FILL_START}) * (100cqi - ${THUMB_SIZE}px)) 0`,
+			':dir(rtl)': `calc(-${THUMB_INSET_PX}px - var(${FILL_START}) * (100cqi - ${THUMB_SIZE}px)) 0`
+		}
+	},
+	fillMoverRangeVertical: {
+		translate: `0 calc(-${THUMB_INSET_PX}px - var(${FILL_START}) * (100cqb - ${THUMB_SIZE}px))`
+	},
+	filledTrack: {
+		position: 'absolute',
+		inset: 0,
+		backgroundColor: colorVars['--color-accent']
+	},
+	// The fill's end is round too, under the thumb.
+	filledTrackHorizontal: {
+		borderStartEndRadius: radiusVars['--radius-full'],
+		borderEndEndRadius: radiusVars['--radius-full']
+	},
+	filledTrackVertical: {
+		borderStartStartRadius: radiusVars['--radius-full'],
+		borderStartEndRadius: radiusVars['--radius-full']
+	},
+	// A single slider's fill runs from the track's start to the thumb's center.
+	filledTrackSingleHorizontal: {
+		translate: {
+			default: `calc(${THUMB_INSET_PX}px + var(${FILL_END}) * (100cqi - ${THUMB_SIZE}px) - 100cqi) 0`,
+			':dir(rtl)': `calc(100cqi - ${THUMB_INSET_PX}px - var(${FILL_END}) * (100cqi - ${THUMB_SIZE}px)) 0`
+		}
+	},
+	filledTrackSingleVertical: {
+		translate: `0 calc(100cqb - ${THUMB_INSET_PX}px - var(${FILL_END}) * (100cqb - ${THUMB_SIZE}px))`
+	},
+	// A range's fill runs from the lower thumb's center to the upper's. The
+	// mover already sits at the lower one.
+	filledTrackRangeHorizontal: {
+		translate: {
+			default: `calc((var(${FILL_END}) - var(${FILL_START})) * (100cqi - ${THUMB_SIZE}px) - 100cqi) 0`,
+			':dir(rtl)': `calc(100cqi - (var(${FILL_END}) - var(${FILL_START})) * (100cqi - ${THUMB_SIZE}px)) 0`
+		}
+	},
+	filledTrackRangeVertical: {
+		translate: `0 calc(100cqb - (var(${FILL_END}) - var(${FILL_START})) * (100cqb - ${THUMB_SIZE}px))`
 	},
 	thumb: {
 		position: 'absolute',
@@ -123,7 +249,6 @@ const styles = stylex.create({
 		height: THUMB_SIZE,
 		borderRadius: radiusVars['--radius-full'],
 		backgroundColor: colorVars['--color-accent'],
-		transform: 'translate(-50%, -50%)',
 		transitionProperty: 'background-color, box-shadow',
 		transitionDuration: {
 			default: durationVars['--duration-fast'],
@@ -138,15 +263,40 @@ const styles = stylex.create({
 		zIndex: 1
 	},
 	thumbHorizontal: {
-		top: '50%',
-		// The thumb is positioned via logical `insetInlineStart`, which resolves
-		// from the right edge under RTL. The centering translate is a physical
-		// (screen-space) transform, so it must flip its X direction under RTL to
-		// keep the thumb centered on the value point.
-		transform: {
-			default: 'translate(-50%, -50%)',
-			':is([dir="rtl"] *)': 'translate(50%, -50%)'
+		// Centered by its offset, not by a transform: the touch lift scales the
+		// thumb (`scale`), and CSS applies `transform` inside `scale`. So a
+		// centering translate would grow with it and lift the thumb off the
+		// track.
+		top: `calc(50% - ${THUMB_SIZE / 2}px)`,
+		insetInlineStart: 0,
+		// The thumb starts at the track's inline start (the right edge under
+		// RTL). It travels by its progress along the track minus its own size,
+		// so its center lands where `insetPosition` places the fill and the
+		// marks. `translate` is physical, so it flips its sign under RTL.
+		translate: {
+			default: `calc(var(${THUMB_PROGRESS}) * (100cqi - ${THUMB_SIZE}px)) 0`,
+			':dir(rtl)': `calc(var(${THUMB_PROGRESS}) * (${THUMB_SIZE}px - 100cqi)) 0`
 		}
+	},
+	// A thumb's touch target under a finger: the thumb's own `::before`,
+	// invisible and centered on it, larger than it. Each side grows by the
+	// inset `thumbHitInsets` sets on the thumb.
+	thumbHit: {
+		'::before': {
+			content: '""',
+			position: 'absolute',
+			top: `var(${HIT_INSET.top})`,
+			bottom: `var(${HIT_INSET.bottom})`,
+			insetInlineStart: `var(${HIT_INSET.inlineStart})`,
+			insetInlineEnd: `var(${HIT_INSET.inlineEnd})`
+		}
+	},
+	thumbVertical: {
+		bottom: 0,
+		// Centered by its offset (see thumbHorizontal): the same in both
+		// directions, since the thumb is symmetric.
+		insetInlineStart: `calc(50% - ${THUMB_SIZE / 2}px)`,
+		translate: `0 calc(var(${THUMB_PROGRESS}) * (${THUMB_SIZE}px - 100cqb))`
 	},
 	thumbHover: {
 		backgroundColor: {
@@ -155,6 +305,12 @@ const styles = stylex.create({
 				'@media (hover: hover)': `color-mix(in srgb, ${colorVars['--color-accent']}, ${colorVars['--color-tint-hover']} 15%)`
 			}
 		}
+	},
+	// Pressed: the system's pressed overlay over the thumb's fill for as long
+	// as the thumb is being dragged. A slider is a drag, not a tap, so the
+	// pressed paint follows the drag state the pointer handlers keep.
+	thumbPressed: {
+		backgroundImage: `linear-gradient(${colorVars['--color-overlay-pressed']}, ${colorVars['--color-overlay-pressed']})`
 	},
 	thumbDisabled: {
 		backgroundColor: colorVars['--color-background-muted'],
@@ -182,8 +338,14 @@ const styles = stylex.create({
 	},
 	mark: {
 		position: 'absolute',
-		backgroundColor: colorVars['--color-border-emphasized'],
+		backgroundColor: colorVars['--color-track'],
 		borderRadius: radiusVars['--radius-full']
+	},
+	// Marks over the filled region (at or behind the thumb in single mode,
+	// between the thumbs in range mode) take the fill color so they read as
+	// part of the filled track rather than the unfilled rail.
+	markFilled: {
+		backgroundColor: colorVars['--color-accent']
 	},
 	markHorizontal: {
 		width: 2,
@@ -235,13 +397,12 @@ export function sliderTrackContainerAttrs(
 	);
 }
 
-/**
- * The unfilled rail. The vertical branch centres on the inline axis through
- * `rtlStyles.centerInline`, which upstream composes at the JSX call site; here
- * the attrs function is that call site. It replaced a local
- * `insetInlineStart: '50%'` + `translateX(-50%)` pair that was off-centre by the
- * rail's own width under RTL — see the helper's header.
- */
+/** The control-sized box whose container units the parts travel in. */
+export function sliderTravelBoxAttrs(): SvelteStyleAttrs {
+	return sx(styles.travelBox);
+}
+
+/** The unfilled rail. */
 export function sliderTrackAttrs(isHorizontal: boolean): SvelteStyleAttrs {
 	return sx(
 		styles.track,
@@ -249,13 +410,39 @@ export function sliderTrackAttrs(isHorizontal: boolean): SvelteStyleAttrs {
 	);
 }
 
+/** The clip that gives the filled range the track's shape. */
+export function sliderFillClipAttrs(isHorizontal: boolean): SvelteStyleAttrs {
+	return sx(
+		styles.fillClip,
+		isHorizontal
+			? styles.fillClipHorizontal
+			: [styles.fillClipVertical, rtlStyles.centerInline('0px')]
+	);
+}
+
+/** The mover that cuts the fill at a range's start. */
+export function sliderFillMoverAttrs(isHorizontal: boolean, isRange: boolean): SvelteStyleAttrs {
+	return sx(
+		styles.fillMover,
+		isRange &&
+			(isHorizontal
+				? [styles.fillMoverRangeHorizontal, styles.fillMoverRangeStartHorizontal]
+				: [styles.fillMoverRangeVertical, styles.fillMoverRangeStartVertical])
+	);
+}
+
 /** The accent-filled portion of the rail; its extent is an inline style. */
-export function sliderFilledTrackAttrs(isHorizontal: boolean): SvelteStyleAttrs {
+export function sliderFilledTrackAttrs(isHorizontal: boolean, isRange: boolean): SvelteStyleAttrs {
 	return sx(
 		styles.filledTrack,
-		isHorizontal
-			? styles.filledTrackHorizontal
-			: [styles.filledTrackVertical, rtlStyles.centerInline('0px')]
+		isHorizontal ? styles.filledTrackHorizontal : styles.filledTrackVertical,
+		isRange
+			? isHorizontal
+				? styles.filledTrackRangeHorizontal
+				: styles.filledTrackRangeVertical
+			: isHorizontal
+				? styles.filledTrackSingleHorizontal
+				: styles.filledTrackSingleVertical
 	);
 }
 
@@ -268,8 +455,12 @@ export function sliderMarksContainerAttrs(isHorizontal: boolean): SvelteStyleAtt
 }
 
 /** A single tick; its offset along the rail is an inline style. */
-export function sliderMarkAttrs(isHorizontal: boolean): SvelteStyleAttrs {
-	return sx(styles.mark, isHorizontal ? styles.markHorizontal : styles.markVertical);
+export function sliderMarkAttrs(isHorizontal: boolean, isFilled: boolean): SvelteStyleAttrs {
+	return sx(
+		styles.mark,
+		isHorizontal ? styles.markHorizontal : styles.markVertical,
+		isFilled && styles.markFilled
+	);
 }
 
 /** A tick's caption; its offset along the rail is an inline style. */
@@ -282,17 +473,28 @@ export function sliderTextValueAttrs(): SvelteStyleAttrs {
 	return sx(styles.textValue);
 }
 
-/**
- * A draggable thumb. `thumbDisabled`'s plain `backgroundColor` replaces
- * `thumbHover`'s whole conditional group, which is why the disabled variants
- * collapse to the same atomic classes whether or not the hover key is applied.
- */
-export function sliderThumbAttrs(isHorizontal: boolean, isDisabled: boolean): SvelteStyleAttrs {
+/** A draggable thumb's geometry; its progress is an inline custom property. */
+export function sliderThumbAttrs(
+	isHorizontal: boolean,
+	isDisabled: boolean,
+	isDragging: boolean,
+	hasTouchTargets: boolean
+): SvelteStyleAttrs {
 	return sx(
 		styles.thumb,
-		isHorizontal ? styles.thumbHorizontal : rtlStyles.centerInline('50%'),
+		isHorizontal ? styles.thumbHorizontal : styles.thumbVertical,
 		!isDisabled && styles.thumbHover,
+		!isDisabled && isDragging && styles.thumbPressed,
 		!isDisabled && focusOutlineStyles.focusVisible,
-		isDisabled && styles.thumbDisabled
+		isDisabled && styles.thumbDisabled,
+		hasTouchTargets && styles.thumbHit
+	);
+}
+
+/** A thumb's value-tooltip anchor: a thumb-sized box layout places at the value. */
+export function sliderValueAnchorAttrs(isHorizontal: boolean): SvelteStyleAttrs {
+	return sx(
+		styles.valueAnchor,
+		isHorizontal ? styles.valueAnchorHorizontal : styles.valueAnchorVertical
 	);
 }

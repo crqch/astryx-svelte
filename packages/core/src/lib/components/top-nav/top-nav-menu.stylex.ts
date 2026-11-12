@@ -51,7 +51,8 @@ const styles = stylex.create({
 				'@media (hover: hover)': colorVars['--color-overlay-hover']
 			}
 		},
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		fontFamily: 'inherit'
 	},
 	triggerOpen: {
@@ -77,6 +78,8 @@ const styles = stylex.create({
 		transform: 'rotate(180deg)'
 	},
 	menuContainer: {
+		// A held pointer slides across the items; it selects no text.
+		userSelect: 'none',
 		display: 'flex',
 		flexDirection: 'column',
 		gap: spacingVars['--spacing-1'],
@@ -104,7 +107,8 @@ const styles = stylex.create({
 				'@media (hover: hover)': colorVars['--color-overlay-hover']
 			}
 		},
-		border: 'none'
+		borderWidth: 0,
+		borderStyle: 'none'
 	},
 	menuItemIcon: {
 		display: 'flex',
@@ -143,8 +147,9 @@ const drawerStyles = stylex.create({
 	},
 	header: {
 		justifyContent: 'space-between',
-		border: 'none',
-		background: 'none'
+		borderWidth: 0,
+		borderStyle: 'none',
+		backgroundColor: 'transparent'
 	},
 	chevron: {
 		display: 'inline-flex',

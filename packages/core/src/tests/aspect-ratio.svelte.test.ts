@@ -11,10 +11,10 @@ import baseCss from '$lib/styles/base.css?raw';
 import AspectRatioProbe from './fixtures/aspect-ratio-probe.svelte';
 
 /**
- * Astryx's `AspectRatio/AspectRatio.test.tsx` at the **0.5.0** pin — **28
+ * Astryx's `AspectRatio/AspectRatio.test.tsx` at the **0.7.13** pin — **28
  * upstream `it` declarations** (14 top-level, 2 in `describe('responsive
- * ratio')`, 7 in `describe('fit')`, 2 in `describe('style merging')`, 3 in
- * `describe('reset.css fit baseline rules')`), **26 here**.
+ * ratio')`, 9 in `describe('fit')`, 2 in `describe('style merging')`, 1 in
+ * `describe('reset.css')`), **26 here**.
  *
  * **The 2 that are not here are the whole `responsive ratio` block**, new at
  * 0.5.0: `emits the ratio as a class-level declaration, not an inline style`
@@ -52,11 +52,10 @@ import AspectRatioProbe from './fixtures/aspect-ratio-probe.svelte';
  *   baseline rules to mean anything.
  *
  * - **`reset.css` is `styles/base.css` here**, which this port owns in full
- *   (upstream's reset is one of its inputs). The three baseline-rule cases assert
- *   on the same text with the same regexes, widened for this file's Prettier
- *   formatting: single-quoted attribute values, and a selector Prettier wraps
- *   across two lines. Both differences are absorbed by `['"]` and `\s*`; the
- *   declarations being matched are byte-identical to upstream's.
+ *   (upstream's reset is one of its inputs). The single `reset.css` case asserts
+ *   the same absence upstream does; at 0.7.13 the fit declarations moved out of
+ *   the reset sheet and into the component's StyleX styles, so the sheet must
+ *   carry no `aspect-ratio-override` rule at all.
  *
  * - **The ratio is read off `--x-aspectRatio`**, exactly as upstream's own
  *   `ratioVar` helper does since 0.5.0 — see the helper below.
@@ -284,8 +283,11 @@ describe('AspectRatio', () => {
 			});
 			const wrapper = screen.getByTestId('image').element().parentElement;
 			expect(wrapper).not.toHaveAttribute('data-astryx-aspect-ratio-override');
-			// Without the marker, none of the base.css fit rules can match, so
-			// existing self-styled children render exactly as before.
+			// Without fit the wrapper carries no child-sizing styles, so existing
+			// self-styled children render exactly as before.
+			expect(wrapper?.className).not.toContain('childFill');
+			expect(wrapper?.className).not.toContain('childCover');
+			expect(wrapper?.className).not.toContain('childContain');
 			expect(screen.getByTestId('image').element()).not.toHaveAttribute('class');
 		});
 
@@ -300,11 +302,30 @@ describe('AspectRatio', () => {
 				}
 			});
 			const image = screen.getByTestId('image').element() as HTMLImageElement;
-			// Fit styling is pure CSS (zero-specificity baseline rules); the child's
-			// own class/style pass through untouched and always win, so children
-			// that already size themselves keep their behavior.
+			// Fit styling is a direct-child rule on the wrapper; the child's own
+			// class/style pass through untouched and an inline style still wins.
 			expect(image.className).toBe('consumer-class');
 			expect(image.style.objectFit).toBe('contain');
+		});
+
+		it('sizes the child from the wrapper with fit="cover"', async () => {
+			const screen = await render(AspectRatioProbe, {
+				props: { rest: { ratio: 16 / 9, fit: 'cover' }, child: 'img', testid: 'image' }
+			});
+			const wrapper = screen.getByTestId('image').element().parentElement;
+			expect(wrapper?.className).toContain('childFill');
+			expect(wrapper?.className).toContain('childCover');
+			expect(wrapper?.className).not.toContain('childContain');
+		});
+
+		it('sizes the child from the wrapper with fit="contain"', async () => {
+			const screen = await render(AspectRatioProbe, {
+				props: { rest: { ratio: 16 / 9, fit: 'contain' }, child: 'img', testid: 'image' }
+			});
+			const wrapper = screen.getByTestId('image').element().parentElement;
+			expect(wrapper?.className).toContain('childFill');
+			expect(wrapper?.className).toContain('childContain');
+			expect(wrapper?.className).not.toContain('childCover');
 		});
 
 		it('centers the child via the wrapper with fit="center"', async () => {
@@ -318,6 +339,7 @@ describe('AspectRatio', () => {
 			// .childCenter` here against upstream's `AspectRatio__styles.childCenter`
 			// — the module filename differs, the suffix `toContain` matches does not.
 			expect(wrapper?.className).toContain('childCenter');
+			expect(wrapper?.className).not.toContain('childFill');
 		});
 
 		it('does not center the wrapper for other fit values', async () => {
@@ -361,39 +383,16 @@ describe('AspectRatio', () => {
 		});
 	});
 
-	describe('reset.css fit baseline rules', () => {
-		// The cover/contain child sizing ships as zero-specificity baseline
-		// rules in base.css keyed on the data-astryx-aspect-ratio-override
-		// marker the component sets on the child's direct parent. These
-		// assertions keep the stylesheet in sync with the component contract.
+	describe('reset.css', () => {
+		// fit ships with the component's StyleX styles in `astryx-base`. A rule in
+		// reset.css sits below the layer the documented Tailwind setups give
+		// preflight, whose `img, video { height: auto }` would undo the fill.
 		//
 		// Upstream loads the file in `beforeAll` with `fs`; the `?raw` import at
 		// the top of this file is the browser project's equivalent, so there is
 		// nothing left for a `beforeAll` to do.
-
-		it('sizes the child to fill the box for cover and contain', () => {
-			const fillMatch = baseCss.match(
-				/:where\(\[data-astryx-aspect-ratio-override=['"]cover['"]\],\s*\[data-astryx-aspect-ratio-override=['"]contain['"]\]\)\s*>\s*:where\(\*\)\s*\{([^}]+)\}/
-			);
-			expect(fillMatch).not.toBeNull();
-			expect(fillMatch![1]).toContain('width: 100%');
-			expect(fillMatch![1]).toContain('height: 100%');
-		});
-
-		it('crops media with object-fit: cover for fit="cover"', () => {
-			const coverMatch = baseCss.match(
-				/:where\(\[data-astryx-aspect-ratio-override=['"]cover['"]\]\)\s*>\s*:where\(img,\s*video\)\s*\{([^}]+)\}/
-			);
-			expect(coverMatch).not.toBeNull();
-			expect(coverMatch![1]).toContain('object-fit: cover');
-		});
-
-		it('letterboxes media with object-fit: contain for fit="contain"', () => {
-			const containMatch = baseCss.match(
-				/:where\(\[data-astryx-aspect-ratio-override=['"]contain['"]\]\)\s*>\s*:where\(img,\s*video\)\s*\{([^}]+)\}/
-			);
-			expect(containMatch).not.toBeNull();
-			expect(containMatch![1]).toContain('object-fit: contain');
+		it('carries no AspectRatio rules', () => {
+			expect(baseCss).not.toContain('aspect-ratio-override');
 		});
 	});
 });

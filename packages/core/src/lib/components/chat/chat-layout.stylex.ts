@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
-import { spacingVars } from '../../styles/tokens.stylex.js';
+import { focusVars, spacingVars } from '../../styles/tokens.stylex.js';
 import type { ChatDensity } from './chat-context.svelte.js';
+import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 
 /** Ported from the `styles` block in Astryx's `Chat/ChatLayout.tsx`. */
 const styles = stylex.create({
@@ -20,13 +21,7 @@ const styles = stylex.create({
 	},
 	rootScrollable: {
 		overflowY: 'auto',
-		overflowX: 'hidden',
-		// Hide scrollbar during programmatic scroll animation to prevent flash.
-		// Restored when animation settles.
-		scrollbarWidth: {
-			default: null,
-			':is([data-astryx-scrolling])': 'none'
-		}
+		overflowX: 'hidden'
 	},
 
 	messageArea: {
@@ -43,6 +38,13 @@ const styles = stylex.create({
 		maxWidth: '100%',
 		paddingInline: 0
 	},
+
+	// The end padding grows by the part of the keyboard over the dock and, for
+	// a fixed dock, by the dock's height. So the newest message can scroll
+	// above the composer, with no element added for it.
+	messageAreaEndRoom: (room: number) => ({
+		paddingBlockEnd: `calc(${spacingVars['--spacing-6']} + ${room}px)`
+	}),
 
 	emptyState: {
 		display: 'flex',
@@ -90,6 +92,15 @@ const styles = stylex.create({
 		pointerEvents: 'auto',
 		paddingInline: spacingVars['--spacing-3'],
 		paddingBlockEnd: spacingVars['--spacing-3']
+	},
+
+	// The ring Done's park shows after typing, inside the dock's edge, which can
+	// meet the viewport's.
+	dockFocusRing: {
+		outlineOffset: {
+			default: null,
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
 	},
 
 	dockInner: {
@@ -178,8 +189,12 @@ export function chatLayoutRootAttrs(isSelfScrolling: boolean, xstyle?: StyleArg)
 	return sx(styles.root, isSelfScrolling && styles.rootScrollable, xstyle);
 }
 
-export function chatLayoutMessageAreaAttrs(density: ChatDensity): SvelteStyleAttrs {
-	return sx(styles.messageArea, byDensity[density].messageArea);
+export function chatLayoutMessageAreaAttrs(density: ChatDensity, endRoom = 0): SvelteStyleAttrs {
+	return sx(
+		styles.messageArea,
+		byDensity[density].messageArea,
+		endRoom > 0 && styles.messageAreaEndRoom(endRoom)
+	);
 }
 
 export function chatLayoutEmptyStateAttrs(): SvelteStyleAttrs {
@@ -198,7 +213,12 @@ export function chatLayoutBlurLayerAttrs(density: ChatDensity): SvelteStyleAttrs
 }
 
 export function chatLayoutDockAttrs(density: ChatDensity): SvelteStyleAttrs {
-	return sx(styles.dock, byDensity[density].dock);
+	return sx(
+		focusOutlineStyles.focusVisible,
+		styles.dock,
+		byDensity[density].dock,
+		styles.dockFocusRing
+	);
 }
 
 export function chatLayoutDockInnerAttrs(density: ChatDensity): SvelteStyleAttrs {

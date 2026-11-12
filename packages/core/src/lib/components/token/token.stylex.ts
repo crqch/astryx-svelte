@@ -98,19 +98,16 @@ const styles = stylex.create({
 		borderWidth: 0
 	},
 	invisibleButton: {
-		all: 'unset',
 		cursor: {
 			default: 'inherit',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		font: 'inherit',
 		color: 'inherit',
 		outline: 'none',
 		overflow: 'hidden',
 		minWidth: 0
 	},
 	removeButton: {
-		all: 'unset',
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
@@ -124,11 +121,13 @@ const styles = stylex.create({
 		borderRadius: radiusVars['--radius-full'],
 		width: '16px',
 		height: '16px',
+		// A token cut by its width shrinks only its label, not the button.
+		flexShrink: 0,
 		color: 'inherit',
 		'::after': {
 			content: '""',
 			position: 'absolute',
-			inset: '-14px'
+			inset: '-4px'
 		}
 	}
 });

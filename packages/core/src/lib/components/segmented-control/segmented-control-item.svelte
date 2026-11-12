@@ -21,6 +21,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { segmentTitleProps } from '../../private-attributes/segment-title.js';
 	import { segmentDisabledProps } from '../../private-attributes/segment-disabled.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useSegmentedControlContext } from './segmented-control-context.svelte.js';
 	import {
 		segmentedControlIconAttrs,
@@ -56,6 +57,7 @@
 	);
 	/** A press can change an unselected, enabled segment: it paints the overlay. */
 	const isPressable = $derived(!isSelected && !isItemDisabled);
+	const pressable = usePressFeedback();
 	const size = $derived(group().size);
 	const isFill = $derived(group().layout === 'fill');
 
@@ -107,7 +109,7 @@
 	aria-describedby={describedBy}
 	data-value={value}
 	{...segmentDisabledProps(isDisabled)}
-	data-astryx-pressable={isPressable ? '' : undefined}
+	{...isPressable ? pressable : undefined}
 	tabindex={isSelected ? 0 : -1}
 	onclick={handleClick}
 	{...theme}

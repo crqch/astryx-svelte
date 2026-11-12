@@ -15,6 +15,9 @@
 
 	export type PowerSearchSize = 'sm' | 'md' | 'lg';
 
+	/** How PowerSearch presents filter editing; see {@link PowerSearchProps.presentation}. */
+	export type PowerSearchPresentation = 'popover' | 'bottom-sheet' | 'adaptive';
+
 	export interface PowerSearchProps extends Omit<BaseProps<HTMLElement>, 'onChange'> {
 		/** PowerSearch configuration defining available fields and operators. */
 		config: PowerSearchConfig;
@@ -107,6 +110,30 @@
 		 * Keys are operator value types (e.g. 'string', 'enum', 'date_absolute').
 		 */
 		components?: PowerSearchComponents;
+		/**
+		 * How the field presents filter editing.
+		 * - `'popover'`: the tokenizer field with its typeahead and the editor
+		 *   popover, on every device.
+		 * - `'bottom-sheet'`: the whole field is one trigger showing display-only
+		 *   filter tokens; it opens a stack of sheets. Filters lists the filters
+		 *   as rows that edit or remove one, with Add filter, Done, and Clear
+		 *   all, which asks first and keeps read-only filters. Add filter opens
+		 *   above it with the fields (or the content search with inline
+		 *   suggestions), and a value step opens above that, stages operator →
+		 *   value, and confirms from its footer. Dismissing a step reveals the
+		 *   one beneath. The flow edits a draft: `onChange` is called when Done
+		 *   applies it, once per edit in order, and a dismissal with a changed
+		 *   draft asks before discarding it. Suited to compact touch screens,
+		 *   where the editor popover competes with the software keyboard.
+		 * - `'adaptive'`: the bottom sheet on compact coarse-pointer screens,
+		 *   otherwise the popover — the same resolution Selector uses.
+		 *
+		 * In the sheet presentation `menuWidth` and `tokenOverflowBehavior` have
+		 * no surface to act on and warn in development. Pass `'popover'` to keep
+		 * the tokenizer field and the editor popover on every device.
+		 * @default 'adaptive'
+		 */
+		presentation?: PowerSearchPresentation;
 	}
 
 	// =============================================================================
@@ -156,26 +183,40 @@
 </script>
 
 <script lang="ts">
+	import type { Attachment } from 'svelte/attachments';
 	import Avatar from '../avatar/avatar.svelte';
+	import Field from '../field/field.svelte';
 	import Icon from '../icon/icon.svelte';
 	import PopoverLayer from '../popover/popover-layer.svelte';
 	import Token from '../token/token.svelte';
 	import Tokenizer from '../tokenizer/tokenizer.svelte';
+	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import TypeaheadItem from '../typeahead/typeahead-item.svelte';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { usePopover } from '../popover/use-popover.svelte.js';
+	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
+	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { useSize } from '../../internal/contexts.svelte.js';
+	import { useThemeContext } from '../../theme/theme-context.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { isFocusDetached } from '../../utils/focus-return.js';
 	import { formatFilterValue } from './format-filter-value.js';
+	import PowerSearchBottomSheet from './power-search-bottom-sheet.svelte';
 	import PowerSearchEditPopover from './power-search-edit-popover.svelte';
 	import PowerSearchTokenValue from './power-search-token-value.svelte';
 	import {
 		popoverLayerStyles,
 		powerSearchPopoverOffset,
-		powerSearchResultCountAttrs
+		powerSearchResultCountAttrs,
+		powerSearchSheetContentAttrs,
+		powerSearchSheetEndSectionAttrs,
+		powerSearchSheetPlaceholderAttrs,
+		powerSearchSheetStartIconAttrs,
+		powerSearchSheetTriggerAttrs,
+		powerSearchSheetTriggerWrapperAttrs
 	} from './power-search.stylex.js';
 	import { resolveOperatorLabel } from './resolve-operator-label.js';
 	import type { PowerSearchAuxData, PowerSearchItem } from './types.js';
@@ -288,7 +329,8 @@
 		xstyle,
 		class: className,
 		style: styleProp,
-		components: componentOverrides
+		components: componentOverrides,
+		presentation = 'adaptive'
 	}: PowerSearchProps = $props();
 
 	const resolveSize = useSize();
@@ -306,8 +348,221 @@
 		popoverSaveButtonLabelFromProps ?? t('@astryx.powersearch.editor.apply')
 	);
 
+	// ------------------------------------------------------- presentation --
+
+	// The sheet needs both a compact viewport and a coarse primary pointer:
+	// tablets and large touch displays stay anchored, phones in either
+	// orientation get the sheet. Compact is the active theme's definition, so a
+	// theme that moves `md` is honored. Upstream keeps this policy in
+	// `useAdaptivePresentation`; this port has no such hook, and the minimal
+	// wiring the one consumer needs lives here rather than as a duplicate
+	// general-purpose hook.
+	const COMPACT_HEIGHT_BELOW = 500;
+	const DEFAULT_MD = 768;
+	const themeContext = useThemeContext();
+	const isAdaptive = $derived(presentation === 'adaptive');
+	let isCompactTouch = $state(false);
+
+	$effect(() => {
+		if (!isAdaptive) {
+			isCompactTouch = false;
+			return;
+		}
+		const points = themeContext?.().theme.adaptations?.widthBreakpoints;
+		const md = points?.md ?? DEFAULT_MD;
+		const query = `(width < ${md}px) and (pointer: coarse), (height < ${COMPACT_HEIGHT_BELOW}px) and (pointer: coarse)`;
+		const view = typeof window === 'undefined' ? null : window;
+		if (view == null || typeof view.matchMedia !== 'function') {
+			isCompactTouch = false;
+			return;
+		}
+		const list = view.matchMedia(query);
+		isCompactTouch = list.matches;
+		const onChange = (): void => {
+			isCompactTouch = list.matches;
+		};
+		if (typeof list.addEventListener === 'function') {
+			list.addEventListener('change', onChange);
+			return () => list.removeEventListener('change', onChange);
+		}
+		list.addListener(onChange);
+		return () => list.removeListener(onChange);
+	});
+
+	const resolvedPresentation = $derived(
+		isAdaptive ? (isCompactTouch ? 'bottom-sheet' : 'popover') : presentation
+	);
+
 	const uid = $props.id();
 	const popoverID = `${uid}-popover`;
+
+	let isSheetOpen = $state(false);
+	// Latched for the flow's lifetime: the flow stays presented after it closes
+	// until the sheets have run their exit and handed focus back to the trigger.
+	// Without the latch, `adaptive` resolving to `popover` mid-session would
+	// unmount the sheets and the trigger they return focus to in the same
+	// render, dropping focus to the page body.
+	let isSheetPresented = $state(false);
+	const isSheetPresentation = $derived(
+		isSheetOpen || isSheetPresented || resolvedPresentation === 'bottom-sheet'
+	);
+	let triggerEl = $state<HTMLButtonElement | null>(null);
+	let endLaneEl = $state<HTMLDivElement | null>(null);
+
+	// `hasAutoFocus` applies only to the control the field first mounts. A
+	// presentation swap remounts the control, and focusing the new one would
+	// pull focus from wherever on the page it was.
+	// svelte-ignore state_referenced_locally
+	let autoFocusState = $state({
+		presentation: isSheetPresentation,
+		isFirstControl: true
+	});
+	$effect(() => {
+		const now = isSheetPresentation;
+		if (autoFocusState.presentation !== now) {
+			autoFocusState = { presentation: now, isFirstControl: false };
+		}
+	});
+	const autoFocusOnMount = $derived(
+		hasAutoFocus &&
+			autoFocusState.isFirstControl &&
+			autoFocusState.presentation === isSheetPresentation
+	);
+
+	let isSwapFocus = false;
+	function focusAfterSwap(control: { focus(): void } | null | undefined): void {
+		if (control == null) {
+			return;
+		}
+		isSwapFocus = true;
+		try {
+			control.focus();
+		} finally {
+			isSwapFocus = false;
+		}
+	}
+	function handleFieldFocus(event: FocusEvent): void {
+		if (!isSwapFocus) {
+			onFocus?.(event);
+		}
+	}
+	function handleFieldBlur(event: FocusEvent): void {
+		onBlur?.(event);
+	}
+
+	// A presentation swap removes the focused control, so the other
+	// presentation's primary control takes focus and focus never falls to the
+	// page body. The detaching root notes that it held focus; the attaching
+	// root gives focus to its primary control when focus has fallen away.
+	let isFocusPendingHandOff = false;
+	const attachSheetRoot: Attachment<HTMLDivElement> = (node) => {
+		if (isFocusPendingHandOff && isFocusDetached(document)) {
+			focusAfterSwap(triggerEl);
+		}
+		isFocusPendingHandOff = false;
+		return () => {
+			if (node.contains(document.activeElement) || popoverState.type !== 'idle') {
+				isFocusPendingHandOff = true;
+			}
+		};
+	};
+	const attachPopoverRoot: Attachment<HTMLDivElement> = (node) => {
+		const detachPopover = (popover.attachTrigger as (element: HTMLElement) => void | (() => void))(
+			node
+		);
+		if (isFocusPendingHandOff && isFocusDetached(document)) {
+			focusAfterSwap(tokenizer);
+		}
+		isFocusPendingHandOff = false;
+		return () => {
+			detachPopover?.();
+			if (node.contains(document.activeElement) || popoverState.type !== 'idle') {
+				isFocusPendingHandOff = true;
+			}
+		};
+	};
+
+	const showsDisabledMessage = $derived(isDisabled && !!disabledMessage);
+	const disabledMessageTooltip = useTooltip(() => ({
+		id: `${uid}-disabled-tooltip`,
+		placement: 'above' as const,
+		focusTrigger: 'always' as const,
+		isEnabled: isSheetPresentation && showsDisabledMessage
+	}));
+	const triggerId = `${uid}-trigger`;
+	const triggerLabelId = `${uid}-label`;
+	const triggerContentId = `${uid}-content`;
+	const statusMessageId = `${uid}-status`;
+	const triggerDescribedBy = $derived(
+		[
+			status?.message ? statusMessageId : null,
+			showsDisabledMessage ? disabledMessageTooltip.describedBy : null
+		]
+			.filter(Boolean)
+			.join(' ') || undefined
+	);
+
+	function openSheet(): void {
+		if (isDisabled) {
+			return;
+		}
+		triggerEl?.focus({ preventScroll: true });
+		isSheetPresented = true;
+		isSheetOpen = true;
+	}
+
+	function handleTriggerWrapperClick(event: MouseEvent): void {
+		const target = event.target;
+		if (target instanceof Node && (triggerEl?.contains(target) || endLaneEl?.contains(target))) {
+			return;
+		}
+		openSheet();
+	}
+
+	function handleTriggerFocusWithin(event: FocusEvent): void {
+		if (!isSheetOpen && isSheetPresented) {
+			isSheetPresented = false;
+			const count = afterCloseResultCount;
+			afterCloseResultCount = null;
+			if (count != null) {
+				announce(count);
+			}
+		}
+		const related = event.relatedTarget;
+		if (
+			!(related instanceof Node) ||
+			!event.currentTarget ||
+			!(event.currentTarget as HTMLElement).contains(related)
+		) {
+			handleFieldFocus(event);
+		}
+	}
+
+	function handleTriggerBlurWithin(event: FocusEvent): void {
+		const related = event.relatedTarget;
+		if (
+			!(related instanceof Node) ||
+			!event.currentTarget ||
+			!(event.currentTarget as HTMLElement).contains(related)
+		) {
+			handleFieldBlur(event);
+		}
+	}
+
+	useDevWarning(
+		'PowerSearch',
+		'`menuWidth` has no surface in the bottom-sheet presentation: the sheet flow has no typeahead popover to size. Pass `presentation="popover"` to keep the popover on every device, or leave it out.',
+		() => isSheetPresentation && menuWidth != null
+	);
+	useDevWarning(
+		'PowerSearch',
+		'`tokenOverflowBehavior` has no surface in the bottom-sheet presentation: the trigger wraps its display-only tokens. Pass `presentation="popover"` to keep the tokenizer field on every device, or leave it out.',
+		() => isSheetPresentation && tokenOverflowBehavior != null
+	);
+
+	// A result count that changed during the flow's exit is spoken once the
+	// flow has fully closed and focus is back on the trigger.
+	let afterCloseResultCount: string | null = null;
 
 	let tokenizer = $state<Tokenizer<PowerSearchItem> | null>(null);
 
@@ -361,14 +616,45 @@
 		}
 	}
 
+	// When `adaptive` flips to the sheet while the editor popover is open, the
+	// editing ends with the popover: its state returns to idle in the render that
+	// sees the swap, so a later switch back does not reopen a stale editor.
+	$effect(() => {
+		if (isSheetPresentation && popoverState.type !== 'idle') {
+			popoverState = { type: 'idle' };
+			popover.hide();
+		}
+	});
+
+	// A field that becomes disabled cannot keep its flow open, and must not
+	// reopen it when re-enabled.
+	// svelte-ignore state_referenced_locally
+	let wasDisabled = isDisabled;
+	$effect(() => {
+		if (isDisabled !== wasDisabled) {
+			wasDisabled = isDisabled;
+			if (isDisabled && isSheetOpen) {
+				isSheetOpen = false;
+			}
+		}
+	});
+
 	/** Upstream's `useImperativeHandle(handleRef, …)` — reach it via `bind:this`. */
 	export function focusTypeahead(): void {
-		tokenizer?.focus();
+		if (isSheetPresentation) {
+			triggerEl?.focus();
+		} else {
+			tokenizer?.focus();
+		}
 	}
 
 	/** Upstream's `useImperativeHandle(handleRef, …)` — reach it via `bind:this`. */
 	export function blurTypeahead(): void {
-		tokenizer?.blur();
+		if (isSheetPresentation) {
+			triggerEl?.blur();
+		} else {
+			tokenizer?.blur();
+		}
 	}
 
 	// Convert filters to tokenizer items
@@ -558,24 +844,31 @@
 
 	// Announce result-count changes to screen readers through a polite live
 	// region, mirroring the way Typeahead announces its dropdown result count.
-	// The count is otherwise only shown visually and stays silent to assistive
-	// tech. Skip the first run so the count already present on mount isn't
-	// announced unprompted — only user-driven changes are spoken.
+	// Only a change after mount is spoken — the count present on mount is not
+	// announced unprompted. While a sheet of the flow is open the sheet announces
+	// the count from its own body, so this effect stays quiet; a change that
+	// lands during the flow's exit waits for the trigger focus.
 	const announce = useAnnounce();
-	let hasMounted = false;
+	const isSheetExiting = $derived(isSheetPresented && !isSheetOpen);
+	// svelte-ignore state_referenced_locally
+	let announcedResultCount: string | null = resultCountText;
 	$effect(() => {
 		const text = resultCountText;
-		if (!hasMounted) {
-			hasMounted = true;
+		if (text === announcedResultCount) {
 			return;
 		}
+		announcedResultCount = text;
 		if (text != null) {
-			announce(text);
+			if (isSheetExiting) {
+				afterCloseResultCount = text;
+			} else if (!isSheetOpen) {
+				announce(text);
+			}
 		}
 	});
 </script>
 
-{#snippet renderToken(item: PowerSearchItem, onRemove: () => void)}
+{#snippet renderFilterToken(item: PowerSearchItem, onRemove?: () => void)}
 	{@const auxData = item.auxiliaryData}
 	{@const filterIndex = auxData?.filterIndex ?? -1}
 	{@const filter = filterIndex >= 0 ? filters[filterIndex] : undefined}
@@ -583,7 +876,7 @@
 	{@const operator = auxData?.operatorKey
 		? config.getOperator(auxData.fieldKey, auxData.operatorKey)
 		: undefined}
-	{@const canInteract = !isReadOnly && !isDisabled && !filter?.isReadOnly}
+	{@const canInteract = onRemove != null && !isReadOnly && !isDisabled && !filter?.isReadOnly}
 	{@const handleClick = canInteract ? () => handleTokenClick(filterIndex) : undefined}
 	{@const handleRemove = canInteract ? onRemove : undefined}
 	{@const TokenOverride = operator ? componentOverrides?.[operator.value.type]?.Token : undefined}
@@ -649,6 +942,10 @@
 	{/if}
 {/snippet}
 
+{#snippet renderToken(item: PowerSearchItem, onRemove: () => void)}
+	{@render renderFilterToken(item, onRemove)}
+{/snippet}
+
 {#snippet renderItem(item: PowerSearchItem)}
 	{@const auxData = item.auxiliaryData}
 	{#if !auxData}
@@ -679,71 +976,184 @@
 	{#if endContent}{@render endContent()}{/if}
 {/snippet}
 
-<div {...themeProps('power-search')} {@attach popover.attachTrigger}>
-	<Tokenizer
-		bind:this={tokenizer}
-		{label}
-		{isLabelHidden}
-		{searchSource}
-		value={tokenizerValue}
-		onChange={handleTokenizerChange}
-		{renderToken}
-		{renderItem}
-		maxMenuItems={MAX_BROWSE_MENU_ITEMS}
-		{menuWidth}
-		placeholder={filters.length === 0 ? placeholder : ''}
-		{hasAutoFocus}
-		hasClear={hasClear && !isReadOnly}
-		{startIcon}
-		endContent={resultCountText != null || endContent ? combinedEndContent : undefined}
-		{isDisabled}
-		{disabledMessage}
-		{size}
-		{tokenOverflowBehavior}
-		hasEntriesOnFocus
-		debounceMs={0}
-		{status}
-		{statusVariant}
-		onfocusin={onFocus}
-		onfocusout={onBlur}
-		{xstyle}
-		class={className}
-		style={styleProp}
-		data-testid={testId}
-	/>
-</div>
-
-<PopoverLayer
-	{popover}
-	placement="below"
-	alignment="start"
-	offset={powerSearchPopoverOffset}
-	xstyle={[popoverLayerStyles.layer, layerAnimations.below]}
->
-	{#if popoverPartialFilter}
-		{#key popoverKey}
-			{#if EditorOverride}
-				<EditorOverride
-					config={configProp}
-					filter={popoverPartialFilter}
-					mode={popoverMode}
-					onSave={handlePopoverSave}
-					onCancel={handlePopoverCancel}
-					saveButtonLabel={popoverSaveButtonLabel}
-					{isReadOnly}
-				/>
-			{:else}
-				<PowerSearchEditPopover
-					{config}
-					filter={popoverPartialFilter}
-					mode={popoverMode}
-					onSave={handlePopoverSave}
-					onCancel={handlePopoverCancel}
-					saveButtonLabel={popoverSaveButtonLabel}
-					maxMenuItems={maxOperatorMenuItems}
-					{isReadOnly}
-				/>
+{#if isSheetPresentation}
+	<div {...themeProps('power-search')} {@attach attachSheetRoot}>
+		<Field
+			{label}
+			{isLabelHidden}
+			inputID={triggerId}
+			labelID={triggerLabelId}
+			{isDisabled}
+			status={status
+				? {
+						type: status.type,
+						message: status.message,
+						messageID: status.message ? statusMessageId : undefined
+					}
+				: undefined}
+			{statusVariant}
+			{xstyle}
+			class={className}
+			style={styleProp}
+		>
+			<!--
+				The trigger's name is the label plus everything visible here: the
+				placeholder, or the tokens, so speech input can say what it sees and
+				assistive technology hears the selected filters (WCAG 2.5.3).
+			-->
+			<div
+				{...powerSearchSheetTriggerWrapperAttrs({
+					hasTokens: tokenizerValue.length > 0,
+					size,
+					isDisabled,
+					status
+				})}
+				onclick={handleTriggerWrapperClick}
+				onfocusin={handleTriggerFocusWithin}
+				onfocusout={handleTriggerBlurWithin}
+				aria-disabled={isDisabled ? true : undefined}
+				{@attach disabledMessageTooltip.attachTrigger}
+			>
+				<div id={triggerContentId} {...powerSearchSheetContentAttrs()}>
+					{#if startIcon}
+						<span {...powerSearchSheetStartIconAttrs(tokenizerValue.length > 0)}>
+							{#if typeof startIcon === 'string'}
+								<Icon icon={startIcon} size="sm" color="secondary" />
+							{:else}
+								{@render startIcon()}
+							{/if}
+						</span>
+					{/if}
+					{#each tokenizerValue as item (item.id)}
+						{@render renderFilterToken(item)}
+					{/each}
+					<!-- svelte-ignore a11y_autofocus -- the field's first control takes upstream's initial autoFocus -->
+					<button
+						type="button"
+						id={triggerId}
+						bind:this={triggerEl}
+						data-testid={testId}
+						autofocus={autoFocusOnMount}
+						onclick={openSheet}
+						aria-disabled={isDisabled ? true : undefined}
+						aria-haspopup="dialog"
+						aria-expanded={isSheetOpen}
+						aria-labelledby={`${triggerLabelId} ${triggerContentId}`}
+						aria-describedby={triggerDescribedBy}
+						{...powerSearchSheetTriggerAttrs(tokenizerValue.length > 0)}
+					>
+						{#if filters.length === 0}
+							<span {...powerSearchSheetPlaceholderAttrs()}>{placeholder}</span>
+						{/if}
+					</button>
+				</div>
+				{#if endContent || resultCountText != null}
+					<div bind:this={endLaneEl} {...powerSearchSheetEndSectionAttrs()}>
+						{#if resultCountText != null}
+							<span {...powerSearchResultCountAttrs()}>{resultCountText}</span>
+						{/if}
+						{#if endContent}{@render endContent()}{/if}
+					</div>
+				{/if}
+			</div>
+			{#if showsDisabledMessage}
+				<TooltipLayer tooltip={disabledMessageTooltip}>{disabledMessage}</TooltipLayer>
 			{/if}
-		{/key}
-	{/if}
-</PopoverLayer>
+		</Field>
+		<!--
+			Mounted from the press until the flow's exit has completed and focus is
+			back on the trigger: at rest the field renders its trigger alone — no
+			closed dialogs, rows, search field or editors in the DOM.
+		-->
+		{#if isSheetOpen || isSheetPresented}
+			<PowerSearchBottomSheet
+				isOpen={isSheetOpen}
+				onOpenChange={(open) => (isSheetOpen = open)}
+				{resultCountText}
+				{config}
+				{configProp}
+				{filters}
+				{onChange}
+				{searchSource}
+				{placeholder}
+				{isReadOnly}
+				{isDisabled}
+				{hasClear}
+				{maxOperatorMenuItems}
+				{timezoneID}
+				{maxSearchResults}
+				saveButtonLabel={popoverSaveButtonLabelFromProps}
+				components={componentOverrides}
+			/>
+		{/if}
+	</div>
+{:else}
+	<div {...themeProps('power-search')} {@attach attachPopoverRoot}>
+		<Tokenizer
+			bind:this={tokenizer}
+			{label}
+			{isLabelHidden}
+			{searchSource}
+			value={tokenizerValue}
+			onChange={handleTokenizerChange}
+			{renderToken}
+			{renderItem}
+			maxMenuItems={MAX_BROWSE_MENU_ITEMS}
+			{menuWidth}
+			placeholder={filters.length === 0 ? placeholder : ''}
+			hasAutoFocus={autoFocusOnMount}
+			hasClear={hasClear && !isReadOnly}
+			{startIcon}
+			endContent={resultCountText != null || endContent ? combinedEndContent : undefined}
+			{isDisabled}
+			{disabledMessage}
+			{size}
+			{tokenOverflowBehavior}
+			hasEntriesOnFocus
+			debounceMs={0}
+			{status}
+			{statusVariant}
+			onfocusin={handleFieldFocus}
+			onfocusout={handleFieldBlur}
+			{xstyle}
+			class={className}
+			style={styleProp}
+			data-testid={testId}
+		/>
+	</div>
+
+	<PopoverLayer
+		{popover}
+		placement="below"
+		alignment="start"
+		offset={powerSearchPopoverOffset}
+		xstyle={[popoverLayerStyles.layer, layerAnimations.below]}
+	>
+		{#if popoverPartialFilter}
+			{#key popoverKey}
+				{#if EditorOverride}
+					<EditorOverride
+						config={configProp}
+						filter={popoverPartialFilter}
+						mode={popoverMode}
+						onSave={handlePopoverSave}
+						onCancel={handlePopoverCancel}
+						saveButtonLabel={popoverSaveButtonLabel}
+						{isReadOnly}
+					/>
+				{:else}
+					<PowerSearchEditPopover
+						{config}
+						filter={popoverPartialFilter}
+						mode={popoverMode}
+						onSave={handlePopoverSave}
+						onCancel={handlePopoverCancel}
+						saveButtonLabel={popoverSaveButtonLabel}
+						maxMenuItems={maxOperatorMenuItems}
+						{isReadOnly}
+					/>
+				{/if}
+			{/key}
+		{/if}
+	</PopoverLayer>
+{/if}

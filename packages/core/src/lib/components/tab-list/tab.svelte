@@ -53,6 +53,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { EDGE_COMP_ATTR } from '../../internal/edge-compensation.stylex.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
 	import { useTabListContext } from './tab-list-context.svelte.js';
@@ -106,6 +107,9 @@
 	const isTabRole = $derived(isTabsPattern && !isLink);
 	const displayIcon = $derived(isSelected && selectedIcon ? selectedIcon : icon);
 	const hasVisibleLabel = $derived(!isLabelHidden && label !== '');
+	const isDisabled = $derived(rest['aria-disabled'] === true || rest['aria-disabled'] === 'true');
+	// The tab itself is the pressable: the hover layer inherits its strength.
+	const pressable = usePressFeedback();
 
 	function handleSelect(): void {
 		tabList().onChange(value);
@@ -143,7 +147,7 @@
 	const indicatorTheme = $derived(
 		themeProps('tab-indicator', { selected: isSelected ? 'selected' : null })
 	);
-	const attrs = $derived(tabAttrs(size, isSelected, isFill, xstyle));
+	const attrs = $derived(tabAttrs(size, isSelected, isFill, isDisabled, xstyle));
 	const hoverBgAttrs = $derived(tabHoverBgAttrs(size));
 	const iconAttrs = $derived(tabIconAttrs(size));
 	const indicatorAttrs = $derived(tabIndicatorAttrs(isSelected));
@@ -155,6 +159,7 @@
 	/** Upstream's `sharedProps` — everything both branches carry. */
 	const sharedProps = $derived({
 		...rest,
+		...pressable,
 		...(isLabelHidden ? { 'aria-label': label } : {}),
 		[EDGE_COMP_ATTR]: '',
 		'data-tab-value': value,

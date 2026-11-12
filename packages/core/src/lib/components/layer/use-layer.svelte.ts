@@ -91,6 +91,16 @@ export interface ContextLayerOptions extends BaseLayerOptions {
 	 * @default false
 	 */
 	lazyMount?: boolean;
+
+	/**
+	 * Keep the anchor clear: the layer scrolls only once its content overflows
+	 * the box it was given, and a tall layer chains to the page at its end.
+	 * Tooltip sets it so a hint never leaves its trigger off screen on a short
+	 * viewport.
+	 *
+	 * @default false
+	 */
+	keepsAnchorClear?: boolean;
 }
 
 /** Options for fixed mode (manual positioning) */
@@ -111,6 +121,9 @@ interface LayerRenderable {
 
 	/** Whether the popover uses native light dismiss (`popover="auto"`). */
 	readonly lightDismiss: boolean;
+
+	/** Whether the layer keeps its anchor clear by scrolling its own overflow. */
+	readonly keepsAnchorClear: boolean;
 
 	/**
 	 * The visibility declaration for the **no-Popover-API fallback** (finding
@@ -363,6 +376,9 @@ export function useLayer(
 	// upstream re-reads it every render: a consumer may flip it with a prop.
 	const lazyMount = $derived(
 		mode === 'context' ? ((options() as ContextLayerOptions).lazyMount ?? false) : false
+	);
+	const keepsAnchorClear = $derived(
+		mode === 'context' ? ((options() as ContextLayerOptions).keepsAnchorClear ?? false) : false
 	);
 
 	let isOpen = $state(false);
@@ -623,6 +639,9 @@ export function useLayer(
 			get lightDismiss() {
 				return lightDismiss;
 			},
+			get keepsAnchorClear() {
+				return keepsAnchorClear;
+			},
 			get fallbackStyle() {
 				return fallbackDisplay ? `display:${fallbackDisplay}` : undefined;
 			}
@@ -642,6 +661,9 @@ export function useLayer(
 		},
 		get lightDismiss() {
 			return lightDismiss;
+		},
+		get keepsAnchorClear() {
+			return false;
 		},
 		get fallbackStyle() {
 			return fallbackDisplay ? `display:${fallbackDisplay}` : undefined;

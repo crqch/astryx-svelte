@@ -290,6 +290,33 @@ function isItemDisabled(el: HTMLElement): boolean {
 	);
 }
 
+/** Whether an item sits inside a hidden or inert branch of the list. */
+function isHiddenWithin(el: HTMLElement, listEl: HTMLElement): boolean {
+	const hidden = el.parentElement?.closest<HTMLElement>('[hidden],[inert]');
+	return hidden != null && hidden !== listEl && listEl.contains(hidden);
+}
+
+/**
+ * A `tabStopOrder` for a group whose disabled items stay focusable, such as a
+ * row of disabled Buttons. The group keeps one Tab stop while every item is
+ * disabled: the item that holds the stop, else the first enabled item, else the
+ * first item. With an enabled item it places the stop as the default does.
+ */
+export function oneTabStopAmong(
+	itemSelector: string,
+	boundarySelector: string
+): (list: HTMLElement) => HTMLElement[] {
+	return (list) => {
+		const items = Array.from(list.querySelectorAll<HTMLElement>(itemSelector)).filter(
+			(el) => !isHiddenWithin(el, list) && el.closest(boundarySelector) === list
+		);
+		const enabled = items.filter((el) => !isItemDisabled(el));
+		const candidates = enabled.length > 0 ? enabled : items;
+		const stop = candidates.find((el) => el.getAttribute('tabindex') === '0') ?? candidates[0];
+		return stop == null ? items : [stop, ...items.filter((el) => el !== stop)];
+	};
+}
+
 /**
  * Find the next enabled item index from `start`, moving by `step`, optionally
  * wrapping. Returns -1 when no enabled item exists in range. Skipping disabled

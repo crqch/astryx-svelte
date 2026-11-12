@@ -34,6 +34,11 @@
 	 */
 	interface ToastSurfaceProps extends ToastProps {
 		gestureDirection: ToastGestureDirection;
+		/**
+		 * True once the toast's row has started to open. The card then has no
+		 * starting style, so a move between modal outlets starts no transition.
+		 */
+		hasEntryStarted?: boolean;
 	}
 </script>
 
@@ -68,7 +73,8 @@
 		isExiting = false,
 		onDismiss,
 		renderContent,
-		gestureDirection
+		gestureDirection,
+		hasEntryStarted = false
 	}: ToastSurfaceProps = $props();
 
 	const t = useTranslator();
@@ -187,7 +193,7 @@
 	const fallbackMediaMode = $derived(isError || themeMode.current === 'light' ? 'dark' : 'light');
 
 	const theme = $derived(themeProps('toast', { type }));
-	const root = $derived(toastRootAttrs(isError, isExiting));
+	const root = $derived(toastRootAttrs(isError, hasEntryStarted, isExiting));
 	const inner = toastInnerAttrs();
 	const content = toastContentAttrs();
 	const end = toastEndContentAttrs();

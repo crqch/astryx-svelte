@@ -48,8 +48,23 @@
 	// mounted already-open is presented from the first frame.
 	// svelte-ignore state_referenced_locally
 	let isPresented = $state(isOpen);
+	// A sheet that was present on load opens settled, with no rise or fade-in;
+	// later opens animate. Upstream's `useSettledOpen`; the latch ends on the
+	// first close, so nothing after it inherits the settled scrim.
+	// svelte-ignore state_referenced_locally
+	let opensSettled = $state(isOpen);
+
+	$effect(() => {
+		if (!isOpen) {
+			opensSettled = false;
+		}
+	});
 
 	const shouldPresent = $derived(isOpen || isPresented);
+	const isEntrySettled = $derived(opensSettled && isOpen);
+	// The sheet holds focus until its exit motion completes — `handleMotionComplete`
+	// returns it to the opener — so the whole exit takes no pointer input.
+	const isExitHoldingFocus = $derived(!isOpen && isPresented);
 	const panelState = $derived<BottomSheetPanelState>(
 		isOpen
 			? { kind: 'open', entering: false }
@@ -172,7 +187,10 @@
 	}
 
 	const dialogAttrs = $derived(
-		bottomSheetDialogAttrs(shouldPresent, hasScrim, !isOpen && isPresented)
+		bottomSheetDialogAttrs(shouldPresent, hasScrim, !isOpen && isPresented, undefined, {
+			isEntrySettled,
+			isExitHoldingFocus
+		})
 	);
 	const positionerAttrs = bottomSheetPositionerAttrs(false, false);
 </script>
@@ -195,6 +213,7 @@
 			{...rest}
 			{panelState}
 			{height}
+			{label}
 			{snapPoints}
 			{xstyle}
 			{children}

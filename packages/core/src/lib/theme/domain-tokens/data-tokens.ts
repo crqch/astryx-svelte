@@ -10,14 +10,16 @@
  * - Sequential ramps (color-5 -> color-1): darkest -> lightest within a hue.
  *   Use for ordered/quantitative scales, heatmaps, choropleth maps.
  *
- * **These are the single source for the palette.** They reach a document twice
- * and from here both times: `generateDataTokenDefaultsCSS()` formats them for
- * the `<Theme>` runtime, and the theme build splices the same block into every
- * package's `theme.css`, so a built stylesheet and runtime injection cannot
- * drift. Unlike every other token family they are theme-independent, so they are
- * declared once at `:root` rather than inside a theme's `@scope` block — a
- * scoped copy would re-declare the default inside every nested `<Theme>` and
- * shadow the parent's override.
+ * **These are the single source for the palette.** They reach a document three
+ * times and from here all three: `generateDataTokenDefaultsCSS()` formats them
+ * for the `<Theme>` runtime, the theme build splices the same block into every
+ * package's `theme.css`, and the core StyleX sheet emits the identical literal
+ * from `styles/data-tokens.stylex.ts` — `defineVars` requires an object literal,
+ * so that module cannot import this map, and the CSS oracle is what keeps the
+ * two copies honest against upstream. Unlike every other token family they are
+ * theme-independent, so they are declared once at `:root` rather than inside a
+ * theme's `@scope` block — a scoped copy would re-declare the default inside
+ * every nested `<Theme>` and shadow the parent's override.
  */
 export const dataTokenDefaults = {
 	// --- Categorical palette (single accent color per category) ---

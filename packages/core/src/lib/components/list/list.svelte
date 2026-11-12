@@ -1,7 +1,8 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
-	import type { ListDensity, ListMarkerStyle } from './list-context.svelte.js';
+	import type { AnimatedLayout } from '../../motion/animated-layout.js';
+	import type { ListDensity, ListEdge, ListMarkerStyle } from './list-context.svelte.js';
 
 	export interface ListProps extends BaseProps<HTMLUListElement | HTMLOListElement> {
 		/** List items. Should be `ListItem` components. */
@@ -12,10 +13,37 @@
 		 */
 		density?: ListDensity;
 		/**
+		 * The handle from `useAnimatedLayout({containerRef})`. With it, the list
+		 * isolates its rows for every pointer, so a row that slides across its
+		 * neighbours stays above them while it moves.
+		 */
+		animatedLayout?: AnimatedLayout;
+		/**
 		 * Whether to show dividers between list items.
 		 * @default false
 		 */
 		hasDividers?: boolean;
+		/**
+		 * Where each row's text, dividers, and hover and selection backgrounds
+		 * sit, relative to the list's edges and the container around it.
+		 * - `'padded'`: text sits inside each row's padding, so it starts a
+		 *   little in from a heading above the list and backgrounds have room
+		 *   around it
+		 * - `'flush'`: rows drop their side padding, so text starts on the
+		 *   heading's line and dividers and backgrounds stop at the row's
+		 *   content, with no room beyond it on either side
+		 * - `'outset'`: text sits on the heading's line, and dividers and
+		 *   backgrounds reach a little past it into the container's padding
+		 * - `'bleed'`: text sits on the heading's line, and dividers and
+		 *   backgrounds reach the container's edges, like Table rows in a Card
+		 * @default 'padded'
+		 */
+		edge?: ListEdge;
+		/**
+		 * @deprecated Use `edge="outset"`, which this sets. Still works; `edge`
+		 * wins when both are set.
+		 */
+		edgeCompensation?: 'inline';
 		/** Header content rendered above the list, associated via `aria-labelledby`. */
 		header?: string | Snippet;
 		/**
@@ -36,6 +64,7 @@
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { setListContext } from './list-context.svelte.js';
 	import { listAttrs, listHeaderAttrs, listRootAttrs } from './list.stylex.js';
 
@@ -43,7 +72,9 @@
 	 * A vertical list for rendering collections of items.
 	 *
 	 * Renders a semantic `<ul>` or `<ol>` with configurable density, dividers,
-	 * marker styles, and an optional header.
+	 * marker styles, and an optional header. Set `edge` to choose where row
+	 * text, dividers, and backgrounds sit relative to the list's edges and the
+	 * padding of the container around it.
 	 *
 	 * @example
 	 * ```svelte
@@ -51,12 +82,18 @@
 	 *   <ListItem label="Notifications" description="Manage your alerts" />
 	 *   <ListItem label="Privacy" description="Control your data" />
 	 * </List>
+	 * <List edge="flush" hasDividers>
+	 *   <ListItem label="Solstice Mug" description="Ceramic, 12 oz" />
+	 * </List>
 	 * ```
 	 */
 	let {
 		children,
 		density = 'balanced',
+		animatedLayout,
 		hasDividers = false,
+		edge: edgeProp,
+		edgeCompensation,
 		header,
 		listStyle = 'none',
 		start,
@@ -69,12 +106,33 @@
 
 	const headerId = $props.id();
 	const isOrdered = $derived(listStyle === 'decimal');
+	// Plain use of the deprecated prop is reported by its @deprecated type;
+	// development warns only when the two names conflict.
+	useDevWarning(
+		'List',
+		'`edge` and the deprecated `edgeCompensation` are both set; `edge` wins. ' +
+			'Remove `edgeCompensation`. `astryx upgrade` rewrites existing usage.',
+		() => edgeProp != null && edgeCompensation != null
+	);
+	const edge = $derived(edgeProp ?? (edgeCompensation === 'inline' ? 'outset' : 'padded'));
+	const hasHeader = $derived(header != null);
 
-	setListContext(() => ({ density, hasDividers, listStyle }));
+	setListContext(() => ({ density, hasDividers, edge, listStyle, animatedLayout }));
 
 	const theme = $derived(themeProps('list', { density, listStyle }));
-	const attrs = $derived(listAttrs(hasDividers, listStyle, start, xstyle));
-	const rootAttrs = listRootAttrs();
+	const attrs = $derived(
+		listAttrs({
+			hasAnimatedLayout: animatedLayout != null,
+			isOrdered,
+			hasDividers,
+			edge,
+			hasHeader,
+			listStyle,
+			start,
+			xstyle
+		})
+	);
+	const rootAttrs = $derived(listRootAttrs(edge));
 	const headerAttrs = listHeaderAttrs();
 </script>
 
@@ -95,10 +153,11 @@
 		this={isOrdered ? 'ol' : 'ul'}
 		{...rest}
 		data-testid={testId}
-		aria-labelledby={header != null ? headerId : undefined}
-		start={isOrdered && start != null && start !== 1 ? start : undefined}
+		{...hasHeader ? { 'aria-labelledby': headerId } : {}}
+		{...isOrdered && start != null && start !== 1 ? { start } : {}}
 		role="list"
 		{...theme}
+		{...edge === 'bleed' && !hasHeader ? { 'data-container-corner': '' } : {}}
 		class={cx(theme.class, attrs.class, className)}
 		style={mergeStyle(attrs.style, styleProp as string | undefined)}
 	>
@@ -109,7 +168,11 @@
 {#if header == null}
 	{@render listElement()}
 {:else}
-	<div class={rootAttrs.class} style={rootAttrs.style}>
+	<div
+		class={rootAttrs.class}
+		style={rootAttrs.style}
+		{...edge === 'bleed' ? { 'data-container-corner': '' } : {}}
+	>
 		<div id={headerId} class={headerAttrs.class} style={headerAttrs.style}>
 			{#if typeof header === 'function'}{@render header()}{:else}{header}{/if}
 		</div>

@@ -1,7 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import type { SizeValue } from '../../internal/types.js';
-import { borderVars, spacingVars } from '../../styles/tokens.stylex.js';
+import { borderVars, sizeVars, spacingVars } from '../../styles/tokens.stylex.js';
 
 /**
  * Ported from Astryx's `Field/Field.tsx`.
@@ -9,7 +9,14 @@ import { borderVars, spacingVars } from '../../styles/tokens.stylex.js';
 const styles = stylex.create({
 	container: {
 		display: 'flex',
-		flexDirection: 'column'
+		flexDirection: 'column',
+		// The Field root owns the local stacking boundary (AST-027): the input
+		// wrapper's z-index (1, above the attached status box) and the attached
+		// status layer (-1) order parts inside this surface only.
+		isolation: 'isolate',
+		// The Field root is the flex/grid item a row actually sizes; the reset
+		// lets the row shrink the whole field.
+		minWidth: 0
 	},
 	containerGap: {
 		gap: spacingVars['--spacing-1']
@@ -26,7 +33,21 @@ const styles = stylex.create({
 	inputStatusWrapper: {
 		display: 'flex',
 		flexDirection: 'column',
-		isolation: 'isolate'
+		isolation: 'isolate',
+		// Extend an attached FieldStatus behind the lower half of the control.
+		// Half-height is the maximum effective corner radius CSS can render, even
+		// when a theme uses a pill value such as --radius-full (9999px).
+		'--_field-status-overlap': {
+			default: `calc(${sizeVars['--size-element-md']} / 2)`,
+			':has(> [data-size="sm"])': `calc(${sizeVars['--size-element-sm']} / 2)`,
+			':has(> [data-size="lg"])': `calc(${sizeVars['--size-element-lg']} / 2)`
+		}
+	},
+	attachedStatusLayer: {
+		// Keep the overlapping background below both Astryx inputs and custom
+		// controls. The isolated wrapper contains this negative stacking layer.
+		position: 'relative',
+		zIndex: -1
 	}
 });
 
@@ -67,4 +88,9 @@ export function fieldHorizontalLabelAlignAttrs(): SvelteStyleAttrs {
 /** Wraps the control and its status message so the two read as one unit. */
 export function fieldInputStatusWrapperAttrs(): SvelteStyleAttrs {
 	return sx(styles.inputStatusWrapper);
+}
+
+/** The attached status box sits under the control, behind its lower half. */
+export function fieldAttachedStatusStyle(): StyleArg {
+	return styles.attachedStatusLayer;
 }

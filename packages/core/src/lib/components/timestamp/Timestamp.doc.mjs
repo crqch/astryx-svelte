@@ -143,7 +143,7 @@ export default {
 		},
 		{
 			name: 'format',
-			type: "'auto' | 'date' | 'date_long' | 'date_weekday' | 'system_date' | 'time' | 'relative' | 'relative_short' | 'date_time' | 'system_date_time' | 'system_time' | 'unix_seconds'",
+			type: "'auto' | 'date' | 'date_long' | 'date_weekday' | 'system_date' | 'relative' | 'time' | 'relative_short' | 'date_time' | 'system_date_time' | 'system_time' | 'unix_seconds'",
 			description:
 				"Display format. 'relative' uses the locale's native long relative-time wording ('2 hours ago' in English), 'relative_short' uses its narrow pattern ('2h ago' in English) for compact surfaces, 'date' shows 'Mar 21, 2025', 'date_long' shows 'March 21, 2025', 'date_weekday' shows 'Wed, Mar 21, 2025', 'date_time' shows 'Mar 21, 2025, 2:51 PM', 'time' shows '2:51 PM', 'system_*' variants use ISO-style formatting, 'unix_seconds' shows the Unix time in whole seconds since the epoch (an absolute, zone-independent value), 'auto' switches from relative to date_time based on recency. Absolute formats never read the current time. 'relative', 'relative_short' and 'auto' read it on the client only: a server render or static prerender shows the full date and time in UTC, labelled, and the client switches to the format's normal output after hydration. Date-bearing formats ('date', 'date_long', 'date_weekday', 'date_time', and the full date in the hover card and the accessible name) use the InternationalizationProvider calendar, such as calendar=\"persian\"; 'time', the relative formats, 'system_*', and 'unix_seconds' do not change.",
 			default: "'auto'"

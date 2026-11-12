@@ -16,3 +16,11 @@ import * as stylex from '@stylexjs/stylex';
  * from the module's path — the same split `overlay.markers.stylex.ts` uses.
  */
 export const switchScope: ReturnType<typeof stylex.defineMarker> = stylex.defineMarker();
+
+/**
+ * Marks the switch's own focusable input, the track's preceding sibling, so
+ * the track's focus ring follows that input's `:focus-visible` alone. Unlike
+ * `switchScope`, it stays on while disabled (a focusable-disabled switch
+ * still shows the ring).
+ */
+export const switchFocusInput: ReturnType<typeof stylex.defineMarker> = stylex.defineMarker();

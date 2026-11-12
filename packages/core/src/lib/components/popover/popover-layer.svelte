@@ -45,7 +45,7 @@
 </script>
 
 <script lang="ts">
-	import { cx } from '../../internal/sx.js';
+	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { stableClassName } from '../../internal/naming.js';
 	import Button from '../button/button.svelte';
 	import Layer from '../layer/layer.svelte';
@@ -53,6 +53,7 @@
 		popoverCloseButtonWrapperAttrs,
 		popoverContentWrapperAttrs
 	} from './use-popover.stylex.js';
+	import { popoverSurfaceAttrs } from './popover.stylex.js';
 
 	/**
 	 * The rendering half of `usePopover`, replacing upstream's `render` function.
@@ -100,16 +101,88 @@
 	const closeWrapper = popoverCloseButtonWrapperAttrs();
 
 	const isDialog = $derived(popover.role === 'dialog');
+
+	/**
+	 * Whether the content overflows the surface's box, which makes it a scroll
+	 * container (spec:AST-059). Upstream measures the surface it renders through
+	 * `usePopover`'s content ref; here the surface is this component's element.
+	 */
+	let surfaceEl = $state<HTMLElement | null>(null);
+	let hasOverflow = $state(false);
+	let measurementFrame: number | null = null;
+
+	function measureOverflow(): void {
+		const surface = surfaceEl;
+		if (surface == null) {
+			return;
+		}
+		const next =
+			surface.scrollHeight > surface.clientHeight + 1 ||
+			surface.scrollWidth > surface.clientWidth + 1;
+		if (next !== hasOverflow) {
+			hasOverflow = next;
+		}
+	}
+
+	function scheduleOverflowMeasurement(): void {
+		if (measurementFrame != null) {
+			return;
+		}
+		// The surface's own window paints it, so its frame runs the measurement.
+		const view = surfaceEl?.ownerDocument.defaultView ?? window;
+		measurementFrame = view.requestAnimationFrame(() => {
+			measurementFrame = null;
+			measureOverflow();
+		});
+	}
+
+	$effect(() => {
+		const surface = surfaceEl;
+		if (surface == null || !popover.isOpen) {
+			return;
+		}
+		// Observe from the surface's own window: a Popover rendered into a second
+		// document resizes with that document's window.
+		const view = surface.ownerDocument.defaultView ?? window;
+		measureOverflow();
+		const resizeObserver =
+			typeof view.ResizeObserver === 'undefined'
+				? null
+				: new view.ResizeObserver(scheduleOverflowMeasurement);
+		const mutationObserver =
+			typeof MutationObserver === 'undefined'
+				? null
+				: new MutationObserver(scheduleOverflowMeasurement);
+		resizeObserver?.observe(surface);
+		mutationObserver?.observe(surface, { childList: true, characterData: true, subtree: true });
+		surface.addEventListener('load', scheduleOverflowMeasurement, true);
+		view.addEventListener('resize', scheduleOverflowMeasurement);
+		view.visualViewport?.addEventListener('resize', scheduleOverflowMeasurement);
+		return () => {
+			resizeObserver?.disconnect();
+			mutationObserver?.disconnect();
+			surface.removeEventListener('load', scheduleOverflowMeasurement, true);
+			view.removeEventListener('resize', scheduleOverflowMeasurement);
+			view.visualViewport?.removeEventListener('resize', scheduleOverflowMeasurement);
+			if (measurementFrame != null) {
+				view.cancelAnimationFrame(measurementFrame);
+				measurementFrame = null;
+			}
+		};
+	});
+
+	const surface = $derived(popoverSurfaceAttrs(hasOverflow));
 </script>
 
 <Layer layer={popover.layer} {placement} {alignment} {offset} {xstyle} style={styleProp}>
 	<div
+		bind:this={surfaceEl}
 		{@attach popover.attachContent}
 		role={isDialog ? 'dialog' : undefined}
 		aria-modal={isDialog && popover.isModal ? true : undefined}
 		aria-label={isDialog ? popover.dialogLabel : undefined}
-		class={surfaceClass}
-		style={contentWrapper.style}
+		class={cx(surfaceClass, surface.class)}
+		style={mergeStyle(contentWrapper.style, surface.style)}
 	>
 		{@render children()}
 		{#if popover.hasCloseButton}

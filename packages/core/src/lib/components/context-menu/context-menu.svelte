@@ -76,6 +76,7 @@
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import { useLongPress } from '../../hooks/use-long-press.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
+	import { useMenuOverflow } from '../dropdown-menu/use-menu-overflow.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
@@ -305,10 +306,19 @@
 
 	setDropdownMenuContext(() => ({ closeMenu, menuSize: size }));
 
+	// A menu that overflows hands vertical touch scrolling to the browser; one
+	// that fits keeps pinch-zoom only, so a pan cannot drag the page behind it.
+	const menuOverflow = useMenuOverflow({
+		menu: () => menuEl,
+		content: () => (items !== undefined ? items : menuContent),
+		isOpen: () => isOpen
+	});
+	const hasOverflow = $derived(menuOverflow());
+
 	const theme = themeProps('context-menu');
 	const triggerAttrs = $derived(contextMenuTriggerAttrs(triggerXstyle));
 	const anchorAttrs = contextMenuCursorAnchorAttrs();
-	const menuAttrs = $derived(contextMenuAttrs(xstyle));
+	const menuAttrs = $derived(contextMenuAttrs(xstyle, hasOverflow));
 	const popoverXstyle = $derived(contextMenuPopoverXstyle(menuWidth));
 </script>
 

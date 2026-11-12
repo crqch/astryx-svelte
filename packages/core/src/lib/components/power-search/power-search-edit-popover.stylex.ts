@@ -3,9 +3,13 @@ import { sx, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { spacingVars, typeScaleVars } from '../../styles/tokens.stylex.js';
 
 /**
- * Ported from Astryx's `PowerSearchEditPopover.tsx` styles — one group, eleven
- * keys, every call site passing exactly one key unconditionally, so the compiler
- * folded all of them into literal class strings: `inline` mode throughout.
+ * Ported from Astryx's `PowerSearchEditPopover.tsx` styles — one group. Every
+ * call site passes its keys unconditionally except the date-time value cell,
+ * which adds `valueEditorFullWidth` so a two-input control takes its own line
+ * under the wrapping chip row. Those fixed call sites let the compiler fold
+ * the rest into literal class strings: `inline` mode, except
+ * `chipRow`/`chipRowWrapped`, which travel through `HStack`'s `xstyle` and so
+ * stay live objects — `object` mode.
  *
  * **`nestedRow` is declared upstream and referenced nowhere**, and it is kept
  * here because the source is the contract — a silently-dropped declaration is
@@ -36,6 +40,12 @@ const styles = stylex.create({
 	chipRow: {
 		flexWrap: { default: 'nowrap', [CHIP_ROW_COLLAPSE]: 'wrap' }
 	},
+	// A date-and-time control is two inputs wide. Beside the selectors it
+	// shrinks the field selector to nothing. The row wraps, so the control
+	// gets its own line.
+	chipRowWrapped: {
+		flexWrap: 'wrap'
+	},
 	content: {
 		padding: spacingVars['--spacing-4']
 	},
@@ -58,6 +68,9 @@ const styles = stylex.create({
 	valueEditor: {
 		flexGrow: 2,
 		minWidth: 0
+	},
+	valueEditorFullWidth: {
+		flexBasis: '100%'
 	},
 	// Nested editor styles
 	nestedRootLabel: {
@@ -91,6 +104,12 @@ const styles = stylex.create({
  */
 export const editPopoverChipRowStyle = styles.chipRow;
 
+/**
+ * The same row with a date-and-time value: the row wraps unconditionally so
+ * the two-input control gets its own line even above the collapse width.
+ */
+export const editPopoverChipRowWrappedStyle = styles.chipRowWrapped;
+
 export function editPopoverContainerAttrs(): SvelteStyleAttrs {
 	return sx(styles.container);
 }
@@ -116,8 +135,8 @@ export function editPopoverOperatorSelectorAttrs(): SvelteStyleAttrs {
 }
 
 /** Wrapper around the value editor, and the autofocus query's root. */
-export function editPopoverValueEditorAttrs(): SvelteStyleAttrs {
-	return sx(styles.valueEditor);
+export function editPopoverValueEditorAttrs(isFullWidth = false): SvelteStyleAttrs {
+	return sx(styles.valueEditor, isFullWidth && styles.valueEditorFullWidth);
 }
 
 /** The nested editor's tree-root label. */

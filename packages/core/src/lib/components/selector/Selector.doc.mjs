@@ -330,7 +330,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'ghost' | 'input'",
+			type: "'secondary' | 'ghost' | 'input'",
 			description:
 				'Visual trigger style. input is the bordered input treatment for forms; secondary matches the secondary buttons of the active theme (borderless and neutral-filled by default) for navs and toolbars; ghost is borderless and transparent, matching ghost buttons for toolbar usage.',
 			default: "'input'"

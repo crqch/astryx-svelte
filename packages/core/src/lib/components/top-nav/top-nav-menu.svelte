@@ -39,6 +39,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useMenuHover } from '../../internal/use-menu-hover.svelte.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
 	import { useAppShellMobile } from '../app-shell/app-shell-mobile-context.svelte.js';
 	import Icon from '../icon/icon.svelte';
@@ -210,6 +211,8 @@
 	const drawerItemTextAttrs = topNavMenuDrawerItemTextAttrs();
 	const drawerItemDescriptionAttrs = topNavMenuDrawerItemDescriptionAttrs();
 
+	// Drawer header and each drawer item are pressable surfaces.
+	const pressable = usePressFeedback();
 	function drawerItemProps(item: TopNavMenuItemData) {
 		return {
 			href: item.href,
@@ -218,6 +221,7 @@
 				item.onclick?.();
 				appShellMobile().closeMobileNav();
 			},
+			...pressable,
 			class: drawerItemAttrs.class,
 			style: drawerItemAttrs.style
 		};
@@ -230,6 +234,7 @@
 	<div class={drawerSectionAttrs.class} style={drawerSectionAttrs.style}>
 		<button
 			type="button"
+			{...pressable}
 			onclick={() => (drawerExpanded = !drawerExpanded)}
 			aria-expanded={drawerExpanded}
 			aria-controls="{menuId}-items"

@@ -70,7 +70,7 @@ export default {
 		},
 		{
 			name: 'align',
-			type: "'center' | 'start' | 'first-line'",
+			type: "'start' | 'center' | 'first-line'",
 			description:
 				'Vertical alignment of the start and end content against the label, passed through to Item unchanged. `first-line` keeps a small mark (a status dot, an icon) level with the first line of a wrapped label. See Item.align.',
 			default: "'center'"

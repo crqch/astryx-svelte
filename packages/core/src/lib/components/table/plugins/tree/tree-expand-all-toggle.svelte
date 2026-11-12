@@ -12,6 +12,7 @@
 <script lang="ts">
 	import Icon from '../../../icon/icon.svelte';
 	import { useTranslator } from '../../../../i18n/index.js';
+	import { useTableContext } from '../../table-context.svelte.js';
 	import {
 		treeChevronIconCollapsedStyle,
 		treeChevronIconExpandedStyle,
@@ -38,8 +39,10 @@
 
 	const t = useTranslator();
 	const allExpanded = $derived(isAllExpanded === true);
+	const tableContext = useTableContext();
+	const isCompact = $derived(tableContext?.().density === 'compact');
 
-	const buttonAttrs = treeExpanderButtonAttrs();
+	const buttonAttrs = $derived(treeExpanderButtonAttrs(isCompact));
 	const chevronXstyle = $derived([
 		treeChevronIconStyle,
 		allExpanded ? treeChevronIconExpandedStyle : treeChevronIconCollapsedStyle

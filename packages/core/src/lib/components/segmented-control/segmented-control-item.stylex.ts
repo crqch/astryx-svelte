@@ -12,6 +12,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import type { SegmentedControlSize } from './segmented-control-context.svelte.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 
 const styles = stylex.create({
 	base: {
@@ -40,17 +41,6 @@ const styles = stylex.create({
 		transitionProperty: 'color, background-color, box-shadow',
 		transitionDuration: durationVars['--duration-fast'],
 		transitionTimingFunction: easeVars['--ease-standard']
-	},
-	overlay: {
-		backgroundColor: {
-			default: null,
-			':hover:where(:not(:disabled,[aria-disabled="true"]))': {
-				'@media (hover: hover)': colorVars['--color-overlay-hover']
-			},
-			':active:where(:not(:disabled,[aria-disabled="true"]))': {
-				'@media (hover: hover)': colorVars['--color-overlay-pressed']
-			}
-		}
 	},
 	selected: {
 		// Forced colors (Windows High Contrast) strips the painted surface fill
@@ -162,7 +152,9 @@ export function segmentedControlItemAttrs({
 		isFill && styles.fill,
 		isLabelHidden && styles.iconOnly,
 		isSelected && styles.selected,
-		!isSelected && !isItemDisabled && styles.overlay,
+		// The shared hover and pressed overlay, on the segments a press can
+		// change: the selected segment keeps its raised surface as it is.
+		!isSelected && !isItemDisabled && interactionOverlayStyles.backgroundColor,
 		isItemDisabled && styles.disabled,
 		isTouchPresentation && styles.touchPresentation
 	);

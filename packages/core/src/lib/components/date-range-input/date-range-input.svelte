@@ -231,8 +231,10 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import {
+		dateRangeInputCalendarPaneStyle,
 		dateRangeInputIconButtonAttrs,
 		dateRangeInputPopoverLayoutAttrs,
+		dateRangeInputPopoverScrollAttrs,
 		dateRangeInputPresetButtonAttrs,
 		dateRangeInputPresetSidebarAttrs,
 		dateRangeInputTriggerAttrs,
@@ -438,6 +440,7 @@
 	const toggleAttrs = $derived(dateRangeInputIconButtonAttrs(isEffectivelyDisabled));
 	const triggerAttrs = $derived(dateRangeInputTriggerAttrs(!displayValue, isEffectivelyDisabled));
 	const layoutAttrs = dateRangeInputPopoverLayoutAttrs();
+	const scrollAttrs = dateRangeInputPopoverScrollAttrs();
 	const sidebarAttrs = dateRangeInputPresetSidebarAttrs();
 </script>
 
@@ -542,53 +545,56 @@
 		<InputStatusIcon {statusIcon} />
 	</div>
 	<PopoverLayer {popover} placement="below" alignment="start">
-		<div class={layoutAttrs.class} style={layoutAttrs.style}>
-			{#if presets && presets.length > 0}
-				<div
-					role="group"
-					aria-label={t('@astryx.dateRangeInput.presetDateRanges')}
-					{...themeProps('date-range-input-presets')}
-					class={cx(themeProps('date-range-input-presets').class, sidebarAttrs.class)}
-					style={sidebarAttrs.style}
-				>
-					{#each presets as preset (preset.label)}
-						{@const presetRange = preset.getRange()}
-						{@const isActive = isRangeEqual(value, presetRange)}
-						{@const isPresetDisabled = !isRangeWithinSpan(presetRange)}
-						{@const presetAttrs = dateRangeInputPresetButtonAttrs(isActive, isPresetDisabled)}
-						{@const presetTheme = themeProps('date-range-input-preset')}
-						<!--
-							These presets are independent action buttons navigated by Tab,
-							not a single-tab-stop listbox — so they are a labeled group of
-							buttons, and the currently-applied preset is marked with
-							aria-current (not aria-selected, a listbox concept that
-							contradicted the Tab interaction) (forms-5).
-						-->
-						<button
-							type="button"
-							aria-current={isActive ? 'true' : undefined}
-							disabled={isPresetDisabled}
-							onclick={() => handlePresetClick(preset)}
-							class={cx(presetTheme.class, presetAttrs.class)}
-							style={presetAttrs.style}
-						>
-							{preset.label}
-						</button>
-					{/each}
-				</div>
-			{/if}
-			<Calendar
-				{maxRangeSpan}
-				{minRangeSpan}
-				mode="range"
-				value={value ?? undefined}
-				onChange={handleRangeSelect}
-				{min}
-				{max}
-				{dateConstraints}
-				{numberOfMonths}
-				{weekStartsOn}
-			/>
+		<div class={scrollAttrs.class} style={scrollAttrs.style}>
+			<div class={layoutAttrs.class} style={layoutAttrs.style}>
+				{#if presets && presets.length > 0}
+					<div
+						role="group"
+						aria-label={t('@astryx.dateRangeInput.presetDateRanges')}
+						{...themeProps('date-range-input-presets')}
+						class={cx(themeProps('date-range-input-presets').class, sidebarAttrs.class)}
+						style={sidebarAttrs.style}
+					>
+						{#each presets as preset (preset.label)}
+							{@const presetRange = preset.getRange()}
+							{@const isActive = isRangeEqual(value, presetRange)}
+							{@const isPresetDisabled = !isRangeWithinSpan(presetRange)}
+							{@const presetAttrs = dateRangeInputPresetButtonAttrs(isActive, isPresetDisabled)}
+							{@const presetTheme = themeProps('date-range-input-preset')}
+							<!--
+								These presets are independent action buttons navigated by Tab,
+								not a single-tab-stop listbox — so they are a labeled group of
+								buttons, and the currently-applied preset is marked with
+								aria-current (not aria-selected, a listbox concept that
+								contradicted the Tab interaction) (forms-5).
+							-->
+							<button
+								type="button"
+								aria-current={isActive ? 'true' : undefined}
+								disabled={isPresetDisabled}
+								onclick={() => handlePresetClick(preset)}
+								class={cx(presetTheme.class, presetAttrs.class)}
+								style={presetAttrs.style}
+							>
+								{preset.label}
+							</button>
+						{/each}
+					</div>
+				{/if}
+				<Calendar
+					{maxRangeSpan}
+					{minRangeSpan}
+					mode="range"
+					value={value ?? undefined}
+					onChange={handleRangeSelect}
+					{min}
+					{max}
+					{dateConstraints}
+					{numberOfMonths}
+					{weekStartsOn}
+					xstyle={presets && presets.length > 0 ? dateRangeInputCalendarPaneStyle : undefined}
+				/>
+			</div>
 		</div>
 	</PopoverLayer>
 

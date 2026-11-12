@@ -46,6 +46,7 @@
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useClickableContainer } from '../../hooks/use-clickable-container.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { clickableCardControlAttrs, clickableCardXstyle } from './clickable-card.stylex.js';
 
 	/**
@@ -104,6 +105,10 @@
 			: clickable.onmouseup
 	);
 
+	// The card surface is the pressable: the overlay's pressed arms read the
+	// controller's attribute there.
+	const pressable = usePressFeedback();
+
 	const theme = $derived(themeProps('clickable-card', { variant }));
 	const controlAttrs = clickableCardControlAttrs();
 
@@ -142,6 +147,7 @@
 </script>
 
 <Card
+	{...!isDisabled ? pressable : undefined}
 	{...rest}
 	{...theme}
 	{...containerAttach}

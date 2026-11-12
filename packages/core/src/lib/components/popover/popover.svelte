@@ -162,6 +162,7 @@
 	import { untrack } from 'svelte';
 	import type { Attachment as AttachmentType } from 'svelte/attachments';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { spacingVars } from '../../styles/tokens.stylex.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { devWarn } from '../../utils/dev-warning.js';
 	import PopoverAnchor from './popover-anchor.svelte';
@@ -436,7 +437,13 @@
 	{@render trigger?.(renderTriggerProps)}
 {/if}
 
-<PopoverLayer {popover} {placement} {alignment} xstyle={layerXstyle}>
+<PopoverLayer
+	{popover}
+	{placement}
+	{alignment}
+	offset={spacingVars['--spacing-1']}
+	xstyle={layerXstyle}
+>
 	<div
 		data-testid={testId}
 		class={cx(themeClass, contentAttrs.class, className)}

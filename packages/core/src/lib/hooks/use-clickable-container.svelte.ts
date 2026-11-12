@@ -1,3 +1,5 @@
+import { cancelPress } from '../utils/press-feedback.js';
+
 /**
  * Clickable containers that hold nested interactive elements, ported from
  * Astryx's `hooks/useClickableContainer.ts`.
@@ -54,7 +56,7 @@ const NON_INTERACTIVE_SELECTORS = '[aria-readonly="true"]';
  * If the click target is inside a nested button/link/etc., we should NOT
  * handle it at the container level.
  */
-function hasInteractiveAncestor(el: Element, rootEl: Element): boolean {
+export function hasInteractiveAncestor(el: Element, rootEl: Element): boolean {
 	let current: Element | null = el;
 	while (current != null && current !== rootEl && current !== document.body) {
 		if (current.matches(INTERACTIVE_SELECTORS) && !current.matches(NON_INTERACTIVE_SELECTORS)) {
@@ -66,7 +68,7 @@ function hasInteractiveAncestor(el: Element, rootEl: Element): boolean {
 }
 
 /** Check if there's a text selection inside the node (don't navigate on text select) */
-function hasTextSelection(node: Element): boolean {
+export function hasTextSelection(node: Element): boolean {
 	if (typeof document === 'undefined' || !('getSelection' in document)) {
 		return false;
 	}
@@ -75,6 +77,34 @@ function hasTextSelection(node: Element): boolean {
 		return false;
 	}
 	return node.contains(selection.anchorNode);
+}
+
+/**
+ * The touch half of a container's press rule: a finger press that starts on a
+ * nested interactive element other than the container's own action does not
+ * activate the container, so it ends the press controller's paint on
+ * `container`. A mouse or pen press, and a press on the container's surface or
+ * on `ownAction`, are left alone. Not part of the package's public API.
+ */
+export function cancelNestedTouchPress(
+	event: PointerEvent,
+	container: HTMLElement | null,
+	ownAction: Element | null
+): void {
+	const target = event.target;
+	if (
+		event.pointerType !== 'touch' ||
+		container == null ||
+		!(target instanceof Element) ||
+		target === event.currentTarget ||
+		!hasInteractiveAncestor(target, container) ||
+		// The container's own action, such as the control it delegates to: a
+		// press on it activates the container.
+		ownAction?.contains(target) === true
+	) {
+		return;
+	}
+	cancelPress(container);
 }
 
 export interface UseClickableContainerOptions {

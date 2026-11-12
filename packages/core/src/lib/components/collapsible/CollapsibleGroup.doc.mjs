@@ -63,7 +63,7 @@ export default {
 		},
 		{
 			name: 'chevronPosition',
-			type: "'start' | 'end'",
+			type: "'end' | 'start'",
 			description:
 				"Logical position shared by the group's direct Collapsible items. `end` is the default trailing indicator; `start` is a leading disclosure arrow that points inward when collapsed (mirrored under RTL) and down when expanded. An individual Collapsible can still override it.",
 			default: "'end'"

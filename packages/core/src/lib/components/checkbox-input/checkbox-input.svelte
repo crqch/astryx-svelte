@@ -140,6 +140,9 @@
 	import { useIndicator } from '../indicator/use-indicator.svelte.js';
 	import { useIndicatorFocusRing } from '../../hooks/use-indicator-focus-ring.svelte.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import { useCheckboxRowPress } from './checkbox-row-press-context.svelte.js';
+	import { pressBoxProps } from '../../private-attributes/press-box.stylex.js';
 
 	/**
 	 * A checkbox input for toggling boolean (or mixed) values, ported from
@@ -301,8 +304,18 @@
 
 	const fieldTheme = $derived(themeProps('checkbox-input', { size }));
 	const fieldAttrs = $derived(checkboxFieldAttrs(width, xstyle));
-	const containerAttrs = $derived(checkboxContainerAttrs(isLabelHidden, isDisabled));
-	const wrapperAttrs = $derived(checkboxWrapperAttrs(size));
+	// A row around the checkbox that answers a press anywhere on it (a
+	// CheckboxListItem) owns the touch press instead. The checkbox then carries
+	// no press marker of its own, so the controller's innermost-wins rule finds
+	// the row for a finger on the label, the description or the box. The overlay
+	// below paints that row's press.
+	const isRowPressSurface = useCheckboxRowPress();
+	const ownsPress = $derived(!isDisabled && !isRowPressSurface);
+	const pressable = usePressFeedback();
+	const containerAttrs = $derived(
+		checkboxContainerAttrs(isLabelHidden, isDisabled, isReadOnly, isRowPressSurface)
+	);
+	const wrapperAttrs = $derived(checkboxWrapperAttrs(size, isDisabled, isRowPressSurface));
 	const inputAttrs = $derived(checkboxInputAttrs(size, isDisabled));
 	const indicatorSlotAttrs = checkboxIndicatorSlotAttrs();
 	const labelWrapperAttrs = checkboxLabelWrapperAttrs();
@@ -347,6 +360,7 @@
 	-->
 	<div
 		{@attach disabledMessageTooltip.attachInteraction}
+		{...ownsPress ? pressable : undefined}
 		class={containerAttrs.class}
 		style={containerAttrs.style}
 	>
@@ -358,6 +372,7 @@
 			correction `useKeyboardHint` records.
 		-->
 		<div
+			{...isDisabled ? undefined : pressBoxProps}
 			class={wrapperAttrs.class}
 			style={wrapperAttrs.style}
 			onfocusin={focusProps.onFocus}

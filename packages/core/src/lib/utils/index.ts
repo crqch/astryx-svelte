@@ -109,6 +109,13 @@ export { rtlStyles } from './rtl.stylex.js';
 // `useIndicatorFocusRing`, not published API.
 export { focusOutlineStyles, focusOutlineProps } from './focus-outline.stylex.js';
 
+// The touch press model's one composable: the shared hover and pressed overlay
+// styles, which carry the press's strength, its release and its paint. A local
+// pressable spreads the result of `usePressFeedback` on the element that paints
+// and composes one of these on it; the controller, its attributes and its
+// clocks are internals.
+export { interactionOverlayStyles } from './interaction-overlay.stylex.js';
+
 // The "should this overlay reclaim focus?" test, new at upstream 0.4.0.
 export { isFocusDetached } from './focus-return.js';
 

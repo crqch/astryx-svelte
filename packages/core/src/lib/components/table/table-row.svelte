@@ -57,7 +57,15 @@
 	const tableContext = useTableContext();
 
 	const theme = themeProps('table-row');
-	const attrs = $derived(tableRowAttrs(tableContext?.() ?? null, isHeaderRow, xstyle));
+	const logicalIndex = $derived((rest as Record<string, unknown>)['data-table-logical-index']);
+	const attrs = $derived(
+		tableRowAttrs(
+			tableContext?.() ?? null,
+			isHeaderRow,
+			xstyle,
+			logicalIndex as string | number | null | undefined
+		)
+	);
 </script>
 
 <tr

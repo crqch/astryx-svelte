@@ -242,6 +242,22 @@
 
 	const effectiveValue = $derived(value !== undefined ? value : internalValue);
 
+	// Upstream's `isMonthKnown`: without a focus date or a selected value the
+	// opening month follows today, which is unknown during the server render and
+	// the render that hydrates server HTML. The port cannot read Svelte's private
+	// `hydrating` flag (see the Drawer debt), so the pending state resolves in an
+	// effect, before the browser paints the client-only mount. A consumer's own
+	// `focusDate` or `value` names the month outright, so those are known at once.
+	// svelte-ignore state_referenced_locally
+	let isMonthKnown = $state(
+		focusDateProp !== undefined || value !== undefined || defaultValue !== undefined
+	);
+	$effect(() => {
+		if (!isMonthKnown) {
+			isMonthKnown = true;
+		}
+	});
+
 	// Focus date state (which month is visible). Seeded once, as upstream's lazy
 	// `useState` initialiser is: `focusDate` → the effective value (a range
 	// unwraps to its `start`) → today, clamped into the min/max window so a
@@ -293,6 +309,9 @@
 	);
 
 	const monthYearLabel = $derived.by(() => {
+		if (!isMonthKnown) {
+			return '';
+		}
 		if (numberOfMonths === 1) {
 			return plainDateFormat(visibleMonths[0], DATE_FORMAT_MONTH_YEAR, locale());
 		}
@@ -391,6 +410,9 @@
 
 	// Whether prev/next navigation is possible given min/max.
 	const canNavigatePrevious = $derived.by(() => {
+		if (!isMonthKnown) {
+			return false;
+		}
 		if (!min) {
 			return true;
 		}
@@ -403,6 +425,9 @@
 	});
 
 	const canNavigateNext = $derived.by(() => {
+		if (!isMonthKnown) {
+			return false;
+		}
 		if (!max) {
 			return true;
 		}
@@ -527,7 +552,7 @@
 	const rootAttrs = $derived(calendarAttrs(xstyle));
 	const headerAttrs = calendarHeaderAttrs();
 	const labelAttrs = calendarMonthYearLabelAttrs();
-	const monthsAttrs = calendarMonthsContainerAttrs();
+	const monthsAttrs = $derived(calendarMonthsContainerAttrs(isMonthKnown));
 	const navIconAttrs = calendarNavIconAttrs();
 </script>
 
@@ -583,7 +608,16 @@
 		</Button>
 	</div>
 	<!-- Month grids -->
-	<div bind:this={monthsContainer} class={monthsAttrs.class} style={monthsAttrs.style}>
+	<!-- Before the month is known the grids keep their space but stay hidden
+	     and out of reach. With the default six-row grid, the month appears
+	     with no layout jump. -->
+	<div
+		bind:this={monthsContainer}
+		aria-hidden={isMonthKnown ? undefined : true}
+		inert={!isMonthKnown}
+		class={monthsAttrs.class}
+		style={monthsAttrs.style}
+	>
 		{#each visibleMonths as month (`${month.year}-${month.month}`)}
 			<MonthGrid
 				{month}

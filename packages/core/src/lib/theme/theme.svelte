@@ -41,10 +41,15 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { NAMESPACE, dataAttr } from '../internal/naming.js';
+	import {
+		reducedMotionMarkProps,
+		setRootReducedMotionMark
+	} from '../private-attributes/reduced-motion.js';
 	import { warnOnce } from '../utils/dev-warning.js';
 	import { generateThemeCSS } from './generate-theme-rules.js';
 	import { isNestedTheme, markThemeNested, setThemeContext } from './theme-context.js';
 	import { registerTheme } from './theme-registry.js';
+	import { REDUCED_MOTION_PROPERTY, resolveMotionKnobs } from './theme-motion.js';
 	import { themeWrapperAttrs } from './theme.stylex.js';
 
 	/**
@@ -95,6 +100,12 @@
 	const isNested = isNestedTheme();
 	markThemeNested();
 	setThemeContext(() => ({ theme, mode }));
+
+	// resolveMotionKnobs resolves no public theme to 'always', so no theme
+	// marks its root.
+	const reducesMotion = $derived(
+		resolveMotionKnobs(theme.__axes?.motion).reducedMotion === 'always'
+	);
 
 	// Makes the theme resolvable by *name*, which is what a consumer outside the
 	// component tree has to go on. Upstream's, and what it put in place of the
@@ -247,6 +258,7 @@
 
 		const currentMode = mode;
 		const themeName = theme.name;
+		const isReducedMotion = reducesMotion;
 
 		if (currentMode === 'light' || currentMode === 'dark') {
 			document.documentElement.setAttribute('data-theme', currentMode);
@@ -254,14 +266,22 @@
 			document.documentElement.removeAttribute('data-theme');
 		}
 		document.documentElement.setAttribute(dataAttr('theme'), themeName);
+		setRootReducedMotionMark(document.documentElement, isReducedMotion);
+		if (isReducedMotion) {
+			document.documentElement.style.setProperty(REDUCED_MOTION_PROPERTY, '1');
+		} else {
+			document.documentElement.style.removeProperty(REDUCED_MOTION_PROPERTY);
+		}
 
 		return () => {
 			document.documentElement.removeAttribute('data-theme');
 			document.documentElement.removeAttribute(dataAttr('theme'));
+			setRootReducedMotionMark(document.documentElement, false);
+			document.documentElement.style.removeProperty(REDUCED_MOTION_PROPERTY);
 		};
 	});
 
-	const attrs = $derived(themeWrapperAttrs(mode));
+	const attrs = $derived(themeWrapperAttrs(mode, reducesMotion));
 </script>
 
 <div
@@ -269,6 +289,7 @@
 		[dataAttr('theme')]: theme.name,
 		'data-theme': mode === 'system' ? undefined : mode
 	}}
+	{...reducedMotionMarkProps(reducesMotion)}
 	class={attrs.class}
 	style={attrs.style}
 >

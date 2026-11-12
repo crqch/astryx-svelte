@@ -14,7 +14,13 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { iconBoxStyle } from '../icon/icon.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { groupStyles as inputGroupStyles } from '../input-group/group-styles.stylex.js';
+import {
+	controlPressLayerStyles,
+	rowPressLayerStyles
+} from '../../private-attributes/press.stylex.js';
 import type { Elevation } from '../../internal/types.js';
 import type { ButtonGroupContextValue } from '../../internal/contexts.svelte.js';
 
@@ -40,6 +46,12 @@ export interface ButtonVariantMap {
 /** Button variant. Extensible via {@link ButtonVariantMap}. */
 export type ButtonVariant = keyof ButtonVariantMap;
 export type ButtonSize = 'sm' | 'md' | 'lg';
+
+/**
+ * Written by the press controller or a group's tracker while a press is
+ * believed. Typed `string`, so StyleX reads it as a computed key.
+ */
+const PRESSED_ON: string = '[data-astryx-press="on"]';
 
 /**
  * Base button styles.
@@ -73,6 +85,13 @@ const styles = stylex.create({
 		lineHeight: typeScaleVars['--text-label-leading'],
 		fontWeight: fontWeightVars['--font-weight-medium'],
 		whiteSpace: 'nowrap',
+		// One line by construction, so a label wider than the space available
+		// has to truncate. As a flex item the automatic minimum size would hold
+		// the button at its full label width (and `nowrap` lets an inline button
+		// run past its container), so the label's ellipsis never engaged. These
+		// let a row shrink the button and cap it at its container.
+		minWidth: 0,
+		maxWidth: '100%',
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
@@ -87,17 +106,51 @@ const styles = stylex.create({
 	pressable: {
 		transform: {
 			default: 'scale(1)',
-			':active': 'scale(0.98)'
+			// A mouse press. Under a coarse pointer `:active` is not a press (it
+			// paints on the touch and outlives a scroll), so the touch press model
+			// writes `data-astryx-press` instead; see interaction-overlay.stylex.ts.
+			':active:where(:not(:disabled,[aria-disabled="true"]))': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)',
+				// Under reduced motion a press never scales the button. The overlay
+				// alone shows the press.
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 'scale(1)',
+				'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'scale(1)'
+			},
+			[PRESSED_ON]: {
+				default: 'scale(0.98)',
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 'scale(1)',
+				'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'scale(1)'
+			}
 		}
 	},
-	disabled: {
+	// A tracked action's own `:active` image paints nothing: the tracker paints
+	// the action under the pointer, which need not be the one pressed first.
+	trackedOverlay: {
+		backgroundSize: { default: null, [`:active:not(${PRESSED_ON})`]: '0 0' }
+	},
+	// A tracked action's press is painted by its group's tracker alone.
+	pressableTracked: {
+		transform: {
+			default: 'scale(1)',
+			[PRESSED_ON]: {
+				default: 'scale(0.98)',
+				'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': 'scale(1)',
+				'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'scale(1)'
+			}
+		}
+	},
+	inactive: {
 		cursor: 'default',
-		opacity: 0.5,
 		backgroundImage: 'none',
 		transform: {
 			default: 'none',
-			':active': 'none'
+			':active': 'none',
+			[PRESSED_ON]: 'none'
 		}
+	},
+	disabled: {
+		opacity: 0.5
 	},
 	ariaDisabled: {
 		// The variants' hover treatment already steps aside for
@@ -105,14 +158,19 @@ const styles = stylex.create({
 		// button, so that one is suppressed here.
 		backgroundImage: {
 			default: 'none',
-			':active': 'none'
+			':active': 'none',
+			[PRESSED_ON]: 'none'
 		}
 	},
 	iconOnly: {
 		'--button-icon-only-aspect': '1 / 1',
 		aspectRatio: 'var(--button-icon-only-aspect)',
 		paddingInline: 0,
-		paddingBlock: 0
+		paddingBlock: 0,
+		// An icon-only button has no label to truncate: keep it square rather
+		// than letting a crowded row squeeze it.
+		flexShrink: 0,
+		maxWidth: 'none'
 	},
 	endContentWrapper: {
 		display: 'inline-flex',
@@ -125,8 +183,24 @@ const styles = stylex.create({
 		justifyContent: 'center',
 		flexShrink: 0
 	},
+	// A real box, not `display: contents`: WebKit before macOS 15 drops an
+	// accessible name computed through a `display: contents` element, so
+	// VoiceOver read a labelled Button as unnamed. The box takes the Button's
+	// own layout (it is the only in-flow child; the spinner overlay and the
+	// live region are absolutely positioned), so the content sits as before.
 	contentWrapper: {
-		display: 'contents'
+		display: 'flex',
+		flexGrow: 1,
+		flexShrink: 1,
+		flexBasis: 'auto',
+		alignSelf: 'stretch',
+		flexDirection: 'inherit',
+		flexWrap: 'inherit',
+		alignItems: 'inherit',
+		justifyContent: 'inherit',
+		gap: 'inherit',
+		// Lets a narrow row shrink the box, so the label inside still truncates.
+		minWidth: 0
 	},
 	labelText: {
 		overflow: 'hidden',
@@ -156,6 +230,16 @@ const dynamicStyles = stylex.create({
 });
 
 const sizeStyles = stylex.create({
+	sm: { height: `max(${sizeVars['--size-element-sm']}, 1lh)` },
+	md: { height: `max(${sizeVars['--size-element-md']}, 1lh)` },
+	lg: { height: `max(${sizeVars['--size-element-lg']}, 1lh)` }
+});
+
+/**
+ * An icon-only button holds its glyph, which does not grow with the text, so
+ * it keeps a fixed square size.
+ */
+const iconOnlySizeStyles = stylex.create({
 	sm: { height: sizeVars['--size-element-sm'] },
 	md: { height: sizeVars['--size-element-md'] },
 	lg: { height: sizeVars['--size-element-lg'] }
@@ -163,11 +247,6 @@ const sizeStyles = stylex.create({
 
 /** Icon sizing per button size — matches Icon: sm/md = 16px, lg = 20px.
  *  fontSize is set so emoji and text-based icons scale correctly. */
-const iconSizeStyles = stylex.create({
-	sm: { width: 16, height: 16, fontSize: 16 },
-	md: { width: 16, height: 16, fontSize: 16 },
-	lg: { width: 20, height: 20, fontSize: 20 }
-});
 
 /**
  * Variant styles. The hover/pressed overlay is a stacked linear-gradient on top
@@ -191,6 +270,12 @@ const variants = stylex.create({
 	destructive: {
 		backgroundColor: colorVars['--color-error'],
 		color: colorVars['--color-on-error'],
+		// Forced colors replace the fill with ButtonFace; a border keeps the
+		// destructive fill's shape visible. A border, not an outline, leaves the
+		// shared focus ring intact.
+		borderWidth: { default: 0, '@media (forced-colors: active)': '1px' },
+		borderStyle: { default: 'none', '@media (forced-colors: active)': 'solid' },
+		borderColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
 		// The ring matches the variant it rings: an accent-colored outline on a
 		// red button reads as another control's focus. Only the color differs —
 		// width, style and offset come from the shared outline.
@@ -266,7 +351,7 @@ const loadingStyles = stylex.create({
  * group member, so "last member" means: no following element sibling besides
  * those two pieces of layer infrastructure.
  */
-const IS_LAST_ITEM = ':not(:has(~ *:not([popover]):not(template)))';
+const IS_LAST_ITEM = ':nth-last-child(1 of :not([popover]):not(template):not(dialog))';
 
 const groupStyles = stylex.create({
 	horizontal: {
@@ -312,6 +397,10 @@ export interface ButtonRootStyleInput {
 	isLink: boolean;
 	width: string | number | undefined;
 	group: ButtonGroupContextValue | null;
+	/** Whether the button is a direct member of an `InputGroup` (not a button group). */
+	inInputGroup: boolean;
+	/** Whether a tracking group's tracker paints this button's press. */
+	isGroupTracked: boolean;
 	/** Resting elevation. Ignored inside a group. */
 	elevation: Elevation;
 	xstyle?: StyleArg;
@@ -327,6 +416,8 @@ export function buttonRootAttrs(input: ButtonRootStyleInput): SvelteStyleAttrs {
 		isLink,
 		width,
 		group,
+		inInputGroup,
+		isGroupTracked,
 		elevation,
 		xstyle
 	} = input;
@@ -334,18 +425,26 @@ export function buttonRootAttrs(input: ButtonRootStyleInput): SvelteStyleAttrs {
 
 	return focusOutlineProps.focusVisible(
 		styles.base,
-		sizeStyles[size],
+		isIconOnly ? iconOnlySizeStyles[size] : sizeStyles[size],
 		isIconOnly && styles.iconOnly,
 		// Upstream 0.5.1 moved the hover/pressed overlay off each variant into the
 		// shared module. Position is upstream's: before `disabled`/`ariaDisabled`,
 		// which still need to override it, and before `variants`, which no longer
 		// carry a `backgroundImage` of their own.
 		interactionOverlayStyles.backgroundImage,
+		// The press the controller writes, on a layer under the label whose
+		// release runs on the compositor.
+		rowPressLayerStyles.cell,
+		rowPressLayerStyles.cellOnImage,
+		controlPressLayerStyles.control,
+		isGroupTracked && styles.trackedOverlay,
+		isDisabled && styles.inactive,
 		isDisabled && styles.disabled,
 		isAriaDisabled && styles.ariaDisabled,
 		isLink && styles.link,
-		!group && styles.pressable,
+		!group && (isGroupTracked ? styles.pressableTracked : styles.pressable),
 		group && (horizontal ? groupStyles.horizontal : groupStyles.vertical),
+		inInputGroup && inputGroupStyles.buttonAddon,
 		group &&
 			(variant === 'primary' || variant === 'destructive') &&
 			(horizontal ? groupStyles.onSolidHorizontal : groupStyles.onSolidVertical),
@@ -374,7 +473,7 @@ export function buttonSpinnerOverlayAttrs(delaySpinner: boolean): SvelteStyleAtt
 }
 
 export function buttonIconAttrs(size: ButtonSize): SvelteStyleAttrs {
-	return sx(styles.iconWrapper, iconSizeStyles[size]);
+	return sx(styles.iconWrapper, iconBoxStyle(size === 'lg' ? 'md' : 'sm'));
 }
 
 export function buttonLabelAttrs(): SvelteStyleAttrs {

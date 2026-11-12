@@ -87,6 +87,8 @@
 
 	// A resizable region drives the width; the prop is ignored while one is set.
 	const effectiveWidth = $derived(resizable ? resizable._size : width);
+	// A collapsed region sizes its panel to 0.
+	const isZeroWidth = $derived(effectiveWidth === 0);
 
 	const area = useLayoutArea();
 	const slots = useLayoutSlots();
@@ -97,9 +99,10 @@
 				area: area(),
 				slots: slots(),
 				hasDivider,
-				isScrollable,
+				isScrollable: isScrollable && !isZeroWidth,
 				padding,
-				width: effectiveWidth
+				width: effectiveWidth,
+				isZeroWidth
 			},
 			xstyle
 		)

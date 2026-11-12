@@ -136,7 +136,7 @@ export default {
 		},
 		{
 			name: 'activeDescendantId',
-			type: 'string | undefined',
+			type: 'string',
 			description:
 				"The id to pass as the control's `aria-activedescendant`: the active option, or its action cell in a grid. Undefined while the list is closed or nothing is active."
 		},
@@ -163,7 +163,7 @@ export default {
 		},
 		{
 			name: 'onItemMouseEnter',
-			type: '(item: MultiSelectorOptionData, index: number) => void',
+			type: '(item: MultiSelectorOptionData, index: number, cell?: MultiComboboxCell) => void',
 			description:
 				'Makes the hovered option, or its action cell, active without scrolling the list or moving focus.'
 		}

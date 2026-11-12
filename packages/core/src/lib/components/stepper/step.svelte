@@ -93,12 +93,13 @@
 
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { colorVars } from '../../styles/tokens.stylex.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Icon from '../icon/icon.svelte';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
-	import { useStepperContext } from './stepper-context.svelte.js';
+	import { useStepperContext, useStepperInternalContext } from './stepper-context.svelte.js';
 	import {
 		stepBarAttrs,
 		stepBodyAttrs,
@@ -124,6 +125,7 @@
 		stepOtTrackRowAttrs,
 		stepOtWrapAttrs,
 		stepRootAttrs,
+		stepSummaryRootAttrs,
 		stepVerticalBodyAttrs,
 		type StepProgress
 	} from './step.stylex.js';
@@ -169,6 +171,7 @@
 
 	const t = useTranslator();
 	const stepper = useStepperContext();
+	const stepperInternal = useStepperInternalContext();
 
 	const activeStep = $derived(stepper().activeStep);
 	const previousActiveStep = $derived(stepper().previousActiveStep);
@@ -176,13 +179,19 @@
 	const onStepClick = $derived(stepper().onStepClick);
 	const ctxDensity = $derived(stepper().density);
 	const indicatorPosition = $derived(stepper().indicatorPosition);
+	const isCompact = $derived(stepperInternal().isCompact);
+	const summarySlot = $derived(stepperInternal().summarySlot);
 
-	// Register this step index with the parent Stepper for duplicate detection.
-	// `registerStep` is a plain closure over the stepper's counting Map, stable
-	// for the stepper's lifetime — upstream's `useCallback([])`. Reading it once
-	// keeps the effect's only dependency `step`, matching upstream's dep array.
+	// Register this step index with the parent Stepper for duplicate detection
+	// and compact navigation. `registerStep` is a plain closure over the
+	// stepper's maps, stable for the stepper's lifetime — upstream's
+	// `useCallback([])`. The Step's disabled state stays owned here: the
+	// getter the registration carries reads the live prop.
 	const registerStep = stepper().registerStep;
-	$effect(() => registerStep(step));
+	$effect(() => {
+		void isDisabled;
+		return registerStep(step, { getIsDisabled: () => isDisabled });
+	});
 
 	const density = $derived(densityProp ?? ctxDensity);
 
@@ -203,13 +212,31 @@
 	const isActive = $derived(progress === 'in-progress');
 	// Any non-disabled step is navigable when an onStepClick handler is provided,
 	// including not-started steps (free navigation across the flow).
-	const isClickable = $derived(!isDisabled && onStepClick != null);
+	// A clickable step body is the pressable surface. A compact horizontal
+	// stepper moves navigation to the named controls in its summary row, so its
+	// track stays purely presentational.
+	const pressable = usePressFeedback();
+	const isClickable = $derived(!isDisabled && onStepClick != null && !isCompact);
 
 	function handleClick(): void {
 		const onClick = stepper().onStepClick;
 		if (isClickable && onClick) {
 			onClick(step);
 		}
+	}
+
+	/**
+	 * Upstream's `createPortal` for the compact summary: the current step draws
+	 * its label into the Stepper's row rather than into its own `<li>`, so the
+	 * `<ol>` keeps exactly the children it was given. The attachment moves the
+	 * node, which is the DOM half of what createPortal does.
+	 */
+	function portalTo(node: HTMLElement | SVGElement): () => void {
+		const target = summarySlot;
+		if (target != null) {
+			target.appendChild(node);
+		}
+		return () => node.remove();
 	}
 
 	// Bar fill is purely progress-based. `status` never recolors the bar — it
@@ -311,6 +338,7 @@
 	const descriptionRowAttrs = $derived(stepDescriptionRowAttrs(hasIndicator));
 	const descriptionAttrs = stepDescriptionAttrs();
 	const contentAttrs = $derived(stepContentAttrs({ density, hasIndicator }));
+	const summaryRootAttrs = stepSummaryRootAttrs();
 
 	// ======= ON-TRACK =======
 	// Connector fill is purely progress-based (matches the separated bar): the
@@ -327,10 +355,21 @@
 	const otWrapAttrs = $derived(stepOtWrapAttrs({ isVertical, density, isClickable }));
 	const otIndicatorColAttrs = $derived(stepOtIndicatorColAttrs(density));
 	const otLeadSegAttrs = $derived(
-		stepOtLeadSegAttrs({ isVertical, density, isFilled: beforeFilled, timing: timings.before })
+		stepOtLeadSegAttrs({
+			isVertical,
+			density,
+			hasIndicator,
+			isFilled: beforeFilled,
+			timing: timings.before
+		})
 	);
 	const otRailSegAttrs = $derived(
-		stepOtRailSegAttrs({ isVertical, isFilled: afterFilled, timing: timings.rail })
+		stepOtRailSegAttrs({
+			isVertical,
+			hasIndicator,
+			isFilled: afterFilled,
+			timing: timings.rail
+		})
 	);
 	const otContentSegAttrs = $derived(
 		stepOtContentSegAttrs({ density, isFilled: afterFilled, timing: timings.content })
@@ -455,10 +494,14 @@
 	{#if endContent}{@render endContent()}{/if}
 {/snippet}
 
-<!-- Indicator + label row (separated layouts). -->
+<!-- Indicator + label row (separated layouts). In compact on-track mode the
+     indicator remains visible on the rail, so the summary reuses this row
+     without drawing the active indicator a second time beside the label. -->
 {#snippet iconLabelNode()}
 	<div class={iconLabelRowAttrs.class} style={iconLabelRowAttrs.style}>
-		{@render indicatorNode()}
+		{#if !isCompact || indicatorPosition !== 'on-track'}
+			{@render indicatorNode()}
+		{/if}
 		{@render labelLine()}
 	</div>
 {/snippet}
@@ -476,20 +519,72 @@
 	{/if}
 {/snippet}
 
-<!-- Content slot (separated layouts). -->
+<!-- Content slot (separated layouts). Compact horizontal layouts hide public
+     step content without unmounting it, so local state survives as the
+     container crosses the threshold. -->
 {#snippet contentNode()}
 	{#if children}
-		<div class={contentAttrs.class} style={contentAttrs.style}>{@render children()}</div>
+		<div hidden={isCompact || undefined} class={contentAttrs.class} style={contentAttrs.style}>
+			{@render children()}
+		</div>
+	{/if}
+{/snippet}
+
+<!--
+	Every compact step is presentational, including on-track indicators, so
+	each item restores its label and status as hidden text. The list stays a
+	complete ordered sequence with aria-current intact, while the summary row
+	below it owns the compact navigation controls and remains decorative apart
+	from those buttons.
+-->
+{#snippet compactNameNode()}
+	<VisuallyHidden>{label}</VisuallyHidden>
+	{#if statusText != null && statusText !== ''}
+		<VisuallyHidden>{statusText}</VisuallyHidden>
+	{/if}
+{/snippet}
+
+<!--
+	This step, drawn below a collapsed track. Only the current step draws one,
+	into a row the stepper owns and keeps outside the `<ol>` — so the list is
+	left with exactly the children it was given, and the on-track connectors go
+	on reading their own `:first-child`/`:last-child` position to decide which
+	caps to hide.
+
+	The description is re-wrapped rather than reusing `descriptionNode`: the row
+	version indents itself under an indicator, and centred under a track there
+	is nothing to line it up with.
+-->
+{#snippet summaryNode()}
+	{#if isCompact && isActive && summarySlot != null}
+		<div
+			{...stepTheme}
+			class={cx(stepTheme.class, summaryRootAttrs.class)}
+			style={summaryRootAttrs.style}
+			{@attach portalTo}
+		>
+			{@render iconLabelNode()}
+			{#if description != null && description !== ''}
+				<span
+					{...descriptionTheme}
+					class={cx(descriptionTheme.class, descriptionAttrs.class)}
+					style={descriptionAttrs.style}>{description}</span
+				>
+			{/if}
+		</div>
 	{/if}
 {/snippet}
 
 <!-- Body: the hover target, a <button> only when the step is clickable. -->
 {#snippet separatedBody()}
-	{#if isClickable}
+	{#if isCompact}
+		{@render compactNameNode()}
+	{:else if isClickable}
 		<button
 			type="button"
 			onclick={handleClick}
 			aria-label={stepAriaLabel}
+			{...pressable}
 			class={bodyAttrs.class}
 			style={bodyAttrs.style}
 		>
@@ -535,7 +630,13 @@
 				<div class={otContentAttrs.class} style={otContentAttrs.style}>{@render children()}</div>
 			</div>
 		{:else}
-			<div class={otContentAttrs.class} style={otContentAttrs.style}>{@render children()}</div>
+			<div
+				hidden={isCompact || undefined}
+				class={otContentAttrs.class}
+				style={otContentAttrs.style}
+			>
+				{@render children()}
+			</div>
 		{/if}
 	{/if}
 {/snippet}
@@ -580,10 +681,12 @@
 			style={otRailSegAttrs.style}
 		></div>
 	</div>
-	<div class={otLabelWrapAttrs.class} style={otLabelWrapAttrs.style}>
-		{@render otLabelLine()}
-		{@render otDescriptionNode()}
-	</div>
+	{#if !isCompact}
+		<div class={otLabelWrapAttrs.class} style={otLabelWrapAttrs.style}>
+			{@render otLabelLine()}
+			{@render otDescriptionNode()}
+		</div>
+	{/if}
 {/snippet}
 
 {#snippet otBody(inner: Snippet)}
@@ -592,6 +695,7 @@
 			type="button"
 			onclick={handleClick}
 			aria-label={stepAriaLabel}
+			{...pressable}
 			class={otWrapAttrs.class}
 			style={otWrapAttrs.style}
 		>
@@ -613,7 +717,11 @@
 >
 	{#if indicatorPosition === 'on-track'}
 		{@render otBody(isVertical ? otInnerV : otInnerH)}
+		{#if !isVertical && isCompact}
+			{@render compactNameNode()}
+		{/if}
 		{@render otContentNode()}
+		{@render summaryNode()}
 	{:else if isVertical}
 		<!-- 4px progress bar -->
 		<div
@@ -627,6 +735,7 @@
 			{@render separatedBody()}
 			{@render contentNode()}
 		</div>
+		{@render summaryNode()}
 	{:else}
 		<!-- 4px progress bar segment for this step -->
 		<div
@@ -637,5 +746,6 @@
 		></div>
 		{@render separatedBody()}
 		{@render contentNode()}
+		{@render summaryNode()}
 	{/if}
 </li>

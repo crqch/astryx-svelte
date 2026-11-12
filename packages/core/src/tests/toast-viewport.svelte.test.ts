@@ -1280,7 +1280,161 @@ describe('Toast native motion contract', () => {
 		expect(wrapperStyle.maxWidth).toBe('400px');
 		expect(wrapperStyle.minWidth).toBe('0px');
 		expect(getComputedStyle(collapsible).minHeight).toBe('0px');
-		expect(getComputedStyle(collapsible).overflow).toBe('hidden');
+		// Upstream reads `hidden` here because jsdom runs no transitions: the row
+		// is still in its entry state. `renderMotionToast` awaits that entry, and
+		// the row then releases the paint clip so the card's shadow shows — the
+		// lifecycle itself is the case after this one.
+		expect(getComputedStyle(collapsible).overflow).toBe('visible');
+	});
+
+	it('releases the shadow clip only while the toast is settled', async () => {
+		const screen = await render(Harness, {
+			props: {
+				triggers: [{ options: { body: 'Shadow lifecycle', isAutoHide: false } }]
+			}
+		});
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const wrapper = getToastWrapperByText('Shadow lifecycle');
+		const inner = wrapper.firstElementChild as HTMLElement;
+
+		// Entry starts with the row's clip boundary.
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		wrapper.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('visible');
+
+		(wrapper.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// Dismissal restores the clip boundary synchronously. The wrapper keeps
+		// its normal hit boundary, so a second click while the toast is still
+		// visible is absorbed by the toast rather than falling through to an
+		// obscured control underneath.
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+		expect(getComputedStyle(wrapper).pointerEvents).toBe('auto');
+	});
+
+	it('ignores a grid-template-rows transition bubbling from a descendant', async () => {
+		// `grid-template-rows` is not private to the wrapper: any descendant may
+		// animate its own grid, and transitionend bubbles. Reading a descendant's
+		// event as the row's own releases the clip before the row has opened, and
+		// during exit it unmounts the toast mid-collapse.
+		const screen = await render(Harness, {
+			props: {
+				triggers: [{ options: { body: 'Bubbled transition', isAutoHide: false } }]
+			}
+		});
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const wrapper = getToastWrapperByText('Bubbled transition');
+		const inner = wrapper.firstElementChild as HTMLElement;
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		inner.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		// The wrapper's own transition still settles it.
+		wrapper.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('visible');
+
+		// Same guard on the exit path: a descendant's event must not cut the
+		// collapse short and unmount the toast early.
+		(wrapper.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		inner.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(screen.getByText('Bubbled transition', { exact: true }).query()).not.toBeNull();
+	});
+
+	it('drops settled state when a toast is evicted and later resurfaces', async () => {
+		// A toast beyond `maxVisible` unmounts without ever being dismissed, so
+		// neither removeToast nor handleExited runs for it. When the stack drains
+		// and it resurfaces, it mounts a fresh row that has to run its own entry
+		// transition — a settled id left over from its previous life would
+		// release the clip immediately, painting the card's shadow (and taking
+		// pointer input) outside the row that is still opening.
+		const screen = await render(Harness, {
+			props: {
+				triggers: [
+					{ options: { body: 'First', isAutoHide: false }, triggerLabel: 'Show first' },
+					{ options: { body: 'Second', isAutoHide: false }, triggerLabel: 'Show second' }
+				],
+				maxVisible: 1
+			}
+		});
+		(screen.getByText('Show first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const first = getToastWrapperByText('First');
+		first.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(first.firstElementChild as HTMLElement).overflow).toBe('visible');
+
+		// Evicted: still in the list, no longer rendered.
+		(screen.getByText('Show second', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(screen.getByText('First', { exact: true }).query()).toBeNull();
+
+		// Drain the stack so it comes back.
+		const second = getToastWrapperByText('Second');
+		second.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		(second.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		second.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+
+		const resurfaced = getToastWrapperByText('First');
+		expect(getComputedStyle(resurfaced.firstElementChild as HTMLElement).overflow).toBe('hidden');
+
+		// And it settles again on its own transition, rather than being stuck.
+		resurfaced.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(resurfaced.firstElementChild as HTMLElement).overflow).toBe('visible');
 	});
 
 	it('keeps reduced motion transitions eventful for exit cleanup', async () => {

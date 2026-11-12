@@ -198,7 +198,7 @@
 	);
 	const theme = $derived(themeProps('segmented-control', { size }));
 	const containerAttrs = $derived(
-		segmentedControlContainerAttrs({ size, layout, isDisabled, showsDisabledMessage }, xstyle)
+		segmentedControlContainerAttrs({ size, layout, isDisabled }, xstyle)
 	);
 
 	function handleContainerKeyDown(e: KeyboardEvent): void {

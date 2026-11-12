@@ -14,5 +14,5 @@
 </script>
 
 {#each Array.from({ length: count }, (_, i) => i) as index (index)}
-	<Spinner />
+	<Spinner data-testid={`spinner-${index}`} />
 {/each}

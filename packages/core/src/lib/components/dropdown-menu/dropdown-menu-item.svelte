@@ -42,6 +42,7 @@
 	import Icon from '../icon/icon.svelte';
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useDropdownMenuContext } from './dropdown-menu-context.svelte.js';
 	import { focusMenuItemOnHover } from './menu-item-hover.js';
 	import { dropdownMenuItemXstyle } from './dropdown-menu-item.stylex.js';
@@ -88,6 +89,9 @@
 			variant: isDestructive ? 'destructive' : null
 		})
 	);
+	// The row is the pressable; Item also marks itself, but naming the row here
+	// keeps this file's own press arms reachable by the controller.
+	const pressable = usePressFeedback();
 	const itemXstyle = $derived(dropdownMenuItemXstyle(menuSize, isDisabled, isDestructive, xstyle));
 </script>
 
@@ -102,6 +106,7 @@
 <Item
 	role="menuitem"
 	tabindex={isDisabled ? undefined : -1}
+	{...pressable}
 	onpointermove={handlePointerMove}
 	{label}
 	{description}

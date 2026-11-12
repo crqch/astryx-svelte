@@ -273,10 +273,14 @@ export function useTooltip(options: () => TooltipOptions): TooltipReturn {
 		mode: 'context',
 		id: options().id,
 		onShow: options().onShow,
-		onHide: options().onHide
+		onHide: options().onHide,
+		// A tooltip keeps its anchor clear: past a short viewport it scrolls its
+		// own content rather than leaving the trigger off screen
+		// (spec:AST-059 FR4).
+		keepsAnchorClear: true
 	}));
 
-	const xstyle = $derived(tooltipSurfaceXstyle(placement));
+	const xstyle = $derived(tooltipSurfaceXstyle());
 
 	let showTimeout: ReturnType<typeof setTimeout> | null = null;
 	let hideTimeout: ReturnType<typeof setTimeout> | null = null;

@@ -226,6 +226,7 @@
 		{...rest}
 		{panelState}
 		{height}
+		{label}
 		{snapPoints}
 		{xstyle}
 		{children}

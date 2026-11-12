@@ -27,10 +27,15 @@ const wrapperStyles = stylex.create({
 	},
 	system: {
 		colorScheme: 'light dark'
+	},
+	// The mark's custom property (REDUCED_MOTION_PROPERTY), which every element
+	// under the mark inherits.
+	reducedMotion: {
+		'--_astryx-reduced-motion': '1'
 	}
 });
 
-export function themeWrapperAttrs(mode: ThemeMode): SvelteStyleAttrs {
+export function themeWrapperAttrs(mode: ThemeMode, reducesMotion: boolean): SvelteStyleAttrs {
 	const colorSchemeStyle =
 		mode === 'dark'
 			? wrapperStyles.dark
@@ -38,5 +43,5 @@ export function themeWrapperAttrs(mode: ThemeMode): SvelteStyleAttrs {
 				? wrapperStyles.light
 				: wrapperStyles.system;
 
-	return sx(wrapperStyles.base, colorSchemeStyle);
+	return sx(wrapperStyles.base, colorSchemeStyle, reducesMotion && wrapperStyles.reducedMotion);
 }

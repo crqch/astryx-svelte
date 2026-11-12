@@ -120,7 +120,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'default' | 'transparent' | 'muted' | 'gray'",
+			type: "'default' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'transparent' | 'muted' | 'gray'",
 			description: 'Background color variant.',
 			default: "'default'"
 		},

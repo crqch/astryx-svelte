@@ -22,6 +22,15 @@ export interface CollapsibleGroupContextValue {
 export type CollapsibleGroupDensity = 'compact' | 'balanced' | 'spacious';
 
 /**
+ * Logical position of Collapsible's disclosure chevron.
+ *
+ * `end` is the default trailing indicator: down when collapsed, up when
+ * expanded. `start` is the leading disclosure pattern: inward toward content
+ * when collapsed (mirrored under RTL), down when expanded.
+ */
+export type CollapsibleChevronPosition = 'start' | 'end';
+
+/**
  * Lets each `Collapsible` draw its own group chrome (StyleX has no child
  * selectors, so the group can't style items from outside).
  */
@@ -30,6 +39,8 @@ export interface CollapsibleGroupPresentationValue {
 	hasDividers: boolean;
 	/** Resolved row density, or null for the default unpadded look. */
 	density: CollapsibleGroupDensity | null;
+	/** The group's chevron side, or null when the group does not set one. */
+	chevronPosition: CollapsibleChevronPosition | null;
 }
 
 const CollapsibleGroupContext = new Context<() => CollapsibleGroupContextValue | null>(

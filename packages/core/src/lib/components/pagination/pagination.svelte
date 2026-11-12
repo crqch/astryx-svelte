@@ -224,6 +224,8 @@
 	import {
 		PAGE_SIZE_SELECTOR_WIDTH,
 		paginationActivePageStyle,
+		paginationCompactFirstAttrs,
+		paginationCompactLastAttrs,
 		paginationControlsAttrs,
 		paginationDotAttrs,
 		paginationDotsContainerAttrs,
@@ -684,6 +686,7 @@
 					onclick={handleFirst}
 					isDisabled={isDisabled || !hasPrevious}
 					isIconOnly
+					class={variant === 'compact' ? paginationCompactFirstAttrs().class : undefined}
 				/>
 			{/if}
 
@@ -721,6 +724,7 @@
 					onclick={handleLast}
 					isDisabled={isDisabled || !hasNext}
 					isIconOnly
+					class={variant === 'compact' ? paginationCompactLastAttrs().class : undefined}
 				/>
 			{/if}
 		</div>

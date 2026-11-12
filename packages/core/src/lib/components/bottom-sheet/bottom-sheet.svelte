@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { StyleArg } from '../../internal/sx.js';
+	import type { SpacingStep } from '../../internal/types.js';
 	import type { DialogPurpose } from '../dialog/dialog.svelte';
 	// Imported under their real names and **not re-exported**. Upstream's
 	// `BottomSheet.tsx` forwards both from `BottomSheetPanel` and its `index.ts`
@@ -21,6 +22,16 @@
 	interface BottomSheetSharedProps extends BaseProps<HTMLDivElement> {
 		/** Accessible label for the sheet. */
 		label: string;
+
+		/**
+		 * Internal padding of the sheet content using the spacing scale, matching
+		 * Dialog. Defaults to the theme's bottom-sheet padding (`--spacing-4`
+		 * unless the theme sets `padding` on `bottom-sheet`). The sheet publishes
+		 * the padding, and bleed children such as Table and Divider compensate
+		 * against it. Pass `0` for content that supplies its own inset. Whatever
+		 * the padding, the grab handle's band is kept clear.
+		 */
+		padding?: SpacingStep;
 
 		/** Sheet content, rendered below the grab handle in a scrollable area. */
 		children: Snippet;

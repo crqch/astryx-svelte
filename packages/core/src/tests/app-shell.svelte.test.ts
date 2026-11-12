@@ -581,7 +581,7 @@ describe('AppShell', () => {
 		expect(observeSpy).toHaveBeenCalled();
 	});
 
-	it('does not set up ResizeObserver in fill mode', async () => {
+	it('does not observe the header in fill mode', async () => {
 		const observeSpy = vi.fn();
 		vi.stubGlobal(
 			'ResizeObserver',
@@ -593,11 +593,17 @@ describe('AppShell', () => {
 			}
 		);
 
-		await render(AppShellFixture, {
+		const screen = await render(AppShellFixture, {
 			props: { topNav: 'div', props: { height: 'fill', 'data-testid': 'shell' } }
 		});
 
-		expect(observeSpy).not.toHaveBeenCalled();
+		// Only the header offset needs measuring for sticky positioning, which
+		// fill mode does not use. (Main is measured for keyboard access.)
+		const observed = new Set<unknown>();
+		for (const call of observeSpy.mock.calls) {
+			observed.add(call[0]);
+		}
+		expect(observed.has(screen.getByRole('banner').element())).toBe(false);
 	});
 
 	// ===========================================================================

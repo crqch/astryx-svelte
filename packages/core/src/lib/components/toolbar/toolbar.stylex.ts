@@ -34,26 +34,53 @@ const styles = stylex.create({
 		alignItems: 'center',
 		justifyContent: 'space-between'
 	},
-	// Three-slot layout (with centerContent): CSS grid 1fr auto 1fr
-	baseGrid: {
-		display: 'grid',
-		gridTemplateColumns: '1fr auto 1fr',
+	// Three-lane layout. The side lanes share the width the center leaves
+	// equally, so the center stays at the middle while each fits its half. When
+	// the lanes do not fit, the row wraps. The end lane moves to a following
+	// line. The center lane moves too when it does not fit beside the start lane.
+	baseThreeLane: {
+		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center'
 	},
+	// Lanes stay side by side in a vertical toolbar too; only the cross-axis
+	// alignment follows the orientation.
+	verticalThreeLane: {
+		alignItems: 'stretch'
+	},
+	// Vertical orientation
 	vertical: {
 		flexDirection: 'column',
 		alignItems: 'stretch'
 	},
+	// Slot containers
 	startSlot: {
 		display: 'flex',
 		alignItems: 'center'
 	},
+	// The center basis is its minimum width, so the row wraps before its text
+	// overlaps a side lane. Alone on a line narrower than its content, the lane
+	// shrinks, so a TabList scrolls. The slot does not clip, because clipping
+	// cuts off the focus ring and shadow of its outer children.
 	centerSlot: {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
+		flexGrow: 1000,
+		flexShrink: 1,
+		flexBasis: 'min-content',
 		minWidth: 0,
-		overflow: 'hidden'
+		maxWidth: 'max-content'
+	},
+	// The side lanes share the width the center leaves. A lane keeps its
+	// controls on one line, so the row wraps first. Only a lane wider than the
+	// toolbar wraps its own controls.
+	sideLane: {
+		flexGrow: 1,
+		flexShrink: 1,
+		flexWrap: 'wrap',
+		// `fit-content` is the lane's full row, capped at the toolbar's width.
+		minWidth: stylex.firstThatWorks('fit-content', '-webkit-fit-content')
 	},
 	endSlot: {
 		display: 'flex',
@@ -76,9 +103,25 @@ const sizeStyles = stylex.create({
 	}
 });
 
+// Edge compensation's marker (edge-compensation.stylex.ts), restated here:
+// StyleX resolves a style's keys within its own file.
+const FIRST_EDGE_COMP = ':has(> [data-astryx-edge-comp]:first-child)';
+const LAST_EDGE_COMP = ':has(> [data-astryx-edge-comp]:last-child)';
+
 const dynamicStyles = stylex.create({
 	gap: (gapValue: string) => ({
 		gap: gapValue
+	}),
+	// Edge compensation pulls a side lane out by a negative margin, which flex
+	// counts toward the lane's share of the row. This basis gives that width
+	// back, so the lane's share excludes it and the center stays at the middle.
+	sideLaneBasis: (amount: string) => ({
+		flexBasis: {
+			default: '0px',
+			[FIRST_EDGE_COMP]: amount,
+			[LAST_EDGE_COMP]: amount,
+			[`${FIRST_EDGE_COMP}${LAST_EDGE_COMP}`]: `calc(2 * ${amount})`
+		}
 	}),
 	tabIndicatorBottom: (offset: string) => ({
 		'--_tab-indicator-bottom': offset
@@ -127,19 +170,41 @@ export function toolbarAttrs(
 	orientation: 'horizontal' | 'vertical',
 	size: ElementSize,
 	gap: SpacingStep,
-	hasBottomDivider: boolean
+	dropsIndicatorOnRail: boolean
 ): SvelteStyleAttrs {
 	return sx(
-		hasCenterContent ? styles.baseGrid : styles.baseFlex,
-		orientation === 'vertical' && styles.vertical,
+		hasCenterContent ? styles.baseThreeLane : styles.baseFlex,
+		orientation === 'vertical' && (hasCenterContent ? styles.verticalThreeLane : styles.vertical),
 		sizeStyles.base,
 		dynamicStyles.gap(gapVarFor(gap)),
 		// Only drop the tab indicator through the toolbar's block padding onto the
 		// rail when a bottom divider is actually present. Without one, leave
 		// `--_tab-indicator-bottom` unset so a nested `TabList`'s indicator keeps
 		// its own default (hugging the tab) instead of floating into the padding.
-		hasBottomDivider &&
+		dropsIndicatorOnRail &&
 			dynamicStyles.tabIndicatorBottom(`calc(-1 * (${blockPaddingVarForSize[size]} + 1px))`)
+	);
+}
+
+/** A side lane of the three-lane layout. */
+export function toolbarStartLaneAttrs(size: ElementSize, gap: SpacingStep): SvelteStyleAttrs {
+	return sx(
+		styles.startSlot,
+		styles.sideLane,
+		dynamicStyles.sideLaneBasis(edgeCompInsetForSize[size]),
+		edgeCompSlot.inset(edgeCompInsetForSize[size]),
+		dynamicStyles.gap(gapVarFor(gap))
+	);
+}
+
+/** The end side lane of the three-lane layout. */
+export function toolbarEndLaneAttrs(size: ElementSize, gap: SpacingStep): SvelteStyleAttrs {
+	return sx(
+		styles.endSlot,
+		styles.sideLane,
+		dynamicStyles.sideLaneBasis(edgeCompInsetForSize[size]),
+		edgeCompSlot.inset(edgeCompInsetForSize[size]),
+		dynamicStyles.gap(gapVarFor(gap))
 	);
 }
 
@@ -157,7 +222,7 @@ export function toolbarStartSlotAttrs(
 	);
 }
 
-/** The centre slot — only present in the three-slot grid layout. */
+/** The centre slot — only present in the three-lane layout. */
 export function toolbarCenterSlotAttrs(gap: SpacingStep): SvelteStyleAttrs {
 	return sx(styles.centerSlot, dynamicStyles.gap(gapVarFor(gap)));
 }

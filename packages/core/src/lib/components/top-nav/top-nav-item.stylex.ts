@@ -52,7 +52,17 @@ const styles = stylex.create({
 			':hover:where(:not(:disabled,[aria-disabled="true"]))': {
 				'@media (hover: hover)': colorVars['--color-neutral']
 			},
-			':active': colorVars['--color-neutral']
+			':active': colorVars['--color-neutral'],
+			// The touch press model writes these instead of `:active`; the selected
+			// item keeps its fill under a finger the way it does under a mouse, and
+			// paints no overlay at any phase of the press.
+			'[data-astryx-press="on"]': colorVars['--color-neutral'],
+			'[data-astryx-press="fading"]': colorVars['--color-neutral']
+		},
+		backgroundImage: {
+			default: null,
+			'[data-astryx-press="on"]': 'none',
+			'[data-astryx-press="fading"]': 'none'
 		}
 	},
 	iconOnly: {

@@ -20,6 +20,7 @@
 	import { useAvatarGroup } from '../avatar/avatar-context.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { avatarGroupOverflowAttrs } from './avatar-group-overflow.stylex.js';
 
@@ -69,6 +70,8 @@
 	// have to reach `themeProps` — and both arrive through the group context,
 	// which makes them `$derived` rather than mount-time `const`s.
 	const size = $derived(group?.().size ?? 'md');
+	// An interactive overflow is a pressable surface like any other button.
+	const pressable = usePressFeedback();
 	const theme = $derived(themeProps('avatar-group-overflow', { size, shape }));
 </script>
 
@@ -87,6 +90,7 @@
 		type="button"
 		{onclick}
 		{...rest}
+		{...pressable}
 		data-avatar-item=""
 		{...theme}
 		class={cx(theme.class, attrs.class, className)}

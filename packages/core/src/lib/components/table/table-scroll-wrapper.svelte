@@ -39,6 +39,7 @@
 	tabindex="0"
 	role="group"
 	aria-label={t('@astryx.table.label')}
+	data-container-corner=""
 	{...htmlProps}
 	{...theme}
 	class={cx(theme.class, attrs.class)}

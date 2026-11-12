@@ -5,12 +5,14 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
 import {
 	colorVars,
 	durationVars,
 	easeVars,
+	focusVars,
 	fontWeightVars,
 	radiusVars,
 	sizeVars,
@@ -20,6 +22,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 
 /**
  * Ported from Astryx's `MultiSelector/MultiSelector.tsx`, where the styles are
@@ -152,14 +155,55 @@ const styles = stylex.create({
 		transitionProperty: 'background-image, background-color, color, opacity, transform',
 		transform: {
 			default: 'scale(1)',
-			':active': 'scale(0.98)'
+			// A mouse press; under a coarse pointer the touch press model writes
+			// `data-astryx-press` instead (see interaction-overlay.stylex.ts).
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			'[data-astryx-press="on"]': 'scale(0.98)'
+		}
+	},
+	// Keep the input-family width contract while reusing ghost's borderless paint
+	// and the neutral resting fill used by secondary buttons.
+	triggerSecondary: {
+		borderWidth: 0,
+		backgroundColor: colorVars['--color-neutral'],
+		boxShadow: {
+			default: 'none',
+			':hover:not(:focus-within):where(:not(:disabled,[aria-disabled="true"]))': {
+				'@media (hover: hover)': 'none'
+			},
+			':focus-within': 'none'
+		},
+		fontWeight: fontWeightVars['--font-weight-medium'],
+		transitionProperty: 'background-image, background-color, color, opacity, transform',
+		transform: {
+			default: 'scale(1)',
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			'[data-astryx-press="on"]': 'scale(0.98)'
 		}
 	},
 	triggerGhostDisabled: {
 		backgroundImage: 'none',
 		transform: {
 			default: 'none',
-			':active': 'none'
+			':active': 'none',
+			'[data-astryx-press="on"]': 'none'
+		}
+	},
+	triggerReadOnly: {
+		cursor: 'default'
+	},
+	triggerGhostReadOnly: {
+		backgroundImage: 'none',
+		transform: {
+			default: 'none',
+			':active': 'none',
+			'[data-astryx-press="on"]': 'none'
 		}
 	},
 
@@ -181,12 +225,36 @@ const styles = stylex.create({
 		borderRadius: radiusVars['--radius-element']
 	},
 
+	// A panel with a search field, capped as a whole.
+	searchPanel: {
+		display: 'flex',
+		flexDirection: 'column',
+		// No taller than its layer's block-size cap, which folds in the software
+		// keyboard's. The search field's row keeps its height, and the list takes
+		// what is left.
+		maxHeight: stylex.firstThatWorks(
+			`calc(${layerViewportInset.maxBlockSize})`,
+			`calc(${layerViewportInset.maxBlockSizeFallback})`
+		)
+	},
+
 	// Dropdown container
 	dropdown: {
 		boxSizing: 'border-box',
-		maxHeight: '300px',
+		// In a search panel, the list shrinks below its content to fit the cap.
+		minHeight: 0,
+		// 300 px, and no taller than its layer's block-size cap, which folds in
+		// the software keyboard's: the list ends above the keyboard with the
+		// layer.
+		maxHeight: stylex.firstThatWorks(
+			`min(300px, ${layerViewportInset.maxBlockSize})`,
+			`min(300px, ${layerViewportInset.maxBlockSizeFallback})`
+		),
 		overflowY: 'auto',
 		padding: spacingVars['--spacing-1']
+	},
+	listbox: {
+		outline: 'none'
 	},
 
 	// Popover container (for anchor positioning)
@@ -246,7 +314,8 @@ const styles = stylex.create({
 		fontWeight: fontWeightVars['--font-weight-medium'],
 		color: colorVars['--color-text-primary'],
 		backgroundColor: 'transparent',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		outline: 'none'
 	},
 	itemHighlighted: {
@@ -281,6 +350,42 @@ const styles = stylex.create({
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
 		whiteSpace: 'nowrap'
+	},
+
+	// Grid rows (spec:AST-058): the row carries today's option chrome (padding,
+	// radius, highlight); its two cells split it into the option's click
+	// target and the action's slot. The action cell is a real cell for the
+	// active-descendant ring, drawn with the shared focus-outline parts because
+	// no element inside the popup has DOM focus.
+	gridRow: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-2']
+	},
+	optionCell: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-2'],
+		flexGrow: 1,
+		flexShrink: 1,
+		minWidth: 0,
+		alignSelf: 'stretch'
+	},
+	actionCell: {
+		display: 'flex',
+		alignItems: 'center',
+		flexShrink: 0,
+		borderRadius: radiusVars['--radius-element']
+	},
+	// The standard ring, from the focus tokens themselves: inside
+	// `stylex.create` StyleX resolves an imported `defineVars` group, and a
+	// plain object such as `FOCUS_OUTLINE_PARTS` compiles to variables nothing
+	// defines.
+	actionCellActive: {
+		outlineWidth: focusVars['--focus-outline-width'],
+		outlineStyle: focusVars['--focus-outline-style'],
+		outlineColor: focusVars['--focus-outline-color'],
+		outlineOffset: focusVars['--focus-outline-offset']
 	},
 
 	// Empty state
@@ -347,7 +452,7 @@ export type MultiSelectorSize = keyof typeof sizeStyles;
  * `MultiSelectorStatusType` and withholds `MultiSelectorVariant`, so the barrel
  * does too.
  */
-export type MultiSelectorVariant = 'input' | 'ghost';
+export type MultiSelectorVariant = 'input' | 'secondary' | 'ghost';
 
 /** The bordered surface wrapping the trigger button, spinner, clear and chevron. */
 export function multiSelectorTriggerContainerAttrs(
@@ -355,6 +460,7 @@ export function multiSelectorTriggerContainerAttrs(
 	variant: MultiSelectorVariant,
 	statusType: InputStatusType | undefined,
 	isDisabled: boolean,
+	isReadOnly: boolean,
 	isEmpty: boolean,
 	inGroup: boolean,
 	xstyle: StyleArg
@@ -363,19 +469,27 @@ export function multiSelectorTriggerContainerAttrs(
 		inputWrapperStyles.base,
 		styles.triggerContainer,
 		sizeStyles[size],
+		variant === 'secondary' && styles.triggerSecondary,
 		variant === 'ghost' && styles.triggerGhost,
 		// Upstream 0.5.1 moved the ghost trigger's hover/pressed overlay into the
-		// shared module, under the same `ghost` gate and in upstream's position.
-		variant === 'ghost' && interactionOverlayStyles.backgroundImage,
-		// A ghost trigger has no bordered wrapper of its own, so the shared ring is
-		// what makes its keyboard focus visible (#4935/#4973). `focusWithin` is
-		// `:has(:focus-visible)`, so a pointer click does not draw it.
-		variant === 'ghost' && focusOutlineStyles.focusWithin,
+		// shared module, under the same non-input gate and in upstream's position;
+		// `secondary` joined it when that variant landed.
+		variant !== 'input' && interactionOverlayStyles.backgroundImage,
+		// A ghost or secondary trigger has no bordered wrapper of its own, so the
+		// shared ring is what makes its keyboard focus visible (#4935/#4973).
+		// `focusWithin` is `:has(:focus-visible)`, so a pointer click does not draw
+		// it.
+		variant !== 'input' && focusOutlineStyles.focusWithin,
 		isDisabled && inputWrapperStyles.disabled,
-		variant === 'ghost' && isDisabled && styles.triggerGhostDisabled,
+		// The shared disabled style drops the focus ring; restore it while the
+		// trigger, a direct child, has keyboard focus (`spec:AST-085` FR6).
+		variant === 'input' && isDisabled && inputDisabledFocusStyles.ring,
+		isReadOnly && styles.triggerReadOnly,
+		variant !== 'input' && isDisabled && styles.triggerGhostDisabled,
+		variant !== 'input' && isReadOnly && styles.triggerGhostReadOnly,
 		isEmpty && styles.triggerPlaceholder,
-		variant !== 'ghost' && statusType && inputStatusBorderStyles[statusType],
-		variant !== 'ghost' && statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
+		variant === 'input' && statusType && inputStatusBorderStyles[statusType],
+		variant === 'input' && statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
 		variant !== 'ghost' && inGroup && groupStyles.inGroup,
 		xstyle
 	);
@@ -436,6 +550,24 @@ export function multiSelectorDropdownAttrs(): SvelteStyleAttrs {
 	return sx(styles.dropdown);
 }
 
+/**
+ * The whole popup with a search row: header, divider and the scrolling list,
+ * capped together at the layer's block-size limit. Without it the header would
+ * scroll with the list and the field would slide out of reach.
+ */
+export function multiSelectorSearchPanelAttrs(): SvelteStyleAttrs {
+	return sx(styles.searchPanel);
+}
+
+/**
+ * The listbox itself, inside the scrolling dropdown. `outline: none` because the
+ * row, not the container, carries the highlight — a sheet-presented listbox owns
+ * the keyboard, and the container must not draw a focus ring of its own.
+ */
+export function multiSelectorListboxAttrs(): SvelteStyleAttrs {
+	return sx(styles.listbox);
+}
+
 /** The `aria-hidden` heading inside a `role="group"`. */
 export function multiSelectorSectionHeadingAttrs(): SvelteStyleAttrs {
 	return sx(styles.sectionHeading);
@@ -443,21 +575,37 @@ export function multiSelectorSectionHeadingAttrs(): SvelteStyleAttrs {
 
 /**
  * A single `role="option"` row. The select-all row takes its own size ramp and
- * the `selectAllWrapper` layout, as upstream's conditional does.
+ * the `selectAllWrapper` layout, as upstream's conditional does. In a grid the
+ * row also takes the `gridRow` layout, which its two cells then split.
  */
 export function multiSelectorItemAttrs(
 	size: MultiSelectorSize,
 	isSelectAll: boolean,
 	isHighlighted: boolean,
-	isDisabled: boolean
+	isDisabled: boolean,
+	isGrid: boolean
 ): SvelteStyleAttrs {
 	return sx(
 		styles.item,
 		isSelectAll ? selectAllSizeStyles[size] : itemSizeStyles[size],
 		isSelectAll && styles.selectAllWrapper,
 		isHighlighted && styles.itemHighlighted,
-		isDisabled && styles.itemDisabled
+		isDisabled && styles.itemDisabled,
+		isGrid && styles.gridRow
 	);
+}
+
+/** The option's cell in a grid row: its click target. */
+export function multiSelectorOptionCellAttrs(): SvelteStyleAttrs {
+	return sx(styles.optionCell);
+}
+
+/**
+ * The action's cell in a grid row. The active variant draws the standard focus
+ * ring, since no element inside the popup holds DOM focus.
+ */
+export function multiSelectorActionCellAttrs(isActive: boolean): SvelteStyleAttrs {
+	return sx(styles.actionCell, isActive && styles.actionCellActive);
 }
 
 /**

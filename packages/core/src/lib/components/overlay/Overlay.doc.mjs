@@ -95,7 +95,7 @@ export default {
 		},
 		{
 			name: 'position',
-			type: "'top' | 'fill' | 'bottom'",
+			type: "'top' | 'bottom' | 'fill'",
 			description: 'Where the scrim appears within the base surface.',
 			default: "'fill'"
 		},

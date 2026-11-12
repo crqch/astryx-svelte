@@ -20,10 +20,24 @@ export function resolveOverlap(numericSize: number): number {
 const styles = stylex.create({
 	root: {
 		display: 'inline-flex',
-		alignItems: 'center'
+		alignItems: 'center',
+		// Every avatar (and the overflow indicator) takes the negative overlap
+		// margin, including the first one, so the overlap survives wrappers such
+		// as HoverCard and Tooltip. This padding gives the first child that space
+		// back, keeping the row inside the group's box.
+		paddingInlineStart: {
+			default: 'calc(-1 * var(--_avatar-group-overlap))',
+			':empty': 0
+		}
 	}
 });
 
-export function avatarGroupAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
-	return sx(styles.root, xstyle);
+const dynamicStyles = stylex.create({
+	overlap: (offset: number) => ({
+		'--_avatar-group-overlap': `${offset}px`
+	})
+});
+
+export function avatarGroupAttrs(overlap: number, xstyle?: StyleArg): SvelteStyleAttrs {
+	return sx(styles.root, dynamicStyles.overlap(-overlap), xstyle);
 }

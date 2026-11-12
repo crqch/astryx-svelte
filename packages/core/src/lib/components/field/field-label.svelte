@@ -76,12 +76,14 @@
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useInputContainer } from '../../hooks/use-input-container.svelte.js';
 	import { useFormLayout } from '../form-layout/form-layout-context.svelte.js';
-	import Icon from '../icon/icon.svelte';
-	import Tooltip from '../tooltip/tooltip.svelte';
+	import InfoTip from '../info-tip/info-tip.svelte';
 	import {
 		fieldLabelAttrs,
 		fieldLabelDescriptionAttrs,
-		fieldLabelStatusTextAttrs
+		fieldLabelLabelGroupAttrs,
+		fieldLabelLabelRowAttrs,
+		fieldLabelStatusTextAttrs,
+		infoTipHiddenStyle
 	} from './field-label.stylex.js';
 
 	/**
@@ -191,6 +193,8 @@
 	const descriptionAttrs = $derived(
 		fieldLabelDescriptionAttrs(isLabelHidden, forwardsDescriptionClick)
 	);
+	const labelGroupAttrs = $derived(fieldLabelLabelGroupAttrs(isLabelHidden));
+	const labelRowAttrs = $derived(fieldLabelLabelRowAttrs(isLabelHidden));
 </script>
 
 <!--
@@ -199,30 +203,55 @@
 	associated with a group. Render it as a `<span>` instead, keeping all the
 	label styling and slots. The group references it via `aria-labelledby`.
 -->
-<svelte:element
-	this={isGroupLabel ? 'span' : 'label'}
-	id={labelID}
-	for={isGroupLabel ? undefined : inputID}
-	{...rest}
-	{...theme}
-	class={cx(theme.class, attrs.class, className)}
-	style={mergeStyle(attrs.style, styleProp as string | undefined)}
->
-	{#if labelIcon}{@render labelIcon()}{/if}{label}{#if statusText}<span
-			class={statusTextAttrs.class}
-			style={statusTextAttrs.style}><span aria-hidden="true">{separator}</span>{statusText}</span
-		>{/if}{#if labelTooltip}<Tooltip content={labelTooltip} placement="above">
-			<Icon icon="info" size="sm" color="inherit" />
-		</Tooltip>{/if}
-</svelte:element>
-{#if description}
-	<span
-		bind:this={descriptionEl}
-		id={descriptionID}
-		{...descriptionClick}
-		class={descriptionAttrs.class}
-		style={descriptionAttrs.style}
+{#snippet labelElement()}
+	<svelte:element
+		this={isGroupLabel ? 'span' : 'label'}
+		id={labelID}
+		for={isGroupLabel ? undefined : inputID}
+		{...rest}
+		{...theme}
+		class={cx(theme.class, attrs.class, className)}
+		style={mergeStyle(attrs.style, styleProp as string | undefined)}
 	>
-		{#if typeof description === 'function'}{@render description()}{:else}{description}{/if}
-	</span>
+		{#if labelIcon}{@render labelIcon()}{/if}{label}{#if statusText}<span
+				class={statusTextAttrs.class}
+				style={statusTextAttrs.style}><span aria-hidden="true">{separator}</span>{statusText}</span
+			>{/if}
+	</svelte:element>
+{/snippet}
+
+<!--
+	A button inside a label also activates the label's control, so the info
+	button sits outside it, in one row with the label.
+-->
+{#snippet labelWithHelp()}
+	{#if labelTooltip}
+		<span class={labelRowAttrs.class} style={labelRowAttrs.style}>
+			{@render labelElement()}
+			<InfoTip
+				content={labelTooltip}
+				label={t('@astryx.field.labelTooltip', { label })}
+				xstyle={isLabelHidden ? infoTipHiddenStyle : undefined}
+			/>
+		</span>
+	{:else}
+		{@render labelElement()}
+	{/if}
+{/snippet}
+
+{#if description}
+	<div class={labelGroupAttrs.class} style={labelGroupAttrs.style}>
+		{@render labelWithHelp()}
+		<span
+			bind:this={descriptionEl}
+			id={descriptionID}
+			{...descriptionClick}
+			class={descriptionAttrs.class}
+			style={descriptionAttrs.style}
+		>
+			{#if typeof description === 'function'}{@render description()}{:else}{description}{/if}
+		</span>
+	</div>
+{:else}
+	{@render labelWithHelp()}
 {/if}

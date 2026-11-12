@@ -171,7 +171,7 @@ export default {
 		},
 		{
 			name: 'chevronPosition',
-			type: "'start' | 'end'",
+			type: "'end' | 'start'",
 			description:
 				"Logical position of Collapsible's disclosure chevron. `end` (default) follows the label, pointing down when collapsed and up when expanded. `start` precedes the label, pointing inward toward content when collapsed (mirrored under RTL) and down when expanded. Inside a CollapsibleGroup this defaults to the group's chevronPosition.",
 			default: "'end'"

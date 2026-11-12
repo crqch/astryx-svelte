@@ -57,6 +57,7 @@
 	import Tooltip from '../tooltip/tooltip.svelte';
 	import { useContainerReveal } from '../../hooks/use-container-reveal.svelte.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
@@ -123,6 +124,10 @@
 	type RevealAttrs = { class?: string; style?: string };
 
 	const t = useTranslator();
+
+	// The interactive picture box is the pressable: the overlay's pressed arms
+	// read the controller's attribute there.
+	const pressable = usePressFeedback();
 
 	// Track the exact src that failed (rather than a boolean) so a changed src
 	// gets a fresh load attempt instead of the stale error.
@@ -231,6 +236,7 @@
 		{...rest}
 	>
 		<div
+			{...isInteractive ? pressable : undefined}
 			class={cx(container.class, containerReveal.class)}
 			style={mergeStyle(container.style, containerReveal.style)}
 		>

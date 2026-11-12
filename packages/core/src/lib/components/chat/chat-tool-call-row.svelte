@@ -6,6 +6,12 @@
 	interface ChatToolCallRowProps {
 		/** The call to render. */
 		call: ChatToolCallItem;
+		/**
+		 * Whether an ancestor clips the focus ring. Upstream sets it on the rows
+		 * inside the group list, whose scroller/overflow wrapper would otherwise
+		 * cut the ring off, and pulls the ring inset for those.
+		 */
+		hasClippedFocusRing?: boolean;
 	}
 
 	/**
@@ -43,9 +49,7 @@
 		chatToolCallNodePillStyle,
 		chatToolCallRowAttrs,
 		chatToolCallStatsAttrs,
-		chatToolCallStatusCircleAttrs,
-		chatToolCallStatusIconAttrs,
-		chatToolCallStatusInnerAttrs
+		chatToolCallStatusIconAttrs
 	} from './chat-tool-calls.stylex.js';
 
 	/**
@@ -55,7 +59,7 @@
 	 * barrel, and its props interface is deliberately *not* exported, matching a
 	 * function component upstream publishes no props type for.
 	 */
-	const { call }: ChatToolCallRowProps = $props();
+	const { call, hasClippedFocusRing = false }: ChatToolCallRowProps = $props();
 
 	const t = useTranslator();
 
@@ -76,10 +80,8 @@
 		}
 	}
 
-	const rowAttrs = $derived(chatToolCallRowAttrs(hasDetail));
+	const rowAttrs = $derived(chatToolCallRowAttrs(hasDetail, hasClippedFocusRing));
 	const statusIcon = $derived(chatToolCallStatusIconAttrs(status));
-	const statusCircle = $derived(chatToolCallStatusCircleAttrs());
-	const statusInner = $derived(chatToolCallStatusInnerAttrs());
 	const nameAttrs = $derived(chatToolCallNameAttrs());
 	const labelAttrs = $derived(chatToolCallLabelAttrs());
 	const statsAttrs = $derived(chatToolCallStatsAttrs());
@@ -121,10 +123,7 @@
 			{#if status === 'running' || status === 'pending'}
 				<Spinner size="sm" shade="subtle" />
 			{:else}
-				<span class={statusCircle.class} style={statusCircle.style}></span>
-				<span class={statusInner.class} style={statusInner.style}>
-					<Icon icon={STATUS_ICON_NAMES[status] ?? 'check'} size="xsm" color="inherit" />
-				</span>
+				<Icon icon={STATUS_ICON_NAMES[status] ?? 'check'} size="xsm" color="inherit" />
 			{/if}
 			{#if status === 'error' && call.errorMessage != null}
 				<!--

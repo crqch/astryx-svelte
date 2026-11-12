@@ -26,6 +26,7 @@
 
 <script lang="ts">
 	import { themeProps } from '../../internal/theme-props.js';
+	import { spacingVars } from '../../styles/tokens.stylex.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import Layer from '../layer/layer.svelte';
 	import { tooltipContentAttrs } from './use-tooltip.stylex.js';
@@ -62,6 +63,7 @@
 	layer={tooltip.layer}
 	placement={renderPlacement}
 	alignment={renderAlignment}
+	offset={spacingVars['--spacing-1']}
 	role="tooltip"
 	xstyle={[tooltip.xstyle, layerAnimations[renderPlacement]]}
 	class={themeProps('tooltip').class}

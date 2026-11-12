@@ -59,6 +59,7 @@ const styles = stylex.create({
 		justifySelf: 'start',
 		display: 'inline-flex',
 		alignItems: 'center',
+		pointerEvents: 'none',
 		height: spacingVars['--spacing-5'],
 		gap: spacingVars['--spacing-2'],
 		borderRadius: radiusVars['--radius-full'],

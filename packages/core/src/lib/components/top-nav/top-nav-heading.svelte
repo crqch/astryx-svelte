@@ -58,9 +58,16 @@
 		topNavHeadingChevronButtonAttrs,
 		topNavHeadingChevronGlyphStyle,
 		topNavHeadingChevronStyle,
+		topNavHeadingColumnsText,
+		topNavHeadingColumnsWithLinks,
+		topNavHeadingColumnsWithLogo,
+		topNavHeadingColumnsWithLogoAndLinks,
+		topNavHeadingColumnsWithLogoAndMenu,
+		topNavHeadingColumnsWithMenu,
 		topNavHeadingEndContentAttrs,
 		topNavHeadingHeadingAttrs,
 		topNavHeadingHeadingLinkAttrs,
+		topNavHeadingLinkedLineStyle,
 		topNavHeadingLogoAttrs,
 		topNavHeadingPopoverChevronStyle,
 		topNavHeadingPopoverContentAttrs,
@@ -157,8 +164,26 @@
 	const isStaticWithLinks = $derived(hasAnyHref && !isWholeHeadingLink);
 
 	const theme = themeProps('top-nav-heading');
-	const rootAttrs = $derived(topNavHeadingRootAttrs(xstyle));
-	const triggerRootAttrs = $derived(topNavHeadingTriggerRootAttrs(xstyle));
+	// Upstream's column track follows what the heading actually renders: no
+	// track when there is neither text nor menu, and wider min-content tracks
+	// once there are independent links to wrap.
+	const rootColumns = $derived(
+		!heading && !menu
+			? undefined
+			: logo
+				? menu
+					? topNavHeadingColumnsWithLogoAndMenu
+					: topNavHeadingColumnsWithLogo
+				: menu
+					? topNavHeadingColumnsWithMenu
+					: topNavHeadingColumnsText
+	);
+	const linkColumns = $derived(
+		logo ? topNavHeadingColumnsWithLogoAndLinks : topNavHeadingColumnsWithLinks
+	);
+	const rootAttrs = $derived(topNavHeadingRootAttrs(xstyle, rootColumns));
+	const triggerRootAttrs = $derived(topNavHeadingTriggerRootAttrs(xstyle, rootColumns));
+	const linkRootAttrs = $derived(topNavHeadingRootAttrs(xstyle, linkColumns));
 	const logoAttrs = topNavHeadingLogoAttrs();
 	const textContainerAttrs = topNavHeadingTextContainerAttrs();
 	const superheadingAttrs = topNavHeadingSuperheadingAttrs();
@@ -237,7 +262,13 @@
 	<span class={textContainerAttrs.class} style={textContainerAttrs.style}>
 		{#if superheading}
 			{#if hasAnyHref && superheadingHref && menu}
-				<Link href={superheadingHref} onclick={stopPropagation} color="secondary" size="xsm">
+				<Link
+					href={superheadingHref}
+					onclick={stopPropagation}
+					color="secondary"
+					size="xsm"
+					xstyle={topNavHeadingLinkedLineStyle}
+				>
 					{superheading}
 				</Link>
 			{:else}
@@ -258,7 +289,13 @@
 		</span>
 		{#if subheading}
 			{#if hasAnyHref && subheadingHref && menu}
-				<Link href={subheadingHref} onclick={stopPropagation} color="secondary" size="xsm">
+				<Link
+					href={subheadingHref}
+					onclick={stopPropagation}
+					color="secondary"
+					size="xsm"
+					xstyle={topNavHeadingLinkedLineStyle}
+				>
 					{subheading}
 				</Link>
 			{:else}
@@ -438,8 +475,8 @@
 		{...rest}
 		data-testid={testId}
 		{...theme}
-		class={cx(theme.class, rootAttrs.class, className)}
-		style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, linkRootAttrs.class, className)}
+		style={mergeStyle(linkRootAttrs.style, styleProp as string | undefined)}
 	>
 		{#if logo}
 			{#if headingHref}
@@ -453,7 +490,14 @@
 		<span class={textContainerAttrs.class} style={textContainerAttrs.style}>
 			{#if superheading}
 				{#if superheadingHref}
-					<Link href={superheadingHref} color="secondary" size="xsm">{superheading}</Link>
+					<Link
+						href={superheadingHref}
+						color="secondary"
+						size="xsm"
+						xstyle={topNavHeadingLinkedLineStyle}
+					>
+						{superheading}
+					</Link>
 				{:else}
 					<span class={superheadingAttrs.class} style={superheadingAttrs.style}>
 						{superheading}
@@ -461,13 +505,27 @@
 				{/if}
 			{/if}
 			{#if headingHref}
-				<Link href={headingHref} color="primary" weight="semibold">{heading}</Link>
+				<Link
+					href={headingHref}
+					color="primary"
+					weight="semibold"
+					xstyle={topNavHeadingLinkedLineStyle}
+				>
+					{heading}
+				</Link>
 			{:else}
 				<span class={headingAttrs.class} style={headingAttrs.style}>{heading}</span>
 			{/if}
 			{#if subheading}
 				{#if subheadingHref}
-					<Link href={subheadingHref} color="secondary" size="xsm">{subheading}</Link>
+					<Link
+						href={subheadingHref}
+						color="secondary"
+						size="xsm"
+						xstyle={topNavHeadingLinkedLineStyle}
+					>
+						{subheading}
+					</Link>
 				{:else}
 					<span class={subheadingAttrs.class} style={subheadingAttrs.style}>{subheading}</span>
 				{/if}

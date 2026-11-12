@@ -600,6 +600,7 @@ export type {
 export { default as ContextMenuDivider } from './components/dropdown-menu/dropdown-menu-divider.svelte';
 export type { CollapsibleGroupProps } from './components/collapsible/collapsible-group.svelte';
 export type { CollapsibleGroupDensity } from './components/collapsible/collapsible-group-context.svelte.js';
+export type { CollapsibleChevronPosition } from './components/collapsible/collapsible-group-context.svelte.js';
 export {
 	useCollapsible,
 	type CollapsibleConfig,
@@ -625,7 +626,10 @@ export type { DropdownMenuItemProps } from './components/dropdown-menu/dropdown-
 export type { DropdownMenuCheckboxItemProps } from './components/dropdown-menu/dropdown-menu-checkbox-item.svelte';
 export type { DropdownMenuRadioGroupProps } from './components/dropdown-menu/dropdown-menu-radio-group.svelte';
 export type { DropdownMenuRadioItemProps } from './components/dropdown-menu/dropdown-menu-radio-item.svelte';
-export type { DropdownMenuSubMenuProps } from './components/dropdown-menu/dropdown-menu-sub-menu.svelte';
+export type {
+	DropdownMenuSubMenuProps,
+	DropdownMenuSubMenuPresentation
+} from './components/dropdown-menu/dropdown-menu-sub-menu.svelte';
 export type {
 	DropdownMenuOption,
 	DropdownMenuItemData,
@@ -672,6 +676,12 @@ export type { InputGroupProps } from './components/input-group/input-group.svelt
 export type { InputGroupSize } from './components/input-group/input-group.stylex.js';
 export type { InputGroupTextProps } from './components/input-group/input-group-text.svelte';
 export type { ItemProps } from './components/item/item.svelte';
+export type {
+	ItemSwipeAction,
+	ItemSwipeActions,
+	ItemSwipeActionVariant,
+	ItemSwipeBehavior
+} from './components/item/item.svelte';
 export type { ItemAlign, ItemDensity } from './components/item/item.stylex.js';
 export type { KbdProps } from './components/kbd/kbd.svelte';
 // `ContextRenderProps` and `FixedRenderProps` are upstream's own names for the
@@ -710,6 +720,7 @@ export type { ListProps } from './components/list/list.svelte';
 // `ListContext` itself stays module-private, as upstream keeps it.
 export type {
 	ListDensity,
+	ListEdge,
 	ListMarkerStyle as ListStyle
 } from './components/list/list-context.svelte.js';
 export type { ListItemProps } from './components/list/list-item.svelte';
@@ -898,17 +909,22 @@ export type { SpinnerProps } from './components/spinner/spinner.svelte';
 export type { StackAlignment, StackProps } from './components/stack/stack.svelte';
 export type { StackItemProps } from './components/stack/stack-item.svelte';
 export type { StatusDotProps } from './components/status-dot/status-dot.svelte';
-// Upstream's `Stepper/index.ts` publishes exactly these seven names.
-// `StepDensity` and `StepperDensity` are module-public upstream and
-// barrel-absent, so they stay unpublished here too — the `focusableSelector`
+// Upstream's `Stepper/index.ts` publishes the components, `useStepperContext`,
+// and these types. `StepDensity` and `StepperDensity` are module-public upstream
+// and barrel-absent, so they stay unpublished here too — the `focusableSelector`
 // rule.
-export type { StepperProps } from './components/stepper/stepper.svelte';
+export type {
+	StepperCollapsedVariant,
+	StepperHorizontalOptions,
+	StepperProps
+} from './components/stepper/stepper.svelte';
 export type { StepProps, StepIndicatorPreset } from './components/stepper/step.svelte';
 export type { StepStatus } from './components/stepper/step-status.js';
 export type {
 	StepperContextValue,
 	StepperOrientation,
-	StepperIndicatorPosition
+	StepperIndicatorPosition,
+	StepperRegistrationOptions
 } from './components/stepper/stepper-context.svelte.js';
 export type {
 	SwitchProps,
@@ -1077,6 +1093,7 @@ export { useTableFilterState } from './components/table/plugins/filtering/use-ta
 // auditable against upstream's `PowerSearch/index.ts` line by line.
 export { default as PowerSearch } from './components/power-search/power-search.svelte';
 export type {
+	PowerSearchPresentation,
 	PowerSearchProps,
 	PowerSearchSize
 } from './components/power-search/power-search.svelte';
@@ -1225,6 +1242,7 @@ export type { TokenProps } from './components/token/token.svelte';
 export type {
 	TokenizerProps,
 	TokenizerOverflowBehavior,
+	TokenizerPresentation,
 	TokenizerChange,
 	TokenizerHandle,
 	TokenizerStatus,

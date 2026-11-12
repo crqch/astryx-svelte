@@ -9,6 +9,7 @@ import {
 	typeScaleVars,
 	typographyVars
 } from '../../styles/tokens.stylex.js';
+import { inputWrapperStyles } from './input-styles.stylex.js';
 
 /**
  * Ported from Astryx's `Field/PanelSearchInput.tsx`, where the styles are inline
@@ -79,10 +80,13 @@ const styles = stylex.create({
 		color: colorVars['--color-text-primary'],
 		fontFamily: typographyVars['--font-family-body'],
 		// Matches the option rows below it, so the query reads as the first line of
-		// the list. The coarse-pointer floor keeps iOS from zooming on focus.
+		// the list. The floor keeps iOS from zooming on focus — keyed to iOS
+		// alone, since only iOS WebKit implements -webkit-touch-callout.
 		fontSize: {
 			default: typeScaleVars['--text-label-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-label-leading'],
 		// The field draws the focus ring (see `field`), so the bare input must not
@@ -99,9 +103,25 @@ export function panelSearchWrapperAttrs(xstyle: StyleArg): SvelteStyleAttrs {
 	return sx(styles.wrapper, xstyle);
 }
 
-/** The rounded, option-row-shaped box holding the magnifier, input and clear. */
-export function panelSearchFieldAttrs(isKeyboardFocus: boolean): SvelteStyleAttrs {
-	return sx(styles.field, isKeyboardFocus && styles.fieldKeyboardFocus);
+/**
+ * The rounded, option-row-shaped box holding the magnifier, input and clear.
+ *
+ * `hasInputBox` draws the shared input chrome instead of the borderless panel
+ * row — a touch sheet is a full-width surface, so its field reads as a form
+ * input. `fieldXstyle` lets that caller grow the field to its own row height.
+ */
+export function panelSearchFieldAttrs(
+	isKeyboardFocus: boolean,
+	hasInputBox: boolean,
+	fieldXstyle: StyleArg
+): SvelteStyleAttrs {
+	return sx(
+		styles.field,
+		isKeyboardFocus && styles.fieldKeyboardFocus,
+		hasInputBox && inputWrapperStyles.base,
+		hasInputBox && inputWrapperStyles.textField,
+		fieldXstyle
+	);
 }
 
 /** `xstyle` for the leading magnifier `<Icon>`. */

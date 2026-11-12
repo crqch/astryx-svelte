@@ -22,7 +22,7 @@ export interface UseGestureRecognizerOptions {
 	 */
 	isEnabled?: boolean | (() => boolean);
 	/** Let the host set touch-action (and long-press callout) styles. @default true */
-	manageStyle?: boolean;
+	manageStyle?: boolean | (() => boolean);
 	/** Accepted and ignored: every attachment reads each event's pointer. */
 	perEventPointer?: boolean;
 	/**
@@ -94,7 +94,7 @@ export function useGestureRecognizer<R extends GestureRecognizer>(
 	$effect(() => {
 		const element = getElement();
 		const isEnabled = readEnabled(options.isEnabled);
-		const manageStyle = options.manageStyle ?? true;
+		const manageStyle = readEnabled(options.manageStyle);
 		const actionGroup = options.actionGroup ?? false;
 		if (element == null || !isEnabled) {
 			return;

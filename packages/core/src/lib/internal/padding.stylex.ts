@@ -182,36 +182,41 @@ export const containerPaddingBlockEndVarStyles = stylex.create({
 });
 
 /**
- * Publishes `--layout-padding-outer-x`, which every `Layout` slot reads for the
- * edge that touches the container.
+ * Layout outer X padding CSS variable styles for `Layout`'s `padding` prop.
+ *
+ * These write `--layout-padding-own-outer-x`, which the Layout's regions read
+ * ahead of the inherited `--layout-padding-outer-x` that padding containers
+ * (Card, Section, Dialog) publish. Every Layout, padding container, and overlay
+ * root clears the `own` value, so one Layout's padding never reaches a nested
+ * Layout's regions.
  */
 export const layoutPaddingOuterXVarStyles = stylex.create({
-	0: { '--layout-padding-outer-x': spacingVars['--spacing-0'] },
-	0.5: { '--layout-padding-outer-x': spacingVars['--spacing-0-5'] },
-	1: { '--layout-padding-outer-x': spacingVars['--spacing-1'] },
-	1.5: { '--layout-padding-outer-x': spacingVars['--spacing-1-5'] },
-	2: { '--layout-padding-outer-x': spacingVars['--spacing-2'] },
-	3: { '--layout-padding-outer-x': spacingVars['--spacing-3'] },
-	4: { '--layout-padding-outer-x': spacingVars['--spacing-4'] },
-	5: { '--layout-padding-outer-x': spacingVars['--spacing-5'] },
-	6: { '--layout-padding-outer-x': spacingVars['--spacing-6'] },
-	8: { '--layout-padding-outer-x': spacingVars['--spacing-8'] },
-	10: { '--layout-padding-outer-x': spacingVars['--spacing-10'] }
+	0: { '--layout-padding-own-outer-x': spacingVars['--spacing-0'] },
+	0.5: { '--layout-padding-own-outer-x': spacingVars['--spacing-0-5'] },
+	1: { '--layout-padding-own-outer-x': spacingVars['--spacing-1'] },
+	1.5: { '--layout-padding-own-outer-x': spacingVars['--spacing-1-5'] },
+	2: { '--layout-padding-own-outer-x': spacingVars['--spacing-2'] },
+	3: { '--layout-padding-own-outer-x': spacingVars['--spacing-3'] },
+	4: { '--layout-padding-own-outer-x': spacingVars['--spacing-4'] },
+	5: { '--layout-padding-own-outer-x': spacingVars['--spacing-5'] },
+	6: { '--layout-padding-own-outer-x': spacingVars['--spacing-6'] },
+	8: { '--layout-padding-own-outer-x': spacingVars['--spacing-8'] },
+	10: { '--layout-padding-own-outer-x': spacingVars['--spacing-10'] }
 });
 
 /** The block half of the same contract. */
 export const layoutPaddingOuterYVarStyles = stylex.create({
-	0: { '--layout-padding-outer-y': spacingVars['--spacing-0'] },
-	0.5: { '--layout-padding-outer-y': spacingVars['--spacing-0-5'] },
-	1: { '--layout-padding-outer-y': spacingVars['--spacing-1'] },
-	1.5: { '--layout-padding-outer-y': spacingVars['--spacing-1-5'] },
-	2: { '--layout-padding-outer-y': spacingVars['--spacing-2'] },
-	3: { '--layout-padding-outer-y': spacingVars['--spacing-3'] },
-	4: { '--layout-padding-outer-y': spacingVars['--spacing-4'] },
-	5: { '--layout-padding-outer-y': spacingVars['--spacing-5'] },
-	6: { '--layout-padding-outer-y': spacingVars['--spacing-6'] },
-	8: { '--layout-padding-outer-y': spacingVars['--spacing-8'] },
-	10: { '--layout-padding-outer-y': spacingVars['--spacing-10'] }
+	0: { '--layout-padding-own-outer-y': spacingVars['--spacing-0'] },
+	0.5: { '--layout-padding-own-outer-y': spacingVars['--spacing-0-5'] },
+	1: { '--layout-padding-own-outer-y': spacingVars['--spacing-1'] },
+	1.5: { '--layout-padding-own-outer-y': spacingVars['--spacing-1-5'] },
+	2: { '--layout-padding-own-outer-y': spacingVars['--spacing-2'] },
+	3: { '--layout-padding-own-outer-y': spacingVars['--spacing-3'] },
+	4: { '--layout-padding-own-outer-y': spacingVars['--spacing-4'] },
+	5: { '--layout-padding-own-outer-y': spacingVars['--spacing-5'] },
+	6: { '--layout-padding-own-outer-y': spacingVars['--spacing-6'] },
+	8: { '--layout-padding-own-outer-y': spacingVars['--spacing-8'] },
+	10: { '--layout-padding-own-outer-y': spacingVars['--spacing-10'] }
 });
 
 /**
@@ -501,9 +506,17 @@ export const overlayPaddingReset = stylex.create({
 		'--container-padding-inline-end': '0px',
 		'--container-padding-block-start': '0px',
 		'--container-padding-block-end': '0px',
+		// The corner a full-bleed descendant takes: the overlay root is not the
+		// page container's corner.
+		'--container-corner-start-start': '0px',
+		'--container-corner-start-end': '0px',
+		'--container-corner-end-start': '0px',
+		'--container-corner-end-end': '0px',
 		// Added by descendants — fall through to each reader's own default.
 		'--layout-padding-outer-x': 'initial',
 		'--layout-padding-outer-y': 'initial',
+		'--layout-padding-own-outer-x': 'initial',
+		'--layout-padding-own-outer-y': 'initial',
 		'--layout-padding-inner-x': 'initial',
 		'--layout-padding-inner-y': 'initial',
 		'--_section-padding-propagated': 'initial'

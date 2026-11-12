@@ -533,11 +533,11 @@ describe('TreeList', () => {
 		});
 
 		it("variant='noGuides' preserves per-level indentation on the rows", async () => {
-			// Indentation lives on the row's margin-inline-start (not the guide
+			// Indentation lives on the row's inner content wrapper (not the guide
 			// element), so it must survive when the connectors are suppressed. The
 			// per-row distance is published as the `--_tree-indent` custom property
 			// (not an inline longhand — see #4308), so the theme layer can override
-			// the `margin-inline-start` declaration. A deeper row is indented more
+			// the `padding-inline-start` declaration. A deeper row is indented more
 			// than a shallower one.
 			const screen = await render(TreeListFixture, {
 				props: { items: deepItems, tree: { variant: 'noGuides' } }

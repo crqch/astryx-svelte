@@ -12,6 +12,10 @@ import { spacingVars } from '../../styles/tokens.stylex.js';
 const styles = stylex.create({
 	root: {
 		position: 'relative',
+		// Contain the guides' and focused rows' `z-index` (TreeListBranches,
+		// TreeListItem) inside the tree, so they never climb over a sticky header
+		// or other positioned content outside the list.
+		isolation: 'isolate',
 		// Per-level indentation step. Public, themeable lever: a theme can retune
 		// the tree's indent metric (e.g. to `var(--spacing-5)`) via `defineTheme`
 		// on the `tree-list` target, and both the row margins (TreeListItem) and

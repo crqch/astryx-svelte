@@ -178,14 +178,14 @@ export default {
 		},
 		{
 			name: 'as',
-			type: "'div' | 'li' | 'span'",
+			type: "'div' | 'li' | 'span' | LinkComponentType",
 			description:
 				"What the root renders as: an HTML element, or a component for a caller that needs the root to be something else. A menu row that navigates passes the application's link component here, so the row's root IS the anchor. Give a component only when the row carries a role, and only when no interactive node sits in startContent or endContent.",
 			default: "'div'"
 		},
 		{
 			name: 'align',
-			type: "'start' | 'center'",
+			type: "'start' | 'center' | 'first-line'",
 			description:
 				"Vertical alignment of start/end content slots. 'center' centers each slot on the whole text block; 'start' lines up slot tops with the text's top; 'first-line' centers each slot on the label's first line, so a small mark stays level with the first line of a wrapped label. A slot taller than that line moves the text down. The `item` theme target reflects the value as `align`.",
 			default: "'center'"
@@ -263,7 +263,7 @@ export default {
 		},
 		{
 			name: 'swipeActions',
-			type: '{leading?: ItemSwipeAction[]; trailing?: ItemSwipeAction[]}',
+			type: 'ItemSwipeActions',
 			description:
 				"Swipe actions for touch: the verbs a sideways drag uncovers on each side, outermost last, each `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`. `leading` is uncovered by a drag toward the inline end, `trailing` toward the inline start. A mouse never starts the drag and a mostly vertical drag stays the scroller's. The gesture is a touch accelerator and never a row's only path to a verb: a verb reachable only by swipe is unreachable by keyboard and by mouse, so every entry must also be reachable through the row's own content. Served on a row whose role permits interactive descendants (a listitem, a row with no role) and not on an option, a menu item, or a row that is the enlarged target of a native radio. The element containing the rows clips in the inline axis with overflow-inline: clip — List does; any other host does it once. `hasRemoval` only says the row holds out after the action fires instead of springing back. The gesture and its panels are loaded on demand the first time a row has swipe actions, so a row without them ships none of it."
 		},

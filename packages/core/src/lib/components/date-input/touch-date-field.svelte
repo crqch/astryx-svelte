@@ -19,12 +19,14 @@
 		plainDateToday
 	} from '../../utils/plain-date.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import BottomSheet from '../bottom-sheet/bottom-sheet.svelte';
 	import Button from '../button/button.svelte';
 	import Field from '../field/field.svelte';
@@ -135,6 +137,8 @@
 	}: DateInputProps = $props();
 
 	const t = useTranslator();
+	// The month-year header button is the surface's pressable.
+	const pressable = usePressFeedback();
 	const locale = useLocale();
 	const isEffectivelyRequired = useResolvedRequired({
 		isRequired: () => isRequired,
@@ -526,6 +530,7 @@
 				aria-expanded={isWheelOpen}
 				aria-label={t('@astryx.dateInput.chooseMonthYear', { monthYear: monthYearLabel })}
 				data-title="month-year"
+				{...pressable}
 				class={titleAttrs.class}
 				style={titleAttrs.style}
 			>
@@ -718,6 +723,7 @@
 {#snippet inputWrapper()}
 	<div
 		{...rest}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, className)}
 		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}

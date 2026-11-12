@@ -9,18 +9,18 @@ import {
 	typeScaleVars
 } from '../../styles/tokens.stylex.js';
 import type { TreeListDensity } from './tree-list-types.js';
-import { focusOutlineProps, focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { rowPressLayerStyles } from '../../private-attributes/press.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 
 /**
  * Ported from Astryx's `TreeList/TreeListItem.tsx` styles.
  *
- * Both modes. `wrapper`,
- * `contentWrapper`/`interactive`/`focusVisibleOutline`/`disabled`/`selected` (a
- * five-conditional merge with a dynamic density index) and `description` (merged
- * with a dynamic `descriptionSizeStyles[density]`) survive as objects in
- * upstream's `dist/`; everything else is applied alone at one call site and
- * folded into a literal class string.
+ * Both modes. `wrapper`, `contentWrapper`/`focusLift`/`interactive`/`disabled`/
+ * `selected` (a five-conditional merge with a dynamic density index) and
+ * `description` (merged with a dynamic `descriptionSizeStyles[density]`)
+ * survive as objects in upstream's `dist/`; everything else is applied alone at
+ * one call site and folded into a literal class string.
  *
  * **0.2.0 deleted the `treeItemScope` marker.** Focus scoping used to run through
  * `when.ancestor(':focus-visible', treeItemScope)`, which needed a companion
@@ -39,6 +39,13 @@ const styles = stylex.create({
 		padding: 0,
 		position: 'relative',
 		width: '100%',
+		// Publish whether THIS treeitem has keyboard focus, for its row's
+		// `zIndex` (see `focusLift`). Every nested <li> redeclares the
+		// default, so a focused ancestor never lifts its descendants' rows.
+		'--_tree-focus-z': {
+			default: 'auto',
+			':focus-visible': '2'
+		},
 		// The treeitem row is the roving-tabindex focus owner; suppress the
 		// native focus ring in favor of the row's :focus-visible outline below.
 		outline: 'none'
@@ -83,13 +90,39 @@ const styles = stylex.create({
 		overflow: 'hidden',
 		position: 'relative',
 		boxSizing: 'border-box',
-		textAlign: 'start',
-		// Per-level indent. Declared here (not inline) so it lives in
-		// `@layer astryx-base` and the theme layer can override it in normal
-		// cascade order — an inline longhand would outrank every layer. The row
-		// publishes only the computed distance as `--_tree-indent`; the per-level
-		// step is the public `--tree-list-indent` lever (see TreeList `root`).
-		marginInlineStart: 'var(--_tree-indent, 0px)'
+		textAlign: 'start'
+	},
+	// Guide lines draw above the rows (TreeListBranches) so a row's fill does
+	// not break them. Lift the row whose focus ring is showing above the guides
+	// too, so no guide cuts through the ring: when focus is inside the row, or
+	// when its own treeitem publishes focus (`--_tree-focus-z` on `wrapper`).
+	// The ring is the row's outline, so it cannot be lifted on its own: a
+	// focused row that is also filled (selected or hovered) covers the guides at
+	// that row. That is the accepted trade-off. Applied only with
+	// `focusWithinOrPublished`, the rows that draw the ring: a plain row shows
+	// no ring, so its fill stays under the guides.
+	focusLift: {
+		zIndex: {
+			default: 'var(--_tree-focus-z, auto)',
+			':has(:focus-visible)': 2
+		}
+	},
+	// Per-level indent, drawn INSIDE the row box: the row (`contentWrapper`)
+	// stays full width, so a nested row's hover and selected fill spans the
+	// list like a root row's, while its content sits exactly where a margin
+	// indent would put it. A child of the row rather than the row's own padding,
+	// so a theme or caller that sets the row's padding keeps the indent. It
+	// inherits the row's flex alignment and gap, so a theme that retunes those
+	// on `tree-list-item` still lays the content out. The row publishes only the
+	// computed distance as `--_tree-indent`; the per-level step is the public,
+	// themeable `--tree-list-indent` lever (see TreeList `root`).
+	indentedContent: {
+		display: 'flex',
+		flex: 1,
+		minWidth: 0,
+		alignItems: 'inherit',
+		gap: 'inherit',
+		paddingInlineStart: 'var(--_tree-indent, 0px)'
 	},
 	interactive: {
 		cursor: {
@@ -177,16 +210,14 @@ const styles = stylex.create({
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		border: 'none',
-		background: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
+		backgroundColor: 'transparent',
 		padding: 0,
 		color: colorVars['--color-icon-secondary'],
-		borderRadius: radiusVars['--radius-inner'],
-		marginInlineStart: spacingVars['--spacing-1'],
-		marginInlineEnd: `calc(${spacingVars['--spacing-1']} * -1)`
+		borderRadius: radiusVars['--radius-inner']
 	},
 	chevronButton: {
-		all: 'unset',
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
@@ -198,9 +229,7 @@ const styles = stylex.create({
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
 		color: colorVars['--color-icon-secondary'],
-		borderRadius: radiusVars['--radius-inner'],
-		marginInlineStart: spacingVars['--spacing-1'],
-		marginInlineEnd: `calc(${spacingVars['--spacing-1']} * -1)`
+		borderRadius: radiusVars['--radius-inner']
 	},
 	chevronSvg: {
 		display: 'flex',
@@ -301,16 +330,36 @@ export function treeItemContentWrapperAttrs(
 	isDisabled: boolean,
 	isSelected: boolean
 ): SvelteStyleAttrs {
-	return sx(
+	if (!hasInteractiveStyles) {
+		return sx(
+			styles.contentWrapper,
+			densityStyles[density],
+			isDisabled && styles.disabled,
+			isSelected && styles.selected
+		);
+	}
+	// `focusWithinOrPublished` sits FIRST, as upstream's does, and carries
+	// `focusLift`: a plain row draws no ring and keeps its fill under the guides,
+	// while a ringed row lifts above them.
+	return focusOutlineProps.focusWithinOrPublished(
 		styles.contentWrapper,
+		styles.focusLift,
 		densityStyles[density],
-		hasInteractiveStyles && styles.interactive,
+		styles.interactive,
 		// Upstream 0.5.1 moved the hover/pressed overlay into the shared module.
-		hasInteractiveStyles && interactionOverlayStyles.backgroundImage,
-		hasInteractiveStyles && focusOutlineStyles.focusWithinOrPublished,
+		interactionOverlayStyles.backgroundImage,
+		// The touch press on a compositor layer (after the overlay, whose own
+		// touch paint it turns off).
+		rowPressLayerStyles.cell,
+		rowPressLayerStyles.cellOnImage,
 		isDisabled && styles.disabled,
 		isSelected && styles.selected
 	);
+}
+
+/** The per-level indent wrapper inside the row. */
+export function treeItemIndentedContentAttrs(): SvelteStyleAttrs {
+	return sx(styles.indentedContent);
 }
 
 /** The invisible `<button>` an `onClick` item renders. */

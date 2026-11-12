@@ -5,8 +5,11 @@ const baseStyles = stylex.create({
 	span: {
 		// Prevent overflow in the grid.
 		minWidth: 0,
-		// Fill the grid cell, and stretch children to it.
+		// Fill the grid cell, and stretch children to it. The implicit `auto`
+		// column would grow to a child's min-content width; a zero minimum keeps
+		// it inside the span.
 		display: 'grid',
+		gridTemplateColumns: 'minmax(0, 1fr)',
 		height: '100%'
 	}
 });

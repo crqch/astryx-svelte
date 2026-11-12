@@ -35,9 +35,7 @@ const styles = stylex.create({
 	content: {
 		display: 'inline-flex',
 		alignItems: 'center',
-		gap: spacingVars['--spacing-1-5'],
-		flexShrink: 0,
-		whiteSpace: 'nowrap'
+		gap: spacingVars['--spacing-1-5']
 	}
 });
 

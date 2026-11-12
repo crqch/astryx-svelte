@@ -173,7 +173,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'default' | 'transparent' | 'muted' | 'gray'",
+			type: "'default' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'transparent' | 'muted' | 'gray'",
 			description:
 				'Background color variant. `default` uses the standard card background. `transparent` drops the background entirely. `muted` uses the muted background for de-emphasised cards. The non-semantic variants use the corresponding `--color-background-<name>` token.',
 			default: "'default'"

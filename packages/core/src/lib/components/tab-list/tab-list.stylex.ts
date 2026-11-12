@@ -52,6 +52,17 @@ const BLOCK_END_BLEED = `max(${BLEED}, ${INDICATOR_BLEED})`;
 const FADE_WIDTH = spacingVars['--spacing-8'];
 
 /**
+ * A stop's own inline padding, restated here because a full-bleed strip has to
+ * subtract it: the strip pads back in only the part of the container's padding
+ * the stop does not already supply, so the edge label lands on the content
+ * inset. Kept in step with `Tab`/`TabMenu`'s `paddingInline` by hand — the
+ * import would be circular.
+ */
+const STOP_INLINE_PADDING = spacingVars['--spacing-3'];
+const EDGE_PAD_START = `max(var(--container-padding-inline-start, 0px) - ${STOP_INLINE_PADDING}, 0px)`;
+const EDGE_PAD_END = `max(var(--container-padding-inline-end, 0px) - ${STOP_INLINE_PADDING}, 0px)`;
+
+/**
  * Where the fade turns fully opaque, and — the same distance, for the same
  * reason — how far a revealed stop is kept clear of the edge. Declared as
  * scroll-padding so the browser's own focus scrolling uses it too, and read
@@ -137,6 +148,15 @@ const styles = stylex.create({
 		},
 		transitionTimingFunction: easeVars['--ease-standard']
 	},
+	// Put back the part of the bleed a stop's own inline padding does not
+	// already supply, so the first and last label land on the container's
+	// content inset while their boxes still hang out over it. Applied after
+	// `stripScroll` because both write the strip's inline padding; the ring
+	// bleed is carried through so the negative margin there still cancels it.
+	fullBleedStrip: {
+		paddingInlineStart: `calc(var(${BLEED_VAR}, 0px) + ${EDGE_PAD_START})`,
+		paddingInlineEnd: `calc(var(${BLEED_VAR}, 0px) + ${EDGE_PAD_END})`
+	},
 	fadeStart: {
 		maskImage: {
 			default: FADE_FROM_START,
@@ -186,6 +206,16 @@ const styles = stylex.create({
 	},
 	arrowEnd: {
 		insetInlineEnd: 0
+	},
+	fullBleed: {
+		// Cancel the container's inline padding so the strip's box reaches its
+		// content edges. Same spelling as Divider's `isFullBleed`.
+		marginInlineStart: 'calc(-1 * var(--container-padding-inline-start, 0px))',
+		marginInlineEnd: 'calc(-1 * var(--container-padding-inline-end, 0px))',
+		// The `nav` base clamps to 100%, which would pull the widened box back.
+		maxWidth: 'none',
+		width:
+			'calc(100% + var(--container-padding-inline-start, 0px) + var(--container-padding-inline-end, 0px))'
 	}
 });
 
@@ -211,16 +241,28 @@ export type TabStripFade = 'start' | 'end' | 'both' | null;
 export function tabListNavAttrs(
 	isFill: boolean,
 	hasDivider: boolean,
+	isFullBleed: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
-	return sx(styles.nav, isFill && styles.fill, hasDivider && styles.divider, xstyle);
+	return sx(
+		styles.nav,
+		isFill && styles.fill,
+		hasDivider && styles.divider,
+		isFullBleed && styles.fullBleed,
+		xstyle
+	);
 }
 
 /** The scrollport holding the tabs. */
-export function tabStripAttrs(hasScroll: boolean, fade: TabStripFade): SvelteStyleAttrs {
+export function tabStripAttrs(
+	hasScroll: boolean,
+	isFullBleed: boolean,
+	fade: TabStripFade
+): SvelteStyleAttrs {
 	return sx(
 		styles.strip,
 		hasScroll && styles.stripScroll,
+		isFullBleed && styles.fullBleedStrip,
 		fade === 'both'
 			? styles.fadeBoth
 			: fade === 'start'

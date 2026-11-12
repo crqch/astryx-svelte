@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../../../internal/sx.js';
-import { colorVars, radiusVars, spacingVars } from '../../../../styles/tokens.stylex.js';
+import { colorVars, focusVars, radiusVars, spacingVars } from '../../../../styles/tokens.stylex.js';
+import { focusOutlineProps } from '../../../../utils/focus-outline.stylex.js';
 
 /**
  * Ported from the styles declared in Astryx's
@@ -34,14 +35,23 @@ const treeStyles = stylex.create({
 	indent: (paddingInlineStart: string) => ({
 		paddingInlineStart
 	}),
+	// A compact row is shorter than the ring around the 24px toggle, and the
+	// cell clips its overflow, so there the ring sits inside the toggle.
+	expanderFocusInset: {
+		outlineOffset: {
+			default: null,
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
+	},
 	expanderButton: {
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 		width: '24px',
 		height: '24px',
-		background: 'transparent',
-		border: 'none',
+		backgroundColor: 'transparent',
+		borderWidth: 0,
+		borderStyle: 'none',
 		borderRadius: radiusVars['--radius-inner'],
 		cursor: {
 			default: 'pointer',
@@ -121,8 +131,11 @@ export function treeCellAttrs(
 }
 
 /** The expander chevron's button. */
-export function treeExpanderButtonAttrs(): SvelteStyleAttrs {
-	return sx(treeStyles.expanderButton);
+export function treeExpanderButtonAttrs(isCompact = false): SvelteStyleAttrs {
+	return focusOutlineProps.focusVisible(
+		treeStyles.expanderButton,
+		isCompact && treeStyles.expanderFocusInset
+	);
 }
 
 /**

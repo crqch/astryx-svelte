@@ -2,8 +2,8 @@
 	import type { Snippet } from 'svelte';
 	import Icon from '../../../icon/icon.svelte';
 	import ExpansionChevron from './expansion-chevron.svelte';
+	import ExpansionPanel from './expansion-panel.svelte';
 	import { unwrapSlotArg } from '../../../../internal/bind-snippet.js';
-	import { expansionExpandedCellAttrs, expansionExpandedRowAttrs } from './row-expansion.stylex.js';
 	import { rtlStyles } from '../../../../utils/rtl.stylex.js';
 
 	/**
@@ -45,6 +45,8 @@
 		columnCount: number;
 		/** The consumer's `renderExpanded`. */
 		renderExpanded: Snippet<[Record<string, unknown>]>;
+		/** `panelVariant === 'muted'`. */
+		isMuted: boolean;
 	}
 
 	/**
@@ -68,13 +70,12 @@
 
 {#snippet expandedPanel(arg: ExpandedPanelArg | (() => ExpandedPanelArg))}
 	{@const a = unwrapSlotArg(arg)}
-	{@const row = expansionExpandedRowAttrs()}
-	{@const cell = expansionExpandedCellAttrs()}
-	<tr class={row.class} style={row.style}>
-		<td colspan={a.columnCount} class={cell.class} style={cell.style}>
-			{@render a.renderExpanded(a.item)}
-		</td>
-	</tr>
+	<ExpansionPanel
+		columnCount={a.columnCount}
+		renderExpanded={a.renderExpanded}
+		item={a.item}
+		isMuted={a.isMuted}
+	/>
 {/snippet}
 
 {#snippet afterRowFragment(arg: AfterRowArg | (() => AfterRowArg))}

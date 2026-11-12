@@ -59,7 +59,7 @@ export default {
 		},
 		{
 			name: 'group',
-			type: "'first' | 'middle' | 'last'",
+			type: "'middle' | 'first' | 'last'",
 			description:
 				'Position within a multi-bubble group. Controls corner radius reduction on the sender side. Leave unset for standalone bubbles (full radius).'
 		},

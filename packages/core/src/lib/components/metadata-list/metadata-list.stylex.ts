@@ -26,7 +26,7 @@ const styles = stylex.create({
 	// Vertical orientation — a grid of label/value pairs.
 	gridSingle: {
 		display: 'grid',
-		gridTemplateColumns: 'auto 1fr',
+		gridTemplateColumns: 'auto minmax(0, 1fr)',
 		gap: `${spacingVars['--spacing-2']} ${spacingVars['--spacing-4']}`,
 		alignItems: 'baseline'
 	},
@@ -55,14 +55,15 @@ const styles = stylex.create({
 	},
 	toggleButton: {
 		appearance: 'none',
-		background: 'none',
-		border: 'none',
+		backgroundColor: 'transparent',
+		borderWidth: 0,
+		borderStyle: 'none',
 		padding: `${spacingVars['--spacing-2']} 0`,
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		color: colorVars['--color-accent'],
+		color: colorVars['--color-text-accent'],
 		fontSize: typeScaleVars['--text-body-size'],
 		lineHeight: typeScaleVars['--text-body-leading'],
 		fontWeight: fontWeightVars['--font-weight-medium'],

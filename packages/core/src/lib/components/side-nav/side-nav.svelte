@@ -61,6 +61,7 @@
 		sideNavDrawerFooterIconsAttrs,
 		sideNavFooterRowAttrs,
 		sideNavResizableContainerAttrs,
+		sideNavResizableHandleStyle,
 		sideNavRootAttrs,
 		sideNavScrollableAttrs,
 		sideNavStickyBottomAttrs,
@@ -302,6 +303,7 @@
 				isAlwaysVisible={false}
 				resizable={resizableHook.props}
 				label={t('@astryx.sideNav.resizeSidebar')}
+				xstyle={sideNavResizableHandleStyle}
 			/>
 		</div>
 	{:else}

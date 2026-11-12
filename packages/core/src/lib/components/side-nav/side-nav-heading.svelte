@@ -48,6 +48,7 @@
 	import Icon from '../icon/icon.svelte';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import Link from '../link/link.svelte';
 	import NavHeadingCloseScope from '../nav-menu/nav-heading-close-scope.svelte';
 	import PopoverLayer from '../popover/popover-layer.svelte';
@@ -64,6 +65,7 @@
 		sideNavHeadingEndContentAttrs,
 		sideNavHeadingHeadingAttrs,
 		sideNavHeadingHeadingLinkAttrs,
+		sideNavHeadingLinkBesideEndContentAttrs,
 		sideNavHeadingIconAttrs,
 		sideNavHeadingIconLinkAttrs,
 		sideNavHeadingPopover,
@@ -175,6 +177,8 @@
 	const theme = themeProps('side-nav-heading');
 	const rootAttrs = $derived(sideNavHeadingRootAttrs(xstyle));
 	const triggerRootAttrs = $derived(sideNavHeadingTriggerRootAttrs(xstyle));
+	// Collapsed, the heading's link or menu trigger is the pressable.
+	const pressable = usePressFeedback();
 	const collapsedRootAttrs = $derived(sideNavHeadingCollapsedRootAttrs(xstyle));
 	const collapsedLinkAttrs = $derived(sideNavHeadingCollapsedLinkAttrs(xstyle));
 	const collapsedTriggerAttrs = $derived(sideNavHeadingCollapsedTriggerAttrs(xstyle));
@@ -199,6 +203,7 @@
 
 	const collapsedLinkProps = $derived({
 		...collapsedAttach,
+		...pressable,
 		href: headingHref,
 		...(linkResolved.isNative ? {} : { to: headingHref }),
 		'aria-label': heading,
@@ -216,6 +221,18 @@
 		...theme,
 		class: cx(theme.class, triggerRootAttrs.class, className),
 		style: mergeStyle(triggerRootAttrs.style, styleProp as string | undefined)
+	});
+
+	// The link in the whole-heading link row that also holds end content.
+	// Upstream spreads the caller's rest props onto this anchor and applies the
+	// theme/class/style to the row, not the link.
+	const linkBesideEndContentAttrs = sideNavHeadingLinkBesideEndContentAttrs();
+	const wholeHeadingLinkBesideEndContentProps = $derived({
+		...rest,
+		href: headingHref,
+		...(linkResolved.isNative ? {} : { to: headingHref }),
+		class: linkBesideEndContentAttrs.class,
+		style: linkBesideEndContentAttrs.style
 	});
 
 	const headingAsLinkProps = $derived({
@@ -366,6 +383,7 @@
 			{@attach menuHover.attachTrigger}
 			type="button"
 			aria-label={heading}
+			{...pressable}
 			data-testid={testId}
 			{...popover.triggerProps}
 			onclick={menuHover.triggerProps.onclick}
@@ -445,6 +463,27 @@
 		</div>
 	{/if}
 	<Tooltip content={heading} placement="end" anchor={collapsedItemEl} />
+{:else if isWholeHeadingLink && headingHref && headerEndContent}
+	<!--
+		Whole heading is a link (no menu, single headingHref) with end content.
+		End content may be a control, which must not sit inside the link (no
+		interactive content in an <a>), so the row is a div holding the link and
+		the end content side by side, as the mixed mode does.
+	-->
+	<div
+		data-testid={testId}
+		{...theme}
+		class={cx(theme.class, rootAttrs.class, className)}
+		style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
+	>
+		<LinkElement component={linkResolved.component} props={wholeHeadingLinkBesideEndContentProps}>
+			{#if icon}
+				<span class={iconAttrs.class} style={iconAttrs.style}>{@render icon()}</span>
+			{/if}
+			{@render textContent()}
+		</LinkElement>
+		{@render headerEndContentElement()}
+	</div>
 {:else if isWholeHeadingLink && headingHref}
 	<!-- Whole heading is a link (no menu, single headingHref) -->
 	<LinkElement component={linkResolved.component} props={wholeHeadingLinkProps}>

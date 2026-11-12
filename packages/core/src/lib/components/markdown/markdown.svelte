@@ -135,15 +135,19 @@
 		markdownCodeBlockWrapperAttrs,
 		markdownCodeBlockXstyle,
 		markdownFadeInAttrs,
+		markdownHeaderCellXstyle,
 		markdownHeadingAttrs,
 		markdownHrAttrs,
 		markdownImageAttrs,
 		markdownImageBlockAttrs,
 		markdownLinkAttrs,
+		markdownListIndentXstyle,
 		markdownListWrapperAttrs,
 		markdownParagraphAttrs,
 		markdownRootAttrs,
 		markdownStrikethroughAttrs,
+		markdownTableCellCodeStyle,
+		markdownTableOuterEdgeStyle,
 		markdownTableWrapperAttrs,
 		markdownTaskListWrapperAttrs,
 		type BlockStyleContext
@@ -385,7 +389,7 @@
 	{/if}
 {/snippet}
 
-{#snippet inlineNode(node: InlineNode)}
+{#snippet inlineNode(node: InlineNode, inTable = false)}
 	{#if node.type === 'text'}
 		{#each plan.text.get(node) ?? [] as seg (seg.key)}
 			{#if seg.kind === 'text'}
@@ -396,29 +400,29 @@
 		{/each}
 	{:else if node.type === 'bold'}
 		<strong class={boldAttrs.class} style={boldAttrs.style}>
-			{@render inlineFragment(node.children)}
+			{@render inlineFragment(node.children, inTable)}
 		</strong>
 	{:else if node.type === 'italic'}
-		<em>{@render inlineFragment(node.children)}</em>
+		<em>{@render inlineFragment(node.children, inTable)}</em>
 	{:else if node.type === 'strikethrough'}
 		<del class={strikeAttrs.class} style={strikeAttrs.style}>
-			{@render inlineFragment(node.children)}
+			{@render inlineFragment(node.children, inTable)}
 		</del>
 	{:else if node.type === 'code'}
 		{#if components?.inlineCode}
 			{@const InlineCodeComp = components.inlineCode}
 			<InlineCodeComp children={node.content} />
 		{:else}
-			<Code>{node.content}</Code>
+			<Code xstyle={inTable ? markdownTableCellCodeStyle : undefined}>{node.content}</Code>
 		{/if}
 	{:else if node.type === 'link'}
 		{@const safeHref = sanitizeUrl(node.href)}
 		{#if safeHref == null}
 			<!-- Unsafe URL — render as plain text -->
-			<span>{@render inlineFragment(node.children)}</span>
+			<span>{@render inlineFragment(node.children, inTable)}</span>
 		{:else if components?.link}
 			{@const LinkComp = components.link}
-			<LinkComp href={safeHref}>{@render inlineFragment(node.children)}</LinkComp>
+			<LinkComp href={safeHref}>{@render inlineFragment(node.children, inTable)}</LinkComp>
 		{:else}
 			<!--
 				Use linkComponent for internal links, native <a> for external links.
@@ -429,7 +433,7 @@
 				component={isExternalHref(safeHref) ? 'a' : linkComponent}
 				props={linkProps(safeHref)}
 			>
-				{@render inlineFragment(node.children)}
+				{@render inlineFragment(node.children, inTable)}
 			</LinkElement>
 		{/if}
 	{:else if node.type === 'image'}
@@ -462,9 +466,9 @@
 	{/if}
 {/snippet}
 
-{#snippet inlineFragment(nodes: InlineNode[])}
+{#snippet inlineFragment(nodes: InlineNode[], inTable = false)}
 	{#each nodes as node, i (i)}
-		{@render inlineNode(node)}
+		{@render inlineNode(node, inTable)}
 	{/each}
 {/snippet}
 
@@ -586,7 +590,7 @@
 					listStyle={node.ordered ? 'decimal' : 'disc'}
 					density="compact"
 					start={node.ordered ? node.start : undefined}
-					xstyle={markdownBlockIndentXstyle}
+					xstyle={markdownListIndentXstyle(node.ordered)}
 				>
 					{#each node.items as item, i (i)}
 						{#snippet itemLabel()}
@@ -601,25 +605,20 @@
 		{@const colMinWidths = computeTableColumnMinWidths(node)}
 		{@const attrs = markdownTableWrapperAttrs(ctx)}
 		<!--
-			Keyboard-focusable so keyboard users can scroll a horizontally
-			overflowing GFM table. Uses role="group" (not "region") so multiple
-			tables don't create duplicate same-named landmarks (axe: landmark-unique).
+			No role, name, or tab stop here: Table's own Scroll region owns the
+			table's horizontal overflow, its accessible name, and its conditional
+			keyboard focusability. This block only carries spacing, sizing, and
+			alignment.
 		-->
-		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-		<div
-			tabindex="0"
-			role="group"
-			aria-label={t('@astryx.markdown.table')}
-			{...tableTheme}
-			class={cx(tableTheme.class, attrs.class)}
-			style={attrs.style}
-		>
-			<Table dividers="rows" textOverflow="wrap">
+		<div {...tableTheme} class={cx(tableTheme.class, attrs.class)} style={attrs.style}>
+			<Table dividers="grid" textOverflow="wrap" xstyle={markdownTableOuterEdgeStyle}>
 				<TableHeader>
 					<TableRow>
 						{#each node.headers as header, i (i)}
-							<TableHeaderCell xstyle={markdownCellXstyle(colMinWidths[i], node.alignments[i])}>
-								{@render inlineFragment(header.children)}
+							<TableHeaderCell
+								xstyle={markdownHeaderCellXstyle(colMinWidths[i], node.alignments[i])}
+							>
+								{@render inlineFragment(header.children, true)}
 							</TableHeaderCell>
 						{/each}
 					</TableRow>
@@ -628,8 +627,8 @@
 					{#each node.rows as row, i (i)}
 						<TableRow>
 							{#each row as cell, j (j)}
-								<TableCell xstyle={markdownCellXstyle(null, node.alignments[j])}>
-									{@render inlineFragment(cell.children)}
+								<TableCell xstyle={markdownCellXstyle(node.alignments[j])}>
+									{@render inlineFragment(cell.children, true)}
 								</TableCell>
 							{/each}
 						</TableRow>

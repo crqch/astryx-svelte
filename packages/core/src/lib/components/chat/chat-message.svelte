@@ -33,6 +33,7 @@
 		chatMessageAvatarWrapAttrs,
 		chatMessageChildrenAttrs,
 		chatMessageContentColumnAttrs,
+		chatMessageMetadataAttrs,
 		chatMessageNameAttrs,
 		chatMessageRootAttrs
 	} from './chat-message.stylex.js';
@@ -86,6 +87,7 @@
 	const avatarWrap = $derived(chatMessageAvatarWrapAttrs());
 	const contentColumn = $derived(chatMessageContentColumnAttrs(sender));
 	const nameAttrs = $derived(chatMessageNameAttrs());
+	const metadataAttrs = chatMessageMetadataAttrs();
 	const childrenAttrs = $derived(chatMessageChildrenAttrs(sender, density));
 </script>
 
@@ -113,7 +115,7 @@
 		</div>
 
 		{#if metadata != null && !isSystem}
-			<div>
+			<div class={metadataAttrs.class} style={metadataAttrs.style}>
 				{#if typeof metadata === 'function'}{@render metadata()}{:else}{metadata}{/if}
 			</div>
 		{/if}

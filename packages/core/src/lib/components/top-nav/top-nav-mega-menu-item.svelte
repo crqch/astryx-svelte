@@ -32,6 +32,7 @@
 
 <script lang="ts">
 	import { themeProps } from '../../internal/theme-props.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { useAppShellMobile } from '../app-shell/app-shell-mobile-context.svelte.js';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
@@ -102,12 +103,15 @@
 	const desktopTitleAttrs = megaMenuItemTitleAttrs();
 	const desktopDescriptionAttrs = megaMenuItemDescriptionAttrs();
 
+	// Both render modes' root is a pressable surface.
+	const pressable = usePressFeedback();
 	function handleDrawerClick(): void {
 		onclick?.();
 		appShellMobile().closeMobileNav();
 	}
 
 	const drawerLinkProps = $derived({
+		...pressable,
 		...rest,
 		href,
 		...(linkResolved.isNative ? {} : { to: href }),
@@ -118,6 +122,7 @@
 	});
 
 	const desktopLinkProps = $derived({
+		...pressable,
 		...rest,
 		href,
 		...(linkResolved.isNative ? {} : { to: href }),
@@ -164,6 +169,7 @@
 		</LinkElement>
 	{:else}
 		<button
+			{...pressable}
 			{...rest}
 			type="button"
 			onclick={handleDrawerClick}
@@ -185,6 +191,7 @@
 	     A hrefless mega-menu item is a documented-but-unkeyboardable upstream
 	     shape; see port/debts.md → Known debts. -->
 	<div
+		{...pressable}
 		{...rest}
 		{onclick}
 		{tabindex}

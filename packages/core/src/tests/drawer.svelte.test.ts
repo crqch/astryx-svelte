@@ -406,6 +406,24 @@ describe('Drawer', () => {
 			return area;
 		}
 
+		/**
+		 * A token's value as a used length.
+		 *
+		 * `getComputedStyle(document.documentElement).getPropertyValue('--spacing-4')`
+		 * returns the custom property's token stream — `1rem` since spacing moved
+		 * to rem — while a computed `padding` is a used pixel length. A probe
+		 * element resolves the token the way the applied edge does, so the two
+		 * are comparable.
+		 */
+		function resolvedLength(name: string): string {
+			const probe = document.createElement('div');
+			probe.style.width = `var(${name})`;
+			document.body.append(probe);
+			const used = getComputedStyle(probe).width;
+			probe.remove();
+			return used;
+		}
+
 		it("defaults to Dialog's --spacing-4 inset and publishes the theme chain", async () => {
 			const screen = await render(DrawerProbe);
 			const dialog = drawerEl(screen.container);
@@ -434,10 +452,10 @@ describe('Drawer', () => {
 			}
 			// The applied edges read the published value, so bleed children
 			// subtract exactly the inset they sit in.
-			const spacing4 = getComputedStyle(document.documentElement).getPropertyValue('--spacing-4');
-			expect(computed.paddingInlineStart).toBe(spacing4.trim());
-			expect(computed.paddingTop).toBe(spacing4.trim());
-			expect(computed.paddingBottom).toBe(spacing4.trim());
+			const spacing4 = resolvedLength('--spacing-4');
+			expect(computed.paddingInlineStart).toBe(spacing4);
+			expect(computed.paddingTop).toBe(spacing4);
+			expect(computed.paddingBottom).toBe(spacing4);
 		});
 
 		it.each([0, 2] as const)(
@@ -457,7 +475,7 @@ describe('Drawer', () => {
 					expect(computed.getPropertyValue(`--container-padding-${edge}`)).toBe(spacing);
 				}
 				expect(computed.getPropertyValue('--layout-padding-inner-x')).toBe(spacing);
-				expect(computed.paddingInlineStart).toBe(spacing);
+				expect(computed.paddingInlineStart).toBe(resolvedLength(`--spacing-${padding}`));
 			}
 		);
 

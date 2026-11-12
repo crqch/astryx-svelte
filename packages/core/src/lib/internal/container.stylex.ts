@@ -50,11 +50,17 @@ const baseStyles = stylex.create({
 		paddingInlineStart: 'var(--container-padding-inline-start)',
 		paddingInlineEnd: 'var(--container-padding-inline-end)',
 		paddingBlockStart: 'var(--container-padding-block-start)',
-		paddingBlockEnd: 'var(--container-padding-block-end)'
+		paddingBlockEnd: 'var(--container-padding-block-end)',
+		// This container's `--layout-padding-outer-*` below now describe the inset
+		// for Layouts inside it; clear any enclosing Layout's own padding, which
+		// its regions would otherwise read first.
+		'--layout-padding-own-outer-x': 'initial',
+		'--layout-padding-own-outer-y': 'initial'
 	}
 });
 
 const SP4 = spacingVars['--spacing-4'];
+const SP6 = spacingVars['--spacing-6'];
 
 // Card padding chain: the --astryx-* token, then the next level down,
 // terminating at --spacing-4. Written as chained consts rather than a function
@@ -93,6 +99,19 @@ const dialogInlineStart = `var(--astryx-dialog-padding-inline-start, ${dialogInl
 const dialogInlineEnd = `var(--astryx-dialog-padding-inline-end, ${dialogInline})`;
 const dialogBlockStart = `var(--astryx-dialog-padding-block-start, ${dialogShorthand})`;
 const dialogBlockEnd = `var(--astryx-dialog-padding-block-end, ${dialogShorthand})`;
+
+// Bottom sheet padding chain: same shape as Dialog's, under the sheet's own
+// theme names. Without a theme the inset resolves to --spacing-4, as in Dialog.
+const bottomSheetShorthand = `var(--astryx-bottom-sheet-padding, ${SP4})`;
+const bottomSheetInline = `var(--astryx-bottom-sheet-padding-inline, ${bottomSheetShorthand})`;
+const bottomSheetInlineStart = `var(--astryx-bottom-sheet-padding-inline-start, ${bottomSheetInline})`;
+const bottomSheetInlineEnd = `var(--astryx-bottom-sheet-padding-inline-end, ${bottomSheetInline})`;
+const bottomSheetBlockStart = `var(--astryx-bottom-sheet-padding-block-start, ${bottomSheetShorthand})`;
+const bottomSheetBlockEnd = `var(--astryx-bottom-sheet-padding-block-end, ${bottomSheetShorthand})`;
+// The band under a bottom sheet's grab bar (--spacing-6) is not container
+// padding: the sheet publishes only the padding past it and applies the band on
+// top (BottomSheetPanel). The layout padding variables keep the plain padding.
+const bottomSheetBlockStartClear = `max(calc(${bottomSheetBlockStart} - ${SP6}), 0px)`;
 
 // Drawer padding chain: same shape as Dialog's, under the drawer's own theme
 // names. Without a theme the inset resolves to --spacing-4, as in Dialog.
@@ -184,6 +203,33 @@ const dialogDefaultPaddingStyles = stylex.create({
 	}
 });
 
+const bottomSheetDefaultPaddingStyles = stylex.create({
+	containerPaddingInlineStart: {
+		'--container-padding-inline-start': bottomSheetInlineStart
+	},
+	containerPaddingInlineEnd: {
+		'--container-padding-inline-end': bottomSheetInlineEnd
+	},
+	containerPaddingBlockStart: {
+		'--container-padding-block-start': bottomSheetBlockStartClear
+	},
+	containerPaddingBlockEnd: {
+		'--container-padding-block-end': bottomSheetBlockEnd
+	},
+	layoutPaddingOuterX: {
+		'--layout-padding-outer-x': bottomSheetInlineStart
+	},
+	layoutPaddingOuterY: {
+		'--layout-padding-outer-y': bottomSheetBlockStart
+	},
+	layoutPaddingInnerX: {
+		'--layout-padding-inner-x': bottomSheetInlineStart
+	},
+	layoutPaddingInnerY: {
+		'--layout-padding-inner-y': bottomSheetBlockStart
+	}
+});
+
 const drawerDefaultPaddingStyles = stylex.create({
 	containerPaddingInlineStart: {
 		'--container-padding-inline-start': drawerInlineStart
@@ -215,6 +261,7 @@ const themeDefaultStyles = {
 	card: cardDefaultPaddingStyles,
 	section: sectionDefaultPaddingStyles,
 	dialog: dialogDefaultPaddingStyles,
+	'bottom-sheet': bottomSheetDefaultPaddingStyles,
 	drawer: drawerDefaultPaddingStyles
 };
 

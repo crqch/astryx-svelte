@@ -31,7 +31,7 @@ export default {
 		},
 		{
 			name: 'mode',
-			type: "'dark' | 'light'",
+			type: "'light' | 'dark'",
 			description: 'Resolved effective color mode. system mode is resolved to light or dark.'
 		},
 		{

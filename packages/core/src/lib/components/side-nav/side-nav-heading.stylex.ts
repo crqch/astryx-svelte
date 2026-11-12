@@ -163,6 +163,17 @@ const styles = stylex.create({
 		// today. The 28px min box still wins over Icon's width/height.
 		fontSize: 'inherit'
 	},
+	// The link part of a whole-heading link row that also has end content.
+	linkBesideEndContent: {
+		display: 'flex',
+		alignItems: 'center',
+		alignSelf: 'stretch',
+		gap: spacingVars['--spacing-2'],
+		flexGrow: 1,
+		minWidth: 0,
+		textDecoration: 'none',
+		color: 'inherit'
+	},
 	headerEndContent: {
 		flexShrink: 0,
 		display: 'flex',
@@ -180,7 +191,8 @@ const styles = stylex.create({
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
 		width: '100%',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		backgroundColor: 'transparent',
 		fontFamily: 'inherit',
 		fontSize: 'inherit',
@@ -308,6 +320,15 @@ export function sideNavHeadingHeadingAttrs(isCompact = false): SvelteStyleAttrs 
 /** The heading rendered as its own link, inside the mixed-mode row. */
 export function sideNavHeadingHeadingLinkAttrs(): SvelteStyleAttrs {
 	return focusOutlineProps.focusVisible(styles.heading, styles.headingLink);
+}
+
+/**
+ * The link part of a whole-heading link row that also holds end content. The
+ * end content may be a control, which must not sit inside an `<a>`, so that
+ * case is a row holding the link and the end content side by side.
+ */
+export function sideNavHeadingLinkBesideEndContentAttrs(): SvelteStyleAttrs {
+	return focusOutlineProps.focusVisible(styles.linkBesideEndContent, styles.menuTrigger);
 }
 
 /** The subheading line. */

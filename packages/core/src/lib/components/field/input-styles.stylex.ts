@@ -41,9 +41,16 @@ export const inputWrapperStyles = stylex.create({
 		paddingInline: spacingVars['--spacing-2'],
 		borderWidth: borderVars['--border-width'],
 		borderStyle: 'solid',
+		// Forced colors drop the inset shadow below and repaint author border
+		// colors in one system color, so the field-focus treatment would vanish
+		// there. A focused field's border takes the system Highlight color instead
+		// (`spec:AST-020` FR1).
 		borderColor: {
 			default: colorVars['--color-border-emphasized'],
-			':focus-within': colorVars['--color-accent']
+			':focus-within': {
+				default: colorVars['--color-accent'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
 		},
 		// Declared then consumed, so a component further in can retune the radius
 		// without restating the shorthand — the same two-step `Card` uses.
@@ -71,19 +78,51 @@ export const inputWrapperStyles = stylex.create({
 		borderColor: colorVars['--color-border-emphasized'],
 		// Suppress the base hover ring — a disabled control must not react to hover.
 		boxShadow: 'none'
+	},
+	// Text fields apply this after `base`. A tap on one raises the keyboard,
+	// and a fade would repaint the field on each frame of that rise.
+	textField: {
+		transitionDuration: {
+			default: durationVars['--duration-fast'],
+			'@media (prefers-reduced-motion: reduce)': '0s',
+			'@media (pointer: coarse)': '0s'
+		}
 	}
 });
 
-/** Status border colours for input wrappers. Keyed by `InputStatusType`. */
+/**
+ * Status border colours for input wrappers. Keyed by `InputStatusType`. Under
+ * forced colors a focused field's border is Highlight, as in the base style,
+ * for wrappers that apply no status focus style of their own (`Selector`,
+ * `MultiSelector`).
+ */
 export const inputStatusBorderStyles = stylex.create({
 	warning: {
-		borderColor: colorVars['--color-warning']
+		borderColor: {
+			default: colorVars['--color-border-warning'],
+			':focus-within': {
+				default: colorVars['--color-border-warning'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
+		}
 	},
 	error: {
-		borderColor: colorVars['--color-error']
+		borderColor: {
+			default: colorVars['--color-border-error'],
+			':focus-within': {
+				default: colorVars['--color-border-error'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
+		}
 	},
 	success: {
-		borderColor: colorVars['--color-success']
+		borderColor: {
+			default: colorVars['--color-border-success'],
+			':focus-within': {
+				default: colorVars['--color-border-success'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
+		}
 	}
 });
 
@@ -117,25 +156,35 @@ export const inputStatusHoverShadowStyles = stylex.create({
 
 /**
  * Status border colours driven by `:focus-within`, for wrappers that contain a
- * child input or textarea. Keyed by `InputStatusType`.
+ * child input or textarea. Under forced colors the focused border is Highlight,
+ * as in the base style. Keyed by `InputStatusType`.
  */
 export const inputStatusFocusWithinStyles = stylex.create({
 	warning: {
 		borderColor: {
-			default: colorVars['--color-warning'],
-			':focus-within': colorVars['--color-warning']
+			default: colorVars['--color-border-warning'],
+			':focus-within': {
+				default: colorVars['--color-border-warning'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
 		}
 	},
 	error: {
 		borderColor: {
-			default: colorVars['--color-error'],
-			':focus-within': colorVars['--color-error']
+			default: colorVars['--color-border-error'],
+			':focus-within': {
+				default: colorVars['--color-border-error'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
 		}
 	},
 	success: {
 		borderColor: {
-			default: colorVars['--color-success'],
-			':focus-within': colorVars['--color-success']
+			default: colorVars['--color-border-success'],
+			':focus-within': {
+				default: colorVars['--color-border-success'],
+				'@media (forced-colors: active)': 'Highlight'
+			}
 		}
 	}
 });
@@ -147,20 +196,20 @@ export const inputStatusFocusWithinStyles = stylex.create({
 export const inputStatusFocusStyles = stylex.create({
 	warning: {
 		borderColor: {
-			default: colorVars['--color-warning'],
-			':focus': colorVars['--color-warning']
+			default: colorVars['--color-border-warning'],
+			':focus': colorVars['--color-border-warning']
 		}
 	},
 	error: {
 		borderColor: {
-			default: colorVars['--color-error'],
-			':focus': colorVars['--color-error']
+			default: colorVars['--color-border-error'],
+			':focus': colorVars['--color-border-error']
 		}
 	},
 	success: {
 		borderColor: {
-			default: colorVars['--color-success'],
-			':focus': colorVars['--color-success']
+			default: colorVars['--color-border-success'],
+			':focus': colorVars['--color-border-success']
 		}
 	}
 });

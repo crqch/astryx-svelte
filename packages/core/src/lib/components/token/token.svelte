@@ -37,6 +37,8 @@
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useInteractiveRole } from '../../hooks/use-interactive-role.svelte.js';
+	import { cancelNestedTouchPress } from '../../hooks/use-clickable-container.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
@@ -82,6 +84,10 @@
 	const resolveRole = useInteractiveRole();
 	const resolveLink = useLinkComponent();
 	const t = useTranslator();
+	// Constant marker props; the hook's only effect is installing the shared
+	// document controller once, so the token's output stays a pure function of
+	// its props.
+	const pressable = usePressFeedback();
 
 	const role = $derived(resolveRole({ href, onclick, isDisabled }));
 	// A context-provided 'button' role with no explicit onclick still takes the
@@ -134,6 +140,7 @@
 	// Container attributes for the link-with-remove branch — the same theme, ARIA,
 	// class and style the root anchor would have carried.
 	const tokenLinkContainerProps = $derived({
+		...pressable,
 		...theme,
 		...sharedAria,
 		class: rootClass,
@@ -142,6 +149,7 @@
 
 	// The polymorphic link props; a custom component also gets a `to={href}` alias.
 	const linkProps = $derived({
+		...pressable,
 		...theme,
 		href,
 		...(linkResolved.isNative ? {} : { to: href }),
@@ -158,6 +166,20 @@
 			return;
 		}
 		effectiveOnClick?.(event);
+	}
+
+	// A finger press on Remove or a control in end content does not run the
+	// token's action, so the token shows no press for it. The inner button,
+	// the first button child, is the token's own action.
+	function handleContainerPointerDown(event: PointerEvent): void {
+		// The port drops caller handlers passed on a closed prop list (see the
+		// Known debts note above), so upstream's `rest.onPointerDown` call has no
+		// counterpart here.
+		cancelNestedTouchPress(
+			event,
+			event.currentTarget as HTMLElement,
+			(event.currentTarget as HTMLElement).querySelector(':scope > button')
+		);
 	}
 </script>
 
@@ -213,9 +235,11 @@
 		no role; we match that DOM exactly.
 	-->
 	<span
+		{...pressable}
 		{...theme}
 		{...sharedAria}
 		onclick={isDisabled ? undefined : handleContainerClick}
+		onpointerdown={handleContainerPointerDown}
 		class={rootClass}
 		style={rootStyle}
 	>

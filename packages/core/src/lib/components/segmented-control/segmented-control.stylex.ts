@@ -27,22 +27,16 @@ const styles = stylex.create({
 		gap: spacingVars['--spacing-0-5'],
 		'--_segmented-control-padding': spacingVars['--spacing-0-5'],
 		padding: 'var(--_segmented-control-padding)',
-		backgroundColor: colorVars['--color-neutral'],
-		// A finger's horizontal drag carries the selected lens; a vertical one
-		// still scrolls the page.
-		touchAction: 'pan-y'
+		backgroundColor: colorVars['--color-neutral']
 	},
 	fill: {
 		display: 'flex',
 		width: '100%'
 	},
+	// Disabled: dimmed, with pointer events left on so a press can focus the
+	// segment that holds the Tab stop and a reason tooltip can open on hover.
+	// Selection is blocked by the isDisabled guards (spec:AST-085 FR1, FR2).
 	disabled: {
-		opacity: 0.5,
-		pointerEvents: 'none'
-	},
-	// Disabled *with* a disabledMessage: keep the dimmed look but leave pointer
-	// events on so the group can receive hover and surface the reason tooltip.
-	disabledWithMessage: {
 		opacity: 0.5
 	},
 	// The selected face: one element under the segments, moved and resized
@@ -181,12 +175,11 @@ export interface SegmentedControlContainerOptions {
 	size: SegmentedControlSize;
 	layout: SegmentedControlLayout;
 	isDisabled: boolean;
-	showsDisabledMessage: boolean;
 }
 
 /** The radiogroup container styles. `xstyle` is threaded last. */
 export function segmentedControlContainerAttrs(
-	{ size, layout, isDisabled, showsDisabledMessage }: SegmentedControlContainerOptions,
+	{ size, layout, isDisabled }: SegmentedControlContainerOptions,
 	xstyle?: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
@@ -194,7 +187,7 @@ export function segmentedControlContainerAttrs(
 		styles.lens,
 		sizeStyles[size],
 		layout === 'fill' && styles.fill,
-		isDisabled && (showsDisabledMessage ? styles.disabledWithMessage : styles.disabled),
+		isDisabled && styles.disabled,
 		xstyle
 	);
 }

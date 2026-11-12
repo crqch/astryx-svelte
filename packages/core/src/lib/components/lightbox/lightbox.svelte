@@ -46,22 +46,36 @@
 	import IconButton from '../icon-button/icon-button.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { usePager } from '../../hooks/use-pager.svelte.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
+	import { zoomMedia } from '../../motion/uikit/zoomMedia.js';
+	import type { GestureTouch } from '../../gestures/types.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { rtlMirrorAttrs } from '../../utils/rtl.stylex.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { observeResize, unobserveResize } from '../../internal/shared-resize-observer.js';
 	import {
 		lightboxDialogAttrs,
 		lightboxContainerAttrs,
 		lightboxMediaGroupAttrs,
 		lightboxImageWrapperAttrs,
 		lightboxImageAttrs,
+		lightboxTrackAttrs,
+		lightboxPageAttrs,
+		lightboxPageMediaAttrs,
 		lightboxVideoAttrs,
 		lightboxCaptionAttrs,
 		lightboxCounterAttrs,
+		lightboxChromeLayerAttrs,
+		lightboxCloseBackingAttrs,
+		lightboxNavPrevBackingAttrs,
+		lightboxNavNextBackingAttrs,
 		lightboxControlButtonStyle,
+		lightboxControlIconStyle,
 		lightboxCloseButtonStyle,
 		lightboxNavButtonStyle,
 		lightboxNavPrevStyle,
@@ -163,6 +177,14 @@
 	const isVideo = $derived(currentType === 'video');
 	const canPrev = $derived(isGallery && index > 0);
 	const canNext = $derived(isGallery && index < mediaArray.length - 1);
+	// The current item and its neighbours; the pager shows one at rest.
+	const pageIndexes = $derived(
+		isGallery ? [index - 1, index, index + 1].filter((i) => i >= 0 && i < mediaArray.length) : []
+	);
+
+	// The touch presentation: keyed on a coarse primary pointer — a finger.
+	// A touchscreen laptop reports its trackpad and keeps pointer behaviors.
+	const isTouch = useMediaQuery(() => TOUCH_QUERY);
 
 	useScrollLock(() => isOpen);
 
@@ -438,27 +460,174 @@
 		zoom === 1 ? null : `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`
 	);
 
+	/** Set on the stage while a mouse or a pen hovers over the fitted photo. */
+	const OVER_PHOTO_ATTRIBUTE = 'data-lightbox-over-photo';
+	// Upstream's `imageWrapperRef` and `captionRef`, read by `placeCaption`.
+	let imageWrapperEl = $state<HTMLDivElement | null>(null);
+	let captionEl = $state<HTMLDivElement | null>(null);
+	// Upstream's `trackRef`: a gallery's row of pages, which the pager moves.
+	let trackEl = $state<HTMLDivElement | null>(null);
+
+	/**
+	 * With zoom the stage fills the viewer, so a caption would sit at the
+	 * viewer's bottom. It moves up by the stage's space below the fitted photo,
+	 * so it sits under the photo as it does without zoom.
+	 */
+	function placeCaption(): void {
+		const caption = captionEl;
+		if (caption == null) {
+			return;
+		}
+		const photo = imageWrapperEl?.querySelector('img');
+		const below =
+			isZoomTarget && !isZoomed && imageWrapperEl != null && photo != null
+				? (imageWrapperEl.clientHeight - photo.offsetHeight) / 2
+				: 0;
+		caption.style.translate = below > 0 ? `0 ${-below}px` : '';
+	}
+
+	$effect(() => {
+		// Read each source upstream's `placeCaption` runs for: the layout changes
+		// with the item, the zoom state, and the fitted/zoomed stage.
+		void isZoomTarget;
+		void isZoomed;
+		void index;
+		void currentSrc;
+		void imageWrapperEl;
+		void captionEl;
+		placeCaption();
+	});
+
+	$effect(() => {
+		const stage = imageWrapperEl;
+		if (stage == null) {
+			return;
+		}
+		observeResize(stage, placeCaption);
+		return () => unobserveResize(stage);
+	});
+
+	/**
+	 * Whether a mouse or a pen hovers over the fitted photo, for its cursor. The
+	 * stage fills the viewer, so the photo's box is read, not the event target.
+	 * The attribute is written on the stage, so hovering renders nothing.
+	 */
+	function markPointerOverPhoto(e: PointerEvent): void {
+		if (e.pointerType === 'touch' || e.buttons !== 0) {
+			return;
+		}
+		const stage = e.currentTarget as HTMLDivElement;
+		const photo = stage.querySelector('[data-current] img') ?? stage.querySelector('img');
+		const r = photo?.getBoundingClientRect();
+		stage.toggleAttribute(
+			OVER_PHOTO_ATTRIBUTE,
+			r != null &&
+				e.clientX >= r.left &&
+				e.clientX <= r.right &&
+				e.clientY >= r.top &&
+				e.clientY <= r.bottom
+		);
+	}
+
 	const theme = $derived(themeProps('lightbox'));
 	const dialogAttrs = $derived(lightboxDialogAttrs(xstyle));
 	const container = lightboxContainerAttrs();
-	const mediaGroup = lightboxMediaGroupAttrs();
+	const mediaGroup = $derived(lightboxMediaGroupAttrs(isZoomTarget, isGallery));
 	const mirror = rtlMirrorAttrs();
-	const counter = lightboxCounterAttrs();
+	const counter = $derived(lightboxCounterAttrs(hasZoom));
 	const captionAttrs = lightboxCaptionAttrs();
 	const video = lightboxVideoAttrs();
+	const chromeLayer = lightboxChromeLayerAttrs();
+	const closeBacking = lightboxCloseBackingAttrs();
+	const navPrevBacking = lightboxNavPrevBackingAttrs();
+	const navNextBacking = lightboxNavNextBackingAttrs();
 	const imageWrapper = $derived(
 		lightboxImageWrapperAttrs(
 			isZoomTarget,
 			!isVideo && hasZoom && !isZoomed,
 			!isVideo && isZoomed,
-			!isVideo && isDragging
+			isGallery
 		)
 	);
-	const image = $derived(lightboxImageAttrs(isDragging, imageTransform));
+	const image = $derived(lightboxImageAttrs(imageTransform));
+	// A gallery's non-current pages keep the photo's resting box: only the
+	// current page's photo carries the legacy zoom transform.
+	const imageStatic = lightboxImageAttrs(null);
+	const trackAttrs = $derived(
+		lightboxTrackAttrs(isZoomTarget, isTouch.matches && !isZoomTarget && !isVideo)
+	);
+	const pageMediaAttrs = $derived(lightboxPageMediaAttrs(isZoomTarget));
+
+	/**
+	 * A video's native controls are taken as a band at its bottom edge, since
+	 * browsers expose no control geometry. A drag that starts there stays the
+	 * video's, as a scrubber's or a volume slider's drag.
+	 */
+	const VIDEO_CONTROLS_BAND = 48;
+	function startsOnVideoControls(touch: GestureTouch | undefined): boolean {
+		const videoEl = trackEl?.querySelector('[data-current] video[controls]');
+		if (touch == null || videoEl == null) {
+			return false;
+		}
+		const box = videoEl.getBoundingClientRect();
+		return (
+			touch.startX >= box.left &&
+			touch.startX <= box.right &&
+			touch.startY <= box.bottom &&
+			touch.startY >= box.bottom - VIDEO_CONTROLS_BAND
+		);
+	}
+
+	/**
+	 * A gallery pages like Photos, on a UIKit paging scroll view's release. A
+	 * drag or a flick moves one page at most, with Photos' 40 pt gap.
+	 *
+	 * Only the `pages: 'viewport'` mode is used here, so the pager's `count` is
+	 * the media count while at most three pages render around the current one.
+	 *
+	 * The zoom stage (`useZoomCore`/`useZoomStage`) is not ported, so three
+	 * parts of upstream's pager wiring are deliberately absent: the pan handoff
+	 * at a zoomed photo's edge (`stage.isAtEdge`), the `onSettle` that clears
+	 * that stage's inline `translate`/`scale` from the pages left behind, and
+	 * `pageMediaRef` as the gallery's zoom stage. A zoomed photo keeps the
+	 * legacy transform drag and the pager's pan stays off while it is zoomed.
+	 */
+	usePager(() => ({
+		viewportRef: () => imageWrapperEl,
+		trackRef: () => trackEl,
+		count: mediaArray.length,
+		gap: zoomMedia.viewer.pageGap,
+		index,
+		isPanEnabled: isOpen && isGallery && isTouch.matches,
+		// Under the touch presentation a change of `index` slides the pager, and
+		// a refused drag springs back. Under a fine pointer it moves at once, so
+		// a refused button shows nothing.
+		isControlledChangeAnimated: isTouch.matches,
+		// In the touch presentation every pointer pages. A drag that starts on a
+		// video's controls stays the video's.
+		panOptions: {
+			allowedPointerTypes: ['touch', 'pen', 'mouse'],
+			maximumNumberOfTouches: 1,
+			shouldBegin: (pan) => !startsOnVideoControls(pan.trackedTouches[0])
+		},
+		// The zoom-stage handoff (`stage.isAtEdge`) is deferred with that
+		// subsystem; a zoomed photo keeps the whole drag.
+		shouldBeginPan: () => !isZoomed,
+		onIndexChange: (next, reason) => {
+			if (reason === 'drag') {
+				setIndex(next);
+			}
+		}
+	}));
 </script>
 
 {#snippet closeIcon()}
-	<Icon icon="close" size="sm" color="inherit" />
+	<Icon
+		icon="close"
+		size="sm"
+		color="inherit"
+		xstyle={hasZoom ? lightboxControlIconStyle : undefined}
+	/>
 {/snippet}
 
 <!--
@@ -469,14 +638,61 @@
 -->
 {#snippet prevIcon()}
 	<span class={mirror.class} style={mirror.style}>
-		<Icon icon="chevronLeft" size="sm" color="inherit" />
+		<Icon
+			icon="chevronLeft"
+			size="sm"
+			color="inherit"
+			xstyle={hasZoom ? lightboxControlIconStyle : undefined}
+		/>
 	</span>
 {/snippet}
 
 {#snippet nextIcon()}
 	<span class={mirror.class} style={mirror.style}>
-		<Icon icon="chevronRight" size="sm" color="inherit" />
+		<Icon
+			icon="chevronRight"
+			size="sm"
+			color="inherit"
+			xstyle={hasZoom ? lightboxControlIconStyle : undefined}
+		/>
 	</span>
+{/snippet}
+
+<!--
+	One item's media. Only the current gallery page is exposed: the others keep
+	an empty alt and are hidden from the accessibility tree, as upstream does.
+-->
+{#snippet lightboxMedia(item: LightboxMedia, isCurrent: boolean)}
+	{#if (item.type ?? 'image') === 'video'}
+		<!-- svelte-ignore a11y_media_has_caption -->
+		<video
+			src={item.src}
+			aria-label={item.alt}
+			controls
+			autoplay={isCurrent && hasAutoPlay}
+			preload={isCurrent ? 'auto' : 'metadata'}
+			class={video.class}
+			style={video.style}
+		></video>
+	{:else}
+		<img
+			src={item.src}
+			alt={isCurrent ? item.alt : ''}
+			aria-hidden={isCurrent ? undefined : true}
+			draggable={false}
+			onload={placeCaption}
+			class={isCurrent ? image.class : imageStatic.class}
+			style={isCurrent ? image.style : imageStatic.style}
+		/>
+	{/if}
+{/snippet}
+
+{#snippet lightboxCaption(caption: string | Snippet | undefined)}
+	{#if typeof caption === 'function'}
+		{@render caption()}
+	{:else if caption}
+		{caption}
+	{/if}
 {/snippet}
 
 <!--
@@ -503,29 +719,56 @@
 	>
 		<LayerDepthProvider>
 			<div bind:this={containerEl} class={container.class} style={container.style}>
-				<IconButton
-					icon={closeIcon}
-					label={t('@astryx.lightbox.close')}
-					variant="ghost"
-					onclick={handleClose}
-					xstyle={[lightboxCloseButtonStyle, lightboxControlButtonStyle]}
-				/>
+				<div class={chromeLayer.class} style={chromeLayer.style}>
+					{#if hasZoom}
+						<span class={closeBacking.class} style={closeBacking.style}>
+							<IconButton
+								icon={closeIcon}
+								label={t('@astryx.lightbox.close')}
+								variant="ghost"
+								onclick={handleClose}
+								xstyle={lightboxControlButtonStyle}
+							/>
+						</span>
+					{:else}
+						<IconButton
+							icon={closeIcon}
+							label={t('@astryx.lightbox.close')}
+							variant="ghost"
+							onclick={handleClose}
+							xstyle={[lightboxCloseButtonStyle, lightboxControlButtonStyle]}
+						/>
+					{/if}
 
-				<!--
-					Gallery nav: prev — stays mounted and is disabled at the start of the
-					range so pressing/arrowing to the boundary doesn't unmount the focused
-					control and drop focus to <body>.
-				-->
-				{#if isGallery}
-					<IconButton
-						icon={prevIcon}
-						label={t('@astryx.lightbox.previous')}
-						variant="ghost"
-						isDisabled={!canPrev}
-						onclick={goToPrev}
-						xstyle={[lightboxNavButtonStyle, lightboxNavPrevStyle, lightboxControlButtonStyle]}
-					/>
-				{/if}
+					<!--
+						Gallery nav: prev — stays mounted and is disabled at the start of the
+						range so pressing/arrowing to the boundary doesn't unmount the focused
+						control and drop focus to <body>.
+					-->
+					{#if isGallery}
+						{#if hasZoom}
+							<span class={navPrevBacking.class} style={navPrevBacking.style}>
+								<IconButton
+									icon={prevIcon}
+									label={t('@astryx.lightbox.previous')}
+									variant="ghost"
+									isDisabled={!canPrev}
+									onclick={goToPrev}
+									xstyle={lightboxControlButtonStyle}
+								/>
+							</span>
+						{:else}
+							<IconButton
+								icon={prevIcon}
+								label={t('@astryx.lightbox.previous')}
+								variant="ghost"
+								isDisabled={!canPrev}
+								onclick={goToPrev}
+								xstyle={[lightboxNavButtonStyle, lightboxNavPrevStyle, lightboxControlButtonStyle]}
+							/>
+						{/if}
+					{/if}
+				</div>
 
 				<!-- Media + caption group (centered together) -->
 				<div class={mediaGroup.class} style={mediaGroup.style}>
@@ -540,69 +783,104 @@
 					-->
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 					<div
+						bind:this={imageWrapperEl}
 						role={isZoomTarget ? 'button' : undefined}
 						tabindex={isZoomTarget ? 0 : undefined}
 						aria-pressed={isZoomTarget ? isZoomed : undefined}
 						aria-label={isZoomTarget ? t('@astryx.lightbox.zoom') : undefined}
+						data-zoom-dragging={isDragging ? '' : undefined}
 						class={imageWrapper.class}
 						style={imageWrapper.style}
 						ondblclick={isVideo ? undefined : handleDoubleClick}
 						onkeydown={isZoomTarget ? handleImageKeyDown : undefined}
 						onpointerdown={isVideo ? undefined : handlePointerDown}
+						onpointermove={isZoomTarget ? markPointerOverPhoto : undefined}
+						onpointerleave={isZoomTarget
+							? (e) => e.currentTarget.removeAttribute(OVER_PHOTO_ATTRIBUTE)
+							: undefined}
 					>
-						{#if isVideo}
-							<!-- svelte-ignore a11y_media_has_caption -->
-							<video
-								src={currentItem.src}
-								aria-label={currentItem.alt}
-								controls
-								autoplay={hasAutoPlay}
-								class={video.class}
-								style={video.style}
-							></video>
+						{#if isGallery}
+							<div bind:this={trackEl} class={trackAttrs.class} style={trackAttrs.style}>
+								{#each pageIndexes as i (i)}
+									{@const page = lightboxPageAttrs(i)}
+									<!--
+										Only the current page is on screen at rest: the others stay
+										out of the tab order and the accessibility tree.
+									-->
+									<div
+										data-lightbox-page={i}
+										data-current={i === index ? '' : undefined}
+										inert={i !== index ? true : undefined}
+										aria-hidden={i !== index ? true : undefined}
+										class={page.class}
+										style={page.style}
+									>
+										<div
+											data-lightbox-page-media=""
+											class={pageMediaAttrs.class}
+											style={pageMediaAttrs.style}
+										>
+											{@render lightboxMedia(mediaArray[i], i === index)}
+										</div>
+										{#if mediaArray[i].caption}
+											<div
+												data-lightbox-caption=""
+												class={captionAttrs.class}
+												style={captionAttrs.style}
+											>
+												{@render lightboxCaption(mediaArray[i].caption)}
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
 						{:else}
-							<img
-								src={currentItem.src}
-								alt={currentItem.alt}
-								draggable={false}
-								class={image.class}
-								style={image.style}
-							/>
+							{@render lightboxMedia(currentItem, true)}
+							{#if currentItem.caption}
+								<div bind:this={captionEl} class={captionAttrs.class} style={captionAttrs.style}>
+									{@render lightboxCaption(currentItem.caption)}
+								</div>
+							{/if}
 						{/if}
 					</div>
+				</div>
 
-					{#if currentItem.caption}
-						<div class={captionAttrs.class} style={captionAttrs.style}>
-							{#if typeof currentItem.caption === 'function'}
-								{@render currentItem.caption()}
-							{:else}
-								{currentItem.caption}
-							{/if}
+				<div class={chromeLayer.class} style={chromeLayer.style}>
+					<!--
+						Gallery nav: next — see "prev" above; stays mounted and disabled at the
+						end of the range instead of unmounting.
+					-->
+					{#if isGallery}
+						{#if hasZoom}
+							<span class={navNextBacking.class} style={navNextBacking.style}>
+								<IconButton
+									icon={nextIcon}
+									label={t('@astryx.lightbox.next')}
+									variant="ghost"
+									isDisabled={!canNext}
+									onclick={goToNext}
+									xstyle={lightboxControlButtonStyle}
+								/>
+							</span>
+						{:else}
+							<IconButton
+								icon={nextIcon}
+								label={t('@astryx.lightbox.next')}
+								variant="ghost"
+								isDisabled={!canNext}
+								onclick={goToNext}
+								xstyle={[lightboxNavButtonStyle, lightboxNavNextStyle, lightboxControlButtonStyle]}
+							/>
+						{/if}
+					{/if}
+
+					<!-- Gallery counter -->
+					{#if isGallery && mediaArray.length > 1}
+						<div class={counter.class} style={counter.style}>
+							{index + 1} / {mediaArray.length}
 						</div>
 					{/if}
 				</div>
-
-				<!--
-					Gallery nav: next — see "prev" above; stays mounted and disabled at the
-					end of the range instead of unmounting.
-				-->
-				{#if isGallery}
-					<IconButton
-						icon={nextIcon}
-						label={t('@astryx.lightbox.next')}
-						variant="ghost"
-						isDisabled={!canNext}
-						onclick={goToNext}
-						xstyle={[lightboxNavButtonStyle, lightboxNavNextStyle, lightboxControlButtonStyle]}
-					/>
-				{/if}
-
-				<!-- Gallery counter -->
-				{#if isGallery && mediaArray.length > 1}
-					<div class={counter.class} style={counter.style}>
-						{index + 1} / {mediaArray.length}
-					</div>
-				{/if}
 			</div>
 		</LayerDepthProvider>
 	</dialog>

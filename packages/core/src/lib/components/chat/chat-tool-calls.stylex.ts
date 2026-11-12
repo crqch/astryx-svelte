@@ -1,9 +1,11 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 import {
 	colorVars,
 	durationVars,
 	easeVars,
+	focusVars,
 	fontWeightVars,
 	radiusVars,
 	spacingVars,
@@ -56,7 +58,7 @@ const styles = stylex.create({
 		flexShrink: 0,
 		width: '14px',
 		height: '14px',
-		color: colorVars['--color-text-disabled']
+		color: colorVars['--color-text-secondary']
 	},
 	// Rides on the chevron <Icon> (via `xstyle`), next to the rotation it
 	// animates, so one element carries both the transform and the theme target.
@@ -114,6 +116,12 @@ const styles = stylex.create({
 		minHeight: '24px',
 		paddingBlock: spacingVars['--spacing-0-5']
 	},
+	callRowFocusInset: {
+		outlineOffset: {
+			default: null,
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
+	},
 	callRowClickable: {
 		cursor: {
 			default: 'pointer',
@@ -144,17 +152,6 @@ const styles = stylex.create({
 		height: '16px',
 		borderRadius: radiusVars['--radius-full']
 	},
-	statusIconCircle: {
-		position: 'absolute',
-		inset: 0,
-		borderRadius: 'inherit',
-		backgroundColor: 'currentColor',
-		opacity: 0.15
-	},
-	statusIconInner: {
-		position: 'relative',
-		display: 'inline-flex'
-	},
 	callName: {
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
@@ -171,7 +168,7 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		fontFamily: typographyVars['--font-family-body'],
-		color: colorVars['--color-text-disabled'],
+		color: colorVars['--color-text-secondary'],
 		whiteSpace: 'nowrap',
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
@@ -182,7 +179,7 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		fontFamily: typographyVars['--font-family-body'],
-		color: colorVars['--color-text-disabled'],
+		color: colorVars['--color-text-secondary'],
 		whiteSpace: 'nowrap',
 		flexShrink: 0
 	},
@@ -196,17 +193,17 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		fontFamily: typographyVars['--font-family-body'],
-		color: colorVars['--color-text-disabled'],
+		color: colorVars['--color-text-secondary'],
 		flexShrink: 0
 	},
 	statsAdditions: {
-		color: colorVars['--color-success']
+		color: colorVars['--color-text-success']
 	},
 	statsDeletions: {
-		color: colorVars['--color-error']
+		color: colorVars['--color-text-error']
 	},
 	errorText: {
-		color: colorVars['--color-error']
+		color: colorVars['--color-text-error']
 	},
 
 	// Inline result detail
@@ -217,7 +214,7 @@ const styles = stylex.create({
 		flexShrink: 0,
 		width: '14px',
 		height: '14px',
-		color: colorVars['--color-text-disabled'],
+		color: colorVars['--color-text-secondary'],
 		marginInlineStart: 'auto'
 	},
 	callDetailContent: {
@@ -231,7 +228,7 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		fontFamily: typographyVars['--font-family-body'],
-		color: colorVars['--color-text-disabled'],
+		color: colorVars['--color-text-secondary'],
 		flexShrink: 0
 	},
 
@@ -260,8 +257,8 @@ const styles = stylex.create({
 	// Status colors
 	colorPending: { color: colorVars['--color-text-disabled'] },
 	colorRunning: { color: colorVars['--color-accent'] },
-	colorComplete: { color: colorVars['--color-success'] },
-	colorError: { color: colorVars['--color-error'] }
+	colorComplete: { color: colorVars['--color-icon-success'] },
+	colorError: { color: colorVars['--color-icon-error'] }
 });
 
 /**
@@ -295,24 +292,23 @@ export function chatToolCallsRootAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
 	return sx(styles.root, xstyle);
 }
 
-export function chatToolCallRowAttrs(hasDetail: boolean): SvelteStyleAttrs {
-	return sx(styles.callRow, hasDetail && styles.callRowClickable);
+export function chatToolCallRowAttrs(
+	hasDetail: boolean,
+	hasClippedFocusRing = false
+): SvelteStyleAttrs {
+	return focusOutlineProps.focusVisible(
+		styles.callRow,
+		hasDetail && styles.callRowClickable,
+		hasDetail && hasClippedFocusRing && styles.callRowFocusInset
+	);
 }
 
 export function chatToolCallToggleRowAttrs(): SvelteStyleAttrs {
-	return sx(styles.callRow, styles.callRowToggle);
+	return focusOutlineProps.focusVisible(styles.callRow, styles.callRowToggle);
 }
 
 export function chatToolCallStatusIconAttrs(status: ChatToolCallStatus): SvelteStyleAttrs {
 	return sx(styles.statusIcon, STATUS_STYLES[status]);
-}
-
-export function chatToolCallStatusCircleAttrs(): SvelteStyleAttrs {
-	return sx(styles.statusIconCircle);
-}
-
-export function chatToolCallStatusInnerAttrs(): SvelteStyleAttrs {
-	return sx(styles.statusIconInner);
 }
 
 export function chatToolCallNameAttrs(): SvelteStyleAttrs {

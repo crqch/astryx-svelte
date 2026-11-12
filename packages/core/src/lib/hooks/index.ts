@@ -139,6 +139,10 @@ export type { KeyboardHintLayerProps } from './keyboard-hint-layer.svelte';
 
 export { useMediaQuery, type MediaQueryState } from './use-media-query.svelte.js';
 
+// The press model's public entry point: spread its result on the element that
+// paints the press. The private modules it drives stay barrel-absent.
+export { usePressFeedback } from './use-press-feedback.svelte.js';
+
 export {
 	useOverflow,
 	type UseOverflowOptions,

@@ -51,7 +51,7 @@ export default {
 		},
 		{
 			name: 'options.position',
-			type: "'top' | 'fill' | 'bottom'",
+			type: "'top' | 'bottom' | 'fill'",
 			description:
 				'Where the scrim sits: over the whole positioned area, or as a strip along its bottom or top edge.',
 			default: "'fill'"

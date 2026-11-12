@@ -87,6 +87,8 @@
 		bannerHeaderContentAttrs,
 		bannerIconWrapperAttrs,
 		bannerRootAttrs,
+		bannerStatusControlAttrs,
+		bannerStatusForegroundAttrs,
 		bannerTitleAttrs
 	} from './banner.stylex.js';
 
@@ -225,6 +227,8 @@
 	const descriptionTheme = themeProps('banner-description');
 	const descriptionAttrs = bannerDescriptionAttrs();
 	const endAreaAttrs = bannerEndAreaAttrs();
+	const statusControlAttrs = $derived(bannerStatusControlAttrs(status));
+	const statusForegroundAttrs = $derived(bannerStatusForegroundAttrs(status));
 	const contentTheme = $derived(themeProps('banner-content', { container, status }));
 	const contentAreaAttrs = $derived(bannerContentAreaAttrs(isCard));
 
@@ -342,13 +346,13 @@
 				</div>
 			{/if}
 			<div class={headerContentAttrs.class} style={headerContentAttrs.style}>
-				<div class={titleAttrs.class} style={titleAttrs.style}>
+				<div class={cx(titleAttrs.class, statusForegroundAttrs?.class)} style={titleAttrs.style}>
 					{#if typeof title === 'function'}{@render title()}{:else}{title}{/if}
 				</div>
 				{#if hasDescription}
 					<div
 						{...descriptionTheme}
-						class={cx(descriptionTheme.class, descriptionAttrs.class)}
+						class={cx(descriptionTheme.class, descriptionAttrs.class, statusForegroundAttrs?.class)}
 						style={descriptionAttrs.style}
 					>
 						{#if typeof description === 'function'}{@render description()}{:else}{description}{/if}
@@ -362,6 +366,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
+							class={statusControlAttrs?.class}
 							label={toggleLabel}
 							tooltip={toggleLabel}
 							icon={chevronIcon}
@@ -375,6 +380,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
+							class={statusControlAttrs?.class}
 							label={t('@astryx.banner.dismiss')}
 							tooltip={t('@astryx.banner.dismiss')}
 							icon={closeIcon}

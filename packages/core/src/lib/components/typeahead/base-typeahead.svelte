@@ -127,12 +127,16 @@
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Icon from '../icon/icon.svelte';
+	import Spinner from '../spinner/spinner.svelte';
 	import PopoverLayer from '../popover/popover-layer.svelte';
 	import { usePopover } from '../popover/use-popover.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { useBusyIndicatorLane } from './busy-indicator-lane.svelte.js';
+	import { useTrailingKeyDown } from './trailing-key-down.svelte.js';
 	import TypeaheadItem from './typeahead-item.svelte';
 	import {
+		baseTypeaheadDefaultItemStyle,
 		baseTypeaheadDropdownAttrs,
 		baseTypeaheadEmptyStateAttrs,
 		baseTypeaheadGroupHeadingAttrs,
@@ -214,6 +218,31 @@
 	let isLoading = $state(false);
 	let hasSearched = $state(false);
 
+	// Report the busy state to a wrapper that has taken the indicator over.
+	//
+	// A context, not a prop: `BaseTypeaheadProps` is re-exported from the
+	// package entry point, so a handoff named on it would ship as public API
+	// and pin an internal detail between the wrappers and their base. The
+	// wrapper provides the lane; the base is the only thing that knows a search
+	// has started. Without one, the base renders its own indicator below.
+	//
+	// Edge-triggered: a redundant `false` on every keystroke below a query
+	// threshold reports nothing.
+	const getBusyLane = useBusyIndicatorLane();
+	const busyLane = getBusyLane?.() ?? null;
+	function setLoading(next: boolean): void {
+		if (isLoading === next) {
+			return;
+		}
+		isLoading = next;
+		busyLane?.onBusyChange(next);
+	}
+
+	// The consumer key handler a wrapper passes through trailing context. It
+	// runs after this component's own handling, so it observes every key
+	// without being able to cancel navigation, selection, or token editing.
+	const getTrailingKeyDown = useTrailingKeyDown();
+
 	// Track active pointer to defer popover.show() past click events. With
 	// popover="auto", showing the popover between pointerdown and pointerup/click
 	// causes the browser's light-dismiss to immediately close it (the click is
@@ -279,7 +308,7 @@
 		// response for an older query fails the gen check below instead of
 		// overwriting the newer results.
 		const gen = ++searchGen;
-		isLoading = true;
+		setLoading(true);
 		hasSearched = true;
 		try {
 			const searchResults = await searchSource.search(searchQuery);
@@ -313,14 +342,14 @@
 			highlightedIndex = -1;
 		} finally {
 			if (searchGen === gen) {
-				isLoading = false;
+				setLoading(false);
 			}
 		}
 	}
 
 	async function performBootstrap(): Promise<void> {
 		const gen = ++searchGen;
-		isLoading = true;
+		setLoading(true);
 		try {
 			const bootstrapResults = await searchSource.bootstrap();
 			if (searchGen !== gen) {
@@ -340,7 +369,7 @@
 			results = [];
 		} finally {
 			if (searchGen === gen) {
-				isLoading = false;
+				setLoading(false);
 			}
 		}
 	}
@@ -603,6 +632,7 @@
 		? getItemId(highlightedIndex)
 		: undefined}
 	aria-autocomplete="list"
+	aria-busy={isLoading || undefined}
 	aria-describedby={ariaDescribedBy}
 	aria-labelledby={ariaLabelledBy}
 	aria-disabled={isFocusableDisabled ? 'true' : undefined}
@@ -621,7 +651,12 @@
 	}}
 	onfocus={handleFocus}
 	onblur={handleBlur}
-	onkeydown={handleKeyDown}
+	onkeydown={(event) => {
+		handleKeyDown(event);
+		// The consumer handler runs after the built-in handling, so it observes
+		// every key on the input and cannot cancel navigation or selection.
+		getTrailingKeyDown?.()?.(event);
+	}}
 	{placeholder}
 	disabled={isDisabled && !isFocusableDisabled}
 	readonly={isFocusableDisabled || undefined}
@@ -631,14 +666,16 @@
 	class={cx(inputAttrs.class, className)}
 	style={mergeStyle(inputAttrs.style, styleProp as string | undefined)}
 />
-{#if isLoading}
-	<span
-		role="status"
-		aria-label={t('@astryx.typeahead.loading')}
-		class={loadingAttrs.class}
-		style={loadingAttrs.style}
-	>
-		<Icon icon="clock" size="sm" color="secondary" />
+{#if isLoading && busyLane == null}
+	<!--
+		The indicator a direct caller gets. In flow, where it has always been,
+		so it reserves its own width and the input's text never runs under it.
+		Typeahead and Tokenizer take the indicator over and paint it in their own
+		inline-end lane instead; this is what renders for everyone else.
+	-->
+	<span class={loadingAttrs.class} style={loadingAttrs.style}>
+		<!-- Named, never live: the typeahead announces its search. -->
+		<Spinner size="sm" role="img" aria-label={t('@astryx.typeahead.loading')} />
 	</span>
 {/if}
 
@@ -706,7 +743,10 @@
 			style={attrs.style}
 		>
 			<span class={itemContentAttrs.class} style={itemContentAttrs.style}>
-				{#if renderItem}{@render renderItem(item)}{:else}<TypeaheadItem {item} />{/if}
+				{#if renderItem}{@render renderItem(item)}{:else}<TypeaheadItem
+						{item}
+						xstyle={baseTypeaheadDefaultItemStyle}
+					/>{/if}
 			</span>
 			{#if isSelected}
 				<Icon icon="check" size="sm" color="primary" />

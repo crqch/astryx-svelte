@@ -10,6 +10,27 @@
 	 */
 	export type LayoutHeight = 'fill' | 'auto';
 
+	/**
+	 * Internal alignment subtracts contentWidth in CSS. Intrinsic values and
+	 * bare variables cannot participate in that arithmetic, so they keep the
+	 * released constrained-composition path.
+	 */
+	function supportsInternalContentWidthAlignment(width: SizeValue | undefined): boolean {
+		if (width == null || typeof width === 'number') {
+			return true;
+		}
+
+		const value = width.trim().toLowerCase();
+		if (value.includes('%')) {
+			return false;
+		}
+		return (
+			value === '0' ||
+			/^-?(?:\d+(?:\.\d+)?|\.\d+)[a-z]+$/.test(value) ||
+			/^(?:calc|min|max|clamp)\(/.test(value)
+		);
+	}
+
 	export interface LayoutProps extends Omit<BaseProps<HTMLDivElement>, 'content'> {
 		/** Main content area (center). */
 		content?: Snippet;
@@ -29,8 +50,10 @@
 		/** @default 'fill' */
 		height?: LayoutHeight;
 		/**
-		 * Padding at the layout's outer edges, on the spacing scale. Sets both
-		 * `--layout-padding-outer-x` and `--layout-padding-outer-y`.
+		 * Padding at the layout's outer edges, on the spacing scale. Applies to
+		 * this layout's own header, footer, panels and content; a nested layout
+		 * does not inherit it. Without `padding`, the regions use the enclosing
+		 * `Card`, `Section` or `Dialog` padding, or the default inset.
 		 */
 		padding?: SpacingStep;
 		/** Start panel slot — left in LTR, right in RTL. */
@@ -103,6 +126,18 @@
 	// Children are shorthand for the content slot; an explicit `content` wins.
 	const resolvedContent = $derived(content ?? children);
 
+	// A slot left out is absent, so its neighbours take the outer inset on that
+	// side.
+	const hasHeader = $derived(header != null);
+	const hasFooter = $derived(footer != null);
+	const hasStart = $derived(start != null);
+	const hasEnd = $derived(end != null);
+	const hasBothPanels = $derived(hasStart && hasEnd);
+	const hasSinglePanel = $derived(hasStart !== hasEnd);
+	const usesInternalContentWidth = $derived(
+		contentWidth != null && supportsInternalContentWidthAlignment(contentWidth)
+	);
+
 	// Upstream mounts its divider provider only when `defaultHasDividers` is set,
 	// so a nested layout without the prop leaves its parent's default in place —
 	// behaviour `LayoutProps` documents. A Svelte context cannot be conditionally
@@ -115,16 +150,29 @@
 	);
 
 	setLayoutSlotsContext(() => ({
-		hasHeader: header != null,
-		hasFooter: footer != null,
-		hasStart: start != null,
-		hasEnd: end != null
+		hasHeader,
+		hasFooter,
+		hasStart,
+		hasEnd
 	}));
 
 	const outer = $derived(layoutOuterAttrs(isFill, xstyle));
-	const inner = $derived(layoutInnerAttrs({ isFill, padding, contentWidth }));
-	const middle = $derived(layoutMiddleAttrs(contentWidth));
-	const contentSlot = layoutContentSlotAttrs();
+	const inner = $derived(
+		layoutInnerAttrs({ isFill, padding, contentWidth, usesInternalContentWidth })
+	);
+	const middle = $derived(
+		layoutMiddleAttrs({
+			contentWidth,
+			usesInternalContentWidth,
+			hasBothPanels,
+			hasSinglePanel,
+			hasStart,
+			hasEnd
+		})
+	);
+	const contentSlot = $derived(
+		layoutContentSlotAttrs({ usesInternalContentWidth, hasStart, hasEnd })
+	);
 	const theme = $derived(themeProps('layout', { height }));
 </script>
 

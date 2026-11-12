@@ -55,6 +55,7 @@
 	import { setChatLayoutContext } from './chat-context.svelte.js';
 	import { useChatNewMessages } from './use-chat-new-messages.svelte.js';
 	import { useChatStreamScroll } from './use-chat-stream-scroll.svelte.js';
+	import { observeResize } from '../../internal/shared-resize-observer.js';
 	import {
 		chatLayoutBlurLayerAttrs,
 		chatLayoutDockAttrs,
@@ -104,6 +105,23 @@
 
 	const t = useTranslator();
 	let rootEl: HTMLDivElement | null = $state(null);
+	let dockEl: HTMLDivElement | null = $state(null);
+
+	// A fixed dock is out of flow, so the message area makes room for it. The
+	// room is the dock's border-box height, as the shared observer reports it.
+	// The padding changes only the message area, so it never resizes the dock.
+	let dockHeight = $state(0);
+	$effect(() => {
+		const dock = dockEl;
+		if (dock == null || isSelfScrolling) {
+			dockHeight = 0;
+			return;
+		}
+		return observeResize(dock, (entry) => {
+			const height = entry.borderBoxSize?.[0]?.blockSize ?? dock.getBoundingClientRect().height;
+			dockHeight = Math.round(height);
+		});
+	});
 
 	// Upstream recomputes both on every render, so both read the prop live: a
 	// consumer that starts passing `scrollRef` must flip the root from
@@ -128,7 +146,9 @@
 
 	const theme = $derived(themeProps('chat-layout', { density }));
 	const root = $derived(chatLayoutRootAttrs(isSelfScrolling, xstyle));
-	const messageArea = $derived(chatLayoutMessageAreaAttrs(density));
+	const messageArea = $derived(
+		chatLayoutMessageAreaAttrs(density, isSelfScrolling ? 0 : dockHeight)
+	);
 	const emptyStateAttrs = $derived(chatLayoutEmptyStateAttrs());
 	const dockContainer = $derived(chatLayoutDockContainerAttrs(isSelfScrolling));
 	const blurLayer = $derived(chatLayoutBlurLayerAttrs(density));
@@ -164,7 +184,7 @@
 	</div>
 
 	<!-- Dock container — sticky/fixed, holds blur + scroll button + composer -->
-	<div class={dockContainer.class} style={dockContainer.style}>
+	<div bind:this={dockEl} class={dockContainer.class} style={dockContainer.style}>
 		<!-- Scroll-to-bottom button -->
 		{#if scrollButton === undefined}
 			{@render defaultScrollButton()}

@@ -8,13 +8,15 @@ import {
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import type { SizeValue, SpacingStep } from '../../internal/types.js';
 import { colorVars, spacingVars } from '../../styles/tokens.stylex.js';
+import { layoutFooterMarker } from './layout-edges.stylex.js';
 
 /**
  * `LayoutFooter`'s two elements, ported from Astryx's `LayoutFooter.tsx`.
  *
  * The mirror image of the header: the divider sits on the block-*start* edge,
  * and the inner padding is on the top rather than the bottom, since that is the
- * edge facing the content.
+ * edge facing the content. The outer shell carries the edge marker `Layout`'s
+ * middle row matches against.
  */
 
 const styles = stylex.create({
@@ -29,14 +31,14 @@ const styles = stylex.create({
 		maxWidth: 'var(--layout-content-width, none)',
 		marginInline: 'auto',
 		// Default: outer padding on edges that touch container, inner on interior edges
-		paddingInlineStart: `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`,
-		paddingInlineEnd: `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`,
+		paddingInlineStart: `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
+		paddingInlineEnd: `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
 		paddingBlockStart: `var(--layout-padding-inner-y, ${spacingVars['--spacing-4']})`,
-		paddingBlockEnd: `var(--layout-padding-outer-y, ${spacingVars['--spacing-4']})`,
-		'--container-padding-inline-start': `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`,
-		'--container-padding-inline-end': `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`,
+		paddingBlockEnd: `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-inline-start': `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-inline-end': `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
 		'--container-padding-block-start': `var(--layout-padding-inner-y, ${spacingVars['--spacing-4']})`,
-		'--container-padding-block-end': `var(--layout-padding-outer-y, ${spacingVars['--spacing-4']})`
+		'--container-padding-block-end': `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`
 	},
 	fullBleed: {
 		paddingInlineStart: 0,
@@ -67,6 +69,7 @@ export function layoutFooterAttrs(
 	xstyle?: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
+		layoutFooterMarker,
 		styles.footer,
 		dynamicStyles.sizing(height ?? null),
 		hasDivider && styles.divider,

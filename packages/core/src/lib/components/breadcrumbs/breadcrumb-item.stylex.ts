@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 import {
 	colorVars,
 	fontWeightVars,
@@ -68,8 +69,9 @@ const itemStyles = stylex.create({
 	// paddingBlock `link` sets above, which shrank the button crumbs to 20px
 	// against their sibling links' 28px.
 	buttonReset: {
-		background: 'none',
-		border: 'none',
+		backgroundColor: 'transparent',
+		borderWidth: 0,
+		borderStyle: 'none',
 		paddingInline: 0,
 		margin: 0,
 		font: 'inherit'
@@ -185,7 +187,12 @@ const menuStyles = stylex.create({
 		display: 'flex',
 		flexDirection: 'column',
 		gap: spacingVars['--spacing-0-5'],
-		maxHeight: '300px',
+		// 300 px, and no taller than its layer's block-size cap, which folds in
+		// the software keyboard's.
+		maxHeight: stylex.firstThatWorks(
+			`min(300px, ${layerViewportInset.maxBlockSize})`,
+			`min(300px, ${layerViewportInset.maxBlockSizeFallback})`
+		),
 		overflowY: 'auto',
 		'--_dropdown-menu-radius': radiusVars['--radius-container'],
 		'--_dropdown-menu-padding': spacingVars['--spacing-1'],

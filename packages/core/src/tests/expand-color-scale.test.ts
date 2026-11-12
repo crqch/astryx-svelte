@@ -39,7 +39,7 @@ import { formatColor, parseColor } from '$lib/utils/color.js';
 
 /** Light-mode half of colorDefaults['--color-accent'] — the hue an accent-less config seeds from. */
 const DEFAULT_ACCENT = '#0064E0';
-const DEFAULT_ACCENT_DARK = '#2694FE';
+const DEFAULT_ACCENT_DARK = '#0171E3';
 
 /** The three tokens that only exist when a seed accent is supplied. */
 const ACCENT_TOKENS = ['--color-accent', '--color-accent-muted', '--color-on-accent'] as const;

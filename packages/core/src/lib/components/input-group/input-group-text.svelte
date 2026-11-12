@@ -12,6 +12,7 @@
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { inputGroupTextAttrs } from './input-group-text.stylex.js';
+	import { inputGroupItemProps } from './group-styles.stylex.js';
 
 	/**
 	 * A static text or icon addon inside an `InputGroup` — a currency symbol, a
@@ -40,6 +41,7 @@
 
 <div
 	{...rest}
+	{...inputGroupItemProps}
 	{...theme}
 	class={cx(theme.class, attrs.class, className)}
 	style={mergeStyle(attrs.style, styleProp as string | undefined)}

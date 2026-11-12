@@ -23,6 +23,14 @@
 		 */
 		padding?: SpacingStep;
 		/**
+		 * Block-end (bottom) padding override. Takes precedence over `padding` on
+		 * that edge only; the block-start edge and both inline edges are left
+		 * alone. `paddingBlockEnd={0}` docks the last child on the header's bottom
+		 * edge, so a tab strip's underline meets `hasDivider` with no hand-written
+		 * margin.
+		 */
+		paddingBlockEnd?: SpacingStep;
+		/**
 		 * Accessible name for the landmark. Required when `role` is set and more
 		 * than one landmark of that type exists.
 		 */
@@ -50,6 +58,7 @@
 		height,
 		label,
 		padding,
+		paddingBlockEnd,
 		role,
 		class: className,
 		style: styleProp,
@@ -61,7 +70,7 @@
 	const resolvedHasDivider = $derived(hasDivider ?? dividerCtx()?.defaultHasDividers ?? false);
 
 	const attrs = $derived(layoutHeaderAttrs(height, resolvedHasDivider, xstyle));
-	const inner = $derived(layoutHeaderInnerAttrs(padding));
+	const inner = $derived(layoutHeaderInnerAttrs(padding, paddingBlockEnd));
 	const theme = themeProps('layout-header');
 </script>
 

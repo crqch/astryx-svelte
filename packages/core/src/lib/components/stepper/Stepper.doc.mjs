@@ -211,7 +211,7 @@ export default {
 		},
 		{
 			name: 'horizontalOptions',
-			type: "{ minimumStepWidth: number; collapsedVariant: 'withLabelAndControls' | 'withLabel' | 'hiddenLabel' }",
+			type: 'StepperHorizontalOptions',
 			description:
 				'Options for horizontal collapse. minimumStepWidth is the per-step threshold in pixels. collapsedVariant selects a label with controls, the label alone, or a bare progress track with no compact row. Controls appear only for withLabelAndControls when onStepClick is set, and every step keeps its accessible name.',
 			default: "{ minimumStepWidth: 112, collapsedVariant: 'withLabelAndControls' }"

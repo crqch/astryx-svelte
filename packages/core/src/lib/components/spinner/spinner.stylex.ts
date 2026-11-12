@@ -1,25 +1,22 @@
 import * as stylex from '@stylexjs/stylex';
-import { colorVars, durationVars, spacingVars } from '../../styles/tokens.stylex.js';
+import { colorVars, spacingVars } from '../../styles/tokens.stylex.js';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 
 export type SpinnerSize = 'sm' | 'md' | 'lg' | 'xl';
 export type SpinnerShade = 'default' | 'subtle' | 'onMedia' | 'inherit';
 
 /**
- * Fraction of the ring the moving arc covers. The canvas ring this replaces
+ * The fraction of the ring the arc covers. The canvas ring this replaces
  * swept 135deg, not the 270deg its constant's comment claimed.
+ *
+ * Themeable via `--spinner-arc-fraction`, declared alongside the other public
+ * vars in `sizeStyles` below. Only the inline `strokeDasharray` attribute
+ * (the pre-stylesheet render) still reads the constant directly; the CSS side
+ * composes the dash from the live var.
  */
 export const ARC_FRACTION = 0.375;
 
-/**
- * The dash pattern, per unit of diameter: one arc, then the gap that closes
- * the circle. The circumference is `pi x diameter`, so multiplying the
- * resolved diameter by these two constants gives exactly the lengths the
- * default render has always used, and scales them with a themed diameter.
- */
 const PI = 3.141592653589793;
-const ARC_DASH = PI * ARC_FRACTION;
-const ARC_GAP = PI * (1 - ARC_FRACTION);
 
 export const SIZES: Record<SpinnerSize, { diameter: number; border: number }> = {
 	sm: { diameter: 10, border: 2 },
@@ -118,23 +115,6 @@ function registerSpinnerVars(): void {
 // bundler may elide.
 registerSpinnerVars();
 
-// `'0%'`/`'100%'`, not `from`/`to`, and the difference is not cosmetic. CSS
-// treats the two spellings as equivalent, but **StyleX hashes a
-// `stylex.keyframes` body verbatim**, so they compile to two different
-// `@keyframes` names and therefore two different `animation-name` classes —
-// upstream ships `x1ka1v4i`, `from`/`to` shipped `x1aerksh`. The animation looked
-// identical, which is why it survived; what it broke was the port's
-// byte-identical-CSS property, and our stylesheet carried a keyframe upstream's
-// does not have.
-//
-// It was invisible because Spinner's oracle case was object-mode only while
-// upstream folds the ring into a literal — the silently-partial-case blind spot.
-// The case now claims that string, so this cannot drift again.
-const rotation = stylex.keyframes({
-	'0%': { transform: 'rotate(0deg)' },
-	'100%': { transform: 'rotate(360deg)' }
-});
-
 const styles = stylex.create({
 	wrapper: {
 		display: 'inline-flex',
@@ -145,7 +125,6 @@ const styles = stylex.create({
 	spinner: {
 		display: 'inline-grid',
 		placeItems: 'center',
-		overflow: 'hidden',
 		verticalAlign: 'middle',
 		// The public geometry vars, resolved into the registered `<length>` pair
 		// the arithmetic below needs. Reading them here rather than in each
@@ -159,34 +138,52 @@ const styles = stylex.create({
 		// and a themed size moves both together — without the sizing moving from
 		// an inline style to a rule, which would hand a caller's `style="width:…"`
 		// a precedence over the box that it has never had.
-		[BOX_SIZE]: `calc(var(${RESOLVED_DIAMETER}) + var(${RESOLVED_STROKE}) * 2)`
+		[BOX_SIZE]: `calc(var(${RESOLVED_DIAMETER}) + var(${RESOLVED_STROKE}) * 2)`,
+
+		// The box is the ring's size, and a host does not get to take that away.
+		//
+		// `overflow: hidden` used to sit here, carried over from the canvas ring
+		// this component no longer draws. It clipped nothing — the painted circle
+		// is inscribed in the box, so hiding and showing the overflow render
+		// byte-identical pixels at every size, every shade, the labelled case and
+		// every rotation angle. What it did do is remove the floor under this box:
+		// a flex item whose overflow is not `visible` has an automatic minimum
+		// size of zero, so a narrow flex host was free to compress the box while
+		// the ring kept drawing at the size its own attributes ask for, and then
+		// the clip cut the ring off at the box edge.
+		//
+		// `flex-shrink: 0` then states the invariant directly rather than leaving
+		// it to the automatic minimum size, which a host takes away again the
+		// moment it sets `min-width: 0` on its items.
+		flexShrink: 0
 	},
 	ring: {
 		backfaceVisibility: 'hidden',
 		display: 'block',
-		willChange: 'transform',
-		// The svg keeps the size its `viewBox` describes, so one user unit is one
-		// CSS pixel and the lengths below mean what they say. A themed diameter
-		// therefore draws a ring wider than the svg's own box — which is fine, and
-		// stays centered, because the box it is centered in is the span, sized
-		// from the same two vars. Clipping it to the default frame is the one
-		// thing that would break that, hence `visible`.
-		overflow: 'visible',
-		// Slow the rotation dramatically under reduced motion rather than freezing
-		// it — a frozen spinner reads as broken. role="status" plus the "Loading"
-		// label still convey the busy state.
-		// A busy loop reads the duration before a theme's tempo scales it: tempo
-		// retunes transitions, never how fast work appears to be progressing.
-		animationDuration: {
-			default: `var(--_astryx-pre-tempo-duration-slow-min, ${durationVars['--duration-slow-min']})`,
-			'@media (prefers-reduced-motion: reduce)': '3s'
-		},
-		animationIterationCount: 'infinite',
-		animationName: rotation,
-		animationTimingFunction: 'linear'
+		// The track and the rotor share the one grid cell, stacked and centred.
+		gridArea: '1 / 1',
+		// The frame is the box, read from the same composed var the span is sized
+		// from — not from the size constant, which a theme cannot reach, and not
+		// from a percentage, which needs the grid area to be a definite size in
+		// both axes.
+		width: `var(${BOX_SIZE})`,
+		height: `var(${BOX_SIZE})`,
+		overflow: 'visible'
+	},
+	// The rotor is the frame's size, so it turns about the ring's centre.
+	rotor: {
+		display: 'block',
+		gridArea: '1 / 1',
+		width: `var(${BOX_SIZE})`,
+		height: `var(${BOX_SIZE})`
 	},
 	circle: {
 		fill: 'none',
+		// The ring is centred on the box (cx/cy 50%), so the arc's start offset
+		// pivots there too — as a CSS transform, since the SVG `transform`
+		// attribute would need that centre as a number in user units.
+		transformBox: 'fill-box',
+		transformOrigin: 'center',
 		strokeLinecap: 'round',
 		// The geometry the ring is actually drawn at. `r` and `stroke-width` are
 		// CSS properties on an SVG shape, and a CSS declaration outranks the
@@ -210,9 +207,16 @@ const styles = stylex.create({
 	// the circle — 87.398 against the 87.965 of pi x 28 — which shortens the
 	// default arc by 0.64% and moves the cap by half a pixel. Composing the
 	// lengths keeps the default byte-identical to what it drew before.
+	//
+	// The fraction itself also rides a public var (`--spinner-arc-fraction`),
+	// unregistered like the other three color/geometry public vars — it is
+	// read as a bare `<number>` multiplier here, never summed with a unitless
+	// `0` the way the registered length pair guards against, so it needs no
+	// registration.
 	arc: {
 		stroke: 'var(--spinner-color)',
-		strokeDasharray: `calc(var(${RESOLVED_DIAMETER}) * ${ARC_DASH}) calc(var(${RESOLVED_DIAMETER}) * ${ARC_GAP})`
+		transform: 'rotate(-90deg)',
+		strokeDasharray: `calc(var(${RESOLVED_DIAMETER}) * ${PI} * var(--spinner-arc-fraction)) calc(var(${RESOLVED_DIAMETER}) * ${PI} * (1 - var(--spinner-arc-fraction)))`
 	},
 	track: { stroke: 'var(--spinner-track-color)' }
 });
@@ -234,22 +238,30 @@ const styles = stylex.create({
 // necessary, and the fallback shape has a cost of its own — with nothing
 // declaring the var, a reachability audit cannot find an element to check, so a
 // documented var reads as unreachable.
+// Arc fraction is not itself size-dependent, but it declares alongside the
+// two vars that are, on the same per-size condition (`!hasLabel` gate at the
+// call site) — it needs a home on whichever element carries the theme target,
+// and this is the object already wired to be there.
 const sizeStyles = stylex.create({
 	sm: {
 		'--spinner-diameter': `${SIZES.sm.diameter}px`,
-		'--spinner-stroke-width': `${SIZES.sm.border}px`
+		'--spinner-stroke-width': `${SIZES.sm.border}px`,
+		'--spinner-arc-fraction': `${ARC_FRACTION}`
 	},
 	md: {
 		'--spinner-diameter': `${SIZES.md.diameter}px`,
-		'--spinner-stroke-width': `${SIZES.md.border}px`
+		'--spinner-stroke-width': `${SIZES.md.border}px`,
+		'--spinner-arc-fraction': `${ARC_FRACTION}`
 	},
 	lg: {
 		'--spinner-diameter': `${SIZES.lg.diameter}px`,
-		'--spinner-stroke-width': `${SIZES.lg.border}px`
+		'--spinner-stroke-width': `${SIZES.lg.border}px`,
+		'--spinner-arc-fraction': `${ARC_FRACTION}`
 	},
 	xl: {
 		'--spinner-diameter': `${SIZES.xl.diameter}px`,
-		'--spinner-stroke-width': `${SIZES.xl.border}px`
+		'--spinner-stroke-width': `${SIZES.xl.border}px`,
+		'--spinner-arc-fraction': `${ARC_FRACTION}`
 	}
 });
 
@@ -329,6 +341,9 @@ export function spinnerAttrs(
 export function spinnerRingAttrs(): SvelteStyleAttrs {
 	return sx(styles.ring);
 }
+
+/** The rotor's frame, composed with `spinnerRotorStyles.turn` at its call site. */
+export const spinnerRotorFrameStyle: StyleArg = styles.rotor;
 
 export function spinnerTrackAttrs(shade: SpinnerShade): SvelteStyleAttrs {
 	return sx(styles.circle, styles.track, trackOpacityStyles[shade]);

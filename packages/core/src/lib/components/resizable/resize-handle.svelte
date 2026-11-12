@@ -256,6 +256,13 @@
 	// true state via aria-valuetext instead; the valuetext is removed as soon as
 	// the panel expands so the numeric value reads again.
 	const isCollapsed = $derived(resizable?._isCollapsed ?? false);
+	// An inline zone reaches at most half of the pane the Handle resizes. An
+	// overlay Handle takes at most half of it. A collapsed pane, or one at 0px,
+	// has nothing to protect and keeps the whole zone.
+	const paneSize = $derived(resizable?._size);
+	const paneLength = $derived(
+		isCollapsed || paneSize == null || paneSize <= 0 ? undefined : paneSize
+	);
 	const ariaValueNow = $derived(
 		resizable
 			? isCollapsed
@@ -279,19 +286,23 @@
 				hasDivider,
 				isInteracting,
 				isDragging,
-				isDisabled
+				isDisabled,
+				paneLength
 			},
 			xstyle
 		)
 	);
-	const hitArea = $derived(resizeHandleHitAreaAttrs(isHorizontal, effectiveSide, isDisabled));
+	const hitArea = $derived(
+		resizeHandleHitAreaAttrs({ isHorizontal, isOverlay, isDisabled, paneLength })
+	);
 	const pill = $derived(
 		resizeHandlePillAttrs({
 			isHorizontal,
 			effectiveSide,
 			isAlwaysVisible,
 			isInteracting,
-			isDragging
+			isDragging,
+			isDisabled
 		})
 	);
 	const theme = themeProps('resize-handle');
@@ -350,6 +361,20 @@
 	{#if children}
 		{@render children()}
 	{:else}
-		<div {...pillTheme} class={cx(pillTheme.class, pill.class)} style={pill.style}></div>
+		<!-- The pill takes the pointer as the grab zone does, so a pill drawn
+		     outside the zone still resizes. -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			{...pillTheme}
+			class={cx(pillTheme.class, pill.class)}
+			style={pill.style}
+			onpointerdown={handlePointerDown}
+			onpointerenter={() => (isHovered = true)}
+			onpointerleave={() => {
+				if (!isDragging) {
+					isHovered = false;
+				}
+			}}
+		></div>
 	{/if}
 </div>

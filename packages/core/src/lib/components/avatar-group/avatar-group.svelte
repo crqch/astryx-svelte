@@ -53,7 +53,7 @@
 
 	setAvatarGroupContext(() => ({ size, shape, overlap, numericSize }));
 
-	const attrs = $derived(avatarGroupAttrs(xstyle));
+	const attrs = $derived(avatarGroupAttrs(overlap, xstyle));
 	const theme = $derived(themeProps('avatar-group', { size, shape }));
 
 	const t = useTranslator();

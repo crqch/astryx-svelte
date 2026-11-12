@@ -51,6 +51,12 @@
 
 <script lang="ts">
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import {
+		GROUP_PRESS_POINTERS,
+		useGroupPressTracking
+	} from '../../hooks/use-group-press-tracking.svelte.js';
+	import { setPressGroupContext } from '../../hooks/press-group-context.svelte.js';
 	import {
 		setButtonGroupContext,
 		setSizeContext,
@@ -58,6 +64,7 @@
 	} from '../../internal/contexts.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
 	import { buttonGroupAttrs } from './button-group.stylex.js';
 
 	/**
@@ -119,7 +126,20 @@
 	setButtonGroupContext(() => ({ orientation, isDisabled }));
 	setSizeContext(() => size);
 
-	const attrs = $derived(buttonGroupAttrs(orientation === 'vertical', elevation, xstyle));
+	// Only under the touch presentation does a press slide across the buttons.
+	// A desktop press stays the native button's.
+	const isTouch = useMediaQuery(() => TOUCH_QUERY);
+	const tracksPress = $derived(!isDisabled && isTouch.matches);
+	let groupEl = $state<HTMLDivElement | null>(null);
+	useGroupPressTracking(
+		() => groupEl,
+		() => tracksPress
+	);
+	setPressGroupContext(() => (tracksPress ? GROUP_PRESS_POINTERS : null));
+
+	const attrs = $derived(
+		buttonGroupAttrs(orientation === 'vertical', elevation, tracksPress, xstyle)
+	);
 	const theme = $derived(themeProps('button-group', { size, orientation }));
 
 	/**
@@ -136,6 +156,7 @@
 </script>
 
 <div
+	bind:this={groupEl}
 	{@attach list.attachList}
 	{...rest}
 	{...theme}

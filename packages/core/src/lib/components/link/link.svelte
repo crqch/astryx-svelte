@@ -87,15 +87,17 @@
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useInteractiveRole } from '../../hooks/use-interactive-role.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Icon from '../icon/icon.svelte';
 	import Text from '../text/text.svelte';
+	import { TextClampContext } from '../text/text-clamp-context.svelte.js';
 	import Tooltip from '../tooltip/tooltip.svelte';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { computeTargetAndRel } from './compute-target-and-rel.js';
 	import LinkElement from './link-element.svelte';
 	import { useLinkComponent } from './link-context.svelte.js';
-	import { linkAttrs } from './link.stylex.js';
+	import { linkAttrs, linkExternalIconAttrs } from './link.stylex.js';
 
 	/**
 	 * A styled, polymorphic link. Renders a real `<a>` (through the app's
@@ -153,16 +155,38 @@
 	// render as `<button>`.
 	const renderAsButton = $derived(role === 'button' || (role === 'inert' && href == null));
 
+	// Link reads the enclosing Text's clamp, never its own children (AV1). A
+	// Link with its own display or clamp keeps its own box.
+	const inheritedClamp = TextClampContext.getOr(() => false);
+	const isInClampedText = $derived(inheritedClamp() && display === 'inline' && maxLines === 0);
+
+	// Constant marker props; the hook's only effect is installing the shared
+	// document controller once, so the link's output stays a pure function of
+	// its props.
+	const pressable = usePressFeedback();
 	const theme = $derived(themeProps('link', { color }));
 	const styleAttrs = $derived(
-		linkAttrs(color, { isButton: renderAsButton, hasUnderline, isStandalone, isDisabled }, xstyle)
+		linkAttrs(
+			color,
+			{
+				isButton: renderAsButton,
+				hasUnderline,
+				isStandalone,
+				isDisabled,
+				isTruncating: maxLines > 0,
+				isInClampedText
+			},
+			xstyle
+		)
 	);
+	const externalIconAttrs = $derived(linkExternalIconAttrs(isInClampedText));
 	const rootClass = $derived(cx(theme.class, styleAttrs.class, className));
 	const rootStyle = $derived(mergeStyle(styleAttrs.style, styleProp as string | undefined));
 
 	// Props for the polymorphic (non-button, non-disabled) branch. Custom
 	// components also get a `to={href}` alias; the native `<a>` never does.
 	const linkComponentProps = $derived({
+		...pressable,
 		href,
 		...(linkResolved.isNative ? {} : { to: href }),
 		target: targetAndRel.target,
@@ -186,7 +210,13 @@
 {#snippet sharedContent()}
 	<Text {type} {size} {weight} {color} {display} {maxLines}>{@render children()}</Text>
 	{#if isExternalLink && !renderAsButton}
-		<Icon icon="externalLink" size="xsm" color="inherit" />
+		<Icon
+			icon="externalLink"
+			size="xsm"
+			color="inherit"
+			class={externalIconAttrs.class}
+			style={externalIconAttrs.style}
+		/>
 		<VisuallyHidden>{newTabLabel}</VisuallyHidden>
 	{/if}
 {/snippet}
@@ -195,6 +225,7 @@
 	{#if renderAsButton}
 		<button
 			type="button"
+			{...isDisabled ? undefined : pressable}
 			{onclick}
 			aria-label={label || undefined}
 			aria-disabled={isDisabled || undefined}
@@ -213,6 +244,7 @@
 		     navigation or consumer click can fire. Upstream's exact shape. -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<a
+			{...isDisabled ? undefined : pressable}
 			onclick={preventDefaultClick}
 			aria-label={label || undefined}
 			aria-disabled="true"

@@ -357,6 +357,7 @@
 <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 <div
 	role="separator"
+	data-resize-handle=""
 	aria-orientation="vertical"
 	aria-valuenow={currentWidth ?? minWidth}
 	aria-valuemin={minWidth}

@@ -180,6 +180,7 @@
 	// A group sets the size *and* the shape for every avatar inside it, overriding
 	// both props — a facepile stays uniform whatever its members ask for.
 	const group = useAvatarGroup();
+	const isInGroup = $derived(group != null);
 	const resolvedSize = $derived(group?.().size ?? size);
 	const resolvedShape = $derived(group?.().shape ?? shape);
 	const numericSize = $derived(resolveSize(resolvedSize));
@@ -270,8 +271,8 @@
 
 	const content = avatarContentAttrs();
 	const image = avatarImageAttrs();
-	const initials = $derived(avatarInitialsAttrs(numericSize));
-	const icon = avatarIconAttrs();
+	const initials = $derived(avatarInitialsAttrs(numericSize, !isInGroup));
+	const icon = $derived(avatarIconAttrs(!isInGroup));
 	const statusAttrs = $derived(avatarStatusAttrs(numericSize, resolvedShape));
 	const theme = $derived(themeProps('avatar', { size: resolvedSize, shape: resolvedShape }));
 	// The fallback surface (initials + default icon) is its own theme target as

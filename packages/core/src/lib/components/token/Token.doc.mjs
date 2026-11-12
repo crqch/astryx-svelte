@@ -110,7 +110,7 @@ export default {
 		},
 		{
 			name: 'color',
-			type: "'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'default' | 'gray'",
+			type: "'default' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'gray'",
 			description: 'Color variant of the token.',
 			default: "'default'"
 		},

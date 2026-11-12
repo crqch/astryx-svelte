@@ -554,7 +554,7 @@ describe('busy loops read the duration before tempo (spec:AST-108 FR4)', () => {
 	it('Spinner and Skeleton read the pre-tempo duration first', () => {
 		const read = (file: string) =>
 			readFileSync(join(__dirname, '..', 'lib', 'components', file), 'utf8');
-		expect(read('spinner/spinner.stylex.ts')).toContain(
+		expect(read('spinner/spinner-rotor.stylex.ts')).toContain(
 			"var(--_astryx-pre-tempo-duration-slow-min, ${durationVars['--duration-slow-min']})"
 		);
 		expect(read('skeleton/skeleton.stylex.ts')).toContain(

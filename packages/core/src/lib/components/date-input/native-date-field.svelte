@@ -17,6 +17,7 @@
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import Field from '../field/field.svelte';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
@@ -368,6 +369,7 @@
 {#snippet inputWrapper()}
 	<div
 		{...rest}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, className)}
 		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}

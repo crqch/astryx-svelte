@@ -94,6 +94,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useScrollSpy } from './use-scroll-spy.svelte.js';
 	import {
 		outlineRootAttrs,
@@ -163,6 +164,8 @@
 		...rest
 	}: OutlineProps = $props();
 
+	// Every outline link is a pressable surface.
+	const pressable = usePressFeedback();
 	const t = useTranslator();
 	const label = $derived(labelFromProps ?? t('@astryx.outline.label'));
 
@@ -336,6 +339,7 @@
 				<LinkElement
 					component={linkResolved.component}
 					props={{
+						...pressable,
 						href: `#${item.id}`,
 						...(linkResolved.isNative ? {} : { to: `#${item.id}` }),
 						'aria-current': isActive ? 'location' : undefined,

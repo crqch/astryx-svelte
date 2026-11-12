@@ -1,6 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { setButtonGroupContext } from '../../internal/contexts.svelte.js';
+	import {
+		setPressGroupBandContext,
+		setPressGroupContext
+	} from '../../hooks/press-group-context.svelte.js';
+	import { TextClampContext } from '../text/text-clamp-context.svelte.js';
 
 	/**
 	 * The private layer content boundary, ported from upstream's
@@ -15,6 +20,9 @@
 	let { children }: { children?: Snippet } = $props();
 
 	setButtonGroupContext(() => ({ orientation: 'horizontal', isDisabled: false }));
+	setPressGroupContext(() => null);
+	setPressGroupBandContext(() => false);
+	TextClampContext.set(() => false);
 </script>
 
 {@render children?.()}

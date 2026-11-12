@@ -33,6 +33,7 @@
 
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { useCommandPaletteContext } from './command-palette-context.svelte.js';
@@ -130,6 +131,8 @@
 		ctx().setHighlightedIndex(itemIndex);
 	}
 
+	// The row is the pressable surface.
+	const pressable = usePressFeedback();
 	const theme = $derived(themeProps('command-palette-item'));
 	const attrs = $derived(commandPaletteItemAttrs(isDisabled, isHighlighted, isSelected, xstyle));
 </script>
@@ -140,6 +143,7 @@
 	deliberately not focusable and needs no key handler of its own.
 -->
 <div
+	{...pressable}
 	{...rest}
 	bind:this={itemEl}
 	id={ctx && itemIndex >= 0 ? ctx().getItemId(itemIndex) : undefined}

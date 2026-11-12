@@ -9,6 +9,8 @@ import {
 	shadowVars,
 	spacingVars
 } from '../../styles/tokens.stylex.js';
+import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { focusWithinOwnerOverlay } from '../../private-attributes/focus-owner.stylex.js';
 
 /** The gap steps `Carousel` accepts — narrower than the full spacing scale. */
 export type CarouselGap = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4;
@@ -49,10 +51,16 @@ const styles = stylex.create({
 		maskImage: 'none'
 	},
 	fadeStart: {
-		maskImage: `linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`
+		maskImage: {
+			default: `linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`,
+			':is([dir="rtl"] *)': `linear-gradient(to left, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`
+		}
 	},
 	fadeEnd: {
-		maskImage: `linear-gradient(to left, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`
+		maskImage: {
+			default: `linear-gradient(to left, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`,
+			':is([dir="rtl"] *)': `linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']})`
+		}
 	},
 	fadeBoth: {
 		maskImage: `linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 2px, black ${spacingVars['--spacing-1']}, black calc(100% - ${spacingVars['--spacing-1']}), rgba(0,0,0,0.3) calc(100% - 2px), transparent 100%)`
@@ -165,7 +173,9 @@ const paddingStyles = stylex.create({
 
 /** The clipping wrapper that also anchors the button layer. */
 export function carouselRootAttrs(xstyle: StyleArg): SvelteStyleAttrs {
-	return sx(styles.root, xstyle);
+	// The scroller is the focus owner. Its edge-fade mask would cover a ring the
+	// root draws itself, so the root draws the ring as an overlay.
+	return sx(styles.root, focusWithinOwnerOverlay, xstyle);
 }
 
 /** The horizontal scroll container, with its gap, padding, snap and edge fade. */
@@ -177,6 +187,8 @@ export function carouselScrollerAttrs(
 ): SvelteStyleAttrs {
 	return sx(
 		styles.scroller,
+		// A tab stop whose shared ring the root paints.
+		focusOutlineStyles.suppressed,
 		gapStyles[gap],
 		padding != null && paddingStyles[padding],
 		hasSnap && styles.snap,

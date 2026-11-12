@@ -1,7 +1,10 @@
 import * as stylex from '@stylexjs/stylex';
 import type { StyleArg } from '../../internal/sx.js';
+import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { menuPressLitRowStyle } from '../../private-attributes/menu-press-lit.stylex.js';
 import {
 	colorVars,
+	focusVars,
 	spacingVars,
 	typographyVars,
 	typeScaleVars
@@ -23,17 +26,30 @@ const menuItemStyles = stylex.create({
 		// Focus is the *sole* highlight source: `focusMenuItemOnHover` moves focus
 		// to the pointed-at row, so a `:hover` background here would leave the
 		// keyboard-focused row highlighted at the same time as the hovered one.
+		// A held finger or pen sets the focus-paint variable on the lit row.
 		backgroundColor: {
 			default: 'transparent',
-			':focus': colorVars['--color-overlay-hover']
+			':focus': `var(--_menu-row-focus-paint, ${colorVars['--color-overlay-hover']})`,
+			// The pressed look only where hover exists. Under a finger the row a
+			// press BEGAN on would otherwise stay painted while the highlight
+			// (focus) moves to the row under the finger — two rows lit.
+			'@media (hover: hover)': {
+				default: null,
+				':active:where(:not(:disabled,[aria-disabled="true"]))': `var(--_menu-row-active-paint, ${colorVars['--color-overlay-pressed']})`
+			}
 		},
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
 		textAlign: 'start',
-		outline: 'none'
+		// Rows show focus with a translucent overlay, which forced colors replace
+		// with the page color. The standard focus ring (`focusOutlineStyles`),
+		// drawn inside the row by its own width, marks the focused row in every
+		// mode.
+		outlineOffset: `calc(-1 * ${focusVars['--focus-outline-width']})`
 	},
 	disabled: {
 		opacity: 0.5,
@@ -42,11 +58,11 @@ const menuItemStyles = stylex.create({
 	destructive: {
 		// Only recolor the text/icon; the hover / focus background stays the shared
 		// neutral overlay from `root` so the hover state matches every other menu
-		// item. The root color covers the label/description via the Item custom
-		// properties (and any bare text). Semantic error tokens keep it theme-aware.
-		color: colorVars['--color-error'],
-		'--_item-label-color': colorVars['--color-error'],
-		'--_item-description-color': colorVars['--color-error']
+		// item. The semantic status foreground covers the label, description, icon,
+		// and any bare text on a plain surface.
+		color: colorVars['--color-text-error'],
+		'--_item-label-color': colorVars['--color-text-error'],
+		'--_item-description-color': colorVars['--color-text-error']
 	}
 });
 
@@ -73,7 +89,9 @@ export function dropdownMenuItemXstyle(
 	xstyle?: StyleArg
 ): StyleArg {
 	return [
+		focusOutlineStyles.focusVisible,
 		menuItemStyles.root,
+		menuPressLitRowStyle,
 		itemSizeStyles[size],
 		isDestructive && menuItemStyles.destructive,
 		isDisabled && menuItemStyles.disabled,

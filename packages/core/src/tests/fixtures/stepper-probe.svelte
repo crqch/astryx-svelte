@@ -33,6 +33,13 @@
 	 *
 	 * `activeStep` is a plain prop, exactly as upstream's is — the cases that
 	 * advance the flow drive it with `rerender`, upstream's `rerender`.
+	 *
+	 * The explicit width keeps the ported cases measuring what upstream's jsdom
+	 * run measures: with no layout, `rootWidth` stays 0 and a horizontal Stepper
+	 * never collapses. The browser project has a real 414px viewport, where four
+	 * steps would sit under the 112px-per-step threshold and render the compact
+	 * row instead of the labels these cases assert on. Compact cases set their
+	 * own width.
 	 */
 	interface Props extends Omit<StepperProps, 'children'> {
 		steps: StepConfig[];
@@ -44,7 +51,7 @@
 {#snippet star()}<span data-testid="custom-icon">★</span>{/snippet}
 {#snippet pay()}<span data-testid="pay-icon">$</span>{/snippet}
 
-<Stepper {...rest}>
+<Stepper style="width: 800px" {...rest}>
 	{#each steps as config (config.step)}
 		{@const indicator =
 			config.indicator === 'custom-star'

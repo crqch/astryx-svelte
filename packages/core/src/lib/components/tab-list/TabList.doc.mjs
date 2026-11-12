@@ -176,7 +176,7 @@ export default {
 		},
 		{
 			name: 'overflow',
-			type: "'auto' | 'scroll' | 'visible'",
+			type: "'auto' | 'visible' | 'scroll'",
 			description:
 				"What happens when the tabs are wider than the strip. 'auto' lets the component choose, which today always scrolls. 'scroll' scrolls the tabs horizontally, with edge fades and arrow affordances for pointers that can hover. 'visible' turns overflow handling off and lets the tabs spill out of the strip. The selected tab is always scrolled back into view.",
 			default: "'auto'"

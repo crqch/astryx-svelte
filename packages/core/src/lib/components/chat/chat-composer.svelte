@@ -215,7 +215,7 @@
 	const inputArea = $derived(chatComposerInputAreaAttrs());
 	const footer = $derived(chatComposerFooterAttrs());
 	const footerLeft = $derived(chatComposerFooterLeftAttrs());
-	const footerRight = $derived(chatComposerFooterRightAttrs());
+	const footerRight = $derived(chatComposerFooterRightAttrs(isDisabled && isStopShown));
 	const statusBar = $derived(
 		status ? chatComposerStatusBarAttrs(statusPosition, status.type) : null
 	);
@@ -228,11 +228,7 @@
 			class={statusBar.class}
 			style={statusBar.style}
 		>
-			<Icon
-				icon={status.type === 'error' ? 'error' : 'warning'}
-				size="md"
-				color={status.type === 'error' ? 'error' : 'warning'}
-			/>
+			<Icon icon={status.type === 'error' ? 'error' : 'warning'} size="md" color="inherit" />
 			{status.message ?? ''}
 		</div>
 	{/if}

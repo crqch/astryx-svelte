@@ -172,7 +172,7 @@ export default {
 		},
 		{
 			name: 'color',
-			type: "'success' | 'error' | 'warning' | 'inherit' | 'disabled' | 'primary' | 'secondary' | 'accent' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'gray' | 'tertiary'",
+			type: "'success' | 'error' | 'warning' | 'info' | 'inherit' | 'disabled' | 'primary' | 'secondary' | 'accent' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'gray' | 'tertiary'",
 			description:
 				'Color variant mapped to Astryx icon color tokens. Semantic values (primary through warning) follow the role, and inherit uses the surrounding text color. On the web, Icon also accepts the palette values blue, red, green, gray, cyan, teal, yellow, orange, pink, and purple, which pick a non-semantic hue.',
 			default: "'inherit'"

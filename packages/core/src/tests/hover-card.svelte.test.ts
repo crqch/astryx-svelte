@@ -262,9 +262,18 @@ describe('HoverCard', () => {
 		const layer = await open(screen.container);
 		expect(screen.container.querySelector('p')?.contains(layer)).toBe(false);
 
-		// Nothing about the theme is snapshotted onto the element…
+		// Nothing about the theme is snapshotted onto the element. A layer's own
+		// private keyboard-cap properties ARE inline by design (Layer's runtime
+		// state, new at 0.7.13), so the check names what a snapshot would carry:
+		// every other custom property is theme or consumer state and must be
+		// inherited, not copied.
 		const inline = Array.from({ length: layer.style.length }, (_, i) => layer.style.item(i));
-		expect(inline.some((property) => property.startsWith('--'))).toBe(false);
+		expect(inline.some((property) => property.startsWith('--x---_layer-keyboard-'))).toBe(true);
+		expect(
+			inline.filter(
+				(property) => property.startsWith('--') && !property.startsWith('--x---_layer-keyboard-')
+			)
+		).toEqual([]);
 
 		// …so a custom property set on the corrective host still reaches it live.
 		const host = layer.parentElement as HTMLElement;

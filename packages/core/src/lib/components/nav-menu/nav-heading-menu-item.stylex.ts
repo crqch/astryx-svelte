@@ -18,13 +18,13 @@ import type { NavHeadingMenuSize } from './nav-menu-context.svelte.js';
  * alone at exactly one call site, so `dist/` carries the finished class string
  * and no object.
  *
- * `border: 'none'` emits nothing (StyleX drops the shorthand); the reset's
- * universal `border-width: 0` is what actually removes it. Kept for parity — see
- * port/todo.md → Phase 0.
+ * A held pointer slides across the items and selects no item text; caller
+ * content beside the items stays selectable.
  */
 const styles = stylex.create({
 	root: {
 		boxSizing: 'border-box',
+		userSelect: 'none',
 		display: 'flex',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
@@ -40,7 +40,8 @@ const styles = stylex.create({
 				'@media (hover: hover)': colorVars['--color-overlay-hover']
 			}
 		},
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'

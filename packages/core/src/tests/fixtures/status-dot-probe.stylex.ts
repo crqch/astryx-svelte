@@ -17,9 +17,17 @@ import { colorVars } from '../../lib/styles/tokens.stylex.js';
  * declarations.
  */
 export const probe = stylex.create({
+	success: {
+		backgroundColor: colorVars['--color-icon-success'],
+		color: colorVars['--color-background-surface']
+	},
 	warning: {
-		backgroundColor: colorVars['--color-warning'],
-		color: colorVars['--color-on-warning']
+		backgroundColor: colorVars['--color-icon-warning'],
+		color: colorVars['--color-background-surface']
+	},
+	error: {
+		backgroundColor: colorVars['--color-icon-error'],
+		color: colorVars['--color-background-surface']
 	}
 });
 

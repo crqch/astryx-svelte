@@ -852,17 +852,23 @@ describe('SideNavHeading headerEndContent', () => {
 		await expect.element(screen.getByTestId('end-badge')).toBeInTheDocument();
 	});
 
-	it('renders headerEndContent inside the link in isWholeHeadingLink path', async () => {
+	it('renders headerEndContent beside the link, not inside it, in isWholeHeadingLink path', async () => {
+		const onPress = vi.fn();
 		const screen = await render(HeadingFixture, {
 			props: {
 				props: { heading: 'My App', headingHref: '/home' },
-				headerEndContent: { text: '3', testid: 'end-badge' }
+				headerEndContentButton: { label: 'Create' },
+				onPress
 			}
 		});
-		const badge = screen.getByTestId('end-badge').element();
-		expect(badge).toBeInTheDocument();
-		// Badge renders inside the link
-		expect(badge.closest('a')).not.toBeNull();
+		const link = screen.getByRole('link', { name: 'My App' });
+		await expect.element(link).toHaveAttribute('href', '/home');
+		// A control inside a link is invalid and its press would follow the link.
+		const button = screen.getByRole('button', { name: 'Create' });
+		expect(button.element().closest('a')).toBeNull();
+		expect(link.element().parentElement).toBe(button.element().parentElement?.parentElement);
+		await userEvent.click(button);
+		expect(onPress).toHaveBeenCalledTimes(1);
 	});
 
 	it('renders headerEndContent in isWholeHeadingTrigger path', async () => {

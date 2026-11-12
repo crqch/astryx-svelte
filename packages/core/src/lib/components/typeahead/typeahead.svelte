@@ -136,6 +136,13 @@
 		onChangeQuery?: (query: string) => void;
 		/** Callback when the dropdown opens or closes. */
 		onOpenChange?: (isOpen: boolean) => void;
+		/**
+		 * Key handler. Runs after the built-in key handling, so it observes every
+		 * key and cannot cancel navigation, selection, or token editing. It
+		 * receives keys on the combobox input and on the field's other controls
+		 * (the clear button and tokens).
+		 */
+		onKeyDown?: (event: KeyboardEvent) => void;
 	}
 </script>
 
@@ -155,11 +162,18 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import BaseTypeahead from './base-typeahead.svelte';
+	import TypeaheadEndLane from './typeahead-end-lane.svelte';
 	import {
-		typeaheadClearButtonStyle,
+		createBusyIndicatorLane,
+		setBusyIndicatorLaneContext
+	} from './busy-indicator-lane.svelte.js';
+	import { setTrailingKeyDownContext } from './trailing-key-down.svelte.js';
+	import {
+		typeaheadContentLaneAttrs,
 		typeaheadInputHiddenStyle,
-		typeaheadTokenStyle,
+		typeaheadTokenOverlayStyle,
 		typeaheadWrapperAttrs
 	} from './typeahead.stylex.js';
 
@@ -210,6 +224,7 @@
 		debounceMs,
 		onChangeQuery,
 		onOpenChange,
+		onKeyDown,
 		width,
 		xstyle,
 		class: className,
@@ -232,6 +247,19 @@
 	const tooltipId = `${uid}-tooltip`;
 
 	const inputGroup = useInputGroup();
+
+	// The field's busy state lives in a lane, not this component's state: the
+	// base owns when a search starts and settles, and this field only paints
+	// the indicator in its end lane. The lane is provided by context so no
+	// handoff prop joins `BaseTypeaheadProps`' exported surface; see
+	// busy-indicator-lane.svelte.ts.
+	const busyLane = createBusyIndicatorLane();
+	setBusyIndicatorLaneContext(() => busyLane);
+
+	// The consumer key handler reaches keys on the combobox input through
+	// trailing context, after the base's own handling, and keys on the field's
+	// other controls through the wrapper's key handler below.
+	setTrailingKeyDownContext(() => onKeyDown);
 
 	let wrapperEl = $state<HTMLDivElement | null>(null);
 	let inputEl = $state<HTMLInputElement | null>(null);
@@ -384,6 +412,7 @@
 	const wrapperAttrs = $derived(
 		typeaheadWrapperAttrs(size, status?.type, isDisabled, inputGroup != null, xstyle)
 	);
+	const contentLaneAttrs = typeaheadContentLaneAttrs();
 </script>
 
 {#snippet startIconSlot()}
@@ -394,6 +423,16 @@
 	{/if}
 {/snippet}
 
+{#snippet clearButton()}
+	<InputClearButton
+		label={t('@astryx.typeahead.clearSelection')}
+		onclick={(e) => {
+			e.stopPropagation();
+			handleClear();
+		}}
+	/>
+{/snippet}
+
 {#snippet typeaheadContent()}
 	<!--
 		The wrapper is the click target and the dropdown anchor. It is not focusable
@@ -401,6 +440,10 @@
 		and the click handler exists only to widen the hit area over the padding and
 		the token — both of which sit inside the same field the input already
 		exposes to keyboard users.
+
+		Keys on the field's other controls (the clear button, tokens) reach a
+		consumer `onKeyDown` here; keys on the input reach it through trailing
+		context after the base's built-in handling.
 	-->
 	<div
 		bind:this={wrapperEl}
@@ -408,6 +451,12 @@
 		data-testid={testId}
 		onclick={handleWrapperClick}
 		onfocusout={handleBlur}
+		onkeydown={(event) => {
+			if (event.target !== inputEl) {
+				onKeyDown?.(event);
+			}
+		}}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, inputGroup ? className : undefined)}
 		style={mergeStyle(
@@ -419,50 +468,54 @@
 		{#if inputGroup}
 			<VisuallyHidden id={inputLabelId}>{label}</VisuallyHidden>
 		{/if}
-		{#if showToken && value}
-			<Token
-				label={value.label}
-				{size}
-				onclick={handleEnterEditMode}
+		<!--
+			The field's content lane: the input, and the token painted over it.
+			This is the box the value is allowed to occupy, and it is what keeps
+			the end lane's space its own — the lane is an ordinary flex item that
+			ends exactly where the end lane begins, so a value bounded by it can
+			never reach the clear button or the spinner.
+		-->
+		<div class={contentLaneAttrs.class} style={contentLaneAttrs.style}>
+			{#if showToken && value}
+				<Token
+					label={value.label}
+					{size}
+					onclick={handleEnterEditMode}
+					{isDisabled}
+					xstyle={typeaheadTokenOverlayStyle}
+				/>
+			{/if}
+			<BaseTypeahead
+				{@attach captureInput}
+				{searchSource}
+				{value}
+				onChange={handleChange}
+				{renderItem}
+				placeholder={showToken ? undefined : placeholder}
+				{hasEntriesOnFocus}
+				{maxMenuItems}
+				{emptySearchResultsText}
 				{isDisabled}
-				xstyle={typeaheadTokenStyle}
+				{hasAutoFocus}
+				isFocusableDisabled={showsDisabledMessage}
+				{inputId}
+				ariaDescribedBy={aria.ariaDescribedBy}
+				ariaLabelledBy={aria.ariaLabelledBy}
+				{onChangeQuery}
+				{onOpenChange}
+				{debounceMs}
+				anchorEl={wrapperEl}
+				onKeyDown={handleKeyDown}
+				inputXStyle={showToken ? typeaheadInputHiddenStyle : undefined}
+				inputTabIndex={showToken ? -1 : undefined}
+				{size}
 			/>
-		{/if}
-		<BaseTypeahead
-			{@attach captureInput}
-			{searchSource}
-			{value}
-			onChange={handleChange}
-			{renderItem}
-			placeholder={showToken ? undefined : placeholder}
-			{hasEntriesOnFocus}
-			{maxMenuItems}
-			{emptySearchResultsText}
-			{isDisabled}
-			{hasAutoFocus}
-			isFocusableDisabled={showsDisabledMessage}
-			{inputId}
-			ariaDescribedBy={aria.ariaDescribedBy}
-			ariaLabelledBy={aria.ariaLabelledBy}
-			{onChangeQuery}
-			{onOpenChange}
-			{debounceMs}
-			anchorEl={wrapperEl}
-			onKeyDown={handleKeyDown}
-			inputXStyle={showToken ? typeaheadInputHiddenStyle : undefined}
-			inputTabIndex={showToken ? -1 : undefined}
-			{size}
+		</div>
+		<TypeaheadEndLane
+			lane={busyLane}
+			loadingLabel={t('@astryx.typeahead.loading')}
+			clear={hasClear && value && !isDisabled ? clearButton : undefined}
 		/>
-		{#if hasClear && value && !isDisabled}
-			<InputClearButton
-				label={t('@astryx.typeahead.clearSelection')}
-				onclick={(e) => {
-					e.stopPropagation();
-					handleClear();
-				}}
-				xstyle={typeaheadClearButtonStyle(size === 'sm')}
-			/>
-		{/if}
 	</div>
 	{#if showsDisabledMessage && disabledMessage}
 		<TooltipLayer tooltip={disabledMessageTooltip}>{disabledMessage}</TooltipLayer>

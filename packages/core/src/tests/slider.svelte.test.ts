@@ -64,15 +64,12 @@ import SliderForm from './fixtures/slider-form.svelte';
  *
  * **Upstream's `getBoundingClientRect` stubs (cases 12, 17, 18) are not carried
  * over, because upstream never reads them.** All three leave `valueDisplay` at
- * its `'tooltip'` default, so each thumb is wrapped in `Tooltip`'s
- * `display: contents` div (upstream renders that wrapper too) and
- * `slider.parentElement` is the wrapper, not the track container the stub was
- * meant for. The faked rect is installed on a node the component never measures,
- * and the three assertions pass for reasons unrelated to geometry: case 12 is a
- * disabled early-return, case 17 counts `onChangeEnd` calls, case 18 checks
- * focus. Nothing in the suite needs a faked rect, so none is installed; the
- * cases click the real track container at a real offset instead. `trackOf`
- * below is the helper that reaches the container upstream meant to reach.
+ * its `'tooltip'` default, so each thumb sits inside the travel box — and none
+ * of them measures the node the stub was installed on: case 12 is a disabled
+ * early-return, case 17 counts `onChangeEnd` calls, case 18 checks focus.
+ * Nothing in the suite needs a faked rect, so none is installed; the cases click
+ * the real track container at a real offset instead. `trackOf` below returns the
+ * control target the stubs were meant for.
  */
 
 /** Every thumb, in document order — upstream's `getAllByRole('slider')`. */
@@ -92,17 +89,13 @@ function thumbIn(container: HTMLElement): HTMLElement {
 /**
  * Upstream's `getTrack()` — the pointer-handling track container.
  *
- * `getByRole('slider').parentElement` only lands on it when `valueDisplay` is
- * `"none"` (all eight `disabledMessage` cases); with the `'tooltip'` default the
- * literal parent is `Tooltip`'s `display: contents` wrapper. Climbing until the
- * ancestor holds the two decorative track divs as direct children finds the
- * container in both shapes, without depending on the stylesheet.
+ * The control target (`themeProps('slider-control')`) sits on the track
+ * container, where the pointer handlers live, exactly as upstream's does — so
+ * the stable class finds it regardless of the travel box and tooltip anchor
+ * inside it.
  */
 function trackOf(thumb: HTMLElement): HTMLElement {
-	let el: HTMLElement | null = thumb.parentElement;
-	while (el != null && el.querySelector(':scope > [aria-hidden="true"]') == null) {
-		el = el.parentElement;
-	}
+	const el = thumb.closest<HTMLElement>('.astryx-slider-control');
 	if (el == null) {
 		throw new Error('expected a slider track container');
 	}
@@ -426,51 +419,53 @@ describe('Slider', () => {
 	/**
 	 * Upstream's `clamps a controlled value of $value to $expectedValue`, an
 	 * `it.each` pair. It asserts the clamped `aria-valuenow` *and* the thumb's
-	 * inset position, which is where #5051's `THUMB_INSET` becomes observable.
+	 * progress along the travel, which is where #5051's `THUMB_INSET` becomes
+	 * observable: the progress is written inline as a custom property and CSS
+	 * turns it into a translate in the control's container units.
 	 *
 	 * Read off the CSSOM rather than the style attribute: the component writes
-	 * `inset-inline-start:calc(…)` and Chromium round-trips `calc()` through its
-	 * own serialiser, so the attribute text is not stable across engines while the
-	 * parsed property is.
+	 * the property through `setProperty`, and the attribute text is not stable
+	 * across engines while the parsed property is.
 	 */
 	it.each([
-		{ value: 150, expectedValue: 100, expectedPosition: 'calc(100% - 10px)' },
-		{ value: -50, expectedValue: 0, expectedPosition: 'calc(0% + 10px)' }
+		{ value: 150, expectedValue: 100, expectedProgress: '1' },
+		{ value: -50, expectedValue: 0, expectedProgress: '0' }
 	])(
 		'clamps a controlled value of $value to $expectedValue',
-		async ({ value, expectedValue, expectedPosition }) => {
+		async ({ value, expectedValue, expectedProgress }) => {
 			const screen = await render(Slider, {
 				props: { label: 'Volume', value, min: 0, max: 100 }
 			});
 			const slider = thumbIn(screen.container);
 			expect(slider.getAttribute('aria-valuenow')).toBe(String(expectedValue));
-			expect(slider.style.getPropertyValue('inset-inline-start')).toBe(expectedPosition);
+			expect(slider.style.getPropertyValue('--_slider-progress')).toBe(expectedProgress);
 		}
 	);
 
 	// Regression: #5050 — at min/max the thumb centred on the container edge, so
-	// half of it (10px of a 20px thumb) hung outside the component.
+	// half of it (10px of a 20px thumb) hung outside the component. The inset
+	// travel keeps it in bounds; progress 0 and 1 are the two ends.
 	it.each([
-		{ value: 0, position: 'calc(0% + 10px)' },
-		{ value: 50, position: 'calc(50% + 0px)' },
-		{ value: 100, position: 'calc(100% - 10px)' }
-	])('insets the thumb at value $value so it stays in bounds', async ({ value, position }) => {
+		{ value: 0, progress: '0' },
+		{ value: 50, progress: '0.5' },
+		{ value: 100, progress: '1' }
+	])('insets the thumb at value $value so it stays in bounds', async ({ value, progress }) => {
 		const screen = await render(Slider, {
 			props: { label: 'Volume', value, min: 0, max: 100 }
 		});
-		expect(thumbIn(screen.container).style.getPropertyValue('inset-inline-start')).toBe(position);
+		expect(thumbIn(screen.container).style.getPropertyValue('--_slider-progress')).toBe(progress);
 	});
 
 	it.each([
-		{ value: 0, position: 'calc(0% + 10px)' },
-		{ value: 100, position: 'calc(100% - 10px)' }
+		{ value: 0, progress: '0' },
+		{ value: 100, progress: '1' }
 	])(
 		'insets a vertical thumb at value $value so it stays in bounds',
-		async ({ value, position }) => {
+		async ({ value, progress }) => {
 			const screen = await render(Slider, {
 				props: { label: 'Volume', value, min: 0, max: 100, orientation: 'vertical' }
 			});
-			expect(thumbIn(screen.container).style.getPropertyValue('bottom')).toBe(position);
+			expect(thumbIn(screen.container).style.getPropertyValue('--_slider-progress')).toBe(progress);
 		}
 	);
 

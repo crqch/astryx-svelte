@@ -79,6 +79,7 @@ function panelProps(
 	return {
 		panelState,
 		height: 'hug',
+		label: 'Panel',
 		children: content,
 		style,
 		onDismiss: () => {},

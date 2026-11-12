@@ -11,7 +11,12 @@
 
 <script lang="ts">
 	import Icon from '../../../icon/icon.svelte';
-	import { expansionChevronButtonAttrs } from './row-expansion.stylex.js';
+	import { useTableContext } from '../../table-context.svelte.js';
+	import {
+		expansionChevronButtonAttrs,
+		expansionGlyphBoxAttrs,
+		expansionGlyphCenterAttrs
+	} from './row-expansion.stylex.js';
 
 	/**
 	 * Ported from Astryx's `ExpansionChevron`, the module-private component
@@ -20,18 +25,23 @@
 	 * Module-private upstream, so the props type is exported for `$props()`
 	 * typing but is deliberately not on the barrel.
 	 *
-	 * At 0.4.1 the rotation moved onto the **button** — `stylex.props(chevronButton,
-	 * isExpanded && chevronExpanded)` — so the icon is a bare `<Icon>` with no
-	 * wrapper span and no `rtlStyles.mirror`. Both spans were this port's reading
-	 * of the pre-0.4.1 markup and both are gone with it.
+	 * The rotation rides the fixed glyph box rather than the button: the button
+	 * is the hit target and carries the hover chip, and turning that swings the
+	 * rounded rectangle and its highlight around with the arrow.
 	 */
 	let { isExpanded, onToggle, ariaLabel }: ExpansionChevronProps = $props();
 
-	const buttonAttrs = $derived(expansionChevronButtonAttrs(isExpanded));
+	const tableContext = useTableContext();
+	const density = $derived(tableContext?.().density ?? 'balanced');
+
+	const buttonAttrs = $derived(expansionChevronButtonAttrs(isExpanded, density));
+	const glyphBoxAttrs = $derived(expansionGlyphBoxAttrs(isExpanded));
+	const glyphCenterAttrs = expansionGlyphCenterAttrs();
 </script>
 
 <button
 	type="button"
+	data-expansion-toggle=""
 	class={buttonAttrs.class}
 	style={buttonAttrs.style}
 	onclick={(e) => {
@@ -41,5 +51,9 @@
 	aria-label={ariaLabel}
 	aria-expanded={isExpanded}
 >
-	<Icon icon="chevronRight" size="xsm" />
+	<span class={glyphBoxAttrs.class} style={glyphBoxAttrs.style}>
+		<span class={glyphCenterAttrs.class} style={glyphCenterAttrs.style}>
+			<Icon icon="chevronRight" size="xsm" />
+		</span>
+	</span>
 </button>

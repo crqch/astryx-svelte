@@ -17,8 +17,17 @@
 		onOpenChange?: (isOpen: boolean) => unknown;
 		/** Content before the title (e.g. a back button). */
 		startContent?: Snippet;
-		/** Content after the title, before the close button (e.g. action buttons). */
+		/**
+		 * Content after the title, before the close button (e.g. action buttons).
+		 */
 		endContent?: Snippet;
+		/**
+		 * Overrides automatic end-slot compensation. When omitted, the slot keeps
+		 * its existing behavior: rendering the close action applies block and
+		 * logical inline-end compensation. Use `inline`, `block`, or `all` to
+		 * select the axes explicitly.
+		 */
+		endContentEdgeCompensation?: 'inline' | 'block' | 'all';
 		/**
 		 * Adds a themed bottom border. Defaults to the parent `Layout`'s
 		 * `defaultHasDividers` context value.
@@ -61,6 +70,7 @@
 		onOpenChange,
 		startContent,
 		endContent,
+		endContentEdgeCompensation,
 		hasDivider,
 		xstyle,
 		class: className,
@@ -94,8 +104,23 @@
 	const titleTheme = themeProps('dialog-header-title-block');
 	const endTheme = themeProps('dialog-header-end-content');
 	const titleWrapper = dialogHeaderTitleWrapperAttrs();
-	const startActions = dialogHeaderActionsAttrs(false);
-	const endActions = $derived(dialogHeaderActionsAttrs(onOpenChange != null));
+	// Upstream's two axes are independent: without an override the close action
+	// compensates both, and `endContentEdgeCompensation` selects either or both
+	// explicitly.
+	const shouldCompensateEndBlock = $derived(
+		endContentEdgeCompensation == null
+			? onOpenChange != null
+			: endContentEdgeCompensation === 'block' || endContentEdgeCompensation === 'all'
+	);
+	const shouldCompensateEndInline = $derived(
+		endContentEdgeCompensation == null
+			? onOpenChange != null
+			: endContentEdgeCompensation === 'inline' || endContentEdgeCompensation === 'all'
+	);
+	const startActions = dialogHeaderActionsAttrs(false, false);
+	const endActions = $derived(
+		dialogHeaderActionsAttrs(shouldCompensateEndBlock, shouldCompensateEndInline)
+	);
 </script>
 
 <LayoutHeader
@@ -124,8 +149,13 @@
 			class={[titleTheme.class, titleWrapper.class].join(' ')}
 			style={titleWrapper.style}
 		>
-			<Heading id={titleId} level={2} tabindex={-1} xstyle={titleFocusableStyle} {...titleAttach}
-				>{title}</Heading
+			<Heading
+				id={titleId}
+				level={2}
+				tabindex={-1}
+				data-autofocus={shouldAutoFocus ? 'dialog-title' : undefined}
+				xstyle={titleFocusableStyle}
+				{...titleAttach}>{title}</Heading
 			>
 			{#if subtitle}
 				<Text type="body" size="sm" color="secondary">{subtitle}</Text>

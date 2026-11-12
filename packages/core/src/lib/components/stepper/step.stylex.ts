@@ -40,6 +40,10 @@ const INDICATOR_SIZE = spacingVars['--spacing-4'];
 // Indicator (16px) + the label-row gap (8px). The indent that lines a
 // description or a content slot up with the label above it.
 const INDICATOR_GUTTER = spacingVars['--spacing-6'];
+// The gap a connector leaves where it meets the indicator, clamped so a
+// consumer's theme override can tune it without letting the hole grow past one
+// density step.
+const CONNECTOR_GAP = `max(0px, min(var(--step-connector-gap, 0px), ${spacingVars['--spacing-2']}))`;
 
 // --- Connector fill motion ---
 //
@@ -326,18 +330,27 @@ const styles = stylex.create({
 		color: colorVars['--color-accent']
 	},
 	iconSuccess: {
-		color: colorVars['--color-success']
+		color: colorVars['--color-icon-success']
 	},
 	iconWarning: {
-		color: colorVars['--color-warning']
+		color: colorVars['--color-icon-warning']
 	},
 	iconError: {
-		color: colorVars['--color-error']
+		color: colorVars['--color-icon-error']
 	},
 
 	// Number badge — same box as every other indicator (see INDICATOR_SIZE).
 	numberBadge: {
 		display: 'grid',
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible (architecture:theme-tokens INV11).
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: {
+			default: null,
+			'@media (forced-colors: active)': 'CanvasText'
+		},
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' },
 		placeItems: 'center',
 		width: INDICATOR_SIZE,
 		height: INDICATOR_SIZE,
@@ -395,11 +408,16 @@ const styles = stylex.create({
 		fontWeight: fontWeightVars['--font-weight-normal'],
 		color: colorVars['--color-text-primary'],
 		// Horizontal steps divide the track evenly, so a label can end up with
-		// less room than it wants. Let it shrink past its longest word and break
-		// that word rather than overlap the neighbouring step. Inert wherever
-		// there is room, which is every vertical stepper.
+		// less room than it wants. It stays on one line and ellipsizes rather than
+		// wrapping, so every step in a row keeps the same height and the track
+		// below them stays straight. minWidth releases the flex floor that would
+		// otherwise hold the label at its min-content width and let it overlap the
+		// neighbouring step. Inert wherever there is room, which is most vertical
+		// steppers. The full string stays in the accessible name either way.
 		minWidth: 0,
-		overflowWrap: 'break-word'
+		whiteSpace: 'nowrap',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis'
 	},
 	labelInProgress: {
 		fontWeight: fontWeightVars['--font-weight-semibold']
@@ -571,6 +589,43 @@ const styles = stylex.create({
 		flexShrink: 0,
 		borderRadius: 0
 	},
+	// The gap a connector leaves where it meets the indicator, spent on the side
+	// that faces the node so the pair leaves a symmetric hole around it.
+	//
+	// Clip the segment rather than changing its box: one `clip-path` clips the
+	// segment's own track and its absolutely positioned `::before` fill against
+	// the same reference box. The indicator stays put, the Stepper cannot grow,
+	// and percentage values cannot resolve differently between the two layers.
+	// The inherited value is clamped in CONNECTOR_GAP; its default is declared
+	// once on the Stepper root, where a generated theme override can replace it.
+	//
+	// A public var rather than a per-segment theme vocabulary: "do not touch the
+	// indicator" is one intent, and naming the segments would publish which
+	// pieces this layout happens to be drawn from today.
+	otSegGapLeadV: {
+		clipPath: `inset(0 0 ${CONNECTOR_GAP} 0)`
+	},
+	otSegGapRailV: {
+		clipPath: `inset(${CONNECTOR_GAP} 0 0 0)`
+	},
+	// The horizontal pair is PHYSICAL: `clip-path: inset()` takes top/right/
+	// bottom/left and has no logical form, while the row itself reverses under
+	// `dir="rtl"`. Left unflipped, the leading segment sits to the RIGHT of the
+	// node in RTL and still clips its right edge — opening the hole at the join
+	// between steps instead of at the indicator. The block axis needs no such
+	// handling: `dir` does not reverse it.
+	otSegGapLeadH: {
+		clipPath: {
+			default: `inset(0 ${CONNECTOR_GAP} 0 0)`,
+			':is([dir="rtl"] *)': `inset(0 0 0 ${CONNECTOR_GAP})`
+		}
+	},
+	otSegGapRailH: {
+		clipPath: {
+			default: `inset(0 0 0 ${CONNECTOR_GAP})`,
+			':is([dir="rtl"] *)': `inset(0 ${CONNECTOR_GAP} 0 0)`
+		}
+	},
 	// Flexible segment (below the node) — grows to fill the step height and
 	// meets the next node's leading segment.
 	otSegFlexV: {
@@ -700,7 +755,15 @@ const styles = stylex.create({
 	}),
 	otMarginTop: (value: string) => ({
 		marginBlockStart: value
-	})
+	}),
+	// The current step's compact label, drawn into the Stepper's summary row.
+	summaryRoot: {
+		alignItems: 'center',
+		display: 'flex',
+		flexDirection: 'column',
+		gap: spacingVars['--spacing-0-5'],
+		minWidth: 0
+	}
 });
 
 /**
@@ -1079,11 +1142,13 @@ function connectorAxisStyle(isVertical: boolean, isFilled: boolean): StyleArg {
 export function stepOtLeadSegAttrs({
 	isVertical,
 	density,
+	hasIndicator,
 	isFilled,
 	timing
 }: {
 	isVertical: boolean;
 	density: StepperDensity;
+	hasIndicator: boolean;
 	isFilled: boolean;
 	timing: StyleArg;
 }): SvelteStyleAttrs {
@@ -1092,6 +1157,7 @@ export function stepOtLeadSegAttrs({
 				styles.otSegBaseV,
 				styles.otSegLeadV(densitySpaceFor(density)),
 				styles.connectorTrack,
+				hasIndicator && styles.otSegGapLeadV,
 				connectorAxisStyle(true, isFilled),
 				timing,
 				styles.otSegHiddenIfFirst
@@ -1099,6 +1165,7 @@ export function stepOtLeadSegAttrs({
 		: sx(
 				styles.otSegH,
 				styles.connectorTrack,
+				hasIndicator && styles.otSegGapLeadH,
 				connectorAxisStyle(false, isFilled),
 				timing,
 				styles.otSegHiddenIfFirst
@@ -1108,10 +1175,12 @@ export function stepOtLeadSegAttrs({
 /** The on-track segment leaving this step's node, hidden on the last step. */
 export function stepOtRailSegAttrs({
 	isVertical,
+	hasIndicator,
 	isFilled,
 	timing
 }: {
 	isVertical: boolean;
+	hasIndicator: boolean;
 	isFilled: boolean;
 	timing: StyleArg;
 }): SvelteStyleAttrs {
@@ -1120,6 +1189,7 @@ export function stepOtRailSegAttrs({
 				styles.otSegBaseV,
 				styles.otSegFlexV,
 				styles.connectorTrack,
+				hasIndicator && styles.otSegGapRailV,
 				connectorAxisStyle(true, isFilled),
 				timing,
 				styles.otSegHiddenIfLast
@@ -1127,6 +1197,7 @@ export function stepOtRailSegAttrs({
 		: sx(
 				styles.otSegH,
 				styles.connectorTrack,
+				hasIndicator && styles.otSegGapRailH,
 				connectorAxisStyle(false, isFilled),
 				timing,
 				styles.otSegHiddenIfLast
@@ -1195,4 +1266,9 @@ export function stepOtContentAttrs({
 	return isVertical
 		? sx(styles.otContent, styles.contentIndent(densitySpaceFor(density), INDICATOR_GUTTER))
 		: sx(styles.otContent);
+}
+
+/** The current step's compact label, drawn into the Stepper's summary row. */
+export function stepSummaryRootAttrs(): SvelteStyleAttrs {
+	return sx(styles.summaryRoot);
 }

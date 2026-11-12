@@ -84,8 +84,10 @@ export type { SyntaxTokenName } from './syntax/index.js';
 // both halves — its `theme/index.ts` publishes `dataTokenDefaults`,
 // `domainTokenDefaults` and their two name types beside `syntaxTokenDefaults`,
 // so this subpath carries all of them. `dataTokenDefaults` is the single source
-// for the `--color-data-*` palette: the theme build and `<Theme>`'s runtime
-// injection both format their `:root` block from it, and never from a copy.
+// for the runtime and built-theme `:root` blocks — the theme build and
+// `<Theme>`'s runtime injection both format theirs from it, never from a copy.
+// The published StyleX sheet's copy is `styles/data-tokens.stylex.ts`, because
+// `defineVars` cannot take a computed object.
 export { dataTokenDefaults, domainTokenDefaults } from './domain-tokens/index.js';
 export type { DataTokenName, DomainTokenName } from './domain-tokens/index.js';
 

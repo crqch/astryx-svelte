@@ -968,7 +968,11 @@ describe('Timestamp', () => {
 				props: { value: Date.now() / 1000 - 3600, format: 'relative' }
 			});
 			const card = await awaitCard(screen.container);
-			const rowValue = card.querySelector('dd')?.textContent ?? '';
+			// RESTATED narrowly: upstream reads `dd.textContent`, which React trims
+			// to the row value. Svelte keeps the whitespace inside the copy
+			// button's own live region, so read the value span the `<dd>` carries
+			// when it reserves the action column.
+			const rowValue = card.querySelector('dd > span')?.textContent ?? '';
 			expect(rowValue).toBeTruthy();
 			copyButtonIn(card).click();
 			expect(writeText).toHaveBeenCalledWith(rowValue);
@@ -1114,7 +1118,11 @@ describe('Timestamp', () => {
 				}
 			});
 			const card = await awaitCard(screen.container);
-			const [rowValue] = Array.from(card.querySelectorAll('dd')).map((el) => el.textContent ?? '');
+			// Same narrow restatement as the default card's copy case: the `<dd>`
+			// carries the value in its first span when it reserves an action column.
+			const [rowValue] = Array.from(card.querySelectorAll('dd')).map(
+				(el) => el.querySelector('span')?.textContent ?? el.textContent ?? ''
+			);
 
 			copyButtonIn(card).click();
 			expect(writeText).toHaveBeenCalledWith(rowValue);

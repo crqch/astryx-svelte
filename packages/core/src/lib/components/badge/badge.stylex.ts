@@ -32,6 +32,25 @@ const styles = stylex.create({
 		// width and push the clamp back out again.
 		maxWidth: '100%',
 		minWidth: 0
+	},
+	// Never shorter than one line of its label: when the text grows (a larger
+	// text size), the pill grows with the label instead of the label spilling
+	// out of it. A minimum rather than a new height, so the theme's height
+	// (`--spacing-5`, or a theme's own, such as Butter's 30px) holds at the
+	// default size, where the line fits. Only with a label: a color-only badge
+	// has no text to hold and keeps the component:Badge FR1 geometry at every
+	// text size.
+	grows: {
+		minHeight: '1lh'
+	},
+	// The ellipsis goes on the label rather than the badge itself, because
+	// `text-overflow` needs a block container and taking the root off
+	// `inline-flex` to get one would cost the icon its centring. The label is a
+	// flex item, so it needs its own `minWidth: 0` for the same reason as above.
+	label: {
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+		minWidth: 0
 	}
 });
 
@@ -46,20 +65,44 @@ const variants = stylex.create({
 		color: colorVars['--color-text-primary']
 	},
 	info: {
-		backgroundColor: colorVars['--color-accent'],
-		color: colorVars['--color-on-accent']
+		backgroundColor: colorVars['--color-info'],
+		color: colorVars['--color-on-info'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible (architecture:theme-tokens INV11).
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	success: {
 		backgroundColor: colorVars['--color-success'],
-		color: colorVars['--color-on-success']
+		color: colorVars['--color-on-success'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible (architecture:theme-tokens INV11).
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	warning: {
 		backgroundColor: colorVars['--color-warning'],
-		color: colorVars['--color-on-warning']
+		color: colorVars['--color-on-warning'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible (architecture:theme-tokens INV11).
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	error: {
 		backgroundColor: colorVars['--color-error'],
-		color: colorVars['--color-on-error']
+		color: colorVars['--color-on-error'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible (architecture:theme-tokens INV11).
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	// Non-semantic
 	blue: {
@@ -132,6 +175,20 @@ export interface BadgeVariantMap {
 /** Badge variant. Extensible via `BadgeVariantMap`. */
 export type BadgeVariant = keyof BadgeVariantMap;
 
-export function badgeAttrs(variant: BadgeVariant, xstyle?: StyleArg): SvelteStyleAttrs {
-	return sx(styles.base, variants[variant as keyof typeof variants], xstyle);
+export function badgeAttrs(
+	variant: BadgeVariant,
+	hasLabel: boolean,
+	xstyle?: StyleArg
+): SvelteStyleAttrs {
+	return sx(
+		styles.base,
+		hasLabel && styles.grows,
+		variants[variant as keyof typeof variants],
+		xstyle
+	);
+}
+
+/** The label span, which ellipsises. */
+export function badgeLabelAttrs(): SvelteStyleAttrs {
+	return sx(styles.label);
 }

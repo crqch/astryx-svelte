@@ -135,7 +135,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'destructive' | 'default'",
+			type: "'default' | 'destructive'",
 			description:
 				"Visual variant. 'destructive' renders the label, description, and icon in the error color for dangerous actions (e.g. Delete).",
 			default: "'default'"

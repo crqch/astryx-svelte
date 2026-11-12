@@ -22,6 +22,15 @@ export type SelectorOptionData = {
 	disabled?: boolean;
 	/** A registry name, or a snippet for a custom icon. */
 	icon?: IconName | Snippet;
+	/**
+	 * The option's secondary control — an Edit button beside a saved label —
+	 * as one snippet the caller renders and names; the host only places it. In
+	 * `MultiSelector`, any option carrying one turns the popup into a grid whose
+	 * rows pair the option with its action, reachable by pointer, touch, the
+	 * inline-end arrow, and a screen reader (`spec:AST-058`). `Selector` does
+	 * not render it yet. Absent and `null` mean the same: none.
+	 */
+	action?: Snippet | null;
 };
 
 /**

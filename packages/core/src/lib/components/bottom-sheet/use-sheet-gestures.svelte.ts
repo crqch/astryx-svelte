@@ -1327,7 +1327,8 @@ export function useSheetGestures(options: UseSheetGesturesOptions): UseSheetGest
 			options.isOpen() && (isDragging || isScrollAreaReconciling || reducedMotion.matches)
 				? 'transition: none'
 				: null,
-			'touch-action: none',
+			// One-finger drags are the sheet's; a pinch stays the browser's.
+			'touch-action: pinch-zoom',
 			'overscroll-behavior: contain'
 		]
 			.filter((declaration) => declaration !== null)
@@ -1335,7 +1336,7 @@ export function useSheetGestures(options: UseSheetGesturesOptions): UseSheetGest
 	);
 
 	const handleProps: SheetHandleProps = {
-		style: 'touch-action: none; cursor: grab',
+		style: 'touch-action: pinch-zoom; cursor: grab',
 		oncontextmenu: handleContextMenu,
 		onlostpointercapture: handleLostPointerCapture,
 		onpointerdown: handlePointerDown,

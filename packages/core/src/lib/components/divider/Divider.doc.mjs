@@ -70,7 +70,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'subtle' | 'strong'",
+			type: "'strong' | 'subtle'",
 			description: 'Visual weight of the divider line.',
 			default: "'subtle'"
 		},

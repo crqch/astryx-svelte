@@ -5,11 +5,10 @@ import { spacingVars } from '../../styles/tokens.stylex.js';
 /**
  * Ported from Astryx's `TopNav/TopNav.tsx` styles.
  *
- * The bar has two layouts. Without `centerContent` it is a flex row
- * (`base` + `baseFlex`) whose end content is pushed over by `marginInlineStart:
- * auto`. With `centerContent` it switches to a three-column
- * `1fr auto 1fr` grid (`base` + `baseGrid`) — the only way to keep the centre
- * slot *actually* centred regardless of how wide the start and end slots are.
+ * The bar is a wrapping flex row (`base` + `baseFlex`). With `centerContent`
+ * the start and end regions share the free width equally (`base` +
+ * `baseThreeRegion`), which keeps the centre at the bar's middle while the
+ * three regions fit one row; the bar wraps when they do not.
  *
  * `drawerExtraContent` is an **empty** style object on both sides. StyleX
  * compiles it to nothing, so the wrapper renders with no class attribute at
@@ -23,50 +22,75 @@ const styles = stylex.create({
 		padding: spacingVars['--spacing-2'],
 		boxSizing: 'border-box'
 	},
-	// Flex layout (default, used when no centerContent)
+	// The bar wraps when its regions do not fit one row. The end region then
+	// moves to a second line.
 	baseFlex: {
-		display: 'flex'
+		display: 'flex',
+		flexWrap: 'wrap'
 	},
-	// Grid layout (used when centerContent is present)
-	baseGrid: {
-		display: 'grid',
-		gridTemplateColumns: '1fr auto 1fr'
+	// While the regions fit one row, the start and end regions share the free
+	// width equally. This keeps the center at the bar's middle.
+	baseThreeRegion: {
+		display: 'flex',
+		flexWrap: 'wrap'
 	},
+	// A region keeps its items on one line, so the bar wraps first. Only a
+	// region wider than the bar wraps its own items. `fit-content` is the
+	// region's full row, capped at the bar's width.
 	leftSection: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-4'],
 		flex: '1 1 0%',
-		minWidth: 0
+		minWidth: stylex.firstThatWorks('fit-content', '-webkit-fit-content')
 	},
+	// The heading shrinks only to its own narrowest width. TopNavHeading keeps
+	// its logo there.
 	heading: {
 		display: 'flex',
 		alignItems: 'center',
-		flexShrink: 0
+		flexShrink: 1
 	},
 	startContent: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-1']
 	},
+	// The center claims its content's minimum width when the bar decides where
+	// to wrap, then grows first, up to its content width. Only a center wider
+	// than the whole bar, alone on its line, narrows below that minimum.
 	centerContent: {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
-		gap: spacingVars['--spacing-1']
+		gap: spacingVars['--spacing-1'],
+		flexGrow: 1000,
+		flexShrink: 1,
+		flexBasis: 'min-content',
+		minWidth: 0,
+		maxWidth: 'max-content'
 	},
 	rightSection: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
 		justifyContent: 'flex-end',
-		gap: spacingVars['--spacing-1']
+		gap: spacingVars['--spacing-1'],
+		flex: '1 1 0%',
+		minWidth: stylex.firstThatWorks('fit-content', '-webkit-fit-content')
 	},
 	endContent: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
+		justifyContent: 'flex-end',
 		gap: spacingVars['--spacing-1'],
 		flexShrink: 0,
-		marginInlineStart: 'auto'
+		marginInlineStart: 'auto',
+		minWidth: stylex.firstThatWorks('fit-content', '-webkit-fit-content'),
+		maxWidth: '100%'
 	},
 	// Mobile bar mode — simplified top bar with heading + toggle + endContent
 	mobileBar: {
@@ -76,10 +100,18 @@ const styles = stylex.create({
 		padding: spacingVars['--spacing-2'],
 		boxSizing: 'border-box'
 	},
+	// The heading gives up space first so the end content and toggle stay in view
+	mobileBarHeading: {
+		display: 'flex',
+		alignItems: 'center',
+		flex: '0 1 auto',
+		minWidth: 0
+	},
 	mobileBarEnd: {
 		display: 'flex',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-1'],
+		flexShrink: 0,
 		marginInlineStart: 'auto'
 	},
 	// Drawer mode — vertical list of nav items
@@ -94,14 +126,19 @@ const styles = stylex.create({
 	drawerExtraContent: {}
 });
 
-/** The `<nav>` root in default mode — flex or grid depending on `centerContent`. */
+/** The `<nav>` root in default mode — flex or three-region depending on `centerContent`. */
 export function topNavRootAttrs(hasCenterContent: boolean, xstyle: StyleArg): SvelteStyleAttrs {
-	return sx(styles.base, hasCenterContent ? styles.baseGrid : styles.baseFlex, xstyle);
+	return sx(styles.base, hasCenterContent ? styles.baseThreeRegion : styles.baseFlex, xstyle);
 }
 
 /** The `<nav>` root in mobile-bar mode. */
 export function topNavMobileBarAttrs(xstyle: StyleArg): SvelteStyleAttrs {
 	return sx(styles.mobileBar, xstyle);
+}
+
+/** The heading wrapper in mobile-bar mode — first to give up space. */
+export function topNavMobileBarHeadingAttrs(): SvelteStyleAttrs {
+	return sx(styles.mobileBarHeading);
 }
 
 /** The heading + start-content column. */

@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
 import {
@@ -111,7 +112,12 @@ const styles = stylex.create({
 		// though it is not typable, so it needs the same floor DateInput has.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+			// control sits under 16px, and only iOS WebKit implements
+			// -webkit-touch-callout to key the coarse-pointer floor to it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -413,12 +419,10 @@ const styles = stylex.create({
 		display: 'flex'
 	},
 	sheetBody: {
-		// One inset on every edge. The block-start is the exception and has to
-		// be: the sheet's grab handle floats out of flow, costing no layout
-		// height of its own, so the content wrapper owes it the 24px it occupies
-		// — which reads as the same inset, because the handle sits in it.
+		// One inset on every edge but the top: BottomSheet keeps the band under
+		// its grab bar, which reads as the same inset because the bar sits in it.
 		paddingInline: spacingVars['--spacing-4'],
-		paddingBlockStart: spacingVars['--spacing-6'],
+		paddingBlockStart: 0,
 		paddingBlockEnd: spacingVars['--spacing-4']
 	},
 	/**
@@ -448,6 +452,7 @@ export function touchDateFieldWrapperAttrs(
 		sizeStyles[size],
 		styles.wrapper,
 		isEffectivelyDisabled && inputWrapperStyles.disabled,
+		isEffectivelyDisabled && inputDisabledFocusStyles.inputFocusRing,
 		statusType && inputStatusBorderStyles[statusType],
 		statusType && !isEffectivelyDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType],

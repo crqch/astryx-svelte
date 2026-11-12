@@ -28,6 +28,12 @@ export type StepperDensity = 'compact' | 'balanced' | 'spacious';
  */
 export type StepperIndicatorPosition = 'separated' | 'on-track';
 
+/** Options reported by a Step when it registers with Stepper. */
+export interface StepperRegistrationOptions {
+	/** Reads the Step's current disabled state. */
+	getIsDisabled?: () => boolean;
+}
+
 export interface StepperContextValue {
 	activeStep: number;
 	/**
@@ -49,17 +55,38 @@ export interface StepperContextValue {
 	density: StepperDensity;
 	indicatorPosition: StepperIndicatorPosition;
 	/**
-	 * Dev-mode index registration. Each Step calls this on mount with its `step`
-	 * index. The Stepper tracks the set and warns if two Steps share the same
-	 * index. Returns a cleanup function to call on unmount.
+	 * Registers a Step index and an optional disabled-state getter. The Stepper
+	 * tracks the set, warns if two Steps share an index, and keeps compact
+	 * previous/next controls from selecting disabled steps. Returns a cleanup
+	 * function to call on unmount.
 	 */
-	registerStep: (index: number) => () => void;
+	registerStep: (index: number, options?: StepperRegistrationOptions) => () => void;
+}
+
+/**
+ * Package-internal Stepper ↔ Step coordination. This type is intentionally
+ * absent from the public component barrel.
+ */
+export interface StepperInternalContextValue extends StepperContextValue {
+	/** Number of registered steps used to derive the compact threshold. */
+	stepCount: number;
+	/** Whether a horizontal Stepper is currently using its compact layout. */
+	isCompact: boolean;
+	/** Portal target for the active step's compact summary. */
+	summarySlot: HTMLElement | null;
 }
 
 const StepperContext = new Context<() => StepperContextValue>('astryx.stepper');
+const StepperInternalContext = new Context<() => StepperInternalContextValue>(
+	'astryx.stepper-internal'
+);
 
 export function setStepperContext(get: () => StepperContextValue): void {
 	StepperContext.set(get);
+}
+
+export function setStepperInternalContext(get: () => StepperInternalContextValue): void {
+	StepperInternalContext.set(get);
 }
 
 /** Returns the stepper getter, throwing when the step is not inside a `Stepper`. */
@@ -68,6 +95,17 @@ export function useStepperContext(): () => StepperContextValue {
 	if (ctx == null) {
 		throw new Error(
 			'useStepperContext must be used within Stepper. ' + 'Wrap your Step in <Stepper>.'
+		);
+	}
+	return ctx;
+}
+
+/** The internal coordination read, used by the built-in `Step`. */
+export function useStepperInternalContext(): () => StepperInternalContextValue {
+	const ctx = StepperInternalContext.getOr(null);
+	if (ctx == null) {
+		throw new Error(
+			'useStepperInternalContext must be used within Stepper. ' + 'Wrap your Step in <Stepper>.'
 		);
 	}
 	return ctx;

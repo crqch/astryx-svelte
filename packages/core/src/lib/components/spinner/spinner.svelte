@@ -43,14 +43,14 @@
 	// mount invalidating the others, which is the opposite of the batching this
 	// exists for.
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	const pendingRings = new Set<SVGSVGElement>();
+	const pendingRings = new Set<Element>();
 	let flushScheduled = false;
 
 	function pinRingsToTimelineOrigin(): void {
 		flushScheduled = false;
 		const animations: Animation[] = [];
-		for (const svg of pendingRings) {
-			animations.push(...svg.getAnimations());
+		for (const rotor of pendingRings) {
+			animations.push(...rotor.getAnimations());
 		}
 		pendingRings.clear();
 		for (const animation of animations) {
@@ -58,26 +58,26 @@
 		}
 	}
 
-	const syncRotationPhase: Attachment<SVGSVGElement> = (svg) => {
+	const syncRotationPhase: Attachment<HTMLElement> = (rotor) => {
 		// Not every environment implements the Web Animations API, and this runs in
 		// every consumer's component tests.
-		if (typeof svg.getAnimations !== 'function') {
+		if (typeof rotor.getAnimations !== 'function') {
 			return;
 		}
-		pendingRings.add(svg);
+		pendingRings.add(rotor);
 		if (!flushScheduled) {
 			flushScheduled = true;
 			requestAnimationFrame(pinRingsToTimelineOrigin);
 		}
 		return () => {
-			pendingRings.delete(svg);
+			pendingRings.delete(rotor);
 		};
 	};
 </script>
 
 <script lang="ts">
 	import Text from '../text/text.svelte';
-	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { cx, mergeStyle, sx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import {
 		ARC_FRACTION,
@@ -86,9 +86,11 @@
 		spinnerArcAttrs,
 		spinnerAttrs,
 		spinnerRingAttrs,
+		spinnerRotorFrameStyle,
 		spinnerTrackAttrs,
 		spinnerWrapperAttrs
 	} from './spinner.stylex.js';
+	import { spinnerRotorStyles } from './spinner-rotor.stylex.js';
 
 	const {
 		size = 'md',
@@ -122,13 +124,13 @@
 
 	const metrics = $derived(SIZES[size]);
 	const frameSize = $derived(metrics.diameter + metrics.border * 2);
-	const centre = $derived(frameSize / 2);
 	const circumference = $derived(Math.PI * metrics.diameter);
 	const arcLength = $derived(circumference * ARC_FRACTION);
 
 	const base = $derived(spinnerAttrs(size, shade, hasLabel, xstyle));
 	const wrapper = $derived(spinnerWrapperAttrs(size, shade, xstyle));
 	const ring = spinnerRingAttrs();
+	const rotor = $derived(sx(spinnerRotorFrameStyle, spinnerRotorStyles.turn));
 	const track = $derived(spinnerTrackAttrs(shade));
 	const arc = spinnerArcAttrs();
 	const theme = $derived(themeProps('spinner', { size, shade }));
@@ -155,34 +157,34 @@
 			`width:var(${BOX_SIZE}, ${frameSize}px);height:var(${BOX_SIZE}, ${frameSize}px)`
 		)}
 	>
-		<svg
-			{@attach syncRotationPhase}
-			width={frameSize}
-			height={frameSize}
-			viewBox="0 0 {frameSize} {frameSize}"
-			aria-hidden="true"
-			class={ring.class}
-			style={ring.style}
-		>
+		<!--
+			The track is zero-sized by attribute. With no stylesheet, the rotor's
+			arc alone fills the box, instead of two discs side by side. `ring`
+			sizes both to the box.
+		-->
+		<svg width={0} height={0} aria-hidden="true" class={ring.class} style={ring.style}>
 			<circle
-				cx={centre}
-				cy={centre}
+				cx="50%"
+				cy="50%"
 				r={metrics.diameter / 2}
 				stroke-width={metrics.border}
 				class={track.class}
 				style={track.style}
 			></circle>
-			<circle
-				cx={centre}
-				cy={centre}
-				r={metrics.diameter / 2}
-				stroke-width={metrics.border}
-				stroke-dasharray="{arcLength} {circumference - arcLength}"
-				transform="rotate(-90 {centre} {centre})"
-				class={arc.class}
-				style={arc.style}
-			></circle>
 		</svg>
+		<span {@attach syncRotationPhase} aria-hidden="true" class={rotor.class} style={rotor.style}>
+			<svg width={frameSize} height={frameSize} class={ring.class} style={ring.style}>
+				<circle
+					cx="50%"
+					cy="50%"
+					r={metrics.diameter / 2}
+					stroke-width={metrics.border}
+					stroke-dasharray="{arcLength} {circumference - arcLength}"
+					class={arc.class}
+					style={arc.style}
+				></circle>
+			</svg>
+		</span>
 	</span>
 {/snippet}
 

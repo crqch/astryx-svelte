@@ -38,6 +38,24 @@
 		 */
 		hasDivider?: boolean;
 		/**
+		 * Bleeds the strip out to its container's content edges.
+		 *
+		 * Both halves are computed from the `--container-padding-*` custom
+		 * properties a padded Layout container publishes. The strip's box is pulled
+		 * out through the container's inline padding, so a `hasDivider` underline —
+		 * or the header's own divider, when the strip is docked on it — spans the
+		 * full content width. The strip then pads back in by whatever that bleed
+		 * exceeds a stop's own inline padding, so the first and last label still
+		 * land on the container's content inset rather than 4px short of it.
+		 *
+		 * Outside a padded container the properties are unset, the pad-back clamps
+		 * to zero, and the strip is left exactly as it was. Block-edge docking stays
+		 * with the surrounding layout because it cannot be detected through nested
+		 * wrappers without pulling a mid-content strip into its siblings.
+		 * @default false
+		 */
+		isFullBleed?: boolean;
+		/**
 		 * What happens when the tabs are wider than the strip.
 		 *
 		 * `'auto'` lets the component choose; today it always scrolls. `'scroll'`
@@ -112,6 +130,7 @@
 		size: sizeProp,
 		layout = 'hug',
 		hasDivider = false,
+		isFullBleed = false,
 		// NOT re-declared in `TabListProps`, unlike upstream, which restates it on
 		// the interface for its doc comment. `BaseProps` already publishes it, as
 		// upstream's does — restating it here would *narrow* Svelte's
@@ -409,8 +428,8 @@
 	const theme = $derived(themeProps('tab-list', { size }));
 	const stripTheme = themeProps('tab-strip');
 	const arrowTheme = themeProps('tab-scroll-button');
-	const navAttrs = $derived(tabListNavAttrs(layout === 'fill', hasDivider, xstyle));
-	const stripAttrs = $derived(tabStripAttrs(hasScroll, fade));
+	const navAttrs = $derived(tabListNavAttrs(layout === 'fill', hasDivider, isFullBleed, xstyle));
+	const stripAttrs = $derived(tabStripAttrs(hasScroll, isFullBleed, fade));
 	const arrowStartAttrs = $derived(tabScrollButtonAttrs('start', size));
 	const arrowEndAttrs = $derived(tabScrollButtonAttrs('end', size));
 </script>

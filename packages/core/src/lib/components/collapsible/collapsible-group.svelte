@@ -1,7 +1,10 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
-	import type { CollapsibleGroupDensity } from './collapsible-group-context.svelte.js';
+	import type {
+		CollapsibleChevronPosition,
+		CollapsibleGroupDensity
+	} from './collapsible-group-context.svelte.js';
 
 	export interface CollapsibleGroupProps extends Omit<BaseProps<HTMLElement>, 'onchange'> {
 		/** @default 'single' */
@@ -20,6 +23,12 @@
 		hasDividers?: boolean;
 		/** Row density for the group's items. Defaults to `'balanced'` with dividers. */
 		density?: CollapsibleGroupDensity;
+		/**
+		 * Logical position of the items' disclosure chevrons. Set this on the group
+		 * when its direct items should share one position; an individual Collapsible
+		 * can still override it. @default 'end'
+		 */
+		chevronPosition?: CollapsibleChevronPosition;
 		/** Collapsible children (each needs a `value` to participate). */
 		children: Snippet;
 	}
@@ -55,6 +64,7 @@
 		onChange,
 		hasDividers = false,
 		density,
+		chevronPosition,
 		children,
 		xstyle,
 		class: className,
@@ -102,7 +112,11 @@
 	const resolvedDensity = $derived(density ?? (hasDividers ? 'balanced' : null));
 
 	setCollapsibleGroupContext(() => ({ isOpen, toggle }));
-	setCollapsibleGroupPresentationContext(() => ({ hasDividers, density: resolvedDensity }));
+	setCollapsibleGroupPresentationContext(() => ({
+		hasDividers,
+		density: resolvedDensity,
+		chevronPosition: chevronPosition ?? null
+	}));
 
 	const theme = $derived(
 		themeProps('collapsible-group', { density: resolvedDensity ?? undefined })

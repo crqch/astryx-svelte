@@ -7,6 +7,7 @@ import {
 	typeScaleVars
 } from '../../styles/tokens.stylex.js';
 import type { ChatDensity, ChatMessageSender } from './chat-context.svelte.js';
+import { chatMessageVars } from './chat-message.vars.stylex.js';
 
 /** Ported from the `styles` block in Astryx's `Chat/ChatMessage.tsx`. */
 const styles = stylex.create({
@@ -36,11 +37,23 @@ const styles = stylex.create({
 		flexDirection: 'row',
 		justifyContent: 'center'
 	},
-	avatarWrap: {
-		flexShrink: 0,
-		':has(~ * [data-chat-name])': {
-			marginBlockStart: spacingVars['--spacing-5']
+	// Slot wrappers collapse when the caller's content renders nothing, so an
+	// empty Fragment or a component that returns null leaves no gap. Content is
+	// never inspected to decide this.
+	// Judged from this article (parent-relative), never from siblings, so the
+	// global stylesheet keeps no sibling-relative :has().
+	avatarOffset: {
+		[chatMessageVars['--_chat-avatar-offset']]: {
+			default: '0px',
+			':has([data-chat-name])': spacingVars['--spacing-5']
 		}
+	},
+	avatarWrap: {
+		display: { default: null, ':empty': 'none' },
+		flexShrink: 0,
+		// The avatar lines up with a bubble's name row when the message holds
+		// one; the article sets the offset (see chatMessageVars).
+		marginBlockStart: chatMessageVars['--_chat-avatar-offset']
 	},
 	contentColumn: {
 		display: 'flex',
@@ -59,11 +72,15 @@ const styles = stylex.create({
 		alignItems: 'flex-end'
 	},
 	name: {
+		display: { default: null, ':empty': 'none' },
 		fontSize: typeScaleVars['--text-supporting-size'],
 		fontWeight: fontWeightVars['--font-weight-semibold'],
 		color: colorVars['--color-text-secondary'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		marginBlockEnd: spacingVars['--spacing-1']
+	},
+	metadata: {
+		display: { default: null, ':empty': 'none' }
 	},
 	childrenWrap: {
 		display: 'flex',
@@ -109,7 +126,7 @@ export function chatMessageRootAttrs(
 			: sender === 'user'
 				? styles.rootUser
 				: styles.rootAssistant;
-	return sx(styles.root, rootAlignment, hasAvatar && rootGap, xstyle);
+	return sx(styles.avatarOffset, styles.root, rootAlignment, hasAvatar && rootGap, xstyle);
 }
 
 export function chatMessageAvatarWrapAttrs(): SvelteStyleAttrs {
@@ -128,6 +145,10 @@ export function chatMessageContentColumnAttrs(sender: ChatMessageSender): Svelte
 
 export function chatMessageNameAttrs(): SvelteStyleAttrs {
 	return sx(styles.name);
+}
+
+export function chatMessageMetadataAttrs(): SvelteStyleAttrs {
+	return sx(styles.metadata);
 }
 
 export function chatMessageChildrenAttrs(

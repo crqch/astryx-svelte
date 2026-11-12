@@ -28,6 +28,7 @@
 		triggerMenuItemAttrs,
 		triggerMenuItemLabelAttrs,
 		triggerMenuLoadingStateAttrs,
+		triggerMenuPopoverOffset,
 		triggerMenuPopoverStyle
 	} from './use-trigger-menu.stylex.js';
 
@@ -101,6 +102,7 @@
 	popover={menu.popover}
 	placement="above"
 	alignment="start"
+	offset={triggerMenuPopoverOffset}
 	xstyle={triggerMenuPopoverStyle}
 >
 	<div

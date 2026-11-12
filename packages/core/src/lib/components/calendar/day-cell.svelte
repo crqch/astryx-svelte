@@ -52,6 +52,7 @@
 	import { cx } from '../../internal/sx.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { DATE_FORMAT_WITH_WEEKDAY, plainDateFormat } from '../../utils/plain-date.js';
 	import {
 		computeDayCellState,
@@ -134,6 +135,8 @@
 		})
 	);
 
+	// A day button is a pressable surface; the gridcell around it is not.
+	const pressable = usePressFeedback();
 	const cellAttrs = dayCellAttrs();
 	const rangeAttrs = $derived(
 		rangeBgAttrs({
@@ -211,6 +214,7 @@
 		<button
 			type="button"
 			data-date={day.iso}
+			{...pressable}
 			aria-label={dayLabel}
 			aria-disabled={state.effectivelyDisabled || undefined}
 			{...buttonTheme}

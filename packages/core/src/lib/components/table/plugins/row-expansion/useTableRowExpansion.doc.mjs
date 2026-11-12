@@ -66,7 +66,7 @@ export default {
 		},
 		{
 			name: 'panelVariant',
-			type: "'muted' | 'transparent'",
+			type: "'transparent' | 'muted'",
 			description:
 				"Background behind the detail panel. 'transparent' (default) paints nothing: the panel is the row's continuation and takes whatever surface the table sits on, so a Card shows through and a striped table's zebra reads on unchanged. 'muted' washes it, marking it as commentary rather than another row of data — reach for it in a bare table with no card, dividers or striping, where nothing else makes that distinction. The wash is a low-alpha near-black, so it is close to invisible over a dark card: 'muted' is largely a light-theme effect.",
 			default: "'transparent'"

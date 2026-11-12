@@ -144,10 +144,23 @@ const styles = stylex.create({
 		// variant, `.astryx-avatar-fallback.<size>`), so the defaults here are
 		// plain values with no internal-var seam. See Avatar.doc.mjs theming.
 		backgroundColor: colorVars['--color-neutral'],
-		color: colorVars['--color-text-secondary'],
+		color: colorVars['--color-text-primary'],
 		fontFamily: typographyVars['--font-family-body'],
 		fontWeight: fontWeightVars['--font-weight-medium'],
 		textTransform: 'uppercase'
+	},
+	// After `fallback` on a lone Avatar: in forced colors its initials and
+	// default icon take the color around them, which the browser forces to
+	// CanvasText, so a control that paints itself disabled (GrayText) or
+	// selected (HighlightText) carries them with it; an authored color would be
+	// forced to CanvasText whatever the control shows. A grouped face keeps it:
+	// its ring's opaque fill is forced to Canvas, so only CanvasText is sure to
+	// read on it.
+	loneFallback: {
+		color: {
+			default: colorVars['--color-text-primary'],
+			'@media (forced-colors: active)': 'currentColor'
+		}
 	},
 	status: {
 		position: 'absolute'
@@ -224,11 +237,12 @@ const groupStyles = stylex.create({
 		backgroundColor: colorVars['--color-background-surface'],
 		boxSizing: 'content-box'
 	},
+	// Every avatar takes the overlap, not just `:not(:first-child)`: a
+	// HoverCard or Tooltip wraps its trigger in its own element, which makes
+	// every wrapped avatar a first child. AvatarGroup pads its start edge by the
+	// same amount so the first avatar still sits inside the group's box.
 	overlap: {
-		marginInlineStart: {
-			default: null,
-			':not(:first-child)': 'var(--_avatar-group-overlap)'
-		}
+		marginInlineStart: 'var(--_avatar-group-overlap)'
 	}
 });
 
@@ -299,13 +313,13 @@ export function avatarImageAttrs(): SvelteStyleAttrs {
 }
 
 /** The initials plate. Its font size tracks the avatar's. */
-export function avatarInitialsAttrs(size: number): SvelteStyleAttrs {
-	return sx(styles.fallback, dynamicStyles.fontSize(size));
+export function avatarInitialsAttrs(size: number, isLone: boolean): SvelteStyleAttrs {
+	return sx(styles.fallback, isLone && styles.loneFallback, dynamicStyles.fontSize(size));
 }
 
 /** The generic-icon plate. No text, so no font size to scale. */
-export function avatarIconAttrs(): SvelteStyleAttrs {
-	return sx(styles.fallback);
+export function avatarIconAttrs(isLone: boolean): SvelteStyleAttrs {
+	return sx(styles.fallback, isLone && styles.loneFallback);
 }
 
 /**

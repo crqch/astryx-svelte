@@ -43,9 +43,19 @@
 		gray: 'gray'
 	};
 
-	const wrap = rowStatusWrapAttrs();
+	// A raw colour on an icon paints the glyph itself, as upstream's
+	// `customIcon` dynamic style does; a semantic colour maps to the theme's
+	// icon token instead.
+	const customIconColor = $derived(
+		status.icon != null && ICON_COLOR_BY_STATUS[status.color as TableRowStatusColor] == null
+			? status.color
+			: null
+	);
+	const wrap = $derived(rowStatusWrapAttrs(customIconColor));
 	const iconColor = $derived(
-		ICON_COLOR_BY_STATUS[status.color as TableRowStatusColor] ?? 'primary'
+		customIconColor != null
+			? 'inherit'
+			: (ICON_COLOR_BY_STATUS[status.color as TableRowStatusColor] ?? 'primary')
 	);
 	const dot = $derived(rowStatusDotAttrs(status.color));
 </script>

@@ -118,7 +118,7 @@ export default {
 		},
 		{
 			name: 'fit',
-			type: "'center' | 'cover' | 'contain'",
+			type: "'center' | 'contain' | 'cover'",
 			description:
 				'How the child is sized inside the ratio box. `cover` fills and crops media, `contain` fills and letterboxes, `center` keeps the natural size centered. When omitted, the child styles itself.'
 		},

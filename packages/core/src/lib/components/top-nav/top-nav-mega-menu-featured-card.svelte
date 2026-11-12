@@ -30,6 +30,7 @@
 		featuredCardBodyAttrs,
 		featuredCardDescriptionAttrs,
 		featuredCardImageAttrs,
+		featuredCardLinkArrowAttrs,
 		featuredCardLinkAttrs,
 		featuredCardTitleAttrs
 	} from './top-nav-mega-menu-featured-card.stylex.js';
@@ -82,6 +83,7 @@
 	const titleAttrs = featuredCardTitleAttrs();
 	const descriptionAttrs = featuredCardDescriptionAttrs();
 	const linkAttrs = featuredCardLinkAttrs();
+	const linkArrowAttrs = featuredCardLinkArrowAttrs();
 
 	const linkProps = $derived({
 		href: linkHref,
@@ -119,7 +121,8 @@
 		{/if}
 		{#if linkLabel && linkHref}
 			<LinkElement component={linkResolved.component} props={linkProps}>
-				{linkLabel} →
+				{linkLabel}
+				<span class={linkArrowAttrs.class} style={linkArrowAttrs.style}>→</span>
 			</LinkElement>
 		{/if}
 		{#if children}{@render children()}{/if}
