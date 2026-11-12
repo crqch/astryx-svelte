@@ -26,7 +26,7 @@ import { search, scoreCandidate, SEARCH_DOMAINS } from '../../../api/search/sear
 import { runCli } from '../../../test-utils/run-cli.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Run against the monorepo root so @astryx-svelte/core is discoverable.
+// Run against the monorepo root so @astryx-sv/core is discoverable.
 const REPO_ROOT = path.resolve(__dirname, '../../../../..');
 const OPTS = { cwd: REPO_ROOT };
 

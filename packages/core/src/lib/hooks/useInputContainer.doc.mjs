@@ -81,6 +81,6 @@ export default {
 	},
 	relatedComponents: ['TextInput', 'NumberInput', 'TimeInput', 'TextArea'],
 	relatedHooks: ['useClickableContainer'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

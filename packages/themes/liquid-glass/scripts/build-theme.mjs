@@ -31,7 +31,7 @@ const packageDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 await buildThemePackage({
 	packageDir,
-	packageName: '@astryx-svelte/theme-liquid-glass',
+	packageName: '@astryx-sv/theme-liquid-glass',
 	themeExport: 'liquidGlassTheme',
 	theme: liquidGlassTheme,
 	// The registry is named, not imported: this script runs under plain Node,

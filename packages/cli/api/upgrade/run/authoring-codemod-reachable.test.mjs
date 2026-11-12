@@ -54,20 +54,20 @@ afterEach(() => {
 function writeProject(version) {
 	fs.writeFileSync(
 		path.join(tmpDir, 'package.json'),
-		JSON.stringify({ name: 'fixture', dependencies: { '@astryx-svelte/core': version } }, null, 2)
+		JSON.stringify({ name: 'fixture', dependencies: { '@astryx-sv/core': version } }, null, 2)
 	);
-	const coreDir = path.join(tmpDir, 'node_modules', '@astryx-svelte', 'core');
+	const coreDir = path.join(tmpDir, 'node_modules', '@astryx-sv', 'core');
 	fs.mkdirSync(coreDir, { recursive: true });
 	fs.writeFileSync(
 		path.join(coreDir, 'package.json'),
-		JSON.stringify({ name: '@astryx-svelte/core', version }, null, 2)
+		JSON.stringify({ name: '@astryx-sv/core', version }, null, 2)
 	);
 	fs.mkdirSync(path.join(tmpDir, 'src'), { recursive: true });
 }
 
 /** The pre-migration authoring surface: tree-mode `useTableRowExpansion`. */
 const OLD_SURFACE = `<script lang="ts">
-	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-svelte/core';
+	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-sv/core';
 
 	const expansionState = useTableRowExpansionState(() => ({
 		baseData: tree,

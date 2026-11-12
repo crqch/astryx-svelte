@@ -9,8 +9,8 @@
 	because upstream declares it as one and a snippet cannot call a hook.
 -->
 <script lang="ts">
-	import { Card, SegmentedControl, SegmentedControlItem, Text, VStack } from '@astryx-svelte/core';
-	import type { FieldStatusVariant } from '@astryx-svelte/core';
+	import { Card, SegmentedControl, SegmentedControlItem, Text, VStack } from '@astryx-sv/core';
+	import type { FieldStatusVariant } from '@astryx-sv/core';
 	import CouponField from './CouponField.svelte';
 
 	const VALID_CODE = 'SAVE20';

@@ -12,7 +12,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import AstryxWordmark from '$lib/shell/astryx-wordmark.svelte';
 	import DiscordLogo from '$lib/shell/discord-logo.svelte';
 	import GitHubLogo from '$lib/shell/github-logo.svelte';
@@ -185,7 +185,7 @@
 			// included because a discussions tab is the natural home for the
 			// "is this a bug or a deliberate divergence?" question this port
 			// generates constantly — **but if Discussions is not enabled on
-			// devrohit06/astryx-svelte, delete this row rather than leaving it.**
+			// crqch/astryx-svelte, delete this row rather than leaving it.**
 			// It cannot be verified from here (the build has no network).
 			title: 'GitHub Discussions',
 			description:
@@ -213,7 +213,7 @@
 	 *
 	 * Its steps 3 and 4 describe shipping a new component into
 	 * `@astryxdesign/lab` and graduating it into `@astryxdesign/core`. There is no
-	 * `@astryx-svelte/lab`; this port has one package and no incubation stage, so
+	 * `@astryx-sv/lab`; this port has one package and no incubation stage, so
 	 * those two steps describe a gate that does not exist here. Printing them
 	 * anyway would advertise a process a contributor cannot follow — the worse
 	 * failure, by some distance, than diverging openly.
@@ -577,8 +577,8 @@
 						     which process they are reading. -->
 						<Text type="supporting" color="secondary">
 							This is the Svelte port's process, not upstream's. Astryx incubates new components in
-							@astryxdesign/lab; there is no @astryx-svelte/lab, so the gate here is the class
-							oracle instead.
+							@astryxdesign/lab; there is no @astryx-sv/lab, so the gate here is the class oracle
+							instead.
 						</Text>
 					</VStack>
 					{#each PROCESS_STEPS as step (step.number)}

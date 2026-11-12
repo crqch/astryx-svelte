@@ -9,7 +9,7 @@ tags:
   - 'Svelte'
   - 'Parity'
   - 'Testing'
-releasePackage: '@astryx-svelte/core'
+releasePackage: '@astryx-sv/core'
 relatedDocs:
   - title: 'Getting started'
     href: '/docs/getting-started'
@@ -119,7 +119,7 @@ every commit.
 - **626 example blocks** on the docs site, transcribed from upstream's own blocks rather than
   re-authored, each naming its source
 - Upstream's **43 page templates**, ported as real SvelteKit routes and shipped by
-  `@astryx-svelte/cli`, which scaffolds them into your project
+  `@astryx-sv/cli`, which scaffolds them into your project
 
 ## What is not
 
@@ -137,6 +137,6 @@ quietly is a fork with extra steps.
 
 ## Try it
 
-The source is on [GitHub](https://github.com/devrohit06/astryx-svelte). Every component page on this
+The source is on [GitHub](https://github.com/crqch/astryx-svelte). Every component page on this
 site renders live Svelte, and every example is a real file in the repository — including the one that
 was rendering in the wrong theme until it was not.

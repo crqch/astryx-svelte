@@ -124,6 +124,6 @@ export default {
 	},
 	relatedComponents: ['Table'],
 	relatedHooks: ['useTableColumnSettings', 'useTableSelectionState'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

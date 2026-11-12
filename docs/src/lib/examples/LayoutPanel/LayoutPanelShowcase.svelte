@@ -13,7 +13,7 @@
 		LayoutPanel,
 		List,
 		ListItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Center width={400}>

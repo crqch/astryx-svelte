@@ -121,7 +121,7 @@ the IME" rather than four.
 
 This port vendored three of upstream's locale catalogs — `en`, `fr-FR` and the `pseudo` build. The
 `exports` map has always declared `"./locales/*.json"`, so
-`@astryx-svelte/core/locales/de-DE.json` was a specifier a consumer could legitimately write from
+`@astryx-sv/core/locales/de-DE.json` was a specifier a consumer could legitimately write from
 upstream's documentation and it threw `ERR_MODULE_NOT_FOUND`. All **30** catalogs are vendored now,
 byte-identical to upstream's, and `en`/`fr-FR` are refreshed — they were stale, not modified, and
 were missing keys added after `0.4.1`.
@@ -149,9 +149,9 @@ required and only the exception carries a visible indicator. Fields resolve `isR
 
 ### New
 
-- `characterCount`, `firstCharacter` and `truncateCharacters` on `@astryx-svelte/core/utils` —
+- `characterCount`, `firstCharacter` and `truncateCharacters` on `@astryx-sv/core/utils` —
   grapheme-aware, so an emoji or a combining sequence counts as one character.
-- `isImeKeyEvent` moves to `@astryx-svelte/core/utils`. The `hooks` re-export stays for one release
+- `isImeKeyEvent` moves to `@astryx-sv/core/utils`. The `hooks` re-export stays for one release
   and is marked deprecated, matching upstream.
 - `getStandaloneShortWeekdayNames` for calendar headers, from the CLDR standalone forms.
 - `deepMergeComponents`, split out of `defineTheme` so component style maps can be merged directly.
@@ -176,7 +176,7 @@ site and duplicated it. Nothing published changes: the route was excluded from t
 
 ### Breaking: `expandTypeScale` takes upstream's config
 
-`expandTypeScale` is published from `@astryx-svelte/core/theme`, and its signature was not
+`expandTypeScale` is published from `@astryx-sv/core/theme`, and its signature was not
 upstream's. It took the whole `typography` block — `{scale, body, heading, code}` — and did two
 jobs upstream gives to `defineTheme`: building `--font-family-*` from the role declarations, and
 mapping named weights (`'bold'`) onto `var(--font-weight-bold)`.
@@ -206,7 +206,7 @@ One behaviour is removed: a `typography` with weights but **no `scale`** used to
 ### Breaking: StyleX priority layers move under `astryx-base`
 
 Only if you **compile this package from source** — a consumer of the pre-built
-`@astryx-svelte/core/astryx.css` is unaffected, and that is the default.
+`@astryx-sv/core/astryx.css` is unaffected, and that is the default.
 
 Upstream's own build wraps its compiled output in `@layer astryx-base { … }`, so the
 `priority1…N` buckets StyleX emits are nested inside it. This port turned layers on without that
@@ -220,7 +220,7 @@ order around `astryx-base` instead.**
 
 ### New: a Tailwind bridge
 
-`@astryx-svelte/core/tailwind-theme.css` maps the design tokens onto Tailwind v4 `@theme inline`
+`@astryx-sv/core/tailwind-theme.css` maps the design tokens onto Tailwind v4 `@theme inline`
 variables, so a Tailwind consumer writes `class="text-primary bg-surface"` rather than
 `class="text-[var(--color-text-primary)]"`. Ported from upstream's, token for token. Because it
 registers variables rather than emitting declarations, theme switching keeps working — the utilities
@@ -350,7 +350,7 @@ Live in shipped behaviour, not style drift:
 - `useTruncation`, `SizeProvider` and `FormLayoutContext` are published, closing the last of the
   missing exports upstream ships.
 - `themeProps`, `parseStyleKey`, `observeResize` and seven siblings are reachable from
-  `@astryx-svelte/core/utils`, the subpath upstream puts them on. Their existing root exports stay.
+  `@astryx-sv/core/utils`, the subpath upstream puts them on. Their existing root exports stay.
 - `BreadcrumbMenuDividerProps` and `ContextMenuDividerProps` complete those two alias families.
 - Three CLI internals (`buildHelp`, `buildKit`, `importSpecifier`) left the `api` barrel, where
   upstream keeps them module-private.
@@ -391,7 +391,7 @@ codemods this port has ever registered**; `assets/codemods/registry.mjs` had bee
 since it was written, because a codemod migrates _between_ two releases and there had only been one.
 
 ```sh
-npx @astryx-svelte/cli upgrade --from 0.3.1
+npx @astryx-sv/cli upgrade --from 0.3.1
 ```
 
 All three of upstream's v0.4.0 transforms are here: the row-expansion migration,
@@ -508,8 +508,8 @@ when upstream publishes its own 0.3.1.
 ### A pre-built stylesheet, the same as upstream's
 
 ```ts
-import '@astryx-svelte/core/base.css';
-import '@astryx-svelte/core/astryx.css';
+import '@astryx-sv/core/base.css';
+import '@astryx-sv/core/astryx.css';
 ```
 
 That is now the entire setup. 0.3.0 said this package "cannot" ship a pre-built stylesheet; that was
@@ -553,11 +553,11 @@ replicated; recorded, and the skip retires itself when they fix the glob.
 
 ### The StyleX setup is one line now
 
-`@astryx-svelte/core/vite` exports `astryx()` — the StyleX plugin plus the two settings Vite would
+`@astryx-sv/core/vite` exports `astryx()` — the StyleX plugin plus the two settings Vite would
 otherwise use to route this package around it:
 
 ```ts
-import { astryx } from '@astryx-svelte/core/vite';
+import { astryx } from '@astryx-sv/core/vite';
 export default defineConfig({ plugins: [astryx(), sveltekit()] });
 ```
 
@@ -615,7 +615,7 @@ anywhere unfurled as a bare URL.
   where no consumer could benefit from it.
 - **No package declared `main`.** Upstream's every package does. With `exports` present, Node and
   modern bundlers never read `main`, which is why this went unnoticed — but anything that does not
-  understand `exports` could not resolve `@astryx-svelte/core` or any theme at all. Added to all
+  understand `exports` could not resolve `@astryx-sv/core` or any theme at all. Added to all
   nine.
 - **`doctor` reported optional peer dependencies as missing.** `peerDependenciesMeta.optional` was
   ignored, so adding `vite` and `@stylexjs/unplugin` as optional peers of core told every project on
@@ -626,17 +626,17 @@ anywhere unfurled as a bare URL.
 
 The first release. Ports Astryx `0.3.0` — the tag, not the tarball, where the two disagree.
 
-Documentation: **<https://astryx-svelte.rohitk06.in/>**, generated from the same `.doc.mjs` modules
+Documentation: **<https://astryx.crqch.dev/>**, generated from the same `.doc.mjs` modules
 the CLI reads, so the site and the terminal cannot disagree.
 
 ### Published
 
-| Package                                                                   | What it is                                                           |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `@astryx-svelte/core`                                                     | Components, theme system, hooks, message catalogs                    |
-| `@astryx-svelte/cli`                                                      | Docs, search, page templates, theme tooling and codemods             |
-| `@astryx-svelte/theme-{neutral,butter,chocolate,gothic,matcha,stone,y2k}` | Upstream's seven themes                                              |
-| `@astryx-svelte/theme-liquid-glass`                                       | macOS translucent materials — **no upstream counterpart**, see below |
+| Package                                                               | What it is                                                           |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `@astryx-sv/core`                                                     | Components, theme system, hooks, message catalogs                    |
+| `@astryx-sv/cli`                                                      | Docs, search, page templates, theme tooling and codemods             |
+| `@astryx-sv/theme-{neutral,butter,chocolate,gothic,matcha,stone,y2k}` | Upstream's seven themes                                              |
+| `@astryx-sv/theme-liquid-glass`                                       | macOS translucent materials — **no upstream counterpart**, see below |
 
 ### What is in it
 

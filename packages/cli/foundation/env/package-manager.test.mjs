@@ -3,7 +3,7 @@
  * CLI invocation stem.
  *
  * Ported case for case from upstream's suite. Only the identity strings move:
- * the bin is `astryx-svelte` and the scoped package is `@astryx-svelte/cli`.
+ * the bin is `astryx-svelte` and the scoped package is `@astryx-sv/cli`.
  * That rename is not cosmetic here — `formatCliCommand`'s leading-token strip
  * had to diverge from upstream's, which anchors on a word boundary after
  * `astryx`; a word boundary matches at the hyphen, so upstream's pattern would
@@ -166,17 +166,17 @@ describe('isCliOneOff', () => {
 
 	it('detects a pnpm dlx cache entry', () => {
 		process.argv[1] =
-			'/home/u/.cache/pnpm/dlx/9f/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+			'/home/u/.cache/pnpm/dlx/9f/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		expect(isCliOneOff()).toBe(true);
 	});
 
 	it('detects a bunx cache entry', () => {
-		process.argv[1] = '/home/u/.bun/install/cache/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+		process.argv[1] = '/home/u/.bun/install/cache/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		expect(isCliOneOff()).toBe(true);
 	});
 
 	it('is false for an installed node_modules entry', () => {
-		process.argv[1] = '/proj/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+		process.argv[1] = '/proj/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		expect(isCliOneOff()).toBe(false);
 	});
 
@@ -188,7 +188,7 @@ describe('isCliOneOff', () => {
 
 describe('getCliInvocation', () => {
 	it('uses the run-prefix + bare bin when installed (not one-off)', () => {
-		process.argv[1] = '/proj/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+		process.argv[1] = '/proj/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		const dir = makeTmpDir();
 		fs.writeFileSync(path.join(dir, 'pnpm-lock.yaml'), '');
 		expect(getCliInvocation(dir)).toBe('pnpm exec astryx-svelte');
@@ -198,21 +198,21 @@ describe('getCliInvocation', () => {
 		process.argv[1] = '/home/u/.npm/_npx/a1b2/node_modules/.bin/astryx-svelte';
 		const dir = makeTmpDir();
 		delete process.env.npm_config_user_agent;
-		expect(getCliInvocation(dir)).toBe('npx @astryx-svelte/cli');
+		expect(getCliInvocation(dir)).toBe('npx @astryx-sv/cli');
 	});
 
 	it('pairs the dlx runner with the scoped package for pnpm one-off', () => {
 		process.argv[1] =
-			'/home/u/.cache/pnpm/dlx/9f/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+			'/home/u/.cache/pnpm/dlx/9f/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		const dir = makeTmpDir();
 		fs.writeFileSync(path.join(dir, 'pnpm-lock.yaml'), '');
-		expect(getCliInvocation(dir)).toBe('pnpm dlx @astryx-svelte/cli');
+		expect(getCliInvocation(dir)).toBe('pnpm dlx @astryx-sv/cli');
 	});
 });
 
 describe('formatCliCommand', () => {
 	it('strips a leading "astryx-svelte" token and prepends the invocation stem', () => {
-		process.argv[1] = '/proj/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+		process.argv[1] = '/proj/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		const dir = makeTmpDir();
 		fs.writeFileSync(path.join(dir, 'pnpm-lock.yaml'), '');
 		expect(formatCliCommand('astryx-svelte component Button', dir)).toBe(
@@ -221,7 +221,7 @@ describe('formatCliCommand', () => {
 	});
 
 	it('accepts a bare subcommand (no leading astryx-svelte)', () => {
-		process.argv[1] = '/proj/node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs';
+		process.argv[1] = '/proj/node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs';
 		const dir = makeTmpDir();
 		fs.writeFileSync(path.join(dir, 'package-lock.json'), '{}');
 		expect(formatCliCommand('docs tokens', dir)).toBe('npx astryx-svelte docs tokens');
@@ -232,7 +232,7 @@ describe('formatCliCommand', () => {
 		const dir = makeTmpDir();
 		fs.writeFileSync(path.join(dir, 'package-lock.json'), '{}');
 		expect(formatCliCommand('astryx-svelte component Button', dir)).toBe(
-			'npx @astryx-svelte/cli component Button'
+			'npx @astryx-sv/cli component Button'
 		);
 	});
 });

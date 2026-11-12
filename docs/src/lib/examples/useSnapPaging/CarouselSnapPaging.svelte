@@ -8,7 +8,7 @@
 	upstream maps `children`, the same data-driven translation `OverflowList` took.
 -->
 <script lang="ts">
-	import { Card, Carousel, Stack, Switch, Text, useSnapPaging } from '@astryx-svelte/core';
+	import { Card, Carousel, Stack, Switch, Text, useSnapPaging } from '@astryx-sv/core';
 
 	const SCREENS = [
 		{ title: 'Welcome', body: 'Swipe to see what is new.' },

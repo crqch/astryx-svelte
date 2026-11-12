@@ -93,6 +93,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Outline', 'Markdown'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'Navigation'
 };

@@ -72,7 +72,7 @@
 		VStack,
 		useMediaQuery,
 		type IconName
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		Cog6ToothIcon,
 		HashtagIcon,

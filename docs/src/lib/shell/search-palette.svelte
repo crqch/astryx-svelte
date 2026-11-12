@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	import { SEARCH_ITEMS } from './search-index.js';
-	import { createStaticSource } from '@astryx-svelte/core';
-	import type { SearchableItem } from '@astryx-svelte/core';
+	import { createStaticSource } from '@astryx-sv/core';
+	import type { SearchableItem } from '@astryx-sv/core';
 
 	/** What the palette carries per row, beyond the id/label a source needs. */
 	type SearchAux = { group: string; href: string; description: string };
@@ -33,7 +33,7 @@
 
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { CommandPalette, Text } from '@astryx-svelte/core';
+	import { CommandPalette, Text } from '@astryx-sv/core';
 
 	/**
 	 * The `⌘K` palette — **now the real `CommandPalette`**, which is what batch 9

@@ -3,13 +3,13 @@
  *
  * Two entries differ from upstream's beyond compression. The Quick Start and
  * "Runtime vs Built" notes describe the published-theme story this port
- * actually has (every `@astryx-svelte/theme-*` is built; there is no `/built`
+ * actually has (every `@astryx-sv/theme-*` is built; there is no `/built`
  * subpath), and the useTheme override is placed on a prose block rather than a
  * code block — upstream's index lands on its code block, where the loader's
  * type check makes it a silent no-op.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsDense = {
 	description: 'Theme provider, custom themes, light/dark, component overrides',
 	sections: [
@@ -34,7 +34,7 @@ export const docsDense = {
 				null,
 				{
 					type: 'prose',
-					text: 'published: neutral (start here), butter, chocolate, gothic (dark-only), liquid-glass, matcha, stone, y2k. @astryx-svelte/theme-{name} = built theme + icons. /tokens = plain data (node-readable). /theme.css = stylesheet.'
+					text: 'published: neutral (start here), butter, chocolate, gothic (dark-only), liquid-glass, matcha, stone, y2k. @astryx-sv/theme-{name} = built theme + icons. /tokens = plain data (node-readable). /theme.css = stylesheet.'
 				}
 			]
 		},

@@ -1,7 +1,7 @@
 /**
  * Ported from Astryx's `src/internal/calendar-system.ts`.
  *
- * `@astryx-svelte/core/internal/calendar-system`: the hook that resolves the
+ * `@astryx-sv/core/internal/calendar-system`: the hook that resolves the
  * calendar a date component shows, and the helpers that name its months and
  * days as Calendar does, for Lab components.
  *

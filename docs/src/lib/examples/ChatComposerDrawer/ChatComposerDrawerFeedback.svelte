@@ -16,7 +16,7 @@
 		ListItem,
 		Stack,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const options = [
 		{ key: 'A', label: 'Yes' },

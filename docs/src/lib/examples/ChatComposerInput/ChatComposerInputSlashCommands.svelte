@@ -7,14 +7,14 @@
 	there.
 -->
 <script lang="ts">
-	import type { ChatComposerTrigger, SearchableItem } from '@astryx-svelte/core';
+	import type { ChatComposerTrigger, SearchableItem } from '@astryx-sv/core';
 	import {
 		ChatComposer,
 		ChatComposerInput,
 		Stack,
 		TypeaheadItem,
 		createStaticSource
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const COMMANDS: SearchableItem<{ description: string }>[] = [
 		{

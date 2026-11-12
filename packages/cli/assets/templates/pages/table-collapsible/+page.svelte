@@ -70,7 +70,7 @@
 		useTableSortableState,
 		type TableColumn,
 		type TableSortComparator
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type { Attachment } from 'svelte/attachments';
 	import type { Component, Snippet } from 'svelte';
 	import {

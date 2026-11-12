@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ChatLayoutScrollButton, Stack, Text } from '@astryx-svelte/core';
+	import { ChatLayoutScrollButton, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={4}>

@@ -12,7 +12,7 @@
 	example always shows a live, in-range window rather than a stale hardcoded one.
 -->
 <script lang="ts">
-	import { DateInput, Stack, Text, type ISODateString } from '@astryx-svelte/core';
+	import { DateInput, Stack, Text, type ISODateString } from '@astryx-sv/core';
 
 	const pad = (n: number) => String(n).padStart(2, '0');
 	const today = new Date();

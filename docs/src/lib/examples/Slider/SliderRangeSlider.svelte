@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Slider } from '@astryx-svelte/core';
+	import { Slider } from '@astryx-sv/core';
 
 	let value = $state<[number, number]>([20, 80]);
 </script>

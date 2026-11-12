@@ -39,7 +39,7 @@
 		Text,
 		Toolbar,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		AdjustmentsHorizontalIcon,
 		Bars4Icon,

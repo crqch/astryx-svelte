@@ -8,7 +8,7 @@
 	the group.
 -->
 <script lang="ts">
-	import { Button, Text, VStack, useListFocus, useTypeahead } from '@astryx-svelte/core';
+	import { Button, Text, VStack, useListFocus, useTypeahead } from '@astryx-sv/core';
 
 	const COUNTRIES = [
 		'Belgium',

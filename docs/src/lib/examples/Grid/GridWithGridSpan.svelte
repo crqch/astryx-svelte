@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Grid, GridSpan, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Grid, GridSpan, Text, VStack } from '@astryx-sv/core';
 
 	const tiles = [
 		{ label: 'Components', note: '54 available' },

@@ -7,7 +7,7 @@
 	second group opts into custom text.
 -->
 <script lang="ts">
-	import { Avatar, Stack, Text } from '@astryx-svelte/core';
+	import { Avatar, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={5}>

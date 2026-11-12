@@ -8,7 +8,7 @@
 	files with `Access-Control-Allow-Origin: *`.
 -->
 <script lang="ts">
-	import { AspectRatio, MediaTheme, Switch, Text, useImageMode, VStack } from '@astryx-svelte/core';
+	import { AspectRatio, MediaTheme, Switch, Text, useImageMode, VStack } from '@astryx-sv/core';
 
 	const TEMPLATE_ASSETS =
 		'https://raw.githubusercontent.com/meta/astryx/7a298e616fa241b9858670757c8b3fa99abdf5f7' +

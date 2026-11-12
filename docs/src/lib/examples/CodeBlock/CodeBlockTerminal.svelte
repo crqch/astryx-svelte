@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CodeBlock, SyntaxTheme } from '@astryx-svelte/core';
-	import { githubDark } from '@astryx-svelte/core/theme/syntax';
+	import { CodeBlock, SyntaxTheme } from '@astryx-sv/core';
+	import { githubDark } from '@astryx-sv/core/theme/syntax';
 
 	const commands = `$ astryx init --features agents
 ✓ AI agent docs installed → .claude/CLAUDE.md

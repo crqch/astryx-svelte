@@ -115,6 +115,6 @@ export default {
 	},
 	relatedComponents: ['Table'],
 	relatedHooks: ['useTableSortable', 'useCollator'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

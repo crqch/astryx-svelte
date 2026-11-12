@@ -11,7 +11,7 @@
  * This is one half of the seam: `api/` throws, `clients/cli/` catches and
  * formats. An API function never writes to stdout, never calls `process.exit`,
  * and never knows whether `--json` is active — so the same function is usable
- * from a programmatic embedder (`@astryx-svelte/cli/api`) and from the CLI, and
+ * from a programmatic embedder (`@astryx-sv/cli/api`) and from the CLI, and
  * the JSON contract is guaranteed in exactly one place.
  */
 

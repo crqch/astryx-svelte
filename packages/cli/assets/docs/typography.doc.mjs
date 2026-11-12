@@ -3,7 +3,7 @@
  * Svelte markup / plain TypeScript.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'typography',
 	title: 'Typography',
@@ -124,7 +124,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Heading for document structure',
 					code: `<script lang="ts">
-	import { Heading } from '@astryx-svelte/core';
+	import { Heading } from '@astryx-sv/core';
 </script>
 
 <!-- Heading levels map to semantic tokens: level 1 -> --text-heading-1-* -->
@@ -144,7 +144,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Text for body, label, and display text',
 					code: `<script lang="ts">
-	import { Text } from '@astryx-svelte/core';
+	import { Text } from '@astryx-sv/core';
 </script>
 
 <Text type="body">Body text at the base scale.</Text>
@@ -160,7 +160,7 @@ export const docs = {
 					type: 'code',
 					lang: 'ts',
 					label: 'Customizing the type scale via defineTheme',
-					code: `import { defineTheme } from '@astryx-svelte/core/theme';
+					code: `import { defineTheme } from '@astryx-sv/core/theme';
 
 // Adjust the entire ramp holistically with base and ratio
 const editorialTheme = defineTheme({

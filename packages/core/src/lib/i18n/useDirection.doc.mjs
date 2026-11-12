@@ -52,6 +52,6 @@ export default {
 	},
 	relatedComponents: ['InternationalizationProvider'],
 	relatedHooks: ['useLocale', 'useTranslator'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

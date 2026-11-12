@@ -116,7 +116,7 @@ export default {
 	},
 	playground: {
 		defaults: {
-			code: 'import {Button} from \'@astryx-svelte/core\';\n\nexport function App() {\n  return <Button label="Hello" variant="primary" />;\n}',
+			code: 'import {Button} from \'@astryx-sv/core\';\n\nexport function App() {\n  return <Button label="Hello" variant="primary" />;\n}',
 			language: 'tsx',
 			hasCopyButton: true
 		}
@@ -132,7 +132,7 @@ export default {
 			name: 'language',
 			type: 'string',
 			description:
-				'Language for syntax highlighting. A string selects a built-in: ts, js, tsx, jsx, json, html, xml, svg, css, scss, less, python, bash/sh/zsh/shell, php, hack, yaml, markdown, c, cpp (c++, cc, cxx, hpp, hh), sql, rust, kotlin, swift, go. Any other language is a value you import on its own and pass here: graphql, java, thrift, objectiveC, toml, powershell, ruby, lua, dockerfile from @astryx-svelte/core<path> (e.g. languages/graphql, languages/objective-c), or your own made with createCodeLanguage({name, identifiers, tokenize}). A value labels with its name and reflects its first identifier as data-language. Use "plaintext" to disable.',
+				'Language for syntax highlighting. A string selects a built-in: ts, js, tsx, jsx, json, html, xml, svg, css, scss, less, python, bash/sh/zsh/shell, php, hack, yaml, markdown, c, cpp (c++, cc, cxx, hpp, hh), sql, rust, kotlin, swift, go. Any other language is a value you import on its own and pass here: graphql, java, thrift, objectiveC, toml, powershell, ruby, lua, dockerfile from @astryx-sv/core<path> (e.g. languages/graphql, languages/objective-c), or your own made with createCodeLanguage({name, identifiers, tokenize}). A value labels with its name and reflects its first identifier as data-language. Use "plaintext" to disable.',
 			default: "'plaintext'"
 		},
 		{
@@ -236,7 +236,7 @@ export default {
 			name: 'syntaxTheme',
 			type: 'SyntaxThemeDefinition',
 			description:
-				'Per-instance syntax theme override. Shorthand for wrapping the block in <SyntaxTheme theme={...}>. Accepts a preset from @astryx-svelte/core/theme/syntax or a theme created with defineSyntaxTheme(). Defaults to the nearest SyntaxTheme ancestor or the theme-level syntax colors.'
+				'Per-instance syntax theme override. Shorthand for wrapping the block in <SyntaxTheme theme={...}>. Accepts a preset from @astryx-sv/core/theme/syntax or a theme created with defineSyntaxTheme(). Defaults to the nearest SyntaxTheme ancestor or the theme-level syntax colors.'
 		},
 		{
 			name: 'highlightMode',

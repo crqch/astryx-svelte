@@ -7,7 +7,7 @@
 	closes because the person moved on must not undo the move.
 -->
 <script lang="ts">
-	import { BottomSheet, Button, HStack, Heading, Section, Text, VStack } from '@astryx-svelte/core';
+	import { BottomSheet, Button, HStack, Heading, Section, Text, VStack } from '@astryx-sv/core';
 
 	type Step = 'review' | 'confirm' | null;
 

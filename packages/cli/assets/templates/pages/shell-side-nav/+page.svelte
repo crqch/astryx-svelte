@@ -38,7 +38,7 @@
 		VStack,
 		type IconName,
 		type StatusDotVariant
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { SparklesIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	type Conversation = {

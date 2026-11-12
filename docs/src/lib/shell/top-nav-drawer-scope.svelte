@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { TopNavRenderContext } from '@astryx-svelte/core';
+	import { TopNavRenderContext } from '@astryx-sv/core';
 
 	/**
 	 * Publishes `'drawer'` to a subtree, standing in for upstream's

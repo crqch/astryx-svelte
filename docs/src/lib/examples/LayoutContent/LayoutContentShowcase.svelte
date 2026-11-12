@@ -14,7 +14,7 @@
 		LayoutPanel,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Center width={500}>

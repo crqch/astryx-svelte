@@ -17,7 +17,7 @@
 	it is the registry's `close`.
 -->
 <script lang="ts">
-	import { Divider, HStack, Icon, IconButton, Item, useContainerReveal } from '@astryx-svelte/core';
+	import { Divider, HStack, Icon, IconButton, Item, useContainerReveal } from '@astryx-sv/core';
 
 	const TABS = [
 		{ name: 'Project brief', isActive: true },

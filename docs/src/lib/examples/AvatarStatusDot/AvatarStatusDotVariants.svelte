@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Avatar, AvatarStatusDot, HStack } from '@astryx-svelte/core';
+	import { Avatar, AvatarStatusDot, HStack } from '@astryx-sv/core';
 </script>
 
 {#snippet onlineDot()}<AvatarStatusDot variant="success" label="Online" />{/snippet}

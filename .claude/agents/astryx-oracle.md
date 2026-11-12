@@ -19,7 +19,7 @@ module to make a case pass — a mismatch is a report, and the fix belongs to wh
 the component. The one exception is a mismatch you can prove is a typo in the case itself
 (wrong `upstreamFile`, wrong key name).
 
-Run it with `bun run --filter @astryx-svelte/core test:parity`, or `node scripts/compare-upstream-classes.mjs`
+Run it with `bun run --filter @astryx-sv/core test:parity`, or `node scripts/compare-upstream-classes.mjs`
 from `packages/core`.
 
 ## The two comparison modes, and how to pick

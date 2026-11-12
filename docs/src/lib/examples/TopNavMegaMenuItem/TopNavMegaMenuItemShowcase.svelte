@@ -9,7 +9,7 @@
 	size.
 -->
 <script lang="ts">
-	import { Grid, TopNavMegaMenuItem } from '@astryx-svelte/core';
+	import { Grid, TopNavMegaMenuItem } from '@astryx-sv/core';
 </script>
 
 {#snippet boltIcon()}

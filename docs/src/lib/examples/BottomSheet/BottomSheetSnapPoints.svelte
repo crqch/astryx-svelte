@@ -15,7 +15,7 @@
 		VStack,
 		type BottomSheetSnapPoint,
 		type IconName
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	/**
 	 * Upstream's steps carry Heroicons — `MapPin`, `ArrowRight`, `ArrowUp`,

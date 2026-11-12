@@ -148,14 +148,14 @@ describe('doctor leaf — degradation & error paths', () => {
 describe('doctor — checkVersionAlignment', () => {
 	it('skips (info) when the core version is not comparable semver', () => {
 		const dir = mkProject({
-			'node_modules/@astryx-svelte/core/package.json': JSON.stringify({
-				name: '@astryx-svelte/core',
+			'node_modules/@astryx-sv/core/package.json': JSON.stringify({
+				name: '@astryx-sv/core',
 				version: 'workspace:*'
 			})
 		});
 		const c = checkVersionAlignment({
 			cwd: dir,
-			coreDir: path.join(dir, 'node_modules/@astryx-svelte/core'),
+			coreDir: path.join(dir, 'node_modules/@astryx-sv/core'),
 			nodeVersion: '',
 			configPath: null,
 			configTheme: null
@@ -166,14 +166,14 @@ describe('doctor — checkVersionAlignment', () => {
 
 	it('does not leak NaN/undefined for a comparable semver core version', () => {
 		const dir = mkProject({
-			'node_modules/@astryx-svelte/core/package.json': JSON.stringify({
-				name: '@astryx-svelte/core',
+			'node_modules/@astryx-sv/core/package.json': JSON.stringify({
+				name: '@astryx-sv/core',
 				version: '0.0.1'
 			})
 		});
 		const c = checkVersionAlignment({
 			cwd: dir,
-			coreDir: path.join(dir, 'node_modules/@astryx-svelte/core'),
+			coreDir: path.join(dir, 'node_modules/@astryx-sv/core'),
 			nodeVersion: '',
 			configPath: null,
 			configTheme: null

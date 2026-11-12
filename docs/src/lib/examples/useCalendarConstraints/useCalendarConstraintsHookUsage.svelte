@@ -11,7 +11,7 @@
 		useCalendarDays,
 		VStack,
 		type CalendarDay
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	// Hotel closed on Mondays (day === 1)
 	const isNotMonday = (date: Date) => date.getDay() !== 1;

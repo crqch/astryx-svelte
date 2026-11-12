@@ -5,8 +5,8 @@
 	here, so each is declared above the component rather than inline.
 -->
 <script lang="ts">
-	import { CommandPalette, CommandPaletteInput } from '@astryx-svelte/core';
-	import type { SearchSource } from '@astryx-svelte/core';
+	import { CommandPalette, CommandPaletteInput } from '@astryx-sv/core';
+	import type { SearchSource } from '@astryx-sv/core';
 
 	const allFiles = [
 		{ id: 'readme', label: 'README.md' },

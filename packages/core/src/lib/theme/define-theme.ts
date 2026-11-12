@@ -195,7 +195,7 @@ export interface ThemeConfig {
 	 *
 	 * @example
 	 * ```ts
-	 * import { dracula } from '@astryx-svelte/core/theme/syntax';
+	 * import { dracula } from '@astryx-sv/core/theme/syntax';
 	 * defineTheme({ name: 'my-theme', syntax: dracula });
 	 * ```
 	 */
@@ -216,7 +216,7 @@ export interface ThemeConfig {
 	 *
 	 * @example
 	 * ```ts
-	 * import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	 * import { neutralTheme } from '@astryx-sv/theme-neutral';
 	 *
 	 * const myTheme = defineTheme({
 	 * 	name: 'my-brand',

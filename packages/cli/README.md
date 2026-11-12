@@ -5,13 +5,13 @@
 -->
 
 <img
-	src="https://raw.githubusercontent.com/DevRohit06/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
+	src="https://raw.githubusercontent.com/crqch/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
 	alt=""
 	width="64"
 	height="64"
 />
 
-# @astryx-svelte/cli
+# @astryx-sv/cli
 
 The CLI is the primary interface for working with the design system, for humans and machines alike.
 It provides component documentation, design tokens, reference topics, theming tools, page templates
@@ -20,18 +20,18 @@ imports. AI agents and build tools use the same API that powers the CLI, so an a
 end-to-end frontend loop without scraping `--help`.
 
 ```bash
-npm install -D @astryx-svelte/cli
+npm install -D @astryx-sv/cli
 ```
 
 Everything below is written as `pnpm exec astryx-svelte …`, which is the form that works once the
 package is a dependency of your project, and is what the CLI itself prints in its follow-up
-commands. From a clone of [the repository](https://github.com/devrohit06/astryx-svelte), the
+commands. From a clone of [the repository](https://github.com/crqch/astryx-svelte), the
 equivalent is `node packages/cli/bin/astryx-svelte.mjs …`.
 
 The binary is `astryx-svelte`, not `astryx`. Astryx's own CLI publishes `astryx`, and bare `astryx`
 on npm is an unrelated package; a distinct name means both can be installed in the same project.
 
-Everything the CLI prints is also on [the documentation site](https://astryx-svelte.rohitk06.in/) —
+Everything the CLI prints is also on [the documentation site](https://astryx.crqch.dev/) —
 both read the same `.doc.mjs` modules, so the two cannot drift.
 
 ## Finding things: `astryx-svelte search`
@@ -48,19 +48,19 @@ Results for "button" (20)
 
 name:        Button
 domain:      component
-import:      @astryx-svelte/core
+import:      @astryx-sv/core
 description: Button triggers an action when clicked. Use it for form submissions, …
 command:     pnpm exec astryx-svelte component Button
 
 name:        IconButton
 domain:      component
-import:      @astryx-svelte/core
+import:      @astryx-sv/core
 description: A button that shows only an icon with no visible text. …
 command:     pnpm exec astryx-svelte component IconButton
 
 name:        useClickableContainer
 domain:      hook
-import:      @astryx-svelte/core/hooks
+import:      @astryx-sv/core/hooks
 description: Makes a container element clickable while preserving nested interactive …
 command:     pnpm exec astryx-svelte util useClickableContainer
 ```
@@ -141,7 +141,7 @@ Codes are **append-only**: once shipped, a code's meaning never changes and a co
 New error conditions get new codes.
 
 ```typescript
-import { isError } from '@astryx-svelte/cli/json';
+import { isError } from '@astryx-sv/cli/json';
 
 const result = parseResponse(raw);
 if (isError(result)) {
@@ -150,7 +150,7 @@ if (isError(result)) {
 			// suggest the closest match
 			break;
 		case 'ERR_CORE_NOT_FOUND':
-			// prompt the user to install @astryx-svelte/core
+			// prompt the user to install @astryx-sv/core
 			break;
 		default:
 			console.error(result.error);
@@ -175,7 +175,7 @@ present and unused, exactly as an append-only list requires.
 | `ERR_INVALID_LANG`        | `--lang` was given a value outside its choices (`en`, `zh`, `dense`).                  |
 | `ERR_INVALID_DETAIL`      | `--detail` was given a value outside its choices (`full`, `compact`, `brief`).         |
 | `ERR_NODE_VERSION`        | The running Node.js version is below the supported minimum.                            |
-| `ERR_CORE_NOT_FOUND`      | `@astryx-svelte/core` could not be located (not installed / not in a monorepo).        |
+| `ERR_CORE_NOT_FOUND`      | `@astryx-sv/core` could not be located (not installed / not in a monorepo).            |
 | `ERR_UNKNOWN_COMPONENT`   | No component matched the requested name.                                               |
 | `ERR_UNKNOWN_HOOK`        | No util matched the requested name.                                                    |
 | `ERR_UNKNOWN_TOPIC`       | No docs topic matched the requested name.                                              |
@@ -201,7 +201,7 @@ present and unused, exactly as an append-only list requires.
 | `ERR_WRITE_FAILED`        | Writing output files failed (and was rolled back).                                     |
 | `ERR_THEME_INVALID`       | A theme definition was missing a required property (e.g. `name`).                      |
 | `ERR_THEME_LOAD`          | A theme file could not be loaded / parsed into a `defineTheme` result.                 |
-| `ERR_VERSION_DETECT`      | The current `@astryx-svelte/core` version could not be detected.                       |
+| `ERR_VERSION_DETECT`      | The current `@astryx-sv/core` version could not be detected.                           |
 | `ERR_INVALID_VERSION`     | A `--from`/`--to` value was not a valid semver string.                                 |
 | `ERR_DEP_MISSING`         | A required external dependency is missing.                                             |
 | `ERR_GH_CLI`              | GitHub CLI (`gh`) is not installed or not authenticated.                               |
@@ -279,15 +279,7 @@ the structured manifest is additive under `data.manifest`. For the standalone en
 The same logic that powers `astryx-svelte --json` is available as importable functions:
 
 ```typescript
-import {
-	component,
-	docs,
-	discover,
-	template,
-	util,
-	search,
-	AstryxError
-} from '@astryx-svelte/cli/api';
+import { component, docs, discover, template, util, search, AstryxError } from '@astryx-sv/cli/api';
 
 // Same result as: astryx-svelte --json component Button
 const btn = await component('Button');
@@ -316,7 +308,7 @@ try {
 ```
 
 The command handlers are thin wrappers around these functions: they parse args, call the API, then
-format the output. That is what guarantees `@astryx-svelte/cli/api` and `astryx-svelte --json`
+format the output. That is what guarantees `@astryx-sv/cli/api` and `astryx-svelte --json`
 always return identical data.
 
 Astryx names the composables surface `hook`; this port names it `util`, because a Svelte composable
@@ -328,13 +320,13 @@ working, but the API function and the response types are `util.*`.
 If you spawn the CLI as a subprocess rather than importing the API:
 
 ```typescript
-import { parseResponse, isError } from '@astryx-svelte/cli/json';
+import { parseResponse, isError } from '@astryx-sv/cli/json';
 import type {
 	ComponentDetailResponse,
 	ComponentListResponse,
 	DocsListResponse
 	// …import the response types for the commands you consume
-} from '@astryx-svelte/cli/json';
+} from '@astryx-sv/cli/json';
 
 // parseResponse returns the structural { apiVersion, type, data } envelope; `data`
 // is `unknown` until you narrow it. Reconstruct the union you care about from the
@@ -357,8 +349,8 @@ if (isError(result)) {
 Prefer narrowing at the call site? Wrap `assertResponse`, which throws on error or type mismatch:
 
 ```typescript
-import { assertResponse } from '@astryx-svelte/cli/json';
-import type { ComponentDetailResponse } from '@astryx-svelte/cli/json';
+import { assertResponse } from '@astryx-sv/cli/json';
+import type { ComponentDetailResponse } from '@astryx-sv/cli/json';
 
 type MyResponse = ComponentDetailResponse; /* | …others */
 
@@ -425,29 +417,29 @@ check:   Node.js version
 message: Node v22.13.0 meets the minimum (>=22.13.0).
 
 status:  [ok]
-check:   @astryx-svelte/core installed
-message: @astryx-svelte/core resolved (v0.0.0).
+check:   @astryx-sv/core installed
+message: @astryx-sv/core resolved (v0.0.0).
 
 status:  [warn]
 check:   Theme packages
-message: No @astryx-svelte/theme-* packages are installed.
-fix:     Install a theme, e.g. `npm install @astryx-svelte/theme-neutral`, then import its CSS.
+message: No @astryx-sv/theme-* packages are installed.
+fix:     Install a theme, e.g. `npm install @astryx-sv/theme-neutral`, then import its CSS.
 
 Summary: 3 passed, 3 warnings, 0 failures, 2 info
 ```
 
 ### Checks
 
-| Check                      | Status it can return | What it verifies                                                      |
-| -------------------------- | -------------------- | --------------------------------------------------------------------- |
-| Node.js version            | ok / fail            | Running Node meets the CLI's minimum                                  |
-| `@astryx-svelte/core`      | ok / fail            | Core is resolvable from the project                                   |
-| Version alignment          | ok / warn / info     | Installed core is in step with the CLI                                |
-| Theme packages             | ok / warn            | An `@astryx-svelte/theme-*` package is installed and a theme is wired |
-| `astryx-svelte.config.mjs` | ok / fail / info     | Config (if present) loads cleanly with a valid shape                  |
-| AI agent docs              | ok / warn / info     | Agent docs exist and contain the Astryx section markers               |
-| Peer dependencies          | ok / warn / info     | Core's peer dependency (`svelte`) is installed                        |
-| Package manager            | info                 | Reports the detected package manager                                  |
+| Check                      | Status it can return | What it verifies                                                  |
+| -------------------------- | -------------------- | ----------------------------------------------------------------- |
+| Node.js version            | ok / fail            | Running Node meets the CLI's minimum                              |
+| `@astryx-sv/core`          | ok / fail            | Core is resolvable from the project                               |
+| Version alignment          | ok / warn / info     | Installed core is in step with the CLI                            |
+| Theme packages             | ok / warn            | An `@astryx-sv/theme-*` package is installed and a theme is wired |
+| `astryx-svelte.config.mjs` | ok / fail / info     | Config (if present) loads cleanly with a valid shape              |
+| AI agent docs              | ok / warn / info     | Agent docs exist and contain the Astryx section markers           |
+| Peer dependencies          | ok / warn / info     | Core's peer dependency (`svelte`) is installed                    |
+| Package manager            | info                 | Reports the detected package manager                              |
 
 ### CI gate
 
@@ -468,7 +460,7 @@ export default {
 ```
 
 There is no factory: write a plain object. For editor autocomplete and type-checking, annotate it
-with the `AstryxConfig` type exported from `@astryx-svelte/cli/authoring`.
+with the `AstryxConfig` type exported from `@astryx-sv/cli/authoring`.
 
 | Field                         | Type                           | Purpose                                                                                         |
 | ----------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -519,7 +511,7 @@ export default {
 
 Every field is optional; declare only the roots the package ships. There is no factory: write a
 plain object and annotate it with the `AstryxIntegration` type from
-`@astryx-svelte/cli/authoring`.
+`@astryx-sv/cli/authoring`.
 
 ### How it works
 

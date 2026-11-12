@@ -76,7 +76,7 @@
  * recognisable thing in the whole design language.
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
 /**
  * Apple's vibrancy materials, thin → thick. Each is a full `backdrop-filter`

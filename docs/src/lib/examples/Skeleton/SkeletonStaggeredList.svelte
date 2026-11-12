@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Skeleton, VStack } from '@astryx-svelte/core';
+	import { Skeleton, VStack } from '@astryx-sv/core';
 </script>
 
 <VStack gap={2}>

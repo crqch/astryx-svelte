@@ -143,6 +143,6 @@ export default {
 	},
 	relatedComponents: ['Calendar'],
 	relatedHooks: ['useListFocus', 'useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

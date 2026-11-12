@@ -43,7 +43,7 @@
 		Token,
 		VStack,
 		type IconName
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const CAMPAIGN_GOALS = [
 		'Brand Awareness',

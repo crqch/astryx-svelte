@@ -15,7 +15,7 @@
  * publishes none of them, so a copied example would not resolve. See port/todo.md.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'tokens',
 	title: 'All Tokens',
@@ -431,14 +431,14 @@ export const docs = {
 					type: 'code',
 					lang: 'ts',
 					label: 'Tokens in a .stylex.ts module',
-					code: "import * as stylex from '@stylexjs/stylex';\n\n// Token names are the public surface; the `defineVars` objects that mint them\n// are internal to @astryx-svelte/core, so reference them as var() strings.\nexport const styles = stylex.create({\n\tcard: {\n\t\tpadding: 'var(--spacing-4)',\n\t\tbackgroundColor: 'var(--color-background-surface)',\n\t\tborderRadius: 'var(--radius-container)'\n\t},\n\tbutton: {\n\t\theight: 'var(--size-element-md)'\n\t}\n});"
+					code: "import * as stylex from '@stylexjs/stylex';\n\n// Token names are the public surface; the `defineVars` objects that mint them\n// are internal to @astryx-sv/core, so reference them as var() strings.\nexport const styles = stylex.create({\n\tcard: {\n\t\tpadding: 'var(--spacing-4)',\n\t\tbackgroundColor: 'var(--color-background-surface)',\n\t\tborderRadius: 'var(--radius-container)'\n\t},\n\tbutton: {\n\t\theight: 'var(--size-element-md)'\n\t}\n});"
 				},
 				{
 					type: 'code',
 					lang: 'svelte',
 					label: 'Applying them to a component',
 					code: `<script lang="ts">
-	import { Card } from '@astryx-svelte/core';
+	import { Card } from '@astryx-sv/core';
 	import { styles } from './page.stylex.js';
 </script>
 
@@ -450,7 +450,7 @@ export const docs = {
 				},
 				{
 					type: 'prose',
-					text: 'For a non-StyleX styling library, `tokenVar()` / `tokenVars` from `@astryx-svelte/core/theme` return the same `var(--token)` references as typed values. See `astryx-svelte docs styling` for how to apply tokens via xstyle, class, and compound component patterns, and `astryx-svelte docs theme` for overriding tokens with defineTheme.'
+					text: 'For a non-StyleX styling library, `tokenVar()` / `tokenVars` from `@astryx-sv/core/theme` return the same `var(--token)` references as typed values. See `astryx-svelte docs styling` for how to apply tokens via xstyle, class, and compound component patterns, and `astryx-svelte docs theme` for overriding tokens with defineTheme.'
 				}
 			]
 		}

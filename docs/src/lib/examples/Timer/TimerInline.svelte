@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Text, Timer } from '@astryx-svelte/core';
+	import { Text, Timer } from '@astryx-sv/core';
 </script>
 
 <Text type="body" color="primary">

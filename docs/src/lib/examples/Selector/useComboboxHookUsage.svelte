@@ -8,8 +8,8 @@
 	`useAnnounce()` — this port's signature takes no options.
 -->
 <script lang="ts">
-	import { Card, Item, Text, TextInput, VStack, useCombobox } from '@astryx-svelte/core';
-	import { useAnnounce } from '@astryx-svelte/core/hooks';
+	import { Card, Item, Text, TextInput, VStack, useCombobox } from '@astryx-sv/core';
+	import { useAnnounce } from '@astryx-sv/core/hooks';
 
 	type Teammate = { value: string; label: string; disabled?: boolean };
 

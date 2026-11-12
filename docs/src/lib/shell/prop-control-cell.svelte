@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { NumberInput, Selector, Switch, TextInput } from '@astryx-svelte/core';
+	import { NumberInput, Selector, Switch, TextInput } from '@astryx-sv/core';
 	import type { Knob } from './prop-control.js';
 
 	/**

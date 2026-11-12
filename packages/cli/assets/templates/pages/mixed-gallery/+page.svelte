@@ -13,7 +13,7 @@
 	`GalleryCard` is a local sub-component upstream; here it is a snippet.
 -->
 <script lang="ts">
-	import { AspectRatio, Heading, Layout, LayoutContent, Text, VStack } from '@astryx-svelte/core';
+	import { AspectRatio, Heading, Layout, LayoutContent, Text, VStack } from '@astryx-sv/core';
 
 	// ─── Styles ────────────────────────────────────────────────────────────────
 	// The masonry needs a responsive column count AND a hero that spans 2 columns

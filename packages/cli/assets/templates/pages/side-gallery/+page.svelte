@@ -17,7 +17,7 @@
 		LayoutContent,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	// Image fill is a plain inline style so it renders without any CSS compiler
 	// (works in the playground preview's runtime TS compile too).

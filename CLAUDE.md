@@ -89,13 +89,13 @@ bun run --filter '*' build     # must run before check — theme-neutral typeche
 bun run --filter '*' check     # svelte-check + tsc
 bun run --filter '*' lint      # oxfmt --check && oxlint
 bun run --filter '*' test      # vitest + all three fidelity oracles
-bun run --filter @astryx-svelte/core test:unit --run   # unit tests only
-bun run --filter @astryx-svelte/core test:unit --run src/tests/foo.svelte.test.ts   # one file
+bun run --filter @astryx-sv/core test:unit --run   # unit tests only
+bun run --filter @astryx-sv/core test:unit --run src/tests/foo.svelte.test.ts   # one file
 #   Flags after the script name are forwarded to vitest. The old pnpm warning
 #   about `--` no longer applies: Bun handles it, but passing it is unnecessary
 #   and reads as a pnpm habit. `--project=client` / `--project=server` narrows
 #   to one vitest project.
-bun run --filter @astryx-svelte/core test:client   # the client project, chunked — see below
+bun run --filter @astryx-sv/core test:client   # the client project, chunked — see below
 #   Run it alone. Two vitest processes on this project at once fail at *project
 #   init* — `EPERM: operation not permitted, rename` on Windows, as both write
 #   `.svelte-kit` and the Vite cache — and every chunk then reports as failed.
@@ -200,7 +200,7 @@ wrong:
 - **It compiles core's StyleX itself.** `dist/` ships `.stylex.js` _uncompiled_ — `svelte-package`
   transpiles TypeScript and does not run StyleX — so `docs/vite.config.ts` runs the same
   `@stylexjs/unplugin` options as `packages/core`, plus `optimizeDeps.exclude` and `ssr.noExternal`
-  for `@astryx-svelte/core`. Without those last two, Vite's pre-bundler and the SSR externaliser
+  for `@astryx-sv/core`. Without those last two, Vite's pre-bundler and the SSR externaliser
   route the modules around the plugin and the page renders unstyled **with no error**.
 - **Content comes from `node_modules`, not the upstream clone.** `docs/scripts/generate-content.mjs`
   reads `.doc.mjs` from `@astryxdesign/core` and `@astryxdesign/cli`, both pinned **exact** at the

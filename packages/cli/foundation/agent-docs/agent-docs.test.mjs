@@ -107,7 +107,7 @@ describe('generateCompressedIndex', () => {
 	it('includes upgrade command and migration rule', () => {
 		const result = generateCompressedIndex('1.0.0');
 		expect(result).toContain('upgrade --apply');
-		expect(result).toMatch(/after any @astryx-svelte\/core bump/);
+		expect(result).toMatch(/after any @astryx-sv\/core bump/);
 	});
 
 	it('states the invocation once in the CLI header (yarn)', () => {
@@ -123,8 +123,8 @@ describe('generateCompressedIndex', () => {
 	});
 
 	it('uses the scoped package for one-off (uninstalled) runs so agents never hit the bare name', () => {
-		const result = generateCompressedIndex('1.0.0', { invocation: 'npx @astryx-svelte/cli' });
-		expect(result).toContain('npx @astryx-svelte/cli <cmd>');
+		const result = generateCompressedIndex('1.0.0', { invocation: 'npx @astryx-sv/cli' });
+		expect(result).toContain('npx @astryx-sv/cli <cmd>');
 		// The header defines the mapping; the bare "run every command as
 		// `npx astryx-svelte`" footgun must be absent.
 		expect(result).not.toContain('npx astryx-svelte <cmd>');
@@ -426,8 +426,8 @@ describe('installAgentDocs', () => {
 	 * @param {string} [version]
 	 */
 	function setupCorePackage(dir, version = '1.0.0') {
-		// Create a minimal @astryx-svelte/core so getAstryxVersion works
-		const coreDir = path.join(dir, 'node_modules', '@astryx-svelte', 'core');
+		// Create a minimal @astryx-sv/core so getAstryxVersion works
+		const coreDir = path.join(dir, 'node_modules', '@astryx-sv', 'core');
 		fs.mkdirSync(coreDir, { recursive: true });
 		fs.writeFileSync(path.join(coreDir, 'package.json'), JSON.stringify({ version }));
 	}
@@ -742,7 +742,7 @@ describe('inspectAgentDocs', () => {
 	});
 
 	it('defaults the installed version to the core package when omitted', () => {
-		const coreDir = path.join(tmpDir, 'node_modules', '@astryx-svelte', 'core');
+		const coreDir = path.join(tmpDir, 'node_modules', '@astryx-sv', 'core');
 		fs.mkdirSync(coreDir, { recursive: true });
 		fs.writeFileSync(path.join(coreDir, 'package.json'), JSON.stringify({ version: '3.0.0' }));
 		writeBlock('AGENTS.md', '3.0.0');

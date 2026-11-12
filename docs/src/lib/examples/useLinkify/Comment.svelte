@@ -5,8 +5,8 @@
 	registry only looks for `<BlockName>.svelte`, so this file is never listed.
 -->
 <script lang="ts">
-	import { Link, Text, useLinkify } from '@astryx-svelte/core';
-	import type { LinkifyPattern } from '@astryx-svelte/core';
+	import { Link, Text, useLinkify } from '@astryx-sv/core';
+	import type { LinkifyPattern } from '@astryx-sv/core';
 
 	interface Props {
 		children: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Divider, Text, VStack, parseOutlineFromMarkdown } from '@astryx-svelte/core';
+	import { Divider, Text, VStack, parseOutlineFromMarkdown } from '@astryx-sv/core';
 	import DocPageLayout from './doc-page-layout.svelte';
 	import MarkdownReadme from './markdown-readme.svelte';
 	import PackageActions, { type InstallStep } from './package-actions.svelte';

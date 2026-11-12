@@ -46,7 +46,7 @@
 		VStack,
 		VisuallyHidden,
 		useToast
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		BeakerIcon,
 		BoltIcon,

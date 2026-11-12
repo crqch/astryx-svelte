@@ -6,7 +6,7 @@
 	because it owns a media-query branch; the state stays here as upstream's does.
 -->
 <script lang="ts">
-	import { Button, HStack, Text, TextArea, TextInput, VStack } from '@astryx-svelte/core';
+	import { Button, HStack, Text, TextArea, TextInput, VStack } from '@astryx-sv/core';
 	import AdaptiveDialog from './AdaptiveDialog.svelte';
 
 	let isOpen = $state(false);

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Toast, useToast, VStack } from '@astryx-svelte/core';
+	import { Button, Toast, useToast, VStack } from '@astryx-sv/core';
 
 	const toast = useToast();
 </script>

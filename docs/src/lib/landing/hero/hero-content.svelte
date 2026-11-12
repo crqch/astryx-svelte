@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Grid, Heading, Link, Text, Theme, VStack } from '@astryx-svelte/core';
+	import { Button, Grid, Heading, Link, Text, Theme, VStack } from '@astryx-sv/core';
 	import { astryxTheme } from '../../themes/astryx-theme.js';
 	import { componentsHref, topicHref } from '../../shell/links.js';
 	import { UPSTREAM_URL } from '../../shell/nav-items.js';

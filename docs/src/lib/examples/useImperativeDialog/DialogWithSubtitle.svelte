@@ -23,7 +23,7 @@
 		LayoutFooter,
 		Text,
 		useImperativeDialog
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const dialog = useImperativeDialog(() => ({ purpose: 'required' }));
 </script>

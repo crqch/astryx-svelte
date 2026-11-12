@@ -216,7 +216,7 @@ for (const [shape, count] of markerOurs) {
 // is hashed from that text, and `processStylexRules` only substitutes the
 // literal back when the sheet is written — so a const-derived rule ends up with
 // a byte-identical declaration on both sides and a class name that cannot ever
-// agree: ours hashes `@astryx-svelte/core:src/lib/components/date-input/…`,
+// agree: ours hashes `@astryx-sv/core:src/lib/components/date-input/…`,
 // upstream's `@astryxdesign/core:src/DateInput/…`. Same standing as a
 // `defineMarker` class, and paired the same way.
 //

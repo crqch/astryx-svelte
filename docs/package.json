@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview": "wrangler dev",
+		"deploy": "wrangler deploy",
 		"generate": "bun scripts/generate-content.mjs && bun scripts/build-astryx-theme.mjs",
 		"emit-core-docs": "bun scripts/emit-core-docs.mjs",
 		"prepare": "svelte-kit sync || echo ''",
@@ -17,15 +18,15 @@
 		"format": "oxfmt --write ."
 	},
 	"dependencies": {
-		"@astryx-svelte/core": "workspace:*",
-		"@astryx-svelte/theme-butter": "workspace:*",
-		"@astryx-svelte/theme-chocolate": "workspace:*",
-		"@astryx-svelte/theme-gothic": "workspace:*",
-		"@astryx-svelte/theme-liquid-glass": "workspace:*",
-		"@astryx-svelte/theme-matcha": "workspace:*",
-		"@astryx-svelte/theme-neutral": "workspace:*",
-		"@astryx-svelte/theme-stone": "workspace:*",
-		"@astryx-svelte/theme-y2k": "workspace:*",
+		"@astryx-sv/core": "workspace:*",
+		"@astryx-sv/theme-butter": "workspace:*",
+		"@astryx-sv/theme-chocolate": "workspace:*",
+		"@astryx-sv/theme-gothic": "workspace:*",
+		"@astryx-sv/theme-liquid-glass": "workspace:*",
+		"@astryx-sv/theme-matcha": "workspace:*",
+		"@astryx-sv/theme-neutral": "workspace:*",
+		"@astryx-sv/theme-stone": "workspace:*",
+		"@astryx-sv/theme-y2k": "workspace:*",
 		"@stylexjs/stylex": "^0.19.0"
 	},
 	"devDependencies": {
@@ -33,7 +34,7 @@
 		"@astryxdesign/core": "0.7.13",
 		"@qwik.dev/partytown": "^0.14.0",
 		"@stylexjs/unplugin": "^0.19.0",
-		"@sveltejs/adapter-vercel": "^6.3.3",
+		"@sveltejs/adapter-cloudflare": "^7.2.10",
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@types/node": "^22",
@@ -41,6 +42,7 @@
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
-		"vite": "^8.0.16"
+		"vite": "^8.0.16",
+		"wrangler": "^4.161.0"
 	}
 }

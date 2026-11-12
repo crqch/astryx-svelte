@@ -78,6 +78,6 @@ export default {
 	},
 	relatedComponents: ['Dialog', 'DatePicker'],
 	relatedHooks: ['useListFocus', 'useScrollLock'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

@@ -10,7 +10,7 @@ import { getContext, hasContext, setContext } from 'svelte';
  * proportion to it: **555 KB installed, three transitive dependencies**
  * (`dequal`, `esm-env`, `lz-string`), and — the part that actually mattered —
  * `runed` declares peer dependencies on **`@sveltejs/kit`** and **`zod`**.
- * `@astryx-svelte/core` is meant to work in any Svelte 5 application, so a
+ * `@astryx-sv/core` is meant to work in any Svelte 5 application, so a
  * plain-Svelte consumer with no SvelteKit was being asked to satisfy a peer for
  * a framework they had not chosen.
  *

@@ -71,6 +71,6 @@ export default {
 	},
 	relatedComponents: ['PowerSearch', 'Table'],
 	relatedHooks: ['useTableFilterState', 'useTableFiltering'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

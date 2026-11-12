@@ -43,7 +43,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					"For iOS paging under a finger and on a trackpad swipe, pass hasSnap={useSnapPaging()} from @astryx-svelte/core A flick moves one view, or one item with useSnapPaging({pages: 'item'}). A mouse wheel keeps native snapping. Only a carousel given it loads the paging code."
+					"For iOS paging under a finger and on a trackpad swipe, pass hasSnap={useSnapPaging()} from @astryx-sv/core A flick moves one view, or one item with useSnapPaging({pages: 'item'}). A mouse wheel keeps native snapping. Only a carousel given it loads the paging code."
 			},
 			{
 				guidance: true,

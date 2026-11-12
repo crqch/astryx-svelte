@@ -6,11 +6,11 @@
  * and each is a fact about the port, not a preference:
  *
  *   - the peer dependency is `svelte` >= 5, not `react`/`react-dom` >= 19;
- *   - core publishes ONE stylesheet, `@astryx-svelte/core/base.css`, which
+ *   - core publishes ONE stylesheet, `@astryx-sv/core/base.css`, which
  *     already contains the reset — upstream's `reset.css` + `astryx.css` split
  *     does not exist here;
  *   - there are no per-component subpath exports. Everything is on the root
- *     barrel `@astryx-svelte/core`, so upstream's "import from per-category
+ *     barrel `@astryx-sv/core`, so upstream's "import from per-category
  *     entrypoints" advice is inverted;
  *   - `xstyle` takes StyleX styles authored in a `.stylex.ts` module, because
  *     StyleX may not be imported from a `.svelte` file at all.
@@ -20,7 +20,7 @@
  * example apps, so the table would be five dead links. Recorded in port/todo.md.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'getting-started',
 	title: 'Getting Started',
@@ -39,7 +39,7 @@ export const docs = {
 					type: 'code',
 					lang: 'text',
 					label: 'Set up the design system',
-					code: 'Install @astryx-svelte/core, @astryx-svelte/theme-neutral, and @astryx-svelte/cli in this project, then run `npx @astryx-svelte/cli init` to set up agent docs. Read the generated files to learn the conventions.'
+					code: 'Install @astryx-sv/core, @astryx-sv/theme-neutral, and @astryx-sv/cli in this project, then run `npx @astryx-sv/cli init` to set up agent docs. Read the generated files to learn the conventions.'
 				},
 				{
 					type: 'prose',
@@ -49,7 +49,7 @@ export const docs = {
 					type: 'code',
 					lang: 'text',
 					label: 'Give it a look',
-					code: 'Ask me what look and feel this app should have. Run `npx @astryx-svelte/cli theme list` and start from the closest shipped theme with `theme add <slug>`, which copies it in as editable source; if none of them fit, run `npx @astryx-svelte/cli theme template` and fill in the annotated template it writes. Default to neutral if I have no preference, and show me the result before moving on.'
+					code: 'Ask me what look and feel this app should have. Run `npx @astryx-sv/cli theme list` and start from the closest shipped theme with `theme add <slug>`, which copies it in as editable source; if none of them fit, run `npx @astryx-sv/cli theme template` and fill in the annotated template it writes. Default to neutral if I have no preference, and show me the result before moving on.'
 				}
 			]
 		},
@@ -58,7 +58,7 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: 'Astryx requires Svelte 5 or later: `svelte` >= 5.0.0 is the peer dependency of `@astryx-svelte/core`. Runes are used throughout, so there is no Svelte 4 compatibility mode.'
+					text: 'Astryx requires Svelte 5 or later: `svelte` >= 5.0.0 is the peer dependency of `@astryx-sv/core`. Runes are used throughout, so there is no Svelte 4 compatibility mode.'
 				},
 				{
 					type: 'prose',
@@ -68,11 +68,11 @@ export const docs = {
 					type: 'code',
 					lang: 'bash',
 					label: 'Terminal',
-					code: `npm install @astryx-svelte/core @astryx-svelte/theme-neutral @stylexjs/stylex @astryx-svelte/cli\nnpm install -D @stylexjs/unplugin`
+					code: `npm install @astryx-sv/core @astryx-sv/theme-neutral @stylexjs/stylex @astryx-sv/cli\nnpm install -D @stylexjs/unplugin`
 				},
 				{
 					type: 'prose',
-					text: 'Every package here carries the version of the Astryx release it ports and they publish together, so `0.3.0` means "at parity with Astryx 0.3.0" rather than a count of this port\'s own releases. Install them at matching versions. To work against the source instead, clone [the repository](https://github.com/devrohit06/astryx-svelte): `pnpm install`, then `node packages/cli/bin/astryx-svelte.mjs <command>`.'
+					text: 'Every package here carries the version of the Astryx release it ports and they publish together, so `0.3.0` means "at parity with Astryx 0.3.0" rather than a count of this port\'s own releases. Install them at matching versions. To work against the source instead, clone [the repository](https://github.com/crqch/astryx-svelte): `pnpm install`, then `node packages/cli/bin/astryx-svelte.mjs <command>`.'
 				},
 				{
 					type: 'prose',
@@ -97,8 +97,8 @@ export const docs = {
 					type: 'code',
 					lang: 'css',
 					label: 'src/app.css',
-					code: `@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';`
+					code: `@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';`
 				},
 				{
 					type: 'prose',
@@ -106,7 +106,7 @@ export const docs = {
 				},
 				{
 					type: 'prose',
-					text: 'Available themes: @astryx-svelte/theme-neutral (muted minimal, a good starting point), @astryx-svelte/theme-butter, @astryx-svelte/theme-chocolate, @astryx-svelte/theme-gothic (dark-only), @astryx-svelte/theme-liquid-glass, @astryx-svelte/theme-matcha, @astryx-svelte/theme-stone, and @astryx-svelte/theme-y2k. See `astryx-svelte docs theme` for the full theming guide.'
+					text: 'Available themes: @astryx-sv/theme-neutral (muted minimal, a good starting point), @astryx-sv/theme-butter, @astryx-sv/theme-chocolate, @astryx-sv/theme-gothic (dark-only), @astryx-sv/theme-liquid-glass, @astryx-sv/theme-matcha, @astryx-sv/theme-stone, and @astryx-sv/theme-y2k. See `astryx-svelte docs theme` for the full theming guide.'
 				},
 				{
 					type: 'prose',
@@ -119,14 +119,14 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: 'Every component is exported from the package root. There are no per-component subpath entrypoints — the barrel is tree-shaken by your bundler, and `@astryx-svelte/core` is where `Button` lives. The subpaths that do exist are for non-component surfaces: `./theme`, `./hooks`, `./utils`, `./i18n`, `./naming`, and `./base.css`.'
+					text: 'Every component is exported from the package root. There are no per-component subpath entrypoints — the barrel is tree-shaken by your bundler, and `@astryx-sv/core` is where `Button` lives. The subpaths that do exist are for non-component surfaces: `./theme`, `./hooks`, `./utils`, `./i18n`, `./naming`, and `./base.css`.'
 				},
 				{
 					type: 'code',
 					lang: 'svelte',
 					label: 'src/routes/+page.svelte',
 					code: `<script lang="ts">
-	import { Button, VStack } from '@astryx-svelte/core';
+	import { Button, VStack } from '@astryx-sv/core';
 </script>
 
 <VStack gap={2}>
@@ -161,7 +161,7 @@ export const overrides = stylex.create({
 					lang: 'svelte',
 					label: 'src/routes/+page.svelte',
 					code: `<script lang="ts">
-	import { Button } from '@astryx-svelte/core';
+	import { Button } from '@astryx-sv/core';
 	import { overrides } from './page.stylex.js';
 </script>
 
@@ -181,7 +181,7 @@ export const overrides = stylex.create({
 					lang: 'json',
 					label: 'package.json',
 					code: `"scripts": {
-  "astryx-svelte": "node node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs"
+  "astryx-svelte": "node node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs"
 }`
 				},
 				{

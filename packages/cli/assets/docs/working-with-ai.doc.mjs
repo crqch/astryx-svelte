@@ -13,7 +13,7 @@
  * is ever written rather than being quietly forgotten.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'working-with-ai',
 	title: 'Working with AI',
@@ -45,7 +45,7 @@ export const docs = {
 					type: 'code',
 					lang: 'text',
 					label: 'Paste this into your AI',
-					code: 'Install @astryx-svelte/cli and run `npx @astryx-svelte/cli init --features agents` to set up your Astryx context. Read the generated file.'
+					code: 'Install @astryx-sv/cli and run `npx @astryx-sv/cli init --features agents` to set up your Astryx context. Read the generated file.'
 				},
 				{
 					type: 'prose',
@@ -59,9 +59,9 @@ export const docs = {
 					type: 'code',
 					lang: 'bash',
 					label: 'Manual options',
-					code: `npx @astryx-svelte/cli init --features agents --agent claude    # .claude/CLAUDE.md
-npx @astryx-svelte/cli init --features agents --agent cursor    # .cursorrules
-npx @astryx-svelte/cli init --features agents --agent codex     # AGENTS.md (Copilot, Codex, etc.)`
+					code: `npx @astryx-sv/cli init --features agents --agent claude    # .claude/CLAUDE.md
+npx @astryx-sv/cli init --features agents --agent cursor    # .cursorrules
+npx @astryx-sv/cli init --features agents --agent codex     # AGENTS.md (Copilot, Codex, etc.)`
 				}
 			]
 		},
@@ -99,7 +99,7 @@ npx @astryx-svelte/cli init --features agents --agent codex     # AGENTS.md (Cop
 					lang: 'bash',
 					label: 'Install as a Cursor user rule',
 					code: `mkdir -p ~/.cursor/rules
-npx @astryx-svelte/cli init --features agents --agent-docs-path ~/.cursor/rules/astryx-svelte.mdc`
+npx @astryx-sv/cli init --features agents --agent-docs-path ~/.cursor/rules/astryx-svelte.mdc`
 				}
 			]
 		},
@@ -120,7 +120,7 @@ npx @astryx-svelte/cli init --features agents --agent-docs-path ~/.cursor/rules/
 2. How do you make a Dialog non-dismissible?
 3. What prop does Selector use for its items?
 
-If you don't know all three, run \`npx @astryx-svelte/cli init --features agents\` to generate agent docs, then read the generated file.`
+If you don't know all three, run \`npx @astryx-sv/cli init --features agents\` to generate agent docs, then read the generated file.`
 				}
 			]
 		},
@@ -129,14 +129,14 @@ If you don't know all three, run \`npx @astryx-svelte/cli init --features agents
 			content: [
 				{
 					type: 'prose',
-					text: 'AI agents frequently invoke the CLI with incorrect paths (e.g. node_modules/@astryx-svelte/cli/bin/docs.mjs instead of astryx-svelte.mjs), leading to silent failures. Adding an npm script alias with the correct path eliminates this entirely.'
+					text: 'AI agents frequently invoke the CLI with incorrect paths (e.g. node_modules/@astryx-sv/cli/bin/docs.mjs instead of astryx-svelte.mjs), leading to silent failures. Adding an npm script alias with the correct path eliminates this entirely.'
 				},
 				{
 					type: 'code',
 					lang: 'json',
 					label: 'package.json',
 					code: `"scripts": {
-  "astryx-svelte": "node node_modules/@astryx-svelte/cli/bin/astryx-svelte.mjs"
+  "astryx-svelte": "node node_modules/@astryx-sv/cli/bin/astryx-svelte.mjs"
 }`
 				},
 				{

@@ -1,16 +1,16 @@
 {
-	"name": "@astryx-svelte/cli",
+	"name": "@astryx-sv/cli",
 	"displayName": "CLI",
-	"version": "0.5.2",
+	"version": "0.7.13",
 	"description": "Scaffold projects, browse templates, generate themes, and get agent-ready docs from the command line.",
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
+		"url": "https://github.com/crqch/astryx-svelte/issues"
 	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/cli"
 	},
 	"bin": {
@@ -86,8 +86,8 @@
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {
-		"@astryx-svelte/core": "workspace:*",
-		"@astryx-svelte/theme-neutral": "workspace:*",
+		"@astryx-sv/core": "workspace:*",
+		"@astryx-sv/theme-neutral": "workspace:*",
 		"@fvilers/heroicons-svelte": "2.1.5-fix.3",
 		"@lucide/svelte": "^1.25.0",
 		"@types/node": "^22",
@@ -96,15 +96,15 @@
 		"vitest": "^4.1.10"
 	},
 	"peerDependencies": {
-		"@astryx-svelte/core": "*",
-		"@astryx-svelte/theme-neutral": "*",
+		"@astryx-sv/core": "*",
+		"@astryx-sv/theme-neutral": "*",
 		"svelte": "^5.0.0"
 	},
 	"peerDependenciesMeta": {
-		"@astryx-svelte/core": {
+		"@astryx-sv/core": {
 			"optional": true
 		},
-		"@astryx-svelte/theme-neutral": {
+		"@astryx-sv/theme-neutral": {
 			"optional": true
 		},
 		"svelte": {

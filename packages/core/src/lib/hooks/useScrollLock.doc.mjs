@@ -56,6 +56,6 @@ export default {
 	},
 	relatedComponents: ['Dialog'],
 	relatedHooks: ['useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'layout'
 };

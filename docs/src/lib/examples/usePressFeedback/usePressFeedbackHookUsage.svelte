@@ -14,7 +14,7 @@
 		focusOutlineStyles,
 		interactionOverlayStyles,
 		usePressFeedback
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const pressable = usePressFeedback();
 	let isFaceUp = $state(true);

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Center, HoverCardLayer, Text, useHoverCard, VStack } from '@astryx-svelte/core';
+	import { Button, Center, HoverCardLayer, Text, useHoverCard, VStack } from '@astryx-sv/core';
 
 	/**
 	 * The same three translations `TooltipHookUsage` records, for the same

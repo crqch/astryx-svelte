@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { InputGroup, InputGroupText, Stack, TextInput } from '@astryx-svelte/core';
+	import { InputGroup, InputGroupText, Stack, TextInput } from '@astryx-sv/core';
 
 	let price = $state('');
 	let url = $state('');

@@ -44,7 +44,7 @@ function printHuman(data) {
 // Upstream hard-codes the bare `astryx` bin here, and so does this. The port
 // has `formatCliCommand` (foundation/env/package-manager.mjs), which would make
 // the suggestion install-aware — `pnpm exec astryx-svelte …` or
-// `npx @astryx-svelte/cli …` as appropriate — and it is deliberately not used.
+// `npx @astryx-sv/cli …` as appropriate — and it is deliberately not used.
 //
 // Upstream's own usage is the specification, and it is selective rather than
 // accidental: it calls `formatCliCommand` at five sites (`upgrade status`,

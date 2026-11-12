@@ -60,6 +60,6 @@ export default {
 	},
 	relatedComponents: ['Icon', 'Theme'],
 	relatedHooks: ['useTheme'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

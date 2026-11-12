@@ -55,7 +55,7 @@ describe('resolveImportPath reproduces authored util importPaths', () => {
 	const coreDir = findCoreDir(REPO);
 
 	// Representative sample of core utils whose sources are `.ts` files. Before
-	// the `.ts` fix these fell back to bare `@astryx-svelte/core`; the derived
+	// the `.ts` fix these fell back to bare `@astryx-sv/core`; the derived
 	// subpath must now match the value each util's doc currently authors.
 	// `useResizable` is the exception, and deliberately kept: it lives under
 	// `components/resizable/`, which this port publishes no subpath for.

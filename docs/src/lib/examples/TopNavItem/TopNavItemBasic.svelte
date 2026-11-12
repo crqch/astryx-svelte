@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TopNav, TopNavHeading, TopNavItem } from '@astryx-svelte/core';
+	import { TopNav, TopNavHeading, TopNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet heading()}

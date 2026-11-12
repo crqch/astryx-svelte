@@ -107,7 +107,7 @@ suites slice 1 shipped source for but no coverage of (`env/node-version`, `env/p
 25 files and still contains no `.test.mjs`.
 
 Near-verbatim, as forecast — the identity strings change (`@astryxdesign/core` →
-`@astryx-svelte/core`, `astryx` → `astryx-svelte`) and prettier reflows. The four places it is
+`@astryx-sv/core`, `astryx` → `astryx-svelte`) and prettier reflows. The four places it is
 _not_:
 
 - **`jiti` is now a declared dependency**, one slice earlier than scheduled above.
@@ -377,7 +377,7 @@ two refixtured `project.test.mjs` cases.
 - [x] **The no-manifest hint stays a fixed string — decided 2026-08-08, and the parity rule
       decides it.** The question was whether `formatCliCommand` should replace fixed command hints
       everywhere, since it would make them install-aware (`pnpm exec astryx-svelte …` vs
-      `npx @astryx-svelte/cli …`). Measured instead of assumed: **upstream calls `formatCliCommand`
+      `npx @astryx-sv/cli …`). Measured instead of assumed: **upstream calls `formatCliCommand`
       at exactly 5 non-test sites** (`api/upgrade/status`, `api/upgrade/_adapter` ×3,
       `clients/cli/commands/build`, `clients/cli/commands/search`) and hard-codes the bare bin
       everywhere else — including this exact string (`clients/cli/commands/validate-integration.mjs:53`).
@@ -411,7 +411,7 @@ the one thing that must not happen twice.
       209 under `src/` and 209 under `dist/` — and `assert-core-ships-src.mjs` still passes
 - [x] **No dependency cycle was created to win a type annotation.** Upstream's docs annotate
       themselves `/** @type {import('@astryxdesign/cli/authoring').ComponentDoc} */`, which here
-      would make `packages/core` devDepend on `@astryx-svelte/cli` while the CLI's own tests read
+      would make `packages/core` devDepend on `@astryx-sv/cli` while the CLI's own tests read
       core. The files are emitted unannotated; correctness is enforced by running `parseDoc` at emit
       time instead, which is a stronger check than an annotation anyway
 - [x] **Four fields survive normalisation solely because the emitter reads them** —

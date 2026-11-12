@@ -4,7 +4,7 @@
  * published themes are always built.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsZh = {
 	description: 'Theme 提供者、自定义主题、亮/暗模式和组件样式覆盖。',
 	sections: [
@@ -29,7 +29,7 @@ export const docsZh = {
 				null,
 				{
 					type: 'prose',
-					text: '已发布主题：neutral（推荐起点）、butter、chocolate、gothic（仅暗色）、liquid-glass、matcha、stone、y2k。@astryx-svelte/theme-{name} = 预构建主题 + 图标注册表。/tokens = 纯数据（Node 可直接读取）。/theme.css = 样式表。'
+					text: '已发布主题：neutral（推荐起点）、butter、chocolate、gothic（仅暗色）、liquid-glass、matcha、stone、y2k。@astryx-sv/theme-{name} = 预构建主题 + 图标注册表。/tokens = 纯数据（Node 可直接读取）。/theme.css = 样式表。'
 				}
 			]
 		},

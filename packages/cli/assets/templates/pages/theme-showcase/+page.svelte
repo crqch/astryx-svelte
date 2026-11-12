@@ -147,7 +147,7 @@
 		proportional,
 		useAppShellMobile,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		Banknote,
 		CreditCard,

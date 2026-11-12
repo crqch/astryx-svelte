@@ -6,7 +6,7 @@
 	`style` attribute takes one.
 -->
 <script lang="ts">
-	import { DateTimeInput, Stack, type ISODateTimeString } from '@astryx-svelte/core';
+	import { DateTimeInput, Stack, type ISODateTimeString } from '@astryx-sv/core';
 
 	let dateTime = $state<ISODateTimeString | undefined>(undefined);
 </script>

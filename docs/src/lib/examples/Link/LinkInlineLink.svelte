@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Link, Text } from '@astryx-svelte/core';
+	import { Link, Text } from '@astryx-sv/core';
 </script>
 
 <Text type="body">

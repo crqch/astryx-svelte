@@ -5,8 +5,8 @@
 	the other pages render the same block rather than a second copy of it.
 -->
 <script lang="ts">
-	import { DropdownMenu, Text, VStack } from '@astryx-svelte/core';
-	import { useMediaQuery } from '@astryx-svelte/core/hooks';
+	import { DropdownMenu, Text, VStack } from '@astryx-sv/core';
+	import { useMediaQuery } from '@astryx-sv/core/hooks';
 
 	/**
 	 * Upstream passes Heroicons' `Pencil`, `DocumentDuplicate`, `Share` and

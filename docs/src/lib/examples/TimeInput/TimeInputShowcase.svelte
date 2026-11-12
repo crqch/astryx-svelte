@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TimeInput, type ISOTimeString } from '@astryx-svelte/core';
+	import { TimeInput, type ISOTimeString } from '@astryx-sv/core';
 
 	let time = $state<ISOTimeString | undefined>(undefined);
 </script>

@@ -84,6 +84,6 @@ export default {
 	},
 	relatedComponents: ['Theme'],
 	relatedHooks: ['useMediaQuery'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'Utility'
 };

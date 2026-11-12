@@ -14,8 +14,8 @@
 	  and the result count both follow the filters.
 -->
 <script lang="ts">
-	import { PowerSearch, Table, VStack, usePowerSearchConfig } from '@astryx-svelte/core';
-	import type { PowerSearchFilter, TableColumn } from '@astryx-svelte/core';
+	import { PowerSearch, Table, VStack, usePowerSearchConfig } from '@astryx-sv/core';
+	import type { PowerSearchFilter, TableColumn } from '@astryx-sv/core';
 
 	const statusValues = [
 		{ value: 'active', label: 'Active' },

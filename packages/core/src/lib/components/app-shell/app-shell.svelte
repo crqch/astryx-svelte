@@ -15,7 +15,7 @@
 	 * Theme packages add custom variants through declaration merging:
 	 *
 	 * ```ts
-	 * declare module '@astryx-svelte/core' {
+	 * declare module '@astryx-sv/core' {
 	 *   interface AppShellVariantMap {
 	 *     glass: true;
 	 *   }

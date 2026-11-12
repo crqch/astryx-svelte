@@ -20,7 +20,7 @@
  * cannot parse.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'theme',
 	title: 'Theme System',
@@ -37,16 +37,16 @@ export const docs = {
 					type: 'code',
 					lang: 'bash',
 					label: 'Install a theme package',
-					code: 'npm install @astryx-svelte/theme-neutral'
+					code: 'npm install @astryx-sv/theme-neutral'
 				},
 				{
 					type: 'code',
 					lang: 'svelte',
 					label: 'Basic theme setup',
 					code: `<script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
-	import '@astryx-svelte/theme-neutral/theme.css';
+	import { Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
+	import '@astryx-sv/theme-neutral/theme.css';
 
 	let { children } = $props();
 </script>
@@ -61,8 +61,8 @@ export const docs = {
 					label: 'In a SvelteKit root layout',
 					code: `<!-- src/routes/+layout.svelte -->
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	import { Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import '../app.css';
 
 	let { children } = $props();
@@ -88,7 +88,7 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: 'Install the theme package you want with `npm install @astryx-svelte/theme-{name}`, then import its theme object as shown below.'
+					text: 'Install the theme package you want with `npm install @astryx-sv/theme-{name}`, then import its theme object as shown below.'
 				},
 				{
 					type: 'table',
@@ -96,49 +96,49 @@ export const docs = {
 					rows: [
 						[
 							'Neutral',
-							"import {neutralTheme} from '@astryx-svelte/theme-neutral'",
+							"import {neutralTheme} from '@astryx-sv/theme-neutral'",
 							'Muted, minimal aesthetic with system fonts. A good starting point.'
 						],
 						[
 							'Butter',
-							"import {butterTheme} from '@astryx-svelte/theme-butter'",
+							"import {butterTheme} from '@astryx-sv/theme-butter'",
 							'Golden, buttery surfaces with blue accents; Sarina + Outfit type.'
 						],
 						[
 							'Chocolate',
-							"import {chocolateTheme} from '@astryx-svelte/theme-chocolate'",
+							"import {chocolateTheme} from '@astryx-sv/theme-chocolate'",
 							'Warm brown tones and cozy beige; Fraunces + Albert Sans type.'
 						],
 						[
 							'Gothic',
-							"import {gothicTheme} from '@astryx-svelte/theme-gothic'",
+							"import {gothicTheme} from '@astryx-sv/theme-gothic'",
 							'Dark-only atmospheric theme; deep blue-gray surfaces, distressed display type.'
 						],
 						[
 							'Liquid Glass',
-							"import {liquidGlassTheme} from '@astryx-svelte/theme-liquid-glass'",
+							"import {liquidGlassTheme} from '@astryx-sv/theme-liquid-glass'",
 							'Translucent, high-blur surfaces over a saturated backdrop.'
 						],
 						[
 							'Matcha',
-							"import {matchaTheme} from '@astryx-svelte/theme-matcha'",
+							"import {matchaTheme} from '@astryx-sv/theme-matcha'",
 							'Earthy green theme with Figtree typography.'
 						],
 						[
 							'Stone',
-							"import {stoneTheme} from '@astryx-svelte/theme-stone'",
+							"import {stoneTheme} from '@astryx-sv/theme-stone'",
 							'Warm stone and slate tones; Montserrat + Figtree type.'
 						],
 						[
 							'Y2K',
-							"import {y2kTheme} from '@astryx-svelte/theme-y2k'",
+							"import {y2kTheme} from '@astryx-sv/theme-y2k'",
 							'Playful Y2K pop; periwinkle body, holographic accents, Poppins + Crimson Text.'
 						]
 					]
 				},
 				{
 					type: 'prose',
-					text: 'Every theme package publishes three entries:\n- `@astryx-svelte/theme-{name}`: the built theme object plus its icon registry — what an app imports\n- `@astryx-svelte/theme-{name}/tokens`: the same theme as plain data, with no icon registry and no imports, so plain Node can read it\n- `@astryx-svelte/theme-{name}/theme.css`: the pre-compiled stylesheet, imported once alongside the theme'
+					text: 'Every theme package publishes three entries:\n- `@astryx-sv/theme-{name}`: the built theme object plus its icon registry — what an app imports\n- `@astryx-sv/theme-{name}/tokens`: the same theme as plain data, with no icon registry and no imports, so plain Node can read it\n- `@astryx-sv/theme-{name}/theme.css`: the pre-compiled stylesheet, imported once alongside the theme'
 				}
 			]
 		},
@@ -194,7 +194,7 @@ export const docs = {
 					type: 'code',
 					lang: 'ts',
 					label: 'defineTheme with scale configs',
-					code: `import { defineTheme } from '@astryx-svelte/core/theme';
+					code: `import { defineTheme } from '@astryx-sv/core/theme';
 
 export const myTheme = defineTheme({
 	name: 'my-theme',
@@ -259,8 +259,8 @@ export const myTheme = defineTheme({
 					type: 'code',
 					lang: 'ts',
 					label: 'Extending the neutral theme',
-					code: `import { defineTheme } from '@astryx-svelte/core/theme';
-import { neutralTheme } from '@astryx-svelte/theme-neutral';
+					code: `import { defineTheme } from '@astryx-sv/core/theme';
+import { neutralTheme } from '@astryx-sv/theme-neutral';
 import { myIcons } from './icons.svelte';
 
 export const brandTheme = defineTheme({
@@ -400,7 +400,7 @@ export const brandTheme = defineTheme({
 			content: [
 				{
 					type: 'prose',
-					text: '`astryx-svelte theme build` compiles a defineTheme file into production-ready artifacts. Recommended for SSR apps (SvelteKit with `adapter-node`, `adapter-vercel`, or any prerendered output) where styles must be present on first paint.'
+					text: '`astryx-svelte theme build` compiles a defineTheme file into production-ready artifacts. Recommended for SSR apps (SvelteKit with `adapter-node`, `adapter-cloudflare`, or any prerendered output) where styles must be present on first paint.'
 				},
 				{
 					type: 'code',
@@ -440,7 +440,7 @@ export const brandTheme = defineTheme({
 					lang: 'svelte',
 					label: 'Using a custom built theme',
 					code: `<script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
+	import { Theme } from '@astryx-sv/core';
 	import { oceanTheme } from '$lib/themes/ocean.js';
 	import '$lib/themes/ocean.css';
 
@@ -459,7 +459,7 @@ export const brandTheme = defineTheme({
 			content: [
 				{
 					type: 'prose',
-					text: 'Themes work in two modes. Every published `@astryx-svelte/theme-*` package is already built; the distinction matters for a theme you write yourself.'
+					text: 'Themes work in two modes. Every published `@astryx-sv/theme-*` package is already built; the distinction matters for a theme you write yourself.'
 				},
 				{
 					type: 'table',
@@ -468,7 +468,7 @@ export const brandTheme = defineTheme({
 						[
 							'Import (published theme)',
 							'n/a — published themes are built',
-							'@astryx-svelte/theme-{name} + theme.css'
+							'@astryx-sv/theme-{name} + theme.css'
 						],
 						[
 							'Import (custom theme)',
@@ -527,7 +527,7 @@ export const brandTheme = defineTheme({
 					lang: 'svelte',
 					label: 'Toggle with a button',
 					code: `<script lang="ts">
-	import { Button, Theme } from '@astryx-svelte/core';
+	import { Button, Theme } from '@astryx-sv/core';
 	import { myTheme } from '$lib/themes/my-theme.js';
 
 	let mode = $state<'light' | 'dark'>('light');
@@ -586,7 +586,7 @@ export const brandTheme = defineTheme({
 					type: 'code',
 					lang: 'ts',
 					label: 'CSS var references for styling-library configs',
-					code: `import { tokenVar, tokenVars } from '@astryx-svelte/core/theme';
+					code: `import { tokenVar, tokenVars } from '@astryx-sv/core/theme';
 
 const pandaOrEmotionTheme = {
 	colors: {
@@ -602,8 +602,8 @@ const pandaOrEmotionTheme = {
 					type: 'code',
 					lang: 'ts',
 					label: 'Resolve token values without a component',
-					code: `import { resolveThemeTokens } from '@astryx-svelte/core/theme';
-import { neutralTheme } from '@astryx-svelte/theme-neutral/tokens';
+					code: `import { resolveThemeTokens } from '@astryx-sv/core/theme';
+import { neutralTheme } from '@astryx-sv/theme-neutral/tokens';
 
 const lightTokens = resolveThemeTokens(neutralTheme, { mode: 'light' });
 const chartTheme = {
@@ -634,7 +634,7 @@ const chartTheme = {
 					lang: 'svelte',
 					label: 'Access resolved token values',
 					code: `<script lang="ts">
-	import { useTheme } from '@astryx-svelte/core/theme';
+	import { useTheme } from '@astryx-sv/core/theme';
 
 	const theme = useTheme();
 

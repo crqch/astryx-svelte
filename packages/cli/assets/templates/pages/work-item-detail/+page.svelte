@@ -67,7 +67,7 @@
 		type SearchSource,
 		type SelectorOptionData,
 		type StatusDotVariant
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowLeftIcon,
 		BellIcon,

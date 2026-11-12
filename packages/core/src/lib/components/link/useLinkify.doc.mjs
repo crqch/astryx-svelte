@@ -82,6 +82,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Link', 'LinkProvider'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'link'
 };

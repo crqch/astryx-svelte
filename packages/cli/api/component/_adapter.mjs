@@ -86,7 +86,7 @@ export { CORE_PACKAGE };
  */
 
 /**
- * Locate `@astryx-svelte/core`, throwing the stable not-found error when absent.
+ * Locate `@astryx-sv/core`, throwing the stable not-found error when absent.
  * @param {string} cwd
  * @returns {string}
  */

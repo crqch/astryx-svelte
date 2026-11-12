@@ -9,7 +9,7 @@
 	one and a snippet cannot call a hook.
 -->
 <script lang="ts">
-	import { VStack } from '@astryx-svelte/core';
+	import { VStack } from '@astryx-sv/core';
 	import Comment from './Comment.svelte';
 
 	const COMMENTS = [

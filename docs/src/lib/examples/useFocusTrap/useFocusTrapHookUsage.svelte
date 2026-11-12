@@ -6,7 +6,7 @@
 	replacement for upstream's ref object.
 -->
 <script lang="ts">
-	import { Button, Card, HStack, Text, TextInput, useFocusTrap, VStack } from '@astryx-svelte/core';
+	import { Button, Card, HStack, Text, TextInput, useFocusTrap, VStack } from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 	const INITIAL_TITLE = 'Update onboarding guide';

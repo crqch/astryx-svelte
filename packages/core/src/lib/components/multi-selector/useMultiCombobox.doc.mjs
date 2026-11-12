@@ -196,6 +196,6 @@ export default {
 	},
 	relatedComponents: ['MultiSelector'],
 	relatedHooks: ['useCombobox', 'useAnnounce'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'focus'
 };

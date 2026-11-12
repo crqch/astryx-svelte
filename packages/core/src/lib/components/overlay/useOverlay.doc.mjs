@@ -116,6 +116,6 @@ export default {
 	},
 	relatedComponents: ['Overlay', 'Card', 'AspectRatio'],
 	relatedHooks: ['useClickableContainer'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

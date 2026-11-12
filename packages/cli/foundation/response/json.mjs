@@ -19,7 +19,7 @@
  *
  * Commands call jsonOut({type, data}) for success and jsonError(msg) for
  * errors. Consumer-facing utilities (parseResponse, isError, assertResponse)
- * live in api/json/parse.mjs and are exported via `@astryx-svelte/cli/json`.
+ * live in api/json/parse.mjs and are exported via `@astryx-sv/cli/json`.
  */
 
 /**

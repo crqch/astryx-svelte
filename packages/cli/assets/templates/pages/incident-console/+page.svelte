@@ -74,7 +74,7 @@
 		usePowerSearchConfig,
 		useResizable,
 		type PowerSearchFilter
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { BellAlertIcon, PlusIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	const styles: Record<string, string> = {

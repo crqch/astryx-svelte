@@ -7,14 +7,14 @@
 	export), and `inputRef` is a **getter** rather than a `RefObject`.
 -->
 <script lang="ts">
-	import type { ChatComposerInputHandle } from '@astryx-svelte/core';
+	import type { ChatComposerInputHandle } from '@astryx-sv/core';
 	import {
 		ChatComposer,
 		ChatComposerInput,
 		ChatDictationButton,
 		Stack,
 		useChatDictation
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let input = $state<ChatComposerInputHandle | null>(null);
 

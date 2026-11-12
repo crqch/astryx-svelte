@@ -3,13 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		CheckboxList,
-		CheckboxListItem,
-		FormLayout,
-		Selector,
-		TextInput
-	} from '@astryx-svelte/core';
+	import { CheckboxList, CheckboxListItem, FormLayout, Selector, TextInput } from '@astryx-sv/core';
 
 	let name = $state('Maya Torres');
 	let role = $state('editor');

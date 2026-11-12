@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Icon } from '@astryx-svelte/core';
+	import { Icon } from '@astryx-sv/core';
 </script>
 
 <Icon icon="search" color="primary" size="md" />

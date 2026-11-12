@@ -49,6 +49,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Carousel'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'motion & gestures'
 };

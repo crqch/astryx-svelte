@@ -29,7 +29,7 @@ component uses before judging it.
 | Our port          | `packages/core/src/lib/components/<kebab-name>/`      |
 | Our hooks         | `packages/core/src/lib/hooks/`                        |
 | Pattern canon     | `port/research/06-react-to-svelte-patterns.md`        |
-| Typecheck         | `bun run --filter @astryx-svelte/core check`          |
+| Typecheck         | `bun run --filter @astryx-sv/core check`          |
 
 ## Method
 

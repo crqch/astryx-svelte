@@ -104,9 +104,9 @@
 		useResizable,
 		type ThemeMode,
 		type TreeListItemData
-	} from '@astryx-svelte/core';
-	import { defineTheme } from '@astryx-svelte/core/theme';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	} from '@astryx-sv/core';
+	import { defineTheme } from '@astryx-sv/core/theme';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import {
 		Aperture,
 		ArrowDownToLine,

@@ -83,6 +83,6 @@ export default {
 	},
 	relatedComponents: ['MediaTheme'],
 	relatedHooks: ['useMediaQuery'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'media'
 };

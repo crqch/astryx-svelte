@@ -18,7 +18,7 @@ import { borderVars, colorVars, radiusVars, shadowVars } from '../../styles/toke
  * A theme adds a variant by augmenting this interface, exactly as upstream:
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface CardVariantMap {
  *     brand: true;
  *   }

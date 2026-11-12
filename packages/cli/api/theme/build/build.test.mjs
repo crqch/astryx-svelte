@@ -1,6 +1,6 @@
 /**
  * Direct API tests for `themeBuild()` — the programmatic surface behind
- * `astryx-svelte theme build` (`@astryx-svelte/cli/api`).
+ * `astryx-svelte theme build` (`@astryx-sv/cli/api`).
  *
  * The CLI suites (clients/cli/commands/build-theme.*.test.mjs) drive
  * `registerTheme` end-to-end; these assert the API contract you get calling
@@ -8,13 +8,13 @@
  * written to disk), that it honors the `cwd` option, stays SILENT under the
  * default silent logger, and returns `null` when there is nothing to build.
  *
- * `themeBuild` compiles via @astryx-svelte/core's generator, so it needs a
+ * `themeBuild` compiles via @astryx-sv/core's generator, so it needs a
  * built core — `ensureCoreBuilt()` builds it once, behind a lock, if dist is
  * missing.
  *
  * Two adaptations, both consequences of the subpath this port's `theme build`
  * has to import (see build.mjs's header):
- *   - the mocked module is `@astryx-svelte/core/theme/define`, not `./theme`;
+ *   - the mocked module is `@astryx-sv/core/theme/define`, not `./theme`;
  *   - the generator is `generateThemeRulesSplit` + `generateOnMediaCSS`, and the
  *     split one is a real export here rather than something the CLI had to
  *     reconstruct. Both carried this port's `…Css` casing until batch 034 closed
@@ -28,7 +28,7 @@ import * as os from 'node:os';
 import {
 	generateThemeRulesSplit as mockGenerateThemeRulesSplit,
 	generateOnMediaCSS as mockGenerateOnMediaCSS
-} from '@astryx-svelte/core/theme/define';
+} from '@astryx-sv/core/theme/define';
 import { ensureCoreBuilt } from '../../../test-utils/ensure-core-built.mjs';
 import { themeBuild } from './build.mjs';
 
@@ -37,7 +37,7 @@ import { themeBuild } from './build.mjs';
 // exercise the REAL generator, while the "nothing to build" test can force an
 // empty result for a single call — the only way to reach that branch, since
 // core's prose element defaults otherwise always ship a non-empty CSS block.
-vi.mock('@astryx-svelte/core/theme/define', async (importActual) => {
+vi.mock('@astryx-sv/core/theme/define', async (importActual) => {
 	const actual = /** @type {Record<string, unknown>} */ (await importActual());
 	return {
 		...actual,

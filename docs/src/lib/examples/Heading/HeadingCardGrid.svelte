@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Heading, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Heading, Text, VStack } from '@astryx-sv/core';
 </script>
 
 <Card width={300}>

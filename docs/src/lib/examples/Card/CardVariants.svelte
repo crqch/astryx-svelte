@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Stack, Text } from '@astryx-svelte/core';
+	import { Card, Stack, Text } from '@astryx-sv/core';
 
 	const VARIANTS = [
 		{ variant: 'default', label: 'General', note: '4 tasks due today' },

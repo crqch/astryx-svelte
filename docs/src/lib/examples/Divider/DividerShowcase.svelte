@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Divider, Stack } from '@astryx-svelte/core';
+	import { Divider, Stack } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={4} style="width: 500px">

@@ -6,7 +6,7 @@
 	`value`/`onChange` is a controlled pair on both sides, not a `$bindable`.
 -->
 <script lang="ts">
-	import { ChatComposer, ChatComposerInput, Stack, Text } from '@astryx-svelte/core';
+	import { ChatComposer, ChatComposerInput, Stack, Text } from '@astryx-sv/core';
 
 	let value = $state('');
 </script>

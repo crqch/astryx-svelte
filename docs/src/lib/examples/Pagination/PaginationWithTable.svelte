@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Pagination, Stack, Table } from '@astryx-svelte/core';
+	import { Pagination, Stack, Table } from '@astryx-sv/core';
 
 	const ALL_DATA = [
 		{ id: '1', name: 'Olivia Chen', role: 'Engineer', status: 'Active' },

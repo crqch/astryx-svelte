@@ -131,7 +131,7 @@ export { isFocusDetached } from './focus-return.js';
 //
 // These ten all live in upstream's `utils/index.ts` and were reachable here only
 // from the package root (or, for `parseStyleKey`, from `./theme`), so
-// `import {themeProps} from '@astryx-svelte/core/utils'` failed where upstream's
+// `import {themeProps} from '@astryx-sv/core/utils'` failed where upstream's
 // succeeds. Placement, not absence — recorded in `port/debts.md` as the
 // consumer-visible half of the "two homes for one upstream dir" item.
 //

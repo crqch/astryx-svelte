@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Dialog, DialogHeader, Layout, LayoutContent, Text } from '@astryx-svelte/core';
+	import { Dialog, DialogHeader, Layout, LayoutContent, Text } from '@astryx-sv/core';
 </script>
 
 <!-- Remove isInline for production — dialogs should be modal. -->

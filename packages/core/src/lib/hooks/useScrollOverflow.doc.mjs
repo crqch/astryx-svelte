@@ -65,6 +65,6 @@ export default {
 	},
 	relatedComponents: ['Carousel'],
 	relatedHooks: ['useOverflow'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'layout'
 };

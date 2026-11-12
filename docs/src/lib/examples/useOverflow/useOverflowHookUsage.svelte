@@ -13,7 +13,7 @@
 	collapse into the More menu and return.
 -->
 <script lang="ts">
-	import { Button, Card, DropdownMenu, useOverflow } from '@astryx-svelte/core';
+	import { Button, Card, DropdownMenu, useOverflow } from '@astryx-sv/core';
 
 	const actions = [
 		'Bold',

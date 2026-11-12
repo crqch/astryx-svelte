@@ -6,13 +6,13 @@
 	content written between the tags would be a `Snippet`.
 -->
 <script lang="ts">
-	import type { ChatComposerToken } from '@astryx-svelte/core';
+	import type { ChatComposerToken } from '@astryx-sv/core';
 	import {
 		ChatMessage,
 		ChatMessageBubble,
 		ChatMessageList,
 		ChatTokenizedText
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const tokens: ChatComposerToken[] = [
 		{ value: '@cindy', label: '@Cindy', variant: 'blue' },

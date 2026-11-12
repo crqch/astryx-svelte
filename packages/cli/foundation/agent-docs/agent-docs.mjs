@@ -391,10 +391,10 @@ export function generateCompressedIndex(
 	// not run StyleX), so the consumer's bundler MUST run the StyleX plugin or
 	// every component renders unstyled with no error.
 	lines.push('SETUP (once) — without these, components render unstyled:');
-	lines.push("  app.css:        @import '@astryx-svelte/core/base.css';");
-	lines.push("                  @import '@astryx-svelte/theme-neutral/theme.css';");
+	lines.push("  app.css:        @import '@astryx-sv/core/base.css';");
+	lines.push("                  @import '@astryx-sv/theme-neutral/theme.css';");
 	lines.push(
-		'  vite.config.ts: run @stylexjs/unplugin over @astryx-svelte/core ' +
+		'  vite.config.ts: run @stylexjs/unplugin over @astryx-sv/core ' +
 			'(add it to optimizeDeps.exclude + ssr.noExternal).'
 	);
 	lines.push('');
@@ -488,7 +488,7 @@ export function generateCompressedIndex(
 	const topics = bundledDocTopics();
 	if (topics.length > 0) lines.push(`  docs <topic>       ${topics.join(', ')}`);
 	lines.push('  swizzle <Name>     eject component source for deep customization');
-	lines.push('  upgrade --apply    run after any @astryx-svelte/core bump');
+	lines.push('  upgrade --apply    run after any @astryx-sv/core bump');
 	lines.push(MARKER_END);
 
 	return lines.join('\n');

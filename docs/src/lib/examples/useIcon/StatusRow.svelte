@@ -5,7 +5,7 @@
 	under the `<Theme>` whose icons it resolves.
 -->
 <script lang="ts">
-	import { HStack, Text, useIcon } from '@astryx-svelte/core';
+	import { HStack, Text, useIcon } from '@astryx-sv/core';
 
 	const success = useIcon(() => 'success');
 	const warning = useIcon(() => 'warning');

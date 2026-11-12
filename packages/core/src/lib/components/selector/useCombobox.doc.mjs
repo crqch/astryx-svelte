@@ -198,6 +198,6 @@ export default {
 	},
 	relatedComponents: ['Selector', 'CommandPalette'],
 	relatedHooks: ['useMultiCombobox', 'useTypeahead', 'useAnnounce'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'focus'
 };

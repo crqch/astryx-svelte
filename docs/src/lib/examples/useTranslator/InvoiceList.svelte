@@ -5,7 +5,7 @@
 	nothing else in the block reads them.
 -->
 <script lang="ts">
-	import { Button, HStack, List, ListItem, Text, VStack, useTranslator } from '@astryx-svelte/core';
+	import { Button, HStack, List, ListItem, Text, VStack, useTranslator } from '@astryx-sv/core';
 
 	const INVOICES = Array.from({ length: 9 }, (_, index) => `INV-${1001 + index}`);
 	const PAGE_SIZE = 3;

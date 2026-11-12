@@ -47,7 +47,7 @@ export { discoverTemplates, listTemplates } from '../../../api/template/template
  * when a row belongs to some *other* package, so the common listing stays
  * uncluttered.
  */
-const CORE_PACKAGE = '@astryx-svelte/core';
+const CORE_PACKAGE = '@astryx-sv/core';
 
 /**
  * @param {import('commander').Command} program

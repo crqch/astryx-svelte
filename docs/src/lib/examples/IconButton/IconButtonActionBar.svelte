@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { HStack, Icon, IconButton } from '@astryx-svelte/core';
-	import type { IconName } from '@astryx-svelte/core';
+	import { HStack, Icon, IconButton } from '@astryx-sv/core';
+	import type { IconName } from '@astryx-sv/core';
 
 	const actions: { label: string; icon: IconName }[] = [
 		{ label: 'Search', icon: 'search' },

@@ -10,7 +10,7 @@
 		Switch,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	/**
 	 * Live, theme-aware sampler of real Astryx components, ported from upstream's

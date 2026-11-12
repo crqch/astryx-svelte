@@ -154,6 +154,6 @@ export default {
 	},
 	relatedComponents: ['HoverCard', 'Tooltip', 'Popover'],
 	relatedHooks: ['useLayer', 'useTooltip', 'usePopover'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

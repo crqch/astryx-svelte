@@ -12,7 +12,7 @@
 	is a snippet here and `children` — the visible label — stays a string.
 -->
 <script lang="ts">
-	import { Button, ChatComposer, DropdownMenu, Icon, Stack, Text } from '@astryx-svelte/core';
+	import { Button, ChatComposer, DropdownMenu, Icon, Stack, Text } from '@astryx-sv/core';
 </script>
 
 {#snippet sparklesIcon()}<Icon icon="wrench" size="sm" />{/snippet}

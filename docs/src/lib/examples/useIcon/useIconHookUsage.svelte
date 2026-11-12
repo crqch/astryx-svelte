@@ -9,7 +9,7 @@
 -->
 <script module lang="ts">
 	import { createRawSnippet } from 'svelte';
-	import { defineTheme } from '@astryx-svelte/core/theme';
+	import { defineTheme } from '@astryx-sv/core/theme';
 
 	const successIcon = createRawSnippet(() => ({
 		render: () => `<svg
@@ -73,7 +73,7 @@
 </script>
 
 <script lang="ts">
-	import { Text, Theme, useTheme, VStack } from '@astryx-svelte/core';
+	import { Text, Theme, useTheme, VStack } from '@astryx-sv/core';
 	import StatusRow from './StatusRow.svelte';
 
 	const theme = useTheme();

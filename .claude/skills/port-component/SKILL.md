@@ -42,7 +42,7 @@ Run the **`astryx-oracle`** agent to wire the new `.stylex.ts` into
 mode, group renames, or the published-`dist`-lags-source case). It may edit the oracle, not the
 styles — a mismatch is a report, and the styles are what get fixed.
 
-Verify with `bun run --filter @astryx-svelte/core test:parity`.
+Verify with `bun run --filter @astryx-sv/core test:parity`.
 
 ## 4. Idiom
 

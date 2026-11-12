@@ -13,7 +13,7 @@
 	docs theme switcher moves between themes.
 
 	Maps the 29 semantic icon names to Lucide glyphs. These icons are bundled with
-	the theme, not with `@astryx-svelte/core`, which is upstream's arrangement and
+	the theme, not with `@astryx-sv/core`, which is upstream's arrangement and
 	the reason core ships its own dependency-free placeholders instead.
 
 	## Why this is a `.svelte` file
@@ -42,7 +42,7 @@
 	registry that no longer diffs cleanly against the rest.
 -->
 <script module lang="ts">
-	import type { IconRegistry } from '@astryx-svelte/core';
+	import type { IconRegistry } from '@astryx-sv/core';
 	import {
 		X,
 		ChevronDown,

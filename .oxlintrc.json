@@ -37,6 +37,7 @@
 		"**/dist/**",
 		"**/.svelte-kit/**",
 		"**/.vercel/**",
+		"**/.wrangler/**",
 		"/build/**",
 		"/docs/build/**",
 		"/packages/*/build/**",

@@ -29,7 +29,7 @@
  * @property {string} name
  * @property {string} description
  * @property {'page' | 'block'} type
- * @property {string} package - Owning package; core (built-in) templates report '@astryx-svelte/core'.
+ * @property {string} package - Owning package; core (built-in) templates report '@astryx-sv/core'.
  * @property {string} [category] - Optional grouping/category label.
  * @property {string[]} [componentsUsed] - Component display names the template composes.
  * @property {boolean} isReady

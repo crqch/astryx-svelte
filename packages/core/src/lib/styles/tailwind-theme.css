@@ -30,10 +30,10 @@
  *
  *   @import "tailwindcss/theme.css" layer(theme);
  *   @import "tailwindcss/preflight.css" layer(base);
- *   @import "@astryx-svelte/core/base.css";
- *   @import "@astryx-svelte/core/astryx.css";
- *   @import "@astryx-svelte/theme-neutral/theme.css";
- *   @import "@astryx-svelte/core/tailwind-theme.css";
+ *   @import "@astryx-sv/core/base.css";
+ *   @import "@astryx-sv/core/astryx.css";
+ *   @import "@astryx-sv/theme-neutral/theme.css";
+ *   @import "@astryx-sv/core/tailwind-theme.css";
  *   @import "tailwindcss/utilities.css" layer(utilities);
  *
  * @position infrastructure — sits between system tokens and Tailwind utility generation

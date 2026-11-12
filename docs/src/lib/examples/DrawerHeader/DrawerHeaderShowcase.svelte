@@ -4,7 +4,7 @@
 	The panel's StyleX frame is an inline style here; see the scroll examples' note.
 -->
 <script lang="ts">
-	import { DrawerHeader, Layout, LayoutContent, Text } from '@astryx-svelte/core';
+	import { DrawerHeader, Layout, LayoutContent, Text } from '@astryx-sv/core';
 
 	const panel =
 		'width: 360px; max-width: 100%; box-sizing: border-box; background-color: var(--color-background-card); border: 1px solid var(--color-border); border-radius: 0';

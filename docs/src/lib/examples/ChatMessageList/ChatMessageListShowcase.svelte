@@ -11,7 +11,7 @@
 		ChatSystemMessage,
 		Timestamp,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet firstTimestamp()}

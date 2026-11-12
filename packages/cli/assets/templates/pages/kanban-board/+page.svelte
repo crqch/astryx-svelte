@@ -61,7 +61,7 @@
 		Tooltip,
 		VStack,
 		type IconName
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowsUpDownIcon,
 		FunnelIcon,

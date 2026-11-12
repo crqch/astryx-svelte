@@ -9,15 +9,7 @@
 	import StyleX.
 -->
 <script lang="ts">
-	import {
-		Button,
-		Card,
-		HStack,
-		Heading,
-		Text,
-		VStack,
-		useScrollableArea
-	} from '@astryx-svelte/core';
+	import { Button, Card, HStack, Heading, Text, VStack, useScrollableArea } from '@astryx-sv/core';
 
 	const TOP_SHADOW = 'inset 0 12px 8px -8px var(--color-shadow)';
 	const BOTTOM_SHADOW = 'inset 0 -12px 8px -8px var(--color-shadow)';

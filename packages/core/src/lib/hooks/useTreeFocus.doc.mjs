@@ -130,6 +130,6 @@ export default {
 	},
 	relatedComponents: ['TreeList'],
 	relatedHooks: ['useListFocus', 'useGridFocus', 'useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

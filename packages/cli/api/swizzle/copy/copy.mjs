@@ -85,7 +85,7 @@ const REWRITABLE_EXT = /\.(?:svelte|ts|mts|js|mjs)$/;
  * component-discovery (which indexes runtime bindings) this keeps it. Counting
  * type re-exports is what takes the unresolvable set from 801 occurrences to
  * 108: `base-props.ts` and `internal/types.ts` are reachable as
- * `import type {BaseProps} from '@astryx-svelte/core'`.
+ * `import type {BaseProps} from '@astryx-sv/core'`.
  */
 const EXPORT_FROM_RE = /^[^\S\r\n]*export\s+(type\s+)?\{([^}]*)\}\s*from\s*['"]([^'"]+)['"]/gm;
 
@@ -98,7 +98,7 @@ const EXPORT_FROM_RE = /^[^\S\r\n]*export\s+(type\s+)?\{([^}]*)\}\s*from\s*['"](
  * unanchored pattern reads those comments as code. It did: `theme/index.ts`,
  * `i18n/index.ts` and `utils/index.ts` were all indexed a second time under the
  * ROOT specifier, so `../../styles/tokens.stylex.js` rewrote to
- * `@astryx-svelte/core` instead of `@astryx-svelte/core/theme`. A comment line
+ * `@astryx-sv/core` instead of `@astryx-sv/core/theme`. A comment line
  * begins with `//` or ` *`, never with `export`, so anchoring is the whole fix.
  */
 const EXPORT_STAR_RE = /^[^\S\r\n]*export\s+\*\s+from\s*['"]([^'"]+)['"]/gm;
@@ -401,12 +401,12 @@ function classifyImport(spec, ctx) {
  * specifier recorded through `ctx.onUnresolved` rather than rewritten into a
  * specifier that would not resolve.
  *
- * e.g. with ownerPackage '@astryx-svelte/core', copying `components/button/`:
- *      '../../i18n/use-translator.svelte.js' -> '@astryx-svelte/core/i18n'
- *      '../../styles/tokens.stylex.js'       -> '@astryx-svelte/core/theme'
- *      '../../base-props.js'                 -> '@astryx-svelte/core'
+ * e.g. with ownerPackage '@astryx-sv/core', copying `components/button/`:
+ *      '../../i18n/use-translator.svelte.js' -> '@astryx-sv/core/i18n'
+ *      '../../styles/tokens.stylex.js'       -> '@astryx-sv/core/theme/tokens.stylex'
+ *      '../../base-props.js'                 -> '@astryx-sv/core'
  *      import Icon from '../icon/icon.svelte'
- *        -> import { Icon } from '@astryx-svelte/core'
+ *        -> import { Icon } from '@astryx-sv/core'
  *      './button.stylex.js'                  -> unchanged
  *
  * @param {string} content

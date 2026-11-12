@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { DropdownMenu } from '@astryx-svelte/core';
+	import { DropdownMenu } from '@astryx-sv/core';
 </script>
 
 <DropdownMenu

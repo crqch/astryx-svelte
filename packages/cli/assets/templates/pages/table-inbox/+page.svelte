@@ -100,7 +100,7 @@
 		type SearchSource,
 		type TableColumn,
 		type TablePlugin
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArchiveBoxIcon,
 		ArrowLeftIcon,

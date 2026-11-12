@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { HoverCard, HStack, Icon, Link, Text, VStack } from '@astryx-svelte/core';
+	import { HoverCard, HStack, Icon, Link, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `LinkIcon`; the registry ships `externalLink`, so

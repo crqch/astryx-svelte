@@ -35,7 +35,7 @@ function coreRewriteContext({ dir, fileDir } = {}) {
 	const unresolved = [];
 	return {
 		ctx: {
-			ownerPackage: '@astryx-svelte/core',
+			ownerPackage: '@astryx-sv/core',
 			ownerRoot: CORE_ROOT,
 			fileDir: fileDir ?? copiedRoot,
 			copiedRoot,
@@ -47,12 +47,14 @@ function coreRewriteContext({ dir, fileDir } = {}) {
 
 describe('rewriteImports', () => {
 	it('routes the theme token module to the subpath that publishes it', () => {
-		// Upstream's `../theme/tokens.stylex` is a dedicated deep export there. Core
-		// publishes no `./theme/tokens.stylex`; the token objects are re-exported
-		// from `theme/index.ts`, so `./theme` is the specifier that resolves.
+		// Upstream's `../theme/tokens.stylex` is a dedicated deep export there, and
+		// core publishes the same subpath, so the token module resolves to it
+		// rather than collapsing to `./theme`.
 		const { ctx } = coreRewriteContext();
 		const input = `import { tokens } from '../../styles/tokens.stylex.js';`;
-		expect(rewriteImports(input, ctx)).toBe(`import { tokens } from '@astryx-svelte/core/theme';`);
+		expect(rewriteImports(input, ctx)).toBe(
+			`import { tokens } from '@astryx-sv/core/theme/tokens.stylex';`
+		);
 	});
 
 	it('routes a sibling utils module to the entrypoint that re-exports it', () => {
@@ -61,7 +63,7 @@ describe('rewriteImports', () => {
 		// canonical entrypoint when both publish a module, so `cx` lands there.
 		const { ctx } = coreRewriteContext();
 		const input = `import { warnOnce } from '../../utils/dev-warning.js';`;
-		expect(rewriteImports(input, ctx)).toBe(`import { warnOnce } from '@astryx-svelte/core';`);
+		expect(rewriteImports(input, ctx)).toBe(`import { warnOnce } from '@astryx-sv/core';`);
 	});
 
 	it('leaves same-level relative imports untouched', () => {
@@ -74,14 +76,16 @@ describe('rewriteImports', () => {
 		const { ctx } = coreRewriteContext();
 		const input = `export { useTranslator } from '../../i18n/use-translator.svelte.js';`;
 		expect(rewriteImports(input, ctx)).toBe(
-			`export { useTranslator } from '@astryx-svelte/core/i18n';`
+			`export { useTranslator } from '@astryx-sv/core/i18n';`
 		);
 	});
 
 	it('handles double quotes', () => {
 		const { ctx } = coreRewriteContext();
 		const input = `import { tokens } from "../../styles/tokens.stylex.js";`;
-		expect(rewriteImports(input, ctx)).toBe(`import { tokens } from "@astryx-svelte/core/theme";`);
+		expect(rewriteImports(input, ctx)).toBe(
+			`import { tokens } from "@astryx-sv/core/theme/tokens.stylex";`
+		);
 	});
 
 	it('handles multiple imports in one file', () => {
@@ -94,8 +98,8 @@ describe('rewriteImports', () => {
 
 		expect(rewriteImports(input, ctx)).toBe(
 			[
-				`import { tokens } from '@astryx-svelte/core/theme';`,
-				`import { warnOnce } from '@astryx-svelte/core';`,
+				`import { tokens } from '@astryx-sv/core/theme/tokens.stylex';`,
+				`import { warnOnce } from '@astryx-sv/core';`,
 				`import { helper } from './helper';`
 			].join('\n')
 		);
@@ -105,7 +109,7 @@ describe('rewriteImports', () => {
 		// Upstream rewrites the specifier and is done, because `<pkg>/Tooltip`'s
 		// namespace still carries the binding it destructures. Here the barrel
 		// publishes the component's *default* under a name, so
-		// `(await import('@astryx-svelte/core')).default` would be undefined — the
+		// `(await import('@astryx-sv/core')).default` would be undefined — the
 		// `{#await … then {default: Tooltip}}` shape is out of a specifier
 		// rewriter's reach, so the import is left alone and reported.
 		const { ctx, unresolved } = coreRewriteContext();
@@ -126,8 +130,8 @@ describe('rewriteImports', () => {
 			`import en from '../../../locales/en.json' with {type: 'json'};`,
 			ctx
 		);
-		expect(out).not.toContain('@astryx-svelte/core/..');
-		expect(out).toBe(`import en from '@astryx-svelte/core/locales/en.json' with {type: 'json'};`);
+		expect(out).not.toContain('@astryx-sv/core/..');
+		expect(out).toBe(`import en from '@astryx-sv/core/locales/en.json' with {type: 'json'};`);
 	});
 
 	it('keeps a component-local .stylex on the entrypoint that re-exports it', () => {
@@ -137,7 +141,7 @@ describe('rewriteImports', () => {
 		// does re-export the layer animations — is the collapse target.
 		const { ctx } = coreRewriteContext();
 		const input = `import { s } from '../layer/layer-animations.stylex.js';`;
-		expect(rewriteImports(input, ctx)).toBe(`import { s } from '@astryx-svelte/core';`);
+		expect(rewriteImports(input, ctx)).toBe(`import { s } from '@astryx-sv/core';`);
 	});
 });
 

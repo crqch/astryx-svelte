@@ -12,7 +12,7 @@
 		TextArea,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface ProfileFormValues {
 		name: string;

@@ -125,6 +125,6 @@ export default {
 	},
 	relatedComponents: ['Calendar'],
 	relatedHooks: ['useCalendarDays', 'useCalendarConstraints'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

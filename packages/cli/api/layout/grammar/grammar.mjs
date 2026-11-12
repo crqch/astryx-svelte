@@ -68,7 +68,7 @@ ATTRS [...] (outline: bare tokens after the name, no brackets)
   trigger      opens=#id  (a plain attr, no @ — binds a click handler that opens the overlay)
   fill         on a stack child → wraps in <StackItem size="fill">
 
-TEMPLATE REFERENCING  ({hint} pulls in real content — this is how XLE reaches past the @astryx-svelte/core shell)
+TEMPLATE REFERENCING  ({hint} pulls in real content — this is how XLE reaches past the @astryx-sv/core shell)
   app components               register local ones in astryx-svelte.config.mjs to import them by name:
                                  export default {experimental: {xle: {components: {KpiCard: {from: '$lib/components/KpiCard.svelte', default: true}}}}}
                                then {kpi-card} → import KpiCard + <KpiCard /> (kebab ↔ Pascal)

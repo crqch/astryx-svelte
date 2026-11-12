@@ -8,7 +8,7 @@
  * Resolution strategy for the value:
  * - Starts with `.` or `/` → file path relative to cwd
  * - Starts with `@` → npm package (import)
- * - Otherwise → try `@astryx-svelte/theme-{name}`, then try as bare package name
+ * - Otherwise → try `@astryx-sv/theme-{name}`, then try as bare package name
  *
  * Returns the theme object's `variants` and `fonts` if available,
  * or null if no theme is configured or found.
@@ -52,7 +52,7 @@ import * as path from 'node:path';
 import { importUserModule } from '../../../foundation/fs/module-loader.mjs';
 
 /** The scope this port's themes publish under; the bare-name convention below. */
-const THEME_SCOPE = '@astryx-svelte/theme-';
+const THEME_SCOPE = '@astryx-sv/theme-';
 
 /**
  * Extensions a bare, extensionless file specifier may resolve to, in the order
@@ -221,7 +221,7 @@ export async function resolveTheme(cwd = process.cwd()) {
 			return null;
 		}
 	} else {
-		// Convention: try @astryx-svelte/theme-{name} first, then bare package
+		// Convention: try @astryx-sv/theme-{name} first, then bare package
 		loaded = await tryLoadModule(`${THEME_SCOPE}${specifier}`, cwd);
 		if (!loaded.mod) {
 			loaded = await tryLoadModule(specifier, cwd);

@@ -14,7 +14,7 @@
  * — plus the one that is not mechanical: a scaffolded page is `+page.svelte`,
  * SvelteKit's route component, where upstream writes Next.js' `page.tsx`.
  *
- * "always reports core templates under @astryx-svelte/core" carried an
+ * "always reports core templates under @astryx-sv/core" carried an
  * **inverted** assertion until the page-template assets landed: this port
  * shipped none, so the case asserted a count of zero specifically so it would
  * fail the day they arrived. It did. Upstream's `toBeGreaterThan(0)` is now
@@ -116,12 +116,12 @@ describe('integration template discovery', () => {
 		expect(entry.package).toBe('@acme/widgets');
 	});
 
-	it('always reports core templates under @astryx-svelte/core', async () => {
+	it('always reports core templates under @astryx-sv/core', async () => {
 		// Upstream's assertion, restored: `assets/templates/pages/` now carries
 		// the transcribed page templates, so core contributes discoverable
 		// templates and the inverted form this case used to hold has retired.
 		const result = await template(undefined, { list: true, cwd: tmpDir });
-		const core = result.data.filter((t) => t.package === '@astryx-svelte/core');
+		const core = result.data.filter((t) => t.package === '@astryx-sv/core');
 		expect(core.length).toBeGreaterThan(0);
 	});
 

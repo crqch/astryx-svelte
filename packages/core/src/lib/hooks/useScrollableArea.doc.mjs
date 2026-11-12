@@ -84,6 +84,6 @@ export default {
 	},
 	relatedComponents: ['ScrollableArea'],
 	relatedHooks: ['useScrollOverflow'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'layout'
 };

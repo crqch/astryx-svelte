@@ -1702,16 +1702,16 @@ export {
 } from './interactive-role-context.svelte.js';
 
 // Hooks — re-exported at the root as upstream's index does, and available on
-// their own as `@astryx-svelte/core/hooks`.
+// their own as `@astryx-sv/core/hooks`.
 export * from './hooks/index.js';
 
 // Pure helpers — re-exported at the root as upstream's index does
 // (`export * from './utils'`), and available on their own as
-// `@astryx-svelte/core/utils`.
+// `@astryx-sv/core/utils`.
 export * from './utils/index.js';
 
 // i18n — re-exported at the root as upstream's index does (`export * from './i18n'`),
-// and available on its own as `@astryx-svelte/core/i18n`.
+// and available on its own as `@astryx-sv/core/i18n`.
 export {
 	InternationalizationContext,
 	InternationalizationProvider,

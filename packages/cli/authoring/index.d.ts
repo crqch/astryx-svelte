@@ -1,5 +1,5 @@
 /**
- * Public type surface for `@astryx-svelte/cli/authoring`.
+ * Public type surface for `@astryx-sv/cli/authoring`.
  *
  * Authoring is a pure data contract: the TYPES you write plain objects against,
  * and the PARSERS the CLI runs at the load boundary (`unknown` → typed, or a
@@ -12,7 +12,7 @@
  *
  * NOTE: this barrel is a `.d.ts` on purpose. It is a pure re-export (including
  * the parser value bindings from `./*.mjs`), and downstream package builds
- * resolve `@astryx-svelte/cli/authoring` here via the `types` condition. Their
+ * resolve `@astryx-sv/cli/authoring` here via the `types` condition. Their
  * tsconfigs run with `skipLibCheck` (which skips `.d.ts`) but no `allowJs`, so a
  * real `.ts` barrel would make tsc follow the `.mjs` re-exports and fail TS7016.
  * The runtime entry is the sibling `index.mjs`.

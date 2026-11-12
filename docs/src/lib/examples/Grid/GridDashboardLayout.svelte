@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Grid, GridSpan, Text } from '@astryx-svelte/core';
+	import { Card, Grid, GridSpan, Text } from '@astryx-sv/core';
 
 	const metrics = [
 		{ label: 'Revenue', value: '$48,290' },

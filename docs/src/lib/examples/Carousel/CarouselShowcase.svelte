@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Carousel, Heading, Stack, Text } from '@astryx-svelte/core';
+	import { Card, Carousel, Heading, Stack, Text } from '@astryx-sv/core';
 
 	const ITEMS = [
 		{ title: 'Design', body: 'Create wireframes and prototypes.' },

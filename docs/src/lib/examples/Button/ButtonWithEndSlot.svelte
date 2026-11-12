@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Button, Stack, Text } from '@astryx-svelte/core';
+	import { Badge, Button, Stack, Text } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes `label={3}` and `label={12}` — numbers, which its

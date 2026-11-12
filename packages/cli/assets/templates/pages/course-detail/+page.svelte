@@ -50,7 +50,7 @@
 		Text,
 		VStack,
 		VisuallyHidden
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowRightIcon,
 		BoltIcon,

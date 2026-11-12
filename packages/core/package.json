@@ -1,19 +1,19 @@
 {
-	"name": "@astryx-svelte/core",
+	"name": "@astryx-sv/core",
 	"displayName": "Astryx Core",
-	"version": "0.5.2",
+	"version": "0.7.13",
 	"description": "Svelte 5 components for Astryx, Meta's open source design system.",
 	"keywords": [
 		"svelte"
 	],
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
+		"url": "https://github.com/crqch/astryx-svelte/issues"
 	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/core"
 	},
 	"files": [

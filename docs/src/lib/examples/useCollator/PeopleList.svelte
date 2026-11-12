@@ -4,7 +4,7 @@
 	context during component initialisation, which a snippet cannot do.
 -->
 <script lang="ts">
-	import { List, ListItem, useCollator } from '@astryx-svelte/core';
+	import { List, ListItem, useCollator } from '@astryx-sv/core';
 
 	const PEOPLE = ['Zoë', 'emma', 'Örjan', 'Ana', 'Émile', 'oscar', 'Åsa'];
 

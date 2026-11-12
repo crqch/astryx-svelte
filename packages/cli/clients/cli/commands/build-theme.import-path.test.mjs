@@ -28,7 +28,7 @@ function writeTheme(dir, name) {
 	return file;
 }
 
-// `theme build` imports the compiled @astryx-svelte/core/theme/define entry
+// `theme build` imports the compiled @astryx-sv/core/theme/define entry
 // (there is no in-CLI fallback generator). Build core once if it isn't already
 // present so the suite works in any CI job, regardless of job ordering.
 beforeAll(() => {

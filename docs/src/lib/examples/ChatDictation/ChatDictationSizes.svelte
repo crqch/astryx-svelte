@@ -8,7 +8,7 @@
 		Stack,
 		Text,
 		type UseSpeechRecognitionReturn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const noop = () => {};
 

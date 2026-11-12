@@ -43,7 +43,7 @@ body:
     id: version
     attributes:
       label: Version
-      description: The `@astryx-svelte/core` version, or the commit SHA if you're on a checkout.
+      description: The `@astryx-sv/core` version, or the commit SHA if you're on a checkout.
     validations:
       required: true
 
@@ -65,7 +65,7 @@ body:
       label: Environment
       description: >
         Svelte and SvelteKit versions, package manager, browser, OS. Paste the output of
-        `bun pm ls | grep -E "svelte|@astryx-svelte/core"` if that's easiest.
+        `bun pm ls | grep -E "svelte|@astryx-sv/core"` if that's easiest.
       render: shell
     validations:
       required: false

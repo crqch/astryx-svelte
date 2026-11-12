@@ -12,7 +12,7 @@
 		TextInput,
 		useClipboard,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const INVITE_LINK = 'https://example.com/invite/q7x2k9';
 

@@ -9,7 +9,7 @@
  *     publishes no `defineVars` object from any subpath — and the Tailwind row
  *     drops `@astryxdesign/core/tailwind-theme.css`, which has no counterpart
  *     here; the bridge is `@theme inline` over the same token names;
- *   - `resolveThemeTokens` / `tokenVar` come from `@astryx-svelte/core/theme`,
+ *   - `resolveThemeTokens` / `tokenVar` come from `@astryx-sv/core/theme`,
  *     not a `/theme/tokens` subpath;
  *   - MUI is dropped from the list and the section: it is React-only, so the
  *     "map its palette slots" advice cannot be acted on from a Svelte app;
@@ -18,7 +18,7 @@
  *     resolves to nothing.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'styling-libraries',
 	title: 'Styling Library Interop',
@@ -137,7 +137,7 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: 'For StyleX styles, reference tokens as `var(--token)` strings. The token names are the published surface; the `defineVars` objects that mint them are internal to `@astryx-svelte/core` and are not exported from any subpath, so there are no typed token imports to reach for.'
+					text: 'For StyleX styles, reference tokens as `var(--token)` strings. The token names are the published surface; the `defineVars` objects that mint them are internal to `@astryx-sv/core` and are not exported from any subpath, so there are no typed token imports to reach for.'
 				},
 				{
 					type: 'prose',
@@ -180,8 +180,8 @@ export const styles = stylex.create({
 
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme inline {
@@ -347,8 +347,8 @@ tokens: {
 					type: 'code',
 					lang: 'ts',
 					label: 'Resolve tokens with no component context',
-					code: `import { resolveThemeTokens } from '@astryx-svelte/core/theme';
-import { neutralTheme } from '@astryx-svelte/theme-neutral/tokens';
+					code: `import { resolveThemeTokens } from '@astryx-sv/core/theme';
+import { neutralTheme } from '@astryx-sv/theme-neutral/tokens';
 
 const tokens = resolveThemeTokens(neutralTheme, { mode: 'light' });
 
@@ -368,7 +368,7 @@ const chartOptions = {
 					lang: 'svelte',
 					label: 'Resolve tokens from the nearest Theme',
 					code: `<script lang="ts">
-	import { useTheme } from '@astryx-svelte/core/theme';
+	import { useTheme } from '@astryx-sv/core/theme';
 
 	let { data }: { data: Array<{ x: string; y: number }> } = $props();
 
@@ -422,7 +422,7 @@ const chartOptions = {
 					type: 'list',
 					style: 'ordered',
 					items: [
-						'Import `@astryx-svelte/core/base.css` and a theme CSS file early enough for first paint. For a server-rendered app, build custom themes with `astryx-svelte theme build`; published themes are already built.',
+						'Import `@astryx-sv/core/base.css` and a theme CSS file early enough for first paint. For a server-rendered app, build custom themes with `astryx-svelte theme build`; published themes are already built.',
 						'Choose one owner for color mode. Theme uses `data-theme="light|dark"` and `color-scheme` to resolve `light-dark()` tokens.',
 						"Map the external library's semantic layer to system variables by intent, not by exact naming. For example, a library's `background.paper` maps to `--color-background-surface`.",
 						'Use `astryx-svelte docs tokens` and focused token docs when building mappings. Keep mappings small at first: text, surface/body/card/popover, border, accent, status, spacing, radius, typography, shadow.',

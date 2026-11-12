@@ -9,7 +9,7 @@ import { gothicPalettes, gothicTheme } from '../src/gothic-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-gothic',
+	packageName: '@astryx-sv/theme-gothic',
 	themeExport: 'gothicTheme',
 	theme: gothicTheme,
 	// Upstream's `source.ts` publishes the raw ramps alongside the theme, so this

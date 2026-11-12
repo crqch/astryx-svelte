@@ -9,7 +9,7 @@
 		SegmentedControl,
 		SegmentedControlItem,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import PeopleList from './PeopleList.svelte';
 
 	type Locale = 'en' | 'sv-SE';

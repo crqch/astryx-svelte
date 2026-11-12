@@ -89,7 +89,7 @@
 		VStack,
 		useMediaQuery,
 		type IconType
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowDownIcon,
 		ArrowUpIcon,

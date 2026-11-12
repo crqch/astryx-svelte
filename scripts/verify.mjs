@@ -60,9 +60,9 @@ if (scratch.length > 0) {
 // Locally, with no sibling job to lean on, `bun run verify` still covers docs.
 //
 // Bun's workspace filter is scoped by package name, not by directory, so the
-// docs exclusion is expressed positively: `@astryx-svelte/*` matches every
+// docs exclusion is expressed positively: `@astryx-sv/*` matches every
 // publishable package and never the private docs app.
-const workspaceFilter = noDocs ? '@astryx-svelte/*' : '*';
+const workspaceFilter = noDocs ? '@astryx-sv/*' : '*';
 
 const stages = [
 	runStage('build', 'bun', ['run', '--filter', workspaceFilter, 'build']),
@@ -80,10 +80,10 @@ if (!fast) {
 		// instead. `test:node` is core's server project plus both fidelity
 		// oracles; the second stage is every other workspace package's own
 		// `test` script.
-		const restFilters = ['--filter', '@astryx-svelte/cli', '--filter', '@astryx-svelte/theme-*'];
+		const restFilters = ['--filter', '@astryx-sv/cli', '--filter', '@astryx-sv/theme-*'];
 		if (!noDocs) restFilters.push('--filter', 'docs');
 		stages.push(
-			runStage('test:node', 'bun', ['run', '--filter', '@astryx-svelte/core', 'test:node']),
+			runStage('test:node', 'bun', ['run', '--filter', '@astryx-sv/core', 'test:node']),
 			runStage('test:rest', 'bun', ['run', ...restFilters, 'test'])
 		);
 	} else {

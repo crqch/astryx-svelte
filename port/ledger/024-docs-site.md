@@ -362,7 +362,7 @@ console errors. Client JS **+558 B (+0.013%)**.
       identity. Change it if a different legal name or entity should hold it — it appears in all 11
       files
 - [ ] **Nothing is on npm yet.** The packages are publishable; publishing is a human action and has
-      not happened. **The `@astryx-svelte` org must be created on npm first** — a scoped publish
+      not happened. **The `@astryx-sv` org must be created on npm first** — a scoped publish
       does not auto-create it. `npm publish` is then the only remaining step, and the install
       instructions become true the moment it runs
 - [ ] **Send the blessing message.** `research/05-shadcn-svelte-playbook.md` item 9: reach out to
@@ -500,7 +500,7 @@ oracles clean, `build`/`check`/`lint` all 0.
       substitution — the icon is the control's whole meaning. Path data verified byte-identical
       between `lucide-react@1.25.0` (what upstream resolves) and `@lucide/svelte@1.30.0`
 - [x] **The StyleX consumer seam** — the thing that had to work before any of this was worth
-      planning. `@astryx-svelte/core` ships its `.stylex.js` modules **uncompiled** (`svelte-package`
+      planning. `@astryx-sv/core` ships its `.stylex.js` modules **uncompiled** (`svelte-package`
       transpiles TypeScript; it does not run StyleX), so every consumer compiles them itself. The
       docs app runs `@stylexjs/unplugin` with options copied verbatim from `packages/core`, plus
       `optimizeDeps.exclude` and `ssr.noExternal` for core — without those two, Vite's esbuild
@@ -582,7 +582,7 @@ pin-and-cover showcase. Both it and `SharedTopNav` are now ported. What landed:
       `src/lib/generated/astryx-theme.css` by `scripts/build-astryx-theme.mjs` and stamped
       `__built: true`, exactly as upstream's `astryx theme build` artifact is. The config is a
       separate module taking the brand colour as an _argument_, because the build script runs under
-      plain Node: the `@astryx-svelte/core/theme` barrel re-exports `theme.svelte`, which Node
+      plain Node: the `@astryx-sv/core/theme` barrel re-exports `theme.svelte`, which Node
       cannot load, and Node does not resolve a `.js` specifier to a `.ts` file
 - [x] **The hero theme reel** — provider + wordmark/cards/stack/dots placements, the aurora blob
       layer, the per-slide `theme-fill` and `nav-backdrop` bands, touch swipe, visibility pausing,
@@ -872,10 +872,10 @@ Still open from this pass:
       `shell/search-index.ts`, ranked prefix → substring → keyword → description, shared by the
       `⌘K` palette
 - [x] **Host it** so it cannot drift from what it documents — **live at
-      <https://astryx-svelte.rohitk06.in/> since 2026-08-10** (`adapter-vercel`, all 165 pages
-      prerendered). All 165 were loaded and checked in a real browser before the deploy (see the
-      hydration sweep above): none throws, none fails to hydrate, and every image the example blocks
-      reference renders.
+      <https://astryx.crqch.dev/>** (`adapter-cloudflare`, all pages prerendered). The first
+      deployment went live on 2026-08-10, and all 165 pages were loaded and checked in a real
+      browser before it (see the hydration sweep above): none throws, none fails to hydrate, and
+      every image the example blocks reference renders.
 
       **The live site is built from `main`, and that is now a publishing surface with its own
       staleness.** The deployed release post still carries the two claims corrected in this batch —
@@ -966,7 +966,7 @@ production/dev hydration sweeps recorded inline above.
 
 - `CLAUDE.md` § "The docs site" — the StyleX consumer seam: `docs/vite.config.ts` running the same
   `@stylexjs/unplugin` options as `packages/core`, plus `optimizeDeps.exclude` and `ssr.noExternal` for
-  `@astryx-svelte/core`, without which the page renders unstyled with no error.
+  `@astryx-sv/core`, without which the page renders unstyled with no error.
 
 ## Retired debts
 

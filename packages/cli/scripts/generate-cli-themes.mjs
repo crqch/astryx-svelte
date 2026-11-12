@@ -174,7 +174,7 @@ function main() {
 		if (problems.length > 0) {
 			console.error(`generate-cli-themes --check: ${problems.length} problem(s):`);
 			for (const p of problems) console.error(`  ${p}`);
-			console.error('  Rebuild with: bun run --filter @astryx-svelte/cli generate-themes');
+			console.error('  Rebuild with: bun run --filter @astryx-sv/cli generate-themes');
 			process.exitCode = 1;
 			return;
 		}

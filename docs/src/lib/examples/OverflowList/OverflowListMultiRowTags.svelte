@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Card, OverflowList } from '@astryx-svelte/core';
+	import { Badge, Card, OverflowList } from '@astryx-sv/core';
 
 	/**
 	 * `maxRows={2}` wraps the tags across two rows before collapsing the rest —

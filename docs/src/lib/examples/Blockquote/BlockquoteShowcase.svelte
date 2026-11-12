@@ -7,7 +7,7 @@
 	Svelte's type system rather than a change to the example.
 -->
 <script lang="ts">
-	import { Blockquote, Stack } from '@astryx-svelte/core';
+	import { Blockquote, Stack } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={4} style="width: 500px">

@@ -50,6 +50,11 @@ export const authors = {
 	devrohit06: {
 		name: 'Rohit Kushwaha',
 		github: 'devrohit06',
+		role: 'Original author'
+	},
+	crqch: {
+		name: 'crqch',
+		github: 'crqch',
 		role: 'Maintainer'
 	}
 } as const satisfies Record<string, AuthorProfile>;

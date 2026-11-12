@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import type { ChatToolCallItem } from '@astryx-svelte/core';
-	import { ChatToolCalls } from '@astryx-svelte/core';
+	import type { ChatToolCallItem } from '@astryx-sv/core';
+	import { ChatToolCalls } from '@astryx-sv/core';
 
 	const calls: ChatToolCallItem[] = [
 		{ name: 'bash', target: 'git diff --stat', status: 'complete', duration: '340ms' },

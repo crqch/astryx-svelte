@@ -1,14 +1,14 @@
 /**
  * @file Unit tests for the XLE/XLO parser, printers, and validator.
  * Parser/printer tests are registry-free; validator tests use a small
- * synthetic registry so they don't depend on `@astryx-svelte/core` docs.
+ * synthetic registry so they don't depend on `@astryx-sv/core` docs.
  *
  * Ported case-for-case from upstream `foundation/xle/xle.test.mjs` at
  * `v0.3.0`: 36 cases, 36 here. The parser, printer and detectForm halves are
  * verbatim — the notation is the notation. The synthetic registry the validator
  * half builds is retargeted three ways, each matching a divergence already
  * recorded in `registry-core.mjs`:
- *   - `importPath` is the root package (`@astryx-svelte/core` publishes one
+ *   - `importPath` is the root package (`@astryx-sv/core` publishes one
  *     barrel where `@astryxdesign/core` publishes a subpath per component),
  *   - `exportName` is the bare name, not `XDS<Name>`,
  *   - renderable props are typed `Snippet`, not `ReactNode`, so `isNode` is
@@ -242,7 +242,7 @@ function makeTestRegistry() {
 		name,
 		exportName: name,
 		dirName: name,
-		importPath: '@astryx-svelte/core',
+		importPath: '@astryx-sv/core',
 		props: new Map(props.map((p) => [p.name, p]))
 	});
 	const components = new Map([

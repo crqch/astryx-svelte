@@ -7,7 +7,7 @@
 	`Tab.icon`/`Tab.selectedIcon` take.
 -->
 <script lang="ts">
-	import { Tab, TabList } from '@astryx-svelte/core';
+	import { Tab, TabList } from '@astryx-sv/core';
 
 	let value = $state('favorites');
 </script>

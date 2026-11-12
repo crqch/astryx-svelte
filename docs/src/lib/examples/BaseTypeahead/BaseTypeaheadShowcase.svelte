@@ -10,8 +10,8 @@
 	otherwise compile the rule away as unused.
 -->
 <script lang="ts">
-	import { BaseTypeahead, Text, VStack, createStaticSource } from '@astryx-svelte/core';
-	import type { SearchableItem } from '@astryx-svelte/core';
+	import { BaseTypeahead, Text, VStack, createStaticSource } from '@astryx-sv/core';
+	import type { SearchableItem } from '@astryx-sv/core';
 
 	const frameworks: SearchableItem<{ category: string }>[] = [
 		{ id: 'react', label: 'React', auxiliaryData: { category: 'UI library' } },

@@ -12,7 +12,7 @@
  * Montserrat for headings, Figtree for body, JetBrains Mono for code.
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
 /** Stone syntax palette — upstream 0.7.13's resolved values. */
 const stoneSyntax = defineSyntaxTheme({

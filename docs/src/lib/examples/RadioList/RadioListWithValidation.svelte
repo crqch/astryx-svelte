@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { RadioList, RadioListItem } from '@astryx-svelte/core';
-	import type { InputStatus } from '@astryx-svelte/core';
+	import { RadioList, RadioListItem } from '@astryx-sv/core';
+	import type { InputStatus } from '@astryx-sv/core';
 
 	let value = $state('');
 

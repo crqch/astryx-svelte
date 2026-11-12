@@ -13,7 +13,7 @@
  * Core neutral: H=75 C=8 (warm cream neutral derived from #FFF6ED)
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
 /** Y2k syntax palette — upstream 0.7.13's resolved values. */
 const y2kSyntax = defineSyntaxTheme({

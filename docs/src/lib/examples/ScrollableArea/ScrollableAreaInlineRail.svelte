@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Heading, HStack, Link, ScrollableArea, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Heading, HStack, Link, ScrollableArea, Text, VStack } from '@astryx-sv/core';
 
 	const FILES = [
 		{ id: 'brief', title: 'Q3 launch brief', meta: 'Edited 2 days ago' },

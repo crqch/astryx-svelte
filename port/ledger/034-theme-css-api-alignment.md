@@ -62,7 +62,7 @@ Two names lose their drift in the same change: `generateOnMediaCss` -> `generate
 The rename, not the shape change, is what actually reached callers — four files, all found by the
 gate rather than by grep: two core test suites that import the function directly, and the CLI's
 `theme build` plus its own suite, which captures core's generator at module load and mocks it. The
-CLI pair is worth noting because `pnpm -F @astryx-svelte/core check` was clean while
+CLI pair is worth noting because `pnpm -F @astryx-sv/core check` was clean while
 `pnpm -r check` was not: core typechecks against its own sources, and the CLI typechecks against
 core's built `dist/`, so a rename that crosses the package boundary is invisible until the
 recursive run. The CLI's mock failed in the other direction again — `vi.fn(actual.generateOnMediaCss)`

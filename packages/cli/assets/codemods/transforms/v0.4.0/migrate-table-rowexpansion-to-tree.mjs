@@ -68,7 +68,7 @@ export const meta = {
  * lists four because it ships under two scopes; this port ships one package and
  * exposes these hooks only from its root entry point.
  */
-const IMPORT_SOURCES = new Set(['@astryx-svelte/core']);
+const IMPORT_SOURCES = new Set(['@astryx-sv/core']);
 
 const STATE_HOOK = 'useTableRowExpansionState';
 const PLUGIN_HOOK = 'useTableRowExpansion';

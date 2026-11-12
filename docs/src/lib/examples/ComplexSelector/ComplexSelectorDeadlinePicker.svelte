@@ -11,7 +11,7 @@
 		RadioListItem,
 		TimeInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	type ISODate = `${number}${number}${number}${number}-${number}${number}-${number}${number}`;
 	type ISOTime = string & { readonly __brand: 'ISOTimeString' };

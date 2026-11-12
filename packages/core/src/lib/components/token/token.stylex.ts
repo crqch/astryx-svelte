@@ -23,7 +23,7 @@ import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex
  * the fact by a release.
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface TokenColorMap {
  *     brand: true;
  *   }

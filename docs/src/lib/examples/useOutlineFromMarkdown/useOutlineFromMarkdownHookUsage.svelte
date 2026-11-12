@@ -15,7 +15,7 @@
 		ScrollableArea,
 		VStack,
 		useOutlineFromMarkdown
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const ARTICLE = `## Before you start
 

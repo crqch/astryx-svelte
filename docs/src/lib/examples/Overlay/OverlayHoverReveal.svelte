@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { AspectRatio, Button, Overlay } from '@astryx-svelte/core';
+	import { AspectRatio, Button, Overlay } from '@astryx-sv/core';
 
 	/** Upstream's `frame` and `image` `CSSProperties` objects, as style strings. */
 	const frame = 'width: 420px; max-width: 100%; border-radius: 12px; overflow: clip';

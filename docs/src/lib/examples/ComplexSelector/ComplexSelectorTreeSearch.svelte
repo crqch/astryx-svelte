@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ComplexSelector } from '@astryx-svelte/core';
+	import { ComplexSelector } from '@astryx-sv/core';
 	import DestinationSearch from './DestinationSearch.svelte';
 
 	interface DestinationNode {

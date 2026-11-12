@@ -3,7 +3,7 @@
 	`packages/themes/butter/src/icons.tsx`.
 
 	Maps the 29 semantic icon names to Lucide glyphs. These icons are bundled with
-	the theme, not with `@astryx-svelte/core`, which is upstream's arrangement and
+	the theme, not with `@astryx-sv/core`, which is upstream's arrangement and
 	the reason core ships its own dependency-free placeholders instead.
 
 	Upstream's seven registries are content-identical — same imports, same
@@ -37,7 +37,7 @@
 	and would make this file stop matching the source it is transcribed from.
 -->
 <script module lang="ts">
-	import type { IconRegistry } from '@astryx-svelte/core';
+	import type { IconRegistry } from '@astryx-sv/core';
 	import {
 		X,
 		ChevronDown,

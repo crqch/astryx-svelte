@@ -9,7 +9,7 @@
 	— the substitution upstream's block metadata names.
 -->
 <script lang="ts">
-	import { HStack, Icon, Text, VStack, rtlStyles, useTreeFocus } from '@astryx-svelte/core';
+	import { HStack, Icon, Text, VStack, rtlStyles, useTreeFocus } from '@astryx-sv/core';
 
 	type FileNode = { name: string; children?: FileNode[] };
 

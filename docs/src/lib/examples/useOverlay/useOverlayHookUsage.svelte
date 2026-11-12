@@ -17,7 +17,7 @@
 		Text,
 		VStack,
 		useOverlay
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const overlay = useOverlay(() => ({
 		showOn: 'hover',

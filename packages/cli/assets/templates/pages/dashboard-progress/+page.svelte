@@ -81,7 +81,7 @@
 		useHoverCard,
 		type HoverCardReturn,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowDownTrayIcon,
 		CheckCircleIcon,

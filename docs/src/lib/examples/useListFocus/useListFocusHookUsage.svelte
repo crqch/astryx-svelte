@@ -9,7 +9,7 @@
 	while Svelte's `onfocus` is `focus` and fires only on the container itself.
 -->
 <script lang="ts">
-	import { Button, Card, VStack, useListFocus } from '@astryx-svelte/core';
+	import { Button, Card, VStack, useListFocus } from '@astryx-sv/core';
 
 	const RECENT_FILES = [
 		'Q3 roadmap.pdf',

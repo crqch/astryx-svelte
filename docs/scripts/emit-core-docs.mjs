@@ -1,6 +1,6 @@
 // Emits `packages/core`'s own `.doc.mjs` files.
 //
-// `@astryx-svelte/cli` reads component and hook prose out of core the way
+// `@astryx-sv/cli` reads component and hook prose out of core the way
 // upstream's CLI reads it out of `@astryxdesign/core`: co-located `.doc.mjs`
 // modules, discovered by walking the published `src/` tree. This port shipped
 // none, which is why `searchComponents`' Pass 2 finds nothing today (port/todo.md,
@@ -56,7 +56,7 @@ import { format as formatWithOxfmt } from 'oxfmt';
 import { reconcile } from './generate-content.mjs';
 // Reached by path rather than by package specifier, exactly as this pipeline
 // already reaches `packages/core/dist` and `packages/core/package.json`. A
-// `@astryx-svelte/cli` dependency on `docs` would buy the `./doc` subpath and
+// `@astryx-sv/cli` dependency on `docs` would buy the `./doc` subpath and
 // nothing else, and this script's whole job is to write files *for* that
 // package — a declared edge would suggest a coupling that does not exist.
 import { parseDoc } from '../../packages/cli/authoring/doctypes/parse.mjs';

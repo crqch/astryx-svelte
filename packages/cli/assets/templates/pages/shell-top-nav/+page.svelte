@@ -35,7 +35,7 @@
 		TopNavMegaMenuItem,
 		VStack,
 		type IconName
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		MagnifyingGlassIcon,
 		ShoppingBagIcon,

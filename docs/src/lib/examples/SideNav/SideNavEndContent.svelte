@@ -21,7 +21,7 @@
 		SideNavItem,
 		SideNavSection,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet homeIcon()}

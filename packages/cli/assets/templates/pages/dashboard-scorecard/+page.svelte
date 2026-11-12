@@ -63,7 +63,7 @@
 		Timestamp,
 		VStack,
 		useMediaQuery
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowDownTrayIcon } from '@fvilers/heroicons-svelte/24/outline';
 	import {
 		ArrowDownIcon,

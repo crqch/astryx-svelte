@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Spinner } from '@astryx-svelte/core';
+	import { Spinner } from '@astryx-sv/core';
 </script>
 
 <Spinner size="lg" />

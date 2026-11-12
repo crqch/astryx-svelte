@@ -139,7 +139,7 @@ export interface ComponentBaseDoc {
  *
  * Every .doc.mjs must export a single `docs` constant of this type:
  *
- *   /\*\* \@type \{import('@astryx-svelte/cli/authoring').ComponentDoc\} *\/
+ *   /\*\* \@type \{import('@astryx-sv/cli/authoring').ComponentDoc\} *\/
  *   export const docs = \{ ... \};
  *
  * Use SingleComponentDoc (with `props`) for single-component directories.
@@ -161,7 +161,7 @@ export type ComponentDoc = SingleComponentDoc | MultiComponentDoc | SubComponent
  * with the primary/most-used component first.
  */
 export interface ComponentEntry {
-	/** Full export name as published from `@astryx-svelte/core`. e.g. `"TableRow"`,
+	/** Full export name as published from `@astryx-sv/core`. e.g. `"TableRow"`,
 	 *  `"DialogHeader"`, `"useTableSelection"` */
 	name: string;
 	/** Human-readable display name for this subcomponent. Matches the import
@@ -231,7 +231,7 @@ export interface ComponentGroupDoc {
  * the entry's content is emitted from the sub-component's own file, not here.
  */
 export interface ComponentRef {
-	/** Full export name as published from `@astryx-svelte/core`, e.g.
+	/** Full export name as published from `@astryx-sv/core`, e.g.
 	 *  `"ChatComposer"`. Must match the `name` field of the referenced
 	 *  sub-component's own doc. */
 	name: string;

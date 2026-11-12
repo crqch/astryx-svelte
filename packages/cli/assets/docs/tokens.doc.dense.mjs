@@ -1,4 +1,4 @@
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsDense = {
 	description: 'spacing/color/radius/type/shadow token ref',
 	sections: [

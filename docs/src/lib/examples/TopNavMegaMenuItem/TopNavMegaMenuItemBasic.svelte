@@ -10,7 +10,7 @@
 	Retires with the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { Grid, Icon, TopNavMegaMenuItem } from '@astryx-svelte/core';
+	import { Grid, Icon, TopNavMegaMenuItem } from '@astryx-sv/core';
 </script>
 
 {#snippet boltIcon()}<Icon icon="arrowUp" size="md" />{/snippet}

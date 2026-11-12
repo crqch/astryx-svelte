@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Calendar, Stack, Text, type ISODateString } from '@astryx-svelte/core';
+	import { Calendar, Stack, Text, type ISODateString } from '@astryx-sv/core';
 
 	let value = $state<ISODateString>('2026-01-15');
 </script>

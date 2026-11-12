@@ -4,4 +4,4 @@ Disallow:
 
 # Generated from the same registries the pages render from, so a page that
 # exists is a page that is listed. See src/routes/sitemap.xml/+server.ts.
-Sitemap: https://astryx-svelte.rohitk06.in/sitemap.xml
+Sitemap: https://astryx.crqch.dev/sitemap.xml

@@ -34,7 +34,7 @@
 		TextInput,
 		Token,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const ILLUSTRATION_URL =
 		'https://lookaside.facebook.com/assets/astryx/light-working-vertical-2.png';

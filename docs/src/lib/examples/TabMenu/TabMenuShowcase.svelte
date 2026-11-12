@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Tab, TabList, TabMenu } from '@astryx-svelte/core';
+	import { Tab, TabList, TabMenu } from '@astryx-sv/core';
 
 	let value = $state('settings');
 </script>

@@ -9,7 +9,7 @@
 	snippet renders raw.
 -->
 <script lang="ts">
-	import { Badge, SideNav, SideNavItem } from '@astryx-svelte/core';
+	import { Badge, SideNav, SideNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet inboxIcon()}

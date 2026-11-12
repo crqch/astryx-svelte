@@ -15,7 +15,7 @@
 		SegmentedControl,
 		SegmentedControlItem,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import InvoiceSummary from './InvoiceSummary.svelte';
 
 	type Locale = 'en' | 'de-DE';

@@ -22,7 +22,7 @@ export type TreeListDensity = 'compact' | 'balanced' | 'spacious';
  * upstream's does:
  *
  * ```ts
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface TreeListVariantMap {
  *     dotted: true;
  *   }

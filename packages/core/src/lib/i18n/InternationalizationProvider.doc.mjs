@@ -36,7 +36,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Use shipped Astryx locale catalogs from `@astryx-svelte/core` when one exists for your target locale.'
+					'Use shipped Astryx locale catalogs from `@astryx-sv/core` when one exists for your target locale.'
 			},
 			{
 				guidance: true,
@@ -77,7 +77,7 @@ export default {
 			name: 'messages',
 			type: 'MessagesByLocale',
 			description:
-				'Optional map of BCP 47 tag to a rich or generated runtime catalog. Import compact shipped catalogs from `@astryx-svelte/core`; the shipped "en" catalog is always available and does not need to be listed here.'
+				'Optional map of BCP 47 tag to a rich or generated runtime catalog. Import compact shipped catalogs from `@astryx-sv/core`; the shipped "en" catalog is always available and does not need to be listed here.'
 		},
 		{
 			name: 'overrides',

@@ -43,11 +43,11 @@ describe('astryx() vite preset', () => {
 	});
 
 	it('excludes core from the dev pre-bundler', () => {
-		expect(configOf(astryx())?.optimizeDeps?.exclude).toContain('@astryx-svelte/core');
+		expect(configOf(astryx())?.optimizeDeps?.exclude).toContain('@astryx-sv/core');
 	});
 
 	it('keeps core internal to the SSR build', () => {
-		expect(configOf(astryx())?.ssr?.noExternal).toContain('@astryx-svelte/core');
+		expect(configOf(astryx())?.ssr?.noExternal).toContain('@astryx-sv/core');
 	});
 
 	it('carries a consumer package into both settings, not just one', () => {
@@ -60,7 +60,7 @@ describe('astryx() vite preset', () => {
 	});
 
 	it('does not duplicate core when a consumer names it too', () => {
-		const config = configOf(astryx({ include: ['@astryx-svelte/core'] }));
-		expect(config?.optimizeDeps?.exclude).toEqual(['@astryx-svelte/core']);
+		const config = configOf(astryx({ include: ['@astryx-sv/core'] }));
+		expect(config?.optimizeDeps?.exclude).toEqual(['@astryx-sv/core']);
 	});
 });

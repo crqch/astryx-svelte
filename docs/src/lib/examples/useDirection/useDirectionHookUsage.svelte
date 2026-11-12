@@ -8,7 +8,7 @@
 		SegmentedControl,
 		SegmentedControlItem,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import Sparkline from './Sparkline.svelte';
 
 	let lang = $state<'en' | 'ar'>('en');

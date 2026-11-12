@@ -91,7 +91,7 @@
 		/**
 		 * Per-instance syntax theme override. Shorthand for wrapping this block in
 		 * `<SyntaxTheme theme={...}>` — accepts a preset from
-		 * `@astryx-svelte/core/theme/syntax` or a theme created with
+		 * `@astryx-sv/core/theme/syntax` or a theme created with
 		 * `defineSyntaxTheme()`. Without it, the block uses the theme-level syntax
 		 * colours from the nearest `SyntaxTheme` ancestor or `defineTheme({ syntax })`.
 		 */

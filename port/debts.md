@@ -1628,7 +1628,7 @@ defining file under `unstable_moduleResolution: {type: 'commonJS'}` (only
 `processStylexRules` substitutes the literal back in at sheet-generation time, so the emitted
 **declaration** is right; the **class name** is a hash of our package name and our file path.
 
-Ours is `@astryx-svelte/core:src/lib/components/date-input/tokens.stylex.ts`; upstream's is
+Ours is `@astryx-sv/core:src/lib/components/date-input/tokens.stylex.ts`; upstream's is
 `@astryxdesign/core:src/DateInput/tokens.stylex.ts`. Neither half can be made equal — the package
 name is ours by definition — so eleven classes differ **by name only**, verified declaration for
 declaration against `dist/astryx.css`:
@@ -1718,7 +1718,7 @@ while leaving the one that did.
 
 **Closed.** `SizeValue`, `parseStyleKey`, `themeProps`, `themeDataAttributes`, `ClassProps`,
 `ClassValue`, `ThemeProps`, `ThemeDataAttributes`, `observeResize` and `unobserveResize` are all
-on `./utils` now, so `import {themeProps} from '@astryx-svelte/core/utils'` resolves here as it
+on `./utils` now, so `import {themeProps} from '@astryx-sv/core/utils'` resolves here as it
 does upstream.
 
 Two things deliberately did **not** move. The _files_ stay in `internal/` and `theme/`: they are
@@ -1744,7 +1744,7 @@ because a previous run had left `themes/neutral/dist/` on disk; it failed on the
 and the first Vercel deploy that ever built core. The interim fix made `build` a library build
 only (`npm run prepack`) and moved the workbench to `build:demo`, run by CI after
 `pnpm -r build` — which is what left the residue this entry recorded: the import still pointed
-at a build artifact, so `pnpm -F @astryx-svelte/core dev` on a fresh clone needed a prior
+at a build artifact, so `pnpm -F @astryx-sv/core dev` on a fresh clone needed a prior
 `pnpm -r build`.
 
 The whole workbench is gone (`ledger/029`), and with it the two imports, `build:demo`, core's

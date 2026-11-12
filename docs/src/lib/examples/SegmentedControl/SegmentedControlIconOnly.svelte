@@ -7,7 +7,7 @@
 	is what `SegmentedControlItem.icon` takes.
 -->
 <script lang="ts">
-	import { SegmentedControl, SegmentedControlItem } from '@astryx-svelte/core';
+	import { SegmentedControl, SegmentedControlItem } from '@astryx-sv/core';
 
 	let value = $state('grid');
 </script>

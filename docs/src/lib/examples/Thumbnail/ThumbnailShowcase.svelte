@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Thumbnail } from '@astryx-svelte/core';
+	import { Thumbnail } from '@astryx-sv/core';
 
 	// Inline same-origin data URI so the example is self-contained — see
 	// ThumbnailRemovable for why image-backed Thumbnails avoid cross-origin URLs.

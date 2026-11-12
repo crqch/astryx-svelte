@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Card, Heading, Link, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Heading, Link, Text, VStack } from '@astryx-sv/core';
 	import componentRegistry from '$lib/generated/component-registry.js';
 	import { componentsHref, templatesHref, themesHref, topicHref } from '../shell/links.js';
 	import ComponentsPreview from './components-preview.svelte';

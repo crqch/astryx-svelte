@@ -11,7 +11,7 @@
 		Layout,
 		LayoutContent,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 	let width = $state<number | string>(320);

@@ -14,7 +14,7 @@ import type {
  * supplies those overrides; the template falls back to its own neutral defaults
  * for any theme not listed here, which is upstream's arrangement exactly.
  *
- * Keyed by theme slug (the `<slug>` in `@astryx-svelte/theme-<slug>` and in
+ * Keyed by theme slug (the `<slug>` in `@astryx-sv/theme-<slug>` and in
  * `/themes?theme=<slug>`).
  *
  * **The six preview photos per theme are vendored**, at

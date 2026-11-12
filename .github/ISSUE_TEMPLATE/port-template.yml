@@ -10,11 +10,11 @@ body:
         self-contained React page that needs transcribing to Svelte.
 
         **This is a good first contribution.** Every component and hook the templates need is
-        already exported from `@astryx-svelte/core` — including `Table`, `Resizable`, `PowerSearch`,
+        already exported from `@astryx-sv/core` — including `Table`, `Resizable`, `PowerSearch`,
         `Chat`, `TreeList` and `CommandPalette` — so it is transcription work, not component work.
 
         Open one issue per template so two people don't do the same one. Check the existing
-        [`templates` issues](https://github.com/devrohit06/astryx-svelte/labels/templates) first.
+        [`templates` issues](https://github.com/crqch/astryx-svelte/labels/templates) first.
 
   - type: input
     id: slug
@@ -31,7 +31,7 @@ body:
       label: Before you start
       description: >
         These are the rules that make a template port land first time. Full detail is in
-        [CONTRIBUTING.md](https://github.com/devrohit06/astryx-svelte/blob/main/CONTRIBUTING.md).
+        [CONTRIBUTING.md](https://github.com/crqch/astryx-svelte/blob/main/CONTRIBUTING.md).
       options:
         - label: >
             I'll read upstream's `page.tsx` in `reference/astryx-upstream/` first, and transcribe

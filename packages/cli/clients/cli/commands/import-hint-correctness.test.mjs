@@ -1,6 +1,6 @@
 /**
  * @file Validates that every CLI-discoverable component produces a correct
- * import hint — one that names a specifier `@astryx-svelte/core`'s
+ * import hint — one that names a specifier `@astryx-sv/core`'s
  * `package.json#exports` actually declares.
  *
  * This guards against:

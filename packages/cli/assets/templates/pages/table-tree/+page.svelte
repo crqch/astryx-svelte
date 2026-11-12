@@ -68,7 +68,7 @@
 		useTableTreeState,
 		type TableColumn,
 		type TablePlugin
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	/*
 	 * Lucide throughout, not Heroicons. A repository page needs a branch and a
 	 * fork glyph and Heroicons has no git iconography at all, so mixing sets was

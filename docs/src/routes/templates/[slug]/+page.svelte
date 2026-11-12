@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Section, Text } from '@astryx-svelte/core';
+	import { Section, Text } from '@astryx-sv/core';
 	import { templatesHref } from '$lib/shell/links.js';
 	import type { PageProps } from './$types.js';
 

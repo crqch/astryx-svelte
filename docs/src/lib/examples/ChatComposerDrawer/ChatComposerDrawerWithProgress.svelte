@@ -17,7 +17,7 @@
 		ProgressBar,
 		Stack,
 		Token
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet atSymbolIcon()}<Icon icon="info" size="sm" />{/snippet}

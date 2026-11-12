@@ -20,7 +20,7 @@
  *     "renders unstyled, no error" symptom.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'styling',
 	title: 'Styling Components',
@@ -97,7 +97,7 @@ export const overrides = stylex.create({
 					lang: 'svelte',
 					label: 'Simple overrides',
 					code: `<script lang="ts">
-	import { Button, Card } from '@astryx-svelte/core';
+	import { Button, Card } from '@astryx-sv/core';
 	import { overrides } from './card.stylex.js';
 </script>
 
@@ -147,8 +147,8 @@ export const overrides = stylex.create({
 
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme inline {
@@ -229,7 +229,7 @@ export const overrides = stylex.create({
 					lang: 'svelte',
 					label: 'Reaching the root element',
 					code: `<script lang="ts">
-	import { Card } from '@astryx-svelte/core';
+	import { Card } from '@astryx-sv/core';
 	import type { Attachment } from 'svelte/attachments';
 
 	const measure: Attachment<HTMLElement> = (node) => {
@@ -271,7 +271,7 @@ export const overrides = stylex.create({
 		LayoutFooter,
 		LayoutHeader,
 		TextInput
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { overrides } from './dialog.stylex.js';
 
 	let name = $state('');
@@ -399,7 +399,7 @@ export const styles = stylex.create({
 				},
 				{
 					type: 'prose',
-					text: 'The token *names* are the public surface; the `defineVars` objects that mint them are internal to `@astryx-svelte/core` and are not published from any subpath, so a `var(--token)` string is how you reference one. Outside StyleX, `tokenVar()` and `tokenVars` from `@astryx-svelte/core/theme` return the same references as values for a styling-library config.'
+					text: 'The token *names* are the public surface; the `defineVars` objects that mint them are internal to `@astryx-sv/core` and are not published from any subpath, so a `var(--token)` string is how you reference one. Outside StyleX, `tokenVar()` and `tokenVars` from `@astryx-sv/core/theme` return the same references as values for a styling-library config.'
 				},
 				{
 					type: 'prose',
@@ -433,7 +433,7 @@ export const styles = stylex.create({
 					type: 'code',
 					lang: 'ts',
 					label: 'vite.config.ts',
-					code: `import { astryx } from '@astryx-svelte/core/vite';
+					code: `import { astryx } from '@astryx-sv/core/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 

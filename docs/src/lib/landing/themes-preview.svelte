@@ -4,8 +4,8 @@
 		Card,
 		Theme,
 		type AppShellMobileContextValue
-	} from '@astryx-svelte/core';
-	import { butterTheme } from '@astryx-svelte/theme-butter';
+	} from '@astryx-sv/core';
+	import { butterTheme } from '@astryx-sv/theme-butter';
 	import ThemeShowcaseStore from '../../../../packages/cli/assets/templates/pages/theme-showcase/+page.svelte';
 	import { getThemeShowcaseContent } from '$lib/shell/theme-showcase-content.js';
 	import { getColorModeContext } from '$lib/shell/color-mode.svelte.js';

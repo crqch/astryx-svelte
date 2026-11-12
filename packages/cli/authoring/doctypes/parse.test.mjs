@@ -212,10 +212,10 @@ describe('parseDoc (load boundary, both formats)', () => {
 			keywords: ['widget', 'thing'],
 			category: 'Content',
 			isHiddenFromOverview: true,
-			importPath: '@astryx-svelte/core/Widget',
+			importPath: '@astryx-sv/core/Widget',
 			showcase: 'WidgetHero'
 		});
-		expect(parsed.importPath).toBe('@astryx-svelte/core/Widget');
+		expect(parsed.importPath).toBe('@astryx-sv/core/Widget');
 		expect(parsed.showcase).toBe('WidgetHero');
 	});
 
@@ -310,7 +310,7 @@ describe('loadComponentDoc (end-to-end load boundary)', () => {
 				"  description: 'A loose named-export doc.',",
 				"  relatedComponents: ['Gauge'],",
 				"  relatedHooks: ['useThing'],",
-				"  importPath: '@astryx-svelte/core/Legacy',",
+				"  importPath: '@astryx-sv/core/Legacy',",
 				"  props: [{name: 'value', type: 'string', description: 'A value.'}],",
 				'};'
 			].join('\n')
@@ -319,7 +319,7 @@ describe('loadComponentDoc (end-to-end load boundary)', () => {
 		expect(docs.name).toBe('Legacy');
 		expect(docs.props[0].name).toBe('value');
 		expect(docs.relatedComponents).toEqual(['Gauge']);
-		expect(docs.importPath).toBe('@astryx-svelte/core/Legacy');
+		expect(docs.importPath).toBe('@astryx-sv/core/Legacy');
 	});
 
 	it('REGRESSION: loads the OLD loose standalone-hook `docs` format', async () => {

@@ -79,6 +79,6 @@ export default {
 	},
 	relatedComponents: ['VisuallyHidden', 'Toast'],
 	relatedHooks: ['useClipboard'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'accessibility'
 };

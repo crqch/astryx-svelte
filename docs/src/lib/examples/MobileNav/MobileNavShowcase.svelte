@@ -8,7 +8,7 @@
 	assignment Svelte has instead of a setter.
 -->
 <script lang="ts">
-	import { Button, Icon, MobileNav, SideNavItem, SideNavSection } from '@astryx-svelte/core';
+	import { Button, Icon, MobileNav, SideNavItem, SideNavSection } from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 </script>

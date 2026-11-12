@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Code } from '@astryx-svelte/core';
+	import { Code } from '@astryx-sv/core';
 	import { parseInlineMarkdown } from './inline-markdown.js';
 
 	/** Renders the segments `parseInlineMarkdown` produces. */

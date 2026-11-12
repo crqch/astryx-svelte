@@ -77,7 +77,7 @@ function writePkg(deps = {}) {
 	);
 }
 
-function writeInstalledCore(version, packageName = '@astryx-svelte/core') {
+function writeInstalledCore(version, packageName = '@astryx-sv/core') {
 	const parts = packageName.split('/');
 	const dir = path.join(tmpDir, 'node_modules', ...parts);
 	fs.mkdirSync(dir, { recursive: true });
@@ -163,7 +163,7 @@ describe('upgrade argument validation', () => {
 		expect(exitCode).toBe(1);
 	});
 
-	it('detects the installed target version from @astryx-svelte/core', async () => {
+	it('detects the installed target version from @astryx-sv/core', async () => {
 		writePkg();
 		writeInstalledCore('0.0.15');
 		writeSourceFile();

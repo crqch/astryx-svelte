@@ -23,7 +23,7 @@ of the three entries names a batch or cites a date that would place it.
 - [ ] **No public path to the tokens.** Upstream ships `./theme/tokens.stylex` and `./theme/tokens`; ours live at `lib/styles/tokens.stylex.ts` and are exported from no barrel and no subpath. Authoring `stylex.create` against Astryx tokens is the documented consumer pattern _and the property this whole port rests on_, so this is the most consequential single gap in the published surface — and it is not covered by the per-component-subpath item above
   - Retired by: `theme/index.ts` now re-exports `colorVars`/`spacingVars`/`sizeVars`/… (the
     `stylex.create`-authoring vars) from `../styles/tokens.stylex.js`, reachable via
-    `@astryx-svelte/core/theme` — the documented consumer pattern (author `stylex.create` against
+    `@astryx-sv/core/theme` — the documented consumer pattern (author `stylex.create` against
     Astryx tokens) is achievable today, even though the subpath is `./theme` rather than a
     dedicated `./theme/tokens`.
 

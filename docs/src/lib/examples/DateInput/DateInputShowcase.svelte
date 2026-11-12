@@ -9,7 +9,7 @@
 	string, since Svelte's `style` attribute takes one.
 -->
 <script lang="ts">
-	import { DateInput, Stack, type ISODateString } from '@astryx-svelte/core';
+	import { DateInput, Stack, type ISODateString } from '@astryx-sv/core';
 
 	let date = $state<ISODateString | undefined>(undefined);
 </script>

@@ -8,7 +8,7 @@
 	attribute, since a `.svelte` file may not import StyleX.
 -->
 <script lang="ts">
-	import { Button, Link, VStack, useFocusTrap, useScrollLock } from '@astryx-svelte/core';
+	import { Button, Link, VStack, useFocusTrap, useScrollLock } from '@astryx-sv/core';
 
 	const MENU_ITEMS = ['Products', 'Pricing', 'Customers', 'Support'];
 

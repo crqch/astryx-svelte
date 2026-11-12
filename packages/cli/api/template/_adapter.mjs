@@ -21,7 +21,7 @@
  *    directory is a directory, and the component that renders it is the
  *    `+page.svelte` inside it. Every discovery walk that looks for a
  *    "same-stem source" therefore looks for `<stem>.svelte`.
- * 2. **`CORE_PACKAGE` is `@astryx-svelte/core`.** It is this port's identity for
+ * 2. **`CORE_PACKAGE` is `@astryx-sv/core`.** It is this port's identity for
  *    built-in templates, and `foundation/config/project.mjs` already imports the
  *    same constant under its own name for `issuesUrl` routing.
  * 3. **No second jiti instance.** Upstream builds one here with `{jsx: true}`
@@ -46,7 +46,7 @@ import { CLI_ROOT, discoverExternalPackages } from '../../foundation/fs/paths.mj
 import { Project } from '../../foundation/config/project.mjs';
 
 /** Identity used for core (built-in) templates in package-scoped listings. */
-const CORE_PACKAGE = '@astryx-svelte/core';
+const CORE_PACKAGE = '@astryx-sv/core';
 
 /**
  * The extension every template source carries. Upstream's is `.tsx`; a template
@@ -64,7 +64,7 @@ export const PAGE_SOURCE_FILE = '+page.svelte';
 
 /**
  * Identity for a template in package-scoped views. Core (built-in) templates
- * have no `package` field; report them under @astryx-svelte/core.
+ * have no `package` field; report them under @astryx-sv/core.
  * @param {{package?: string}} t
  * @returns {string}
  */

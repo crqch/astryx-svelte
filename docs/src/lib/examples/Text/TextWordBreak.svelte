@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Text } from '@astryx-svelte/core';
+	import { Text } from '@astryx-sv/core';
 </script>
 
 <div style="display: flex; flex-direction: column; gap: 16px; max-width: 400px">

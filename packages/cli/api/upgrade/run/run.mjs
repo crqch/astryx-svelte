@@ -77,7 +77,7 @@ export async function run(options = {}, { cwd = process.cwd() } = {}) {
 	const currentVersion = /** @type {string} */ (options.from);
 	const installed = detectInstalledTargetVersion(cwd);
 	if (!installed) {
-		const msg = `Could not find installed @astryx-svelte/core. Install the target version first, then rerun \`${getCliInvocation()} upgrade --from <old-version>\`.`;
+		const msg = `Could not find installed @astryx-sv/core. Install the target version first, then rerun \`${getCliInvocation()} upgrade --from <old-version>\`.`;
 		logger.error(msg);
 		logger.log('Aborted\n');
 		throw new AstryxError(msg, undefined, ERROR_CODES.ERR_VERSION_DETECT);

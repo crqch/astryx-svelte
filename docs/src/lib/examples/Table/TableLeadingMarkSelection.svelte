@@ -27,7 +27,7 @@
 		useContainerReveal,
 		useTableSelectionState,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface Automation extends Record<string, unknown> {
 		id: string;

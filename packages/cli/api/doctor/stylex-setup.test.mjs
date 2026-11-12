@@ -41,7 +41,7 @@ afterEach(() => {
 });
 
 const PRESET = `
-import { astryx } from '@astryx-svelte/core/vite';
+import { astryx } from '@astryx-sv/core/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 export default defineConfig({ plugins: [astryx(), sveltekit()] });
 `;
@@ -50,8 +50,8 @@ const HAND_ROLLED = `
 import stylex from '@stylexjs/unplugin/vite';
 export default defineConfig({
 	plugins: [stylex({ runtimeInjection: false })],
-	optimizeDeps: { exclude: ['@astryx-svelte/core'] },
-	ssr: { noExternal: ['@astryx-svelte/core'] }
+	optimizeDeps: { exclude: ['@astryx-sv/core'] },
+	ssr: { noExternal: ['@astryx-sv/core'] }
 });
 `;
 
@@ -60,7 +60,7 @@ const MISSING_SSR = `
 import stylex from '@stylexjs/unplugin/vite';
 export default defineConfig({
 	plugins: [stylex({ runtimeInjection: false })],
-	optimizeDeps: { exclude: ['@astryx-svelte/core'] }
+	optimizeDeps: { exclude: ['@astryx-sv/core'] }
 });
 `;
 
@@ -87,7 +87,7 @@ describe('doctor — checkStyleXSetup', () => {
 		// The consequence matters more than the setting name: this is the case
 		// that works in dev and ships unstyled.
 		expect(result.message).toContain('unstyled');
-		expect(result.fix).toContain('@astryx-svelte/core/vite');
+		expect(result.fix).toContain('@astryx-sv/core/vite');
 	});
 
 	it('warns about all three when none are present', () => {
@@ -106,7 +106,7 @@ describe('doctor — checkStyleXSetup', () => {
 		fs.mkdirSync(path.join(dir, 'src', 'routes'), { recursive: true });
 		fs.writeFileSync(
 			path.join(dir, 'src', 'routes', '+layout.svelte'),
-			"<script>import '@astryx-svelte/core/astryx.css';</script>"
+			"<script>import '@astryx-sv/core/astryx.css';</script>"
 		);
 		const result = checkStyleXSetup({ cwd: dir });
 		expect(result.status).toBe('pass');
@@ -119,7 +119,7 @@ describe('doctor — checkStyleXSetup', () => {
 		fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
 		fs.writeFileSync(
 			path.join(dir, 'src', 'app.ts'),
-			"import { Button } from '@astryx-svelte/core';\nimport '@astryx-svelte/core/base.css';"
+			"import { Button } from '@astryx-sv/core';\nimport '@astryx-sv/core/base.css';"
 		);
 		expect(checkStyleXSetup({ cwd: dir }).status).toBe('warn');
 	});
@@ -137,12 +137,12 @@ describe('doctor — checkPeerDeps and optional peers', () => {
 	function projectWithCore() {
 		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'astryx-peers-'));
 		tmpDirs.push(dir);
-		const coreDir = path.join(dir, 'node_modules', '@astryx-svelte', 'core');
+		const coreDir = path.join(dir, 'node_modules', '@astryx-sv', 'core');
 		fs.mkdirSync(coreDir, { recursive: true });
 		fs.writeFileSync(
 			path.join(coreDir, 'package.json'),
 			JSON.stringify({
-				name: '@astryx-svelte/core',
+				name: '@astryx-sv/core',
 				version: '0.3.1',
 				peerDependencies: { svelte: '^5.0.0', vite: '^8.0.0' },
 				peerDependenciesMeta: { vite: { optional: true } }

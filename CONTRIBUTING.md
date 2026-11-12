@@ -71,8 +71,8 @@ Day-to-day:
 
 ```sh
 bun run dev                                            # the docs site
-bun run --filter @astryx-svelte/core test:unit --run         # unit tests only
-bun run --filter @astryx-svelte/core test:unit --run src/tests/foo.svelte.test.ts   # one file
+bun run --filter @astryx-sv/core test:unit --run         # unit tests only
+bun run --filter @astryx-sv/core test:unit --run src/tests/foo.svelte.test.ts   # one file
 ```
 
 > **Flags go after the script name.** Bun forwards them to vitest directly; the old pnpm `--`

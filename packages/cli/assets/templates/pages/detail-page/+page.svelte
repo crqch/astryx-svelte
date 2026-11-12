@@ -54,7 +54,7 @@
 		Thumbnail,
 		VStack,
 		useMediaQuery
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowLeftIcon,
 		CalendarIcon,

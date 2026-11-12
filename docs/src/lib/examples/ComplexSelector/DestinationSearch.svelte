@@ -5,7 +5,7 @@
 	component-local `useState`.
 -->
 <script lang="ts">
-	import { Text, TextInput, TreeList, VStack, type TreeListItemData } from '@astryx-svelte/core';
+	import { Text, TextInput, TreeList, VStack, type TreeListItemData } from '@astryx-sv/core';
 
 	interface DestinationNode {
 		id: string;

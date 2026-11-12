@@ -16,7 +16,7 @@
 		Text,
 		useClickableContainer,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const PROJECT_HREF = '#project-design-tokens';
 

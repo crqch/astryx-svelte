@@ -70,7 +70,7 @@
 		VStack,
 		useMediaQuery,
 		type ISODateString
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		BookOpenIcon,
 		BuildingLibraryIcon,

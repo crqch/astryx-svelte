@@ -16,7 +16,7 @@
 		SelectorOption,
 		Stack,
 		type SelectorOptionData
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	// Heroicons 24/outline `lock-closed`.
 	const LOCK_PATH =

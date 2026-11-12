@@ -11,7 +11,7 @@
 	`ReactNode`, so each row's icon is a snippet reference in the same data array.
 -->
 <script lang="ts">
-	import { Icon, TopNav, TopNavHeading, TopNavItem, TopNavMenu } from '@astryx-svelte/core';
+	import { Icon, TopNav, TopNavHeading, TopNavItem, TopNavMenu } from '@astryx-sv/core';
 </script>
 
 {#snippet heading()}

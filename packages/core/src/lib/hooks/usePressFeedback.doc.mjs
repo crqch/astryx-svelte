@@ -24,7 +24,7 @@ export default {
 			name: 'pressableProps',
 			type: "{'data-astryx-pressable': ''}",
 			description:
-				"The marker attribute to spread on the element that paints the press. Compose one of `interactionOverlayStyles` (from `@astryx-svelte/core/utils`) on the same element — `backgroundColor` or `backgroundImage` for a surface whose hover and press are the system's overlays, `pressedBackgroundColor` for one whose hover is its own — and it paints the pressed token on the first frame of a press and fades it over the release, keeping `:active` for a mouse on a desktop. On a phone or tablet, where the stylesheet drops `:active`, the controller also paints a mouse, trackpad or Space-key press: at once, held while the button or key is down, faded at the release. A press is themed through `--color-overlay-pressed`."
+				"The marker attribute to spread on the element that paints the press. Compose one of `interactionOverlayStyles` (from `@astryx-sv/core/utils`) on the same element — `backgroundColor` or `backgroundImage` for a surface whose hover and press are the system's overlays, `pressedBackgroundColor` for one whose hover is its own — and it paints the pressed token on the first frame of a press and fades it over the release, keeping `:active` for a mouse on a desktop. On a phone or tablet, where the stylesheet drops `:active`, the controller also paints a mouse, trackpad or Space-key press: at once, held while the button or key is down, faded at the release. A press is themed through `--color-overlay-pressed`."
 		}
 	],
 	usage: {
@@ -55,6 +55,6 @@ export default {
 	},
 	relatedComponents: ['Button', 'Item', 'ClickableCard'],
 	relatedHooks: ['useLongPress'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'motion & gestures'
 };

@@ -13,7 +13,7 @@
 <div align="center">
 
 <img
-	src="https://raw.githubusercontent.com/DevRohit06/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
+	src="https://raw.githubusercontent.com/crqch/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
 	alt=""
 	width="88"
 	height="88"
@@ -23,19 +23,19 @@
 
 **[Astryx](https://astryx.atmeta.com/), Meta's open source design system, ported to Svelte 5.**
 
-[![npm](https://img.shields.io/npm/v/@astryx-svelte/core?style=flat&color=EA6A24&label=%40astryx-svelte%2Fcore)](https://www.npmjs.com/package/@astryx-svelte/core)
-[![CI](https://img.shields.io/github/actions/workflow/status/DevRohit06/astryx-svelte/ci.yml?style=flat&label=CI)](https://github.com/DevRohit06/astryx-svelte/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@astryx-sv/core?style=flat&color=EA6A24&label=%40astryx-sv%2Fcore)](https://www.npmjs.com/package/@astryx-sv/core)
+[![CI](https://img.shields.io/github/actions/workflow/status/crqch/astryx-svelte/ci.yml?style=flat&label=CI)](https://github.com/crqch/astryx-svelte/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat)](LICENSE)
 
-[**Documentation**](https://astryx-svelte.rohitk06.in/) · [**Components**](https://astryx-svelte.rohitk06.in/components) · [**Themes**](https://astryx-svelte.rohitk06.in/themes) · [**Changelog**](CHANGELOG.md)
+[**Documentation**](https://astryx.crqch.dev/) · [**Components**](https://astryx.crqch.dev/components) · [**Themes**](https://astryx.crqch.dev/themes) · [**Changelog**](CHANGELOG.md)
 
 </div>
 
 <br />
 
-<a href="https://astryx-svelte.rohitk06.in/">
+<a href="https://astryx.crqch.dev/">
 	<img
-		src="https://raw.githubusercontent.com/DevRohit06/astryx-svelte/fada324f7e8e11ea4f59d67cc359c8ec14d7f1ef/docs/static/og.png"
+		src="https://raw.githubusercontent.com/crqch/astryx-svelte/fada324f7e8e11ea4f59d67cc359c8ec14d7f1ef/docs/static/og.png"
 		alt="astryx-svelte — Astryx, ported to Svelte 5"
 	/>
 </a>
@@ -43,6 +43,9 @@
 <br />
 
 An unofficial, community port. Not affiliated with, endorsed by, or supported by Meta.
+
+Ported by [Rohit Kushwaha (@DevRohit06)](https://github.com/DevRohit06) and maintained by
+[crqch](https://github.com/crqch) at **[astryx.crqch.dev](https://astryx.crqch.dev/)**.
 
 Every component is authored against the same design-token references Astryx uses, so the StyleX
 compiler emits byte-identical atomic CSS — and three oracles diff that output against the
@@ -52,7 +55,7 @@ than one you have to trust.
 ## Installation
 
 ```bash
-npm install @astryx-svelte/core @astryx-svelte/theme-neutral
+npm install @astryx-sv/core @astryx-sv/theme-neutral
 ```
 
 `@stylexjs/stylex` is a peer dependency and npm and bun install it for you. It is required at
@@ -60,10 +63,10 @@ runtime — the components reach `stylex.props()` through `sx()` — so add it e
 package manager does not resolve peers automatically.
 
 ```ts
-import { Button } from '@astryx-svelte/core';
-import '@astryx-svelte/core/base.css';
-import '@astryx-svelte/core/astryx.css';
-import '@astryx-svelte/theme-neutral/theme.css';
+import { Button } from '@astryx-sv/core';
+import '@astryx-sv/core/base.css';
+import '@astryx-sv/core/astryx.css';
+import '@astryx-sv/theme-neutral/theme.css';
 ```
 
 That is the whole setup — the stylesheet ships pre-built, so nothing has to run a compiler. To
@@ -95,12 +98,12 @@ with the condition that retires it.
 
 ## Packages
 
-| Package                                     | What it is                                                                 |
-| ------------------------------------------- | -------------------------------------------------------------------------- |
-| [`@astryx-svelte/core`](packages/core)      | The components, the theme system, the composables, the message catalogs    |
-| [`@astryx-svelte/cli`](packages/cli)        | Docs, search, templates, theme tooling and codemods, for humans and agents |
-| [`@astryx-svelte/theme-*`](packages/themes) | Eight theme packages, `neutral` being the default Astryx look              |
-| [`docs`](docs)                              | The documentation site, built from the same docs the CLI serves            |
+| Package                                 | What it is                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------- |
+| [`@astryx-sv/core`](packages/core)      | The components, the theme system, the composables, the message catalogs    |
+| [`@astryx-sv/cli`](packages/cli)        | Docs, search, templates, theme tooling and codemods, for humans and agents |
+| [`@astryx-sv/theme-*`](packages/themes) | Eight theme packages, `neutral` being the default Astryx look              |
+| [`docs`](docs)                          | The documentation site, built from the same docs the CLI serves            |
 
 Ten packages ship together, versioned by the **Astryx release they port** rather than by this
 port's own history — so `0.4.5` means "at parity with Astryx 0.4.5, plus changes upstream has no
@@ -122,7 +125,7 @@ it.
 
 ## Documentation
 
-**[astryx-svelte.rohitk06.in](https://astryx-svelte.rohitk06.in/)** — every component page,
+**[astryx.crqch.dev](https://astryx.crqch.dev/)** — every component page,
 reference topic and example is generated from the same `.doc.mjs` modules the CLI reads, so the
 site cannot drift from what the CLI prints. Every example is a real file in this repository,
 rendering live Svelte rather than a screenshot.
@@ -130,8 +133,8 @@ rendering live Svelte rather than a screenshot.
 Read the same content in your terminal:
 
 ```sh
-npx @astryx-svelte/cli component Button
-npx @astryx-svelte/cli docs getting-started
+npx @astryx-sv/cli component Button
+npx @astryx-sv/cli docs getting-started
 ```
 
 ## Contributing
@@ -142,6 +145,7 @@ bun run --filter '*' build     # must run before check — the docs generator re
 bun run dev          # the docs site, the port's only demo surface
 
 bun run verify       # the gate: build, check, lint, test, and the status drift check
+bun run deploy:docs  # build the docs dependencies and deploy to Cloudflare Workers
 ```
 
 Never install with `--prod` or prune devDependencies: all three fidelity oracles **and** the docs

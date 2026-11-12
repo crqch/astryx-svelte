@@ -12,7 +12,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runCli } from '../../../test-utils/run-cli.mjs';
 
-// Run against the monorepo root so @astryx-svelte/core is discoverable.
+// Run against the monorepo root so @astryx-sv/core is discoverable.
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../..');
 const SLOW = 30_000;
 

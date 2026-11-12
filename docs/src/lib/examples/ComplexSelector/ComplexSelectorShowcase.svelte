@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ComplexSelector, Text } from '@astryx-svelte/core';
-	import { useGridFocus } from '@astryx-svelte/core/hooks';
+	import { ComplexSelector, Text } from '@astryx-sv/core';
+	import { useGridFocus } from '@astryx-sv/core/hooks';
 
 	type Fruit = 'Apple' | 'Pear' | 'Peach' | 'Plum';
 	type Ripeness = 'Crisp' | 'Tender' | 'Juicy' | 'Peak';

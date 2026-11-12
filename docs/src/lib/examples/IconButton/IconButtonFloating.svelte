@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { IconButton, Icon, Stack, Text } from '@astryx-svelte/core';
+	import { IconButton, Icon, Stack, Text } from '@astryx-sv/core';
 
 	/**
 	 * `elevation` reaches `IconButton` by inheritance on both sides —

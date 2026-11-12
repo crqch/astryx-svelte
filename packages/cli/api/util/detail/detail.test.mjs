@@ -1,6 +1,6 @@
 /**
  * @file Colocated tests for the util.detail leaf, run against the real
- * `@astryx-svelte/core` registry. The list leaf is covered end-to-end by
+ * `@astryx-sv/core` registry. The list leaf is covered end-to-end by
  * clients/cli/commands/detail-levels.test.mjs; this covers the single-util
  * detail projection (envelope shape + the ERR_UNKNOWN_HOOK fuzzy-suggestion
  * path).

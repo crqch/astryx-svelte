@@ -7,7 +7,7 @@
 	snippet `NavIcon.icon` and `TopNavHeading.logo` take.
 -->
 <script lang="ts">
-	import { Icon, NavIcon, TopNav, TopNavHeading } from '@astryx-svelte/core';
+	import { Icon, NavIcon, TopNav, TopNavHeading } from '@astryx-sv/core';
 </script>
 
 {#snippet viewColumnsIcon()}<Icon icon="viewColumns" />{/snippet}

@@ -6,7 +6,7 @@
 	`onFocus` (which bubbles) is `onfocusin`.
 -->
 <script lang="ts">
-	import { Card, Text, useGridFocus, VStack } from '@astryx-svelte/core';
+	import { Card, Text, useGridFocus, VStack } from '@astryx-sv/core';
 
 	const COLUMNS = 8;
 

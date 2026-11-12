@@ -15,8 +15,8 @@
 		LayoutFooter,
 		VStack,
 		type DialogPurpose
-	} from '@astryx-svelte/core';
-	import { useMediaQuery } from '@astryx-svelte/core/hooks';
+	} from '@astryx-sv/core';
+	import { useMediaQuery } from '@astryx-sv/core/hooks';
 
 	type AdaptivePresentation = 'dialog' | 'fullscreen' | 'bottom-sheet';
 

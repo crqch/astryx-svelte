@@ -59,6 +59,6 @@ export default {
 	},
 	relatedComponents: ['Link', 'LinkProvider'],
 	relatedHooks: ['useLinkify'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

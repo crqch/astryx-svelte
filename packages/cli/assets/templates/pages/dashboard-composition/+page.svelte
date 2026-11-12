@@ -75,7 +75,7 @@
 		VStack,
 		proportional,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowDownIcon, ArrowUpIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	// ============= DATA =============

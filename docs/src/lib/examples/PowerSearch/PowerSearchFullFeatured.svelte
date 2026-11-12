@@ -6,13 +6,13 @@
 	width are upstream's, unchanged. `useState` → `$state`.
 -->
 <script lang="ts">
-	import { PowerSearch } from '@astryx-svelte/core';
+	import { PowerSearch } from '@astryx-sv/core';
 	import type {
 		PowerSearchConfig,
 		PowerSearchFilter,
 		SearchableItem,
 		SearchSource
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const statusValues = [
 		{ value: 'open', label: 'Open' },

@@ -120,6 +120,6 @@ export default {
 	},
 	relatedComponents: ['LayerProvider', 'Popover', 'HoverCard', 'Tooltip'],
 	relatedHooks: ['usePopover', 'useHoverCard', 'useTooltip'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

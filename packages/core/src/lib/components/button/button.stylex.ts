@@ -30,7 +30,7 @@ import type { ButtonGroupContextValue } from '../../internal/contexts.svelte.js'
  * Theme packages add their own variants by augmenting this interface:
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface ButtonVariantMap {
  *     'primary-muted': true;
  *   }

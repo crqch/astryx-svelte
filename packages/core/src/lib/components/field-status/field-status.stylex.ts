@@ -90,7 +90,7 @@ const colorStyles = stylex.create({
  * upstream's does:
  *
  * ```ts
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface FieldStatusVariantMap {
  *     inline: true;
  *   }

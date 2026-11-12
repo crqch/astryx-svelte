@@ -8,7 +8,7 @@
 	and the same token variables.
 -->
 <script lang="ts">
-	import { Icon, InputClearButton, useInputContainer } from '@astryx-svelte/core';
+	import { Icon, InputClearButton, useInputContainer } from '@astryx-sv/core';
 
 	let container = $state<HTMLElement | null>(null);
 	let input = $state<HTMLInputElement | null>(null);

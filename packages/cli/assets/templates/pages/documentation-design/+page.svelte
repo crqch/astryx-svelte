@@ -62,7 +62,7 @@
 		pixel,
 		useMediaQuery,
 		type OutlineItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ArrowTopRightOnSquareIcon,
 		ArrowsPointingOutIcon,

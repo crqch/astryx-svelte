@@ -15,7 +15,7 @@
 		RadioListItem,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type { HeroThemeContent } from './hero-theme-content.js';
 
 	/**
@@ -25,7 +25,7 @@
 	 *
 	 * Ported from upstream's `hero/HeroFloatingCards.tsx`.
 	 *
-	 * Cards are real `@astryx-svelte/core` components, so wrapping the set in
+	 * Cards are real `@astryx-sv/core` components, so wrapping the set in
 	 * `<Theme>` re-skins them per theme. The whole layer is decorative:
 	 * `aria-hidden` + `inert` + no pointer events. `layout="overlap"` is the
 	 * desktop art composition; `layout="stack"` is the narrow-screen grid collage.

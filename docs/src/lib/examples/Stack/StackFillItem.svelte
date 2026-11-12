@@ -8,7 +8,7 @@
 	the way Svelte spells it.
 -->
 <script lang="ts">
-	import { Avatar, Button, Stack, StackItem, Text } from '@astryx-svelte/core';
+	import { Avatar, Button, Stack, StackItem, Text } from '@astryx-sv/core';
 
 	const USERS = [
 		{ name: 'Olivia Chen', role: 'Engineering Lead' },

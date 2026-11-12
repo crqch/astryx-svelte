@@ -10,8 +10,8 @@
 	declarations are written in the scoped `<style>` block below.
 -->
 <script lang="ts">
-	import { Field, InputStatusIcon, useInputStatusIcon } from '@astryx-svelte/core';
-	import type { FieldStatusVariant, InputStatus } from '@astryx-svelte/core';
+	import { Field, InputStatusIcon, useInputStatusIcon } from '@astryx-sv/core';
+	import type { FieldStatusVariant, InputStatus } from '@astryx-sv/core';
 
 	const VALID_CODE = 'SAVE20';
 

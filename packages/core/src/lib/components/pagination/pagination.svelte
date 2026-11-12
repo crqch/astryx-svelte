@@ -7,7 +7,7 @@
 	 * Theme packages can add custom variants via TypeScript module augmentation:
 	 *
 	 * @example
-	 * declare module '@astryx-svelte/core' {
+	 * declare module '@astryx-sv/core' {
 	 *   interface PaginationVariantMap {
 	 *     progress: true;
 	 *   }

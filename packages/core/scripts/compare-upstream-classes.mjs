@@ -91,7 +91,7 @@ const BUILTIN_DEFAULT_MARKER = 'stylex.defaultMarker()';
  * so the **declarations are byte-identical** — but the atomic class was already
  * hashed from the text that still held the var, so the class *names* cannot
  * agree across two packages with different names and layouts. Ours hashes
- * `@astryx-svelte/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
+ * `@astryx-sv/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
  * `@astryxdesign/core:src/DateInput/tokens.stylex.ts`.
  *
  * `normaliseRule` already blinds a rule's own atomic class as `.SELF`, which is

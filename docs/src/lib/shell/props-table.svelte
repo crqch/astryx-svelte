@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Badge, Code } from '@astryx-svelte/core';
+	import { Badge, Code } from '@astryx-sv/core';
 	import type { PropEntry } from '$lib/generated/types.js';
 	import InlineMarkdown from './inline-markdown.svelte';
 

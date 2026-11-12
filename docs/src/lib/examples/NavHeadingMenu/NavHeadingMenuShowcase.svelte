@@ -12,7 +12,7 @@
 	`SideNavHeadingShowcase` precedent.
 -->
 <script lang="ts">
-	import { NavHeadingMenu, NavHeadingMenuItem, SideNav, SideNavHeading } from '@astryx-svelte/core';
+	import { NavHeadingMenu, NavHeadingMenuItem, SideNav, SideNavHeading } from '@astryx-sv/core';
 </script>
 
 {#snippet appIcon()}

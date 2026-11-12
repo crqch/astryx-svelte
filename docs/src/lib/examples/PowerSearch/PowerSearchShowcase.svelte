@@ -8,8 +8,8 @@
 	`ReadonlyArray`.
 -->
 <script lang="ts">
-	import { PowerSearch } from '@astryx-svelte/core';
-	import type { PowerSearchConfig, PowerSearchFilter } from '@astryx-svelte/core';
+	import { PowerSearch } from '@astryx-sv/core';
+	import type { PowerSearchConfig, PowerSearchFilter } from '@astryx-sv/core';
 
 	const config: PowerSearchConfig = {
 		name: 'BasicSearch',

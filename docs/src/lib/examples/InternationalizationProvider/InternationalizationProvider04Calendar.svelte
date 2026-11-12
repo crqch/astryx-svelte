@@ -13,7 +13,7 @@
 		Text,
 		VStack,
 		type ISODateString
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	type CalendarSystem = 'gregory' | 'japanese' | 'buddhist';
 

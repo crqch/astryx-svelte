@@ -1,6 +1,6 @@
 /**
  * @file Colocated tests for the util.detail.params leaf, run against the real
- * `@astryx-svelte/core` registry. Covers the params projection (just the
+ * `@astryx-sv/core` registry. Covers the params projection (just the
  * resolved doc's params array) and the shared ERR_UNKNOWN_HOOK path.
  *
  * ## Ported case count

@@ -3,16 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		Avatar,
-		Button,
-		Heading,
-		HoverCard,
-		HStack,
-		Icon,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
+	import { Avatar, Button, Heading, HoverCard, HStack, Icon, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `CalendarIcon`; the registry ships `calendar`, so

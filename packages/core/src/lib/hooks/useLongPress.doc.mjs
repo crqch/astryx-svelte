@@ -83,6 +83,6 @@ export default {
 	},
 	relatedComponents: ['ContextMenu'],
 	relatedHooks: ['useClickableContainer', 'useHotkeys'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

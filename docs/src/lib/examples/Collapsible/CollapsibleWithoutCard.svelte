@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Collapsible, CollapsibleGroup, Divider, Text, VStack } from '@astryx-svelte/core';
+	import { Collapsible, CollapsibleGroup, Divider, Text, VStack } from '@astryx-sv/core';
 </script>
 
 <CollapsibleGroup type="single" defaultValue="deployment">

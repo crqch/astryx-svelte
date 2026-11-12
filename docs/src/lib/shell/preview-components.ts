@@ -1,5 +1,5 @@
 import { createRawSnippet, type Component, type Snippet } from 'svelte';
-import * as core from '@astryx-svelte/core';
+import * as core from '@astryx-sv/core';
 
 /**
  * The two things the interactive preview needs from the library itself: the

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Markdown } from '@astryx-svelte/core';
+	import { Center, Markdown } from '@astryx-sv/core';
 
 	const content = [
 		'## Comparison Table',

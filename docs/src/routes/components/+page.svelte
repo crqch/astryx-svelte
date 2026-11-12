@@ -12,7 +12,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import componentRegistry from '$lib/generated/component-registry.js';
 	import coverage from '$lib/generated/coverage.js';
 	import exampleRegistry from '$lib/generated/example-registry.js';

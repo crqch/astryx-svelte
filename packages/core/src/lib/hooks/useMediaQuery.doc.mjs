@@ -47,6 +47,6 @@ export default {
 		]
 	},
 	relatedHooks: ['useImageMode'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'media'
 };

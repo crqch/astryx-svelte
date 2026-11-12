@@ -52,7 +52,7 @@
 	<VStack gap={4}>
 		<VStack gap={2}>
 			<Text type="display-1">Button</Text>
-			<Text type="supporting" color="secondary">@astryx-svelte/core · Button</Text>
+			<Text type="supporting" color="secondary">@astryx-sv/core · Button</Text>
 		</VStack>
 
 		<TabList value={tab} onChange={() => {}} hasDivider>

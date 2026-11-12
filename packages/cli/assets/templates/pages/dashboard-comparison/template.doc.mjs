@@ -3,7 +3,7 @@
  * `assets/templates/pages/dashboard-comparison/template.doc.mjs`.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').TemplateDoc} */
+/** @type {import('@astryx-sv/cli/authoring').TemplateDoc} */
 export const doc = {
 	type: 'page',
 	name: 'Data Dashboard',

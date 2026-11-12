@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, TextInput, VStack } from '@astryx-svelte/core';
+	import { Center, TextInput, VStack } from '@astryx-sv/core';
 
 	let username = $state('');
 	let email = $state('');

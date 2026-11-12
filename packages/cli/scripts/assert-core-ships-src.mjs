@@ -1,11 +1,11 @@
 /**
- * @file Assert that `@astryx-svelte/core` publishes the sources this CLI reads.
+ * @file Assert that `@astryx-sv/core` publishes the sources this CLI reads.
  *
  * Three commands read core's **source**, not its build output: `component
  * --source` prints it, `swizzle` copies it into the user's project, and the
  * agent-docs writer quotes it. All three resolve core through
  * `findCoreDir()`, which in an installed project lands on
- * `node_modules/@astryx-svelte/core` — so they work only if the published
+ * `node_modules/@astryx-sv/core` — so they work only if the published
  * tarball actually contains `src/`.
  *
  * Nothing in the type system says it does. `package.json#files` is a plain
@@ -20,7 +20,7 @@
  * rather than against the `files` array read literally — the array is the
  * input to the question, not the answer.
  *
- * Runs as `bun run --filter @astryx-svelte/cli test:core-src`, wired into the package's
+ * Runs as `bun run --filter @astryx-sv/cli test:core-src`, wired into the package's
  * `test` script the way `packages/core` wires `test:parity` and
  * `packages/themes/neutral` wires `test:parity` / `test:icons`.
  *
@@ -51,10 +51,10 @@ if (!coreDir) {
 	// missing core must fail the run, never turn the check into a no-op that
 	// still reports green.
 	fail(
-		'Could not locate @astryx-svelte/core.\n' +
+		'Could not locate @astryx-sv/core.\n' +
 			'findCoreDir() walked up from ' +
 			process.cwd() +
-			' and found neither packages/core nor node_modules/@astryx-svelte/core.'
+			' and found neither packages/core nor node_modules/@astryx-sv/core.'
 	);
 }
 
@@ -228,7 +228,7 @@ if (problems.length > 0) {
 		problems.map((p) => `  - ${p}`).join('\n\n') +
 			'\n\n' +
 			'  `component --source`, `swizzle` and the agent-docs writer read these\n' +
-			"  paths out of an installed @astryx-svelte/core. Fix packages/core's\n" +
+			"  paths out of an installed @astryx-sv/core. Fix packages/core's\n" +
 			'  `files` field rather than working around it here.'
 	);
 }
@@ -236,5 +236,5 @@ if (problems.length > 0) {
 const srcCount = [...packFiles].filter((p) => p.startsWith('src/')).length;
 console.log(
 	`  core ships src/  ${components.length} components, ${srcCount} src files, ` +
-		`${packFiles.size} total — @astryx-svelte/core`
+		`${packFiles.size} total — @astryx-sv/core`
 );

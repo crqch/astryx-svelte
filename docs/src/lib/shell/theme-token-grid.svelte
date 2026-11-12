@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { DefinedTheme } from '@astryx-svelte/core/theme';
+	import type { DefinedTheme } from '@astryx-sv/core/theme';
 
 	/**
 	 * Split on top-level commas, so a `light-dark()` pair whose sides are
@@ -75,7 +75,7 @@
 </script>
 
 <script lang="ts">
-	import { Code, Heading, Text, VStack } from '@astryx-svelte/core';
+	import { Code, Heading, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Every token one theme package **declares**, grouped by family.

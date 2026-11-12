@@ -756,7 +756,7 @@ export interface ThemeCSSOutput {
  * specificity. Seeding it per theme scope instead re-declares the default
  * inside every nested theme, which is the shadowing this shape avoids.
  *
- * @internal Not exported from `@astryx-svelte/core/theme`, as upstream does not
+ * @internal Not exported from `@astryx-sv/core/theme`, as upstream does not
  * export its counterpart: `<Theme>` is the only runtime caller, and the theme
  * build formats the same block from the public `dataTokenDefaults` — which is
  * why {@link generateThemeCss} calls this rather than re-deriving it.

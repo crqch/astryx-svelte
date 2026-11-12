@@ -141,7 +141,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Import percent and Table’s same pixel binding from @astryx-svelte/core when constructing configuration in a Server Component; the root package exposes one pixel symbol and one percent symbol without collision.'
+					'Import percent and Table’s same pixel binding from @astryx-sv/core when constructing configuration in a Server Component; the root package exposes one pixel symbol and one percent symbol without collision.'
 			},
 			{
 				guidance: true,
@@ -160,6 +160,6 @@ export default {
 	},
 	relatedComponents: ['Resizable', 'AppShell', 'Layout', 'SideNav'],
 	relatedHooks: ['useCollapsible'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'Layout'
 };

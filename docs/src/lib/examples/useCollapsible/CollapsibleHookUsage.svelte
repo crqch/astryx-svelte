@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Text, useCollapsible, VStack } from '@astryx-svelte/core';
+	import { Button, Card, Text, useCollapsible, VStack } from '@astryx-sv/core';
 
 	/**
 	 * `useCollapsible` takes its options as a getter — this port's standing shape

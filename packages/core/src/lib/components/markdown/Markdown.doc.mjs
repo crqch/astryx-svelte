@@ -138,7 +138,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'To render a plugin node outside Markdown, as another surface showing the same document does, read what the plugin declares with getMarkdownPluginCapabilities (syntax and transform, nothing else), and render each parsed extension node with MarkdownPluginNodeRenderer from the client-only @astryx-svelte/core subpath. It presents the node exactly as Markdown does, fallbacks and failure reports included, with no element of its own.'
+					'To render a plugin node outside Markdown, as another surface showing the same document does, read what the plugin declares with getMarkdownPluginCapabilities (syntax and transform, nothing else), and render each parsed extension node with MarkdownPluginNodeRenderer from the client-only @astryx-sv/core subpath. It presents the node exactly as Markdown does, fallbacks and failure reports included, with no element of its own.'
 			},
 			{
 				guidance: true,
@@ -168,12 +168,12 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Import parseMarkdownAst or parseInlineAst from @astryx-svelte/core when server or React Server Component code needs to run plugins against the canonical readonly tree. The parser and plugin subpaths have no use-client boundary. The Markdown component remains client-owned, so function-bearing plugin entries must not be passed across an RSC serialization boundary.'
+					'Import parseMarkdownAst or parseInlineAst from @astryx-sv/core when server or React Server Component code needs to run plugins against the canonical readonly tree. The parser and plugin subpaths have no use-client boundary. The Markdown component remains client-owned, so function-bearing plugin entries must not be passed across an RSC serialization boundary.'
 			},
 			{
 				guidance: true,
 				description:
-					'Use decodeMarkdownCharacterReferences (from @astryx-svelte/core or @astryx-svelte/core) to show text the way Markdown renders its character references: &copy;, &#169;, and &#xA9; become ©, while unknown names and references without their semicolon stay as written. It decodes plain text and knows nothing of Markdown, so skip code and backslash-escaped references yourself. It uses the same table Markdown renders with.'
+					'Use decodeMarkdownCharacterReferences (from @astryx-sv/core or @astryx-sv/core) to show text the way Markdown renders its character references: &copy;, &#169;, and &#xA9; become ©, while unknown names and references without their semicolon stay as written. It decodes plain text and knows nothing of Markdown, so skip code and backslash-escaped references yourself. It uses the same table Markdown renders with.'
 			},
 			{
 				guidance: true,
@@ -183,7 +183,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					"Import createMarkdownRemarkTransform from '@astryx-svelte/core' only to reuse an existing synchronous transform-only Remark plugin; it stays out of every other bundle. Prove each plugin with fixtures: anything outside the supported MDAST subset — async work, parser or compiler plugins, processor state, raw HTML, unsupported nodes, forged positions, or metadata Astryx cannot represent — keeps the last valid document and reports one diagnostic."
+					"Import createMarkdownRemarkTransform from '@astryx-sv/core' only to reuse an existing synchronous transform-only Remark plugin; it stays out of every other bundle. Prove each plugin with fixtures: anything outside the supported MDAST subset — async work, parser or compiler plugins, processor state, raw HTML, unsupported nodes, forged positions, or metadata Astryx cannot represent — keeps the last valid document and reports one diagnostic."
 			},
 			{
 				guidance: true,
@@ -220,7 +220,7 @@ export default {
 	playground: {
 		defaults: {
 			children:
-				"## Getting Started\n\nInstall the package:\n\n```bash\nnpm install @astryx-svelte/core\n```\n\nThen import and use any component:\n\n```tsx\nimport {Button} from '@astryx-svelte/core';\n```\n\n**Bold**, *italic*, and `inline code` all work."
+				"## Getting Started\n\nInstall the package:\n\n```bash\nnpm install @astryx-sv/core\n```\n\nThen import and use any component:\n\n```tsx\nimport {Button} from '@astryx-sv/core';\n```\n\n**Bold**, *italic*, and `inline code` all work."
 		}
 	},
 	props: [
@@ -312,7 +312,7 @@ export default {
 			name: 'codeLanguages',
 			type: 'ReadonlyArray<CodeLanguage>',
 			description:
-				"CodeBlock language values a fence may name, each imported on its own (e.g. graphql from @astryx-svelte/core) or made with createCodeLanguage. A fence whose language word is one of a listed value's identifiers renders with it, ahead of a built-in; a diff-<identifier> fence takes the diff layer over it; a later entry wins. Pass the same list to RichTextEditor or RichTextView so read and edit match."
+				"CodeBlock language values a fence may name, each imported on its own (e.g. graphql from @astryx-sv/core) or made with createCodeLanguage. A fence whose language word is one of a listed value's identifiers renders with it, ahead of a built-in; a diff-<identifier> fence takes the diff layer over it; a later entry wins. Pass the same list to RichTextEditor or RichTextView so read and edit match."
 		},
 		{
 			name: 'components',

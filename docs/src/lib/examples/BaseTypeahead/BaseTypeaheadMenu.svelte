@@ -22,13 +22,13 @@
 		Text,
 		VStack,
 		createStaticSource
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type {
 		BaseTypeaheadDialogMenuInfo,
 		BaseTypeaheadHandle,
 		BaseTypeaheadListboxMenuInfo,
 		SearchableItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	type Field = SearchableItem & { values: string[] };
 

@@ -402,7 +402,7 @@ for (const file of testFiles(path.join(root, 'packages/core/src/tests'))) {
 // --- Themes ----------------------------------------------------------------
 
 // A directory under packages/themes counts as a theme package only if it has
-// its own manifest declaring an `@astryx-svelte/theme-*` name — `shared` is
+// its own manifest declaring an `@astryx-sv/theme-*` name — `shared` is
 // utilities consumed by the theme scripts, not a package of its own.
 const themes = dirs(path.join(root, 'packages/themes')).filter((name) => {
 	const manifest = path.join(root, 'packages/themes', name, 'package.json');
@@ -413,7 +413,7 @@ const themes = dirs(path.join(root, 'packages/themes')).filter((name) => {
 	} catch {
 		return false;
 	}
-	return typeof pkg.name === 'string' && pkg.name.startsWith('@astryx-svelte/theme-');
+	return typeof pkg.name === 'string' && pkg.name.startsWith('@astryx-sv/theme-');
 });
 
 // --- The upstream pin ------------------------------------------------------
@@ -487,9 +487,9 @@ if (existsSync(path.join(root, 'packages/core/dist/index.d.ts'))) {
 const gates = [];
 if (full) {
 	gates.push(
-		runStage('Class oracle', 'bun', ['run', '--filter', '@astryx-svelte/core', 'test:parity']),
-		runStage('CSS oracle', 'bun', ['run', '--filter', '@astryx-svelte/core', 'test:css']),
-		runStage('Theme oracles', 'bun', ['run', '--filter', '@astryx-svelte/theme-*', 'test']),
+		runStage('Class oracle', 'bun', ['run', '--filter', '@astryx-sv/core', 'test:parity']),
+		runStage('CSS oracle', 'bun', ['run', '--filter', '@astryx-sv/core', 'test:css']),
+		runStage('Theme oracles', 'bun', ['run', '--filter', '@astryx-sv/theme-*', 'test']),
 		runStage('Test collection', 'bunx', ['vitest', 'list', '--reporter=json'], {
 			cwd: path.join(root, 'packages/core')
 		}),

@@ -59,7 +59,7 @@ surfaces without burning a version number — which npm does not let you re-use.
 Watch for `EOTP`: a classic _Publish_ token fails on an account with 2FA enforced for writes, and it
 fails only after authenticating and uploading the tarball — the last possible step, after the full
 gate has already run. `NPM_TOKEN` must be an **Automation** token or a Granular Access Token with
-write access to the `@astryx-svelte` scope.
+write access to the `@astryx-sv` scope.
 
 ## 5. Tag from a merged `main`
 

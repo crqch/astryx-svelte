@@ -103,7 +103,7 @@ export function getRunPrefix(targetDir) {
 }
 
 /** The published CLI package name — used for one-off (uninstalled) invocations. */
-export const CLI_PACKAGE = '@astryx-svelte/cli';
+export const CLI_PACKAGE = '@astryx-sv/cli';
 
 /** The CLI binary name — only resolves once the CLI is installed (or run via CLI_PACKAGE). */
 export const CLI_BIN = 'astryx-svelte';
@@ -142,7 +142,7 @@ export function getDlxPrefix(targetDir) {
  * We sniff the entry path (`process.argv[1]`) for well-known runner-cache
  * markers. This errs safe in both directions: a false negative falls back to
  * the installed form (`<prefix> astryx-svelte`, the historical behavior), and a
- * false positive emits the always-valid scoped form (`<dlx> @astryx-svelte/cli`).
+ * false positive emits the always-valid scoped form (`<dlx> @astryx-sv/cli`).
  *
  * @returns {boolean}
  */
@@ -157,7 +157,7 @@ export function isCliOneOff() {
  * - Installed / global / dev: `<run-prefix> astryx-svelte` (e.g.
  *   `pnpm exec astryx-svelte`). The bare name resolves to the local (or
  *   global) binary.
- * - One-off (npx/dlx cache): `<dlx-prefix> @astryx-svelte/cli` — the bare
+ * - One-off (npx/dlx cache): `<dlx-prefix> @astryx-sv/cli` — the bare
  *   name isn't on disk, so npm would fetch an unrelated registry package; the
  *   scoped package always resolves to us.
  *

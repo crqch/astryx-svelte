@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Heading, Section, Stack, Text, Theme } from '@astryx-svelte/core';
-	import { defineTheme } from '@astryx-svelte/core/theme';
+	import { Button, Card, Heading, Section, Stack, Text, Theme } from '@astryx-sv/core';
+	import { defineTheme } from '@astryx-sv/core/theme';
 
 	const forestTheme = defineTheme({
 		name: 'forest-docs',

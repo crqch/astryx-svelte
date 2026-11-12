@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Link, LinkProvider } from '@astryx-svelte/core';
+	import { Link, LinkProvider } from '@astryx-sv/core';
 	import RouterLink from './RouterLink.svelte';
 
 	/**

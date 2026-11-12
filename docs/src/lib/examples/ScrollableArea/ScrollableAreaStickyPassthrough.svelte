@@ -5,7 +5,7 @@
 	ScrollableArea examples' note.
 -->
 <script lang="ts">
-	import { Card, Grid, Heading, ScrollableArea, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Grid, Heading, ScrollableArea, Text, VStack } from '@astryx-sv/core';
 
 	const SHARED = [
 		{ id: 'brand', title: 'Brand refresh', meta: 'Priya Raman' },

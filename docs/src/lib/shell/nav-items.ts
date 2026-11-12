@@ -75,7 +75,7 @@ export function isActive(item: NavItem, pathname: string): boolean {
  * this one — the parity rule is about the *component API*, and a link that
  * sends a reader to different software is not parity.
  */
-export const REPO_URL = 'https://github.com/devrohit06/astryx-svelte';
+export const REPO_URL = 'https://github.com/crqch/astryx-svelte';
 
 /** Upstream's, kept: it is where the design system itself is documented. */
 export const UPSTREAM_URL = 'https://astryx.atmeta.com/';
@@ -104,11 +104,15 @@ export const UPSTREAM_WIKI_URL = 'https://github.com/facebook/astryx/wiki';
 export const DISCORD_URL = 'https://discord.com/invite/XnsUcFykEP';
 
 /**
- * Who ported it, for the footer's attribution line.
+ * Who ported it and who maintains this fork, for the footer's attribution line.
  *
  * The line follows the shape shadcn-svelte uses — "Built by shadcn. Ported to
  * Svelte by Huntabyte." — which is the established convention for a port's
- * docs site: credit upstream first, then the port, then link the source.
+ * docs site: credit upstream first, then the port, then link the source. The
+ * maintainer credit is separate from the port credit: Rohit wrote the original
+ * port, crqch maintains the fork hosted at astryx.crqch.dev.
  */
 export const AUTHOR_NAME = 'DevRohit06';
 export const AUTHOR_URL = 'https://github.com/DevRohit06';
+export const MAINTAINER_NAME = 'crqch';
+export const MAINTAINER_URL = 'https://github.com/crqch';

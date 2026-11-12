@@ -17,7 +17,7 @@
 		SegmentedControl,
 		SegmentedControlItem,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	type TextDirection = 'ltr' | 'rtl';
 

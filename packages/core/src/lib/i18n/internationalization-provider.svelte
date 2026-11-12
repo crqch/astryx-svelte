@@ -19,7 +19,7 @@
 		 * @example
 		 * ```svelte
 		 * <script lang="ts">
-		 *   import fr from '@astryx-svelte/core/locales/fr.json';
+		 *   import fr from '@astryx-sv/core/locales/fr.json';
 		 * <\/script>
 		 * <InternationalizationProvider locale="fr" messages={{ fr }}>
 		 * ```

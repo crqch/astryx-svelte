@@ -49,7 +49,7 @@ function normalize(str) {
 
 /** The held-result shape this port documents. */
 const HELD = `<script lang="ts">
-	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-svelte/core';
+	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-sv/core';
 
 	const expansionState = useTableRowExpansionState(() => ({
 		baseData: tree,
@@ -67,7 +67,7 @@ const HELD = `<script lang="ts">
 
 /** Upstream's destructured shape, which a consumer may still have written. */
 const DESTRUCTURED = `<script lang="ts">
-	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-svelte/core';
+	import { Table, useTableRowExpansion, useTableRowExpansionState } from '@astryx-sv/core';
 
 	const { data, expansionConfig } = useTableRowExpansionState(() => ({
 		baseData: tree,
@@ -126,7 +126,7 @@ describe('migrate-table-rowexpansion-to-tree', () => {
 
 	it('leaves the new detail-panel usage (renderExpanded) untouched', async () => {
 		const input = `<script lang="ts">
-	import { Table, useTableRowExpansion } from '@astryx-svelte/core';
+	import { Table, useTableRowExpansion } from '@astryx-sv/core';
 
 	const expansion = useTableRowExpansion(() => ({
 		expandedKeys,
@@ -147,7 +147,7 @@ describe('migrate-table-rowexpansion-to-tree', () => {
 
 	it('does not touch files that never imported the row-expansion hooks', async () => {
 		const input = `<script lang="ts">
-	import { Table, useTableSelection } from '@astryx-svelte/core';
+	import { Table, useTableSelection } from '@astryx-sv/core';
 </script>
 
 <Table data={rows} columns={cols} idKey="id" />
@@ -180,7 +180,7 @@ describe('migrate-table-rowexpansion-to-tree — Svelte-specific', () => {
 	});
 
 	it('rewrites a plain .ts module through the synthetic script wrapper', async () => {
-		const input = `import { useTableRowExpansion, useTableRowExpansionState } from '@astryx-svelte/core';
+		const input = `import { useTableRowExpansion, useTableRowExpansionState } from '@astryx-sv/core';
 
 export function makeTree(tree: Node[]) {
 	const expansionState = useTableRowExpansionState(() => ({

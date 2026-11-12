@@ -4,7 +4,7 @@
  * router: no name / --list / --category -> util.list, bare name -> util.detail,
  * --params -> util.detail.params, an unknown --category -> ERR_UNKNOWN_CATEGORY,
  * and a non-string name -> a coded ERR_UNKNOWN_HOOK (not a raw TypeError).
- * Runs against the real `@astryx-svelte/core` utils.
+ * Runs against the real `@astryx-sv/core` utils.
  *
  * ## Ported case count
  *

@@ -170,7 +170,7 @@ function getThemeIconOverrides(source: IconRegistrySource): Partial<IconRegistry
  * with {@link getExtendedIcon}.
  *
  * @example
- * import { registerIcons } from '@astryx-svelte/core';
+ * import { registerIcons } from '@astryx-sv/core';
  * import { brandIcons } from './brand-icons.svelte';
  * registerIcons(brandIcons);
  *

@@ -25,7 +25,7 @@
 		Text,
 		VStack,
 		type BottomSheetHeight
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const height: BottomSheetHeight = 'hug';
 

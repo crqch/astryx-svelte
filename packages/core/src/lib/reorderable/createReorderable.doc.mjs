@@ -72,6 +72,6 @@ export default {
 		]
 	},
 	relatedComponents: ['List'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

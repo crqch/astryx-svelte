@@ -18,7 +18,7 @@
 -->
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import { LinkProvider, Text, VStack } from '@astryx-svelte/core';
+	import { LinkProvider, Text, VStack } from '@astryx-sv/core';
 	import ArticleCard from './ArticleCard.svelte';
 	import RouterLink from './RouterLink.svelte';
 	import { NAVIGATE_KEY } from './navigate-context.js';

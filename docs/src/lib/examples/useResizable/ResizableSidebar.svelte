@@ -13,7 +13,7 @@
 		Text,
 		useResizable,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	/** `useResizable` takes its config as a getter here, against upstream's object. */
 	const sidebar = useResizable(() => ({

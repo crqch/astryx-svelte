@@ -1,4 +1,4 @@
-// Reads the published export surface of @astryx-svelte/core.
+// Reads the published export surface of @astryx-sv/core.
 //
 // The docs site documents *this* library, so the component registry is filtered
 // to what core actually exports — upstream ships 200 sidebar entries and we
@@ -90,12 +90,12 @@ export function readCoreExports(coreDistDir) {
 	/** Entry point → the specifier consumers write. Order matters: the root
 	 * barrel wins, because that is what upstream's own import snippets use. */
 	const entryPoints = [
-		['index.d.ts', '@astryx-svelte/core'],
-		['hooks/index.d.ts', '@astryx-svelte/core/hooks'],
-		['theme/index.d.ts', '@astryx-svelte/core/theme'],
-		['theme/syntax/index.d.ts', '@astryx-svelte/core/theme/syntax'],
-		['utils/index.d.ts', '@astryx-svelte/core/utils'],
-		['i18n/index.d.ts', '@astryx-svelte/core/i18n']
+		['index.d.ts', '@astryx-sv/core'],
+		['hooks/index.d.ts', '@astryx-sv/core/hooks'],
+		['theme/index.d.ts', '@astryx-sv/core/theme'],
+		['theme/syntax/index.d.ts', '@astryx-sv/core/theme/syntax'],
+		['utils/index.d.ts', '@astryx-sv/core/utils'],
+		['i18n/index.d.ts', '@astryx-sv/core/i18n']
 	];
 
 	/** @type {Set<string>} */

@@ -10,13 +10,7 @@
 	  flatten and the tree would never expand.
 -->
 <script lang="ts">
-	import {
-		Table,
-		useTableTreeData,
-		useTableTreeState,
-		proportional,
-		pixel
-	} from '@astryx-svelte/core';
+	import { Table, useTableTreeData, useTableTreeState, proportional, pixel } from '@astryx-sv/core';
 
 	interface FileNode extends Record<string, unknown> {
 		id: string;

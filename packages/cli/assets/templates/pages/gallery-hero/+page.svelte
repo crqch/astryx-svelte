@@ -25,7 +25,7 @@
 		LayoutContent,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowRightIcon } from '@fvilers/heroicons-svelte/20/solid';
 
 	const IMAGES = [

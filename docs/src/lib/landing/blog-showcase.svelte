@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Button, Heading, Icon, VStack } from '@astryx-svelte/core';
+	import { Button, Heading, Icon, VStack } from '@astryx-sv/core';
 	import blogRegistry from '$lib/generated/blog-registry.js';
 	import type { BlogPost } from '$lib/blog/schema.js';
 	import BlogCard from '$lib/blog/blog-card.svelte';

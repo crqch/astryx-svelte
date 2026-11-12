@@ -7,7 +7,7 @@
 	for the full note.
 -->
 <script lang="ts">
-	import { DateInput, Stack, Text, type ISODateString } from '@astryx-svelte/core';
+	import { DateInput, Stack, Text, type ISODateString } from '@astryx-sv/core';
 
 	let value = $state<ISODateString | undefined>(undefined);
 </script>

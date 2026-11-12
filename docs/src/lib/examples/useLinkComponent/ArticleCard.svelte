@@ -5,8 +5,8 @@
 	registry only looks for `<BlockName>.svelte`, so this file is never listed.
 -->
 <script lang="ts">
-	import { Card, Text, VStack, useLinkComponent } from '@astryx-svelte/core';
-	import type { LinkComponentType } from '@astryx-svelte/core';
+	import { Card, Text, VStack, useLinkComponent } from '@astryx-sv/core';
+	import type { LinkComponentType } from '@astryx-sv/core';
 
 	interface Props {
 		title: string;

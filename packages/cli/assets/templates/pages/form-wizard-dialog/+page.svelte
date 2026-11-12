@@ -49,7 +49,7 @@
 		useToast,
 		type ISODateString,
 		type ISOTimeString
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	// ── Data ──────────────────────────────────────────────────────────────────────
 

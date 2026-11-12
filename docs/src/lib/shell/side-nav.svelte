@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { Icon, SideNav, SideNavItem, SideNavSection, TextInput } from '@astryx-svelte/core';
+	import { Icon, SideNav, SideNavItem, SideNavSection, TextInput } from '@astryx-sv/core';
 	import componentGroups from '$lib/generated/component-groups.js';
 	import docsRegistry from '$lib/generated/docs-registry.js';
 	import packageRegistry from '$lib/generated/package-registry.js';
@@ -222,7 +222,7 @@
 
 		<!--
 			Upstream labels each row with the **package name**, not the slug or the
-			display name — `@astryx-svelte/core`, not `Core` — and links it at
+			display name — `@astryx-sv/core`, not `Core` — and links it at
 			`/docs/<slug>`, which is the same route the topics above use.
 		-->
 		<SideNavSection title="Libraries" isHeaderHidden>

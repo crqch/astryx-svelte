@@ -21,7 +21,7 @@
  *     registries are identical but for the export name.
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
 /** Matcha syntax palette — upstream 0.7.13's resolved values. */
 const matchaSyntax = defineSyntaxTheme({

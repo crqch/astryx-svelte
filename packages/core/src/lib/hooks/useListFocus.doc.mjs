@@ -158,6 +158,6 @@ export default {
 	},
 	relatedComponents: ['TabMenu', 'Toolbar'],
 	relatedHooks: ['useGridFocus', 'useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

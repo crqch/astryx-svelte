@@ -3,7 +3,7 @@
  * `assets/templates/pages/form-wizard/page.tsx`.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').TemplateDoc} */
+/** @type {import('@astryx-sv/cli/authoring').TemplateDoc} */
 export const doc = {
 	type: 'page',
 	name: 'Form Wizard',

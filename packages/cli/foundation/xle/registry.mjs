@@ -1,5 +1,5 @@
 /**
- * @file XLE component registry — built from `@astryx-svelte/core` .doc.mjs metadata.
+ * @file XLE component registry — built from `@astryx-sv/core` .doc.mjs metadata.
  *
  * Everything the layout language knows about components (valid names, aliases,
  * props, enums, slots) is derived from the same `.doc.mjs` files that power
@@ -28,7 +28,7 @@
  *
  * **There are no per-component subpath exports.** `@astryxdesign/core` publishes
  * `./Button`, `./Card`, … so upstream resolves a distinct `importPath` per
- * component; `@astryx-svelte/core` publishes one root barrel, so every
+ * component; `@astryx-sv/core` publishes one root barrel, so every
  * component's `importPath` is the package name and the generated module ends
  * up with a single merged import statement.
  *

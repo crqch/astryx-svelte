@@ -108,6 +108,6 @@ export default {
 	},
 	relatedComponents: ['Calendar'],
 	relatedHooks: ['useLocale'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

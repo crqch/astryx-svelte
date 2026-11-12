@@ -12,7 +12,7 @@
 </script>
 
 <script lang="ts">
-	import { Outline } from '@astryx-svelte/core';
+	import { Outline } from '@astryx-sv/core';
 
 	/**
 	 * The on-this-page outline — **now the real `Outline`**, swapped on when it

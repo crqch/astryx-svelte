@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { Skeleton, Text } from '@astryx-svelte/core';
+	import { Skeleton, Text } from '@astryx-sv/core';
 	import ComponentPreviewTheme from './component-preview-theme.svelte';
 
 	/**

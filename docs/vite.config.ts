@@ -1,13 +1,13 @@
 import { fileURLToPath } from 'node:url';
-import adapter from '@sveltejs/adapter-vercel';
+import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import { astryx } from '@astryx-svelte/core/vite';
+import { astryx } from '@astryx-sv/core/vite';
 import { contentPlugin } from './scripts/vite-plugin-content.mjs';
 import { partytownPlugin } from './scripts/vite-plugin-partytown.mjs';
 
 // The monorepo root. StyleX resolves cross-package `.stylex` imports relative to
-// this, and `@astryx-svelte/core` is a workspace symlink into `packages/core`,
+// this, and `@astryx-sv/core` is a workspace symlink into `packages/core`,
 // so the root has to sit above both this app and the library. A single-app
 // consumer wants the preset's default (`process.cwd()`) instead.
 const workspaceRoot = fileURLToPath(new URL('..', import.meta.url));
@@ -22,7 +22,7 @@ export default defineConfig({
 		// itself calls — `analytics.svelte` reports client-side navigations through
 		// it — so it is the one that has to be forwarded into the worker.
 		partytownPlugin({ forward: ['dataLayer.push'] }),
-		// `@astryx-svelte/core` ships its `.stylex.js` modules *uncompiled* —
+		// `@astryx-sv/core` ships its `.stylex.js` modules *uncompiled* —
 		// `svelte-package` only transpiles TS, it does not run StyleX — so every
 		// consumer runs the compiler itself, with `optimizeDeps.exclude` and
 		// `ssr.noExternal` to stop Vite routing the package around it.
@@ -38,6 +38,10 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
+			// Cloudflare Workers with static assets. `docs/wrangler.jsonc` owns the
+			// worker name, the custom domain and the asset/worker split; this adapter
+			// writes `.svelte-kit/cloudflare/_worker.js` and the prerendered pages
+			// into the asset directory that file names.
 			adapter: adapter()
 		})
 	]

@@ -22,8 +22,8 @@
 		LayoutHeader,
 		Table,
 		Text
-	} from '@astryx-svelte/core';
-	import type { TableColumn } from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
+	import type { TableColumn } from '@astryx-sv/core';
 
 	type Item = {
 		id: string;

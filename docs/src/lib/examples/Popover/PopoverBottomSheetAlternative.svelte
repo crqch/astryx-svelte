@@ -18,7 +18,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const PROJECT_ACTIONS = [
 		['user', 'Assign owner', 'Route follow-up to a teammate.'],

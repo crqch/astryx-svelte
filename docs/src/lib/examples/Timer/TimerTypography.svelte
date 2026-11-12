@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Stack, Text, Timer } from '@astryx-svelte/core';
+	import { Stack, Text, Timer } from '@astryx-sv/core';
 
 	const startedAt = Date.now() - 128_000;
 </script>

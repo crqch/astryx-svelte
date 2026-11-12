@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CheckboxInput, Stack } from '@astryx-svelte/core';
+	import { CheckboxInput, Stack } from '@astryx-sv/core';
 
 	let notifications = $state(true);
 	let marketing = $state(false);

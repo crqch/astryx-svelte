@@ -114,6 +114,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Lightbox', 'Grid', 'Thumbnail'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

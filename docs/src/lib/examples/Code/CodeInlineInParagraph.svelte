@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Code, Text } from '@astryx-svelte/core';
+	import { Code, Text } from '@astryx-sv/core';
 
 	/**
 	 * Upstream's JSX omits the space after two of the three `</Code>` tags, so it

@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { DateInput, Stack, Text } from '@astryx-svelte/core';
-	import type { ISODateString } from '@astryx-svelte/core';
+	import { DateInput, Stack, Text } from '@astryx-sv/core';
+	import type { ISODateString } from '@astryx-sv/core';
 
 	let value = $state<ISODateString | undefined>('2026-03-21');
 </script>

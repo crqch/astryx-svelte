@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Center, Spinner, Text } from '@astryx-svelte/core';
+	import { Center, Spinner, Text } from '@astryx-sv/core';
 	import { importerFor } from './example-modules.js';
 
 	/**

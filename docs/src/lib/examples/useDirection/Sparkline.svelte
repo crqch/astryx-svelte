@@ -4,7 +4,7 @@
 	and an effect.
 -->
 <script lang="ts">
-	import { useDirection } from '@astryx-svelte/core';
+	import { useDirection } from '@astryx-sv/core';
 
 	const DATA_POINTS = [10, 25, 18, 40, 32, 60, 48, 75];
 

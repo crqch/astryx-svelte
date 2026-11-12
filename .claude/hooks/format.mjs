@@ -44,6 +44,7 @@ const IGNORED = [
 	'/port/research/',
 	'/.svelte-kit/',
 	'/.vercel/',
+	'/.wrangler/',
 	'/dist/',
 	'/packages/cli/assets/docs/',
 	'/packages/cli/assets/templates/',

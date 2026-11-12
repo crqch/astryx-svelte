@@ -179,7 +179,7 @@ export default {
 			name: 'value',
 			type: 'DateRange | null',
 			description:
-				'Selected date range or null. Import the `DateRange` type from `@astryx-svelte/core`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches.',
+				'Selected date range or null. Import the `DateRange` type from `@astryx-sv/core`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches.',
 			required: true
 		},
 		{
@@ -205,7 +205,7 @@ export default {
 			name: 'min',
 			type: 'ISODateString',
 			description:
-				'Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `"2026-01-28"`, not a runtime string variable. Import it from `@astryx-svelte/core` or use `as ISODateString` if computing the value dynamically.'
+				'Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `"2026-01-28"`, not a runtime string variable. Import it from `@astryx-sv/core` or use `as ISODateString` if computing the value dynamically.'
 		},
 		{
 			name: 'max',

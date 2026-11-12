@@ -159,7 +159,7 @@ jobs:
         run: bun run --filter '*' build
 
       - name: Client test project
-        run: bun run --filter @astryx-svelte/core test:client
+        run: bun run --filter @astryx-sv/core test:client
 
   # The docs site. Runs on its own changes *and* on core's, because the
   # dependency is one-directional: `docs/vite.config.ts` compiles core's StyleX

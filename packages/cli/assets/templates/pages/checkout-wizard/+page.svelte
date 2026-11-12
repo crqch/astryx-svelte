@@ -49,7 +49,7 @@
 		TextInput,
 		Thumbnail,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		CreditCardIcon,
 		LockClosedIcon,

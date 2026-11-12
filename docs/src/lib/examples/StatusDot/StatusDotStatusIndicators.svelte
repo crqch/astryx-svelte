@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { HStack, StatusDot, Text, VStack } from '@astryx-svelte/core';
+	import { HStack, StatusDot, Text, VStack } from '@astryx-sv/core';
 
 	const statuses = [
 		{ variant: 'success', label: 'Online' },

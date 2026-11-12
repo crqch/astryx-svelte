@@ -9,7 +9,7 @@
  * `rename-menu-divider-data-types`. **All 13 are here, all live.** Fixtures move
  * from TSX to the shape a Svelte consumer writes: a rendered
  * `<DropdownMenuDivider />` is markup rather than JSX, and the import source is
- * `@astryx-svelte/core` rather than upstream's per-component subpaths.
+ * `@astryx-sv/core` rather than upstream's per-component subpaths.
  *
  * Four cases beyond upstream's are marked `[svelte]` and cover the two surfaces
  * a React consumer does not have — a `class` attribute in markup and a `<style>`
@@ -45,7 +45,7 @@ async function apply(transform, source, path = 'demo.ts') {
 
 describe('rename-dropdown-menu-radio-dot-target', () => {
 	it('renames the theme target key in a defineTheme components map', async () => {
-		const input = `import { defineTheme } from '@astryx-svelte/core/theme';
+		const input = `import { defineTheme } from '@astryx-sv/core/theme';
 export const theme = defineTheme({
 	name: 'brand',
 	components: {
@@ -137,7 +137,7 @@ const nested = '.astryx-dropdown-menu-radio .astryx-dropdown-menu-radio-dot';`;
 
 describe('rename-menu-divider-data-types', () => {
 	it('renames a type-only import and its type references', async () => {
-		const input = `import type { DropdownMenuOption, DropdownMenuDivider } from '@astryx-svelte/core';
+		const input = `import type { DropdownMenuOption, DropdownMenuDivider } from '@astryx-sv/core';
 
 const rule: DropdownMenuDivider = { type: 'divider' };
 const options: DropdownMenuOption[] = [rule];`;
@@ -147,8 +147,8 @@ const options: DropdownMenuOption[] = [rule];`;
 	});
 
 	it('renames the ContextMenu and Breadcrumbs aliases too', async () => {
-		const input = `import type { ContextMenuDivider } from '@astryx-svelte/core';
-import type { BreadcrumbMenuDivider } from '@astryx-svelte/core';
+		const input = `import type { ContextMenuDivider } from '@astryx-sv/core';
+import type { BreadcrumbMenuDivider } from '@astryx-sv/core';
 const a: ContextMenuDivider = { type: 'divider' };
 const b: BreadcrumbMenuDivider = { type: 'divider' };`;
 		const output = await apply(renameDividerTypes, input);
@@ -161,7 +161,7 @@ const b: BreadcrumbMenuDivider = { type: 'divider' };`;
 		// is the whole reason this transform walks the fragment as well as the
 		// script.
 		const input = `<script lang="ts">
-	import { DropdownMenu, DropdownMenuItem, DropdownMenuDivider } from '@astryx-svelte/core';
+	import { DropdownMenu, DropdownMenuItem, DropdownMenuDivider } from '@astryx-sv/core';
 </script>
 
 <DropdownMenu button={{ label: 'Actions' }}>
@@ -174,7 +174,7 @@ const b: BreadcrumbMenuDivider = { type: 'divider' };`;
 	});
 
 	it('renames an inline type specifier without touching a sibling value import', async () => {
-		const input = `import { DropdownMenu, type DropdownMenuDivider } from '@astryx-svelte/core';
+		const input = `import { DropdownMenu, type DropdownMenuDivider } from '@astryx-sv/core';
 const d: DropdownMenuDivider = { type: 'divider' };`;
 		const output = await apply(renameDividerTypes, input);
 		expect(output).toContain('type DropdownMenuDividerData');
@@ -183,7 +183,7 @@ const d: DropdownMenuDivider = { type: 'divider' };`;
 	});
 
 	it('preserves an alias', async () => {
-		const input = `import type { DropdownMenuDivider as MenuRule } from '@astryx-svelte/core';
+		const input = `import type { DropdownMenuDivider as MenuRule } from '@astryx-sv/core';
 const d: MenuRule = { type: 'divider' };`;
 		const output = await apply(renameDividerTypes, input);
 		expect(output).toContain('DropdownMenuDividerData as MenuRule');
@@ -201,7 +201,7 @@ const d: DropdownMenuDivider = { type: 'divider' };`;
 		// Without this, every `.svelte` assertion in this file is a no-op check that
 		// would pass just as well if the transform never found the import at all.
 		const input = `<script lang="ts">
-	import type { DropdownMenuDivider } from '@astryx-svelte/core';
+	import type { DropdownMenuDivider } from '@astryx-sv/core';
 
 	const rule: DropdownMenuDivider = { type: 'divider' };
 </script>
@@ -215,7 +215,7 @@ const d: DropdownMenuDivider = { type: 'divider' };`;
 		// The import sits in the script and the render sits in the fragment, so
 		// this only works because the walk finishes before any decision is made.
 		const input = `<script lang="ts">
-	import { DropdownMenuDivider } from '@astryx-svelte/core';
+	import { DropdownMenuDivider } from '@astryx-sv/core';
 </script>
 
 <DropdownMenuDivider />

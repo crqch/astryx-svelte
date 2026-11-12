@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Icon, Section, Tab, TabList, Toolbar } from '@astryx-svelte/core';
+	import { Button, Card, Icon, Section, Tab, TabList, Toolbar } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `PlusIcon`; the registry ships no plus glyph, so

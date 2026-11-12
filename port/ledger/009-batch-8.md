@@ -42,9 +42,9 @@ upstream-prs: []
     `generate-theme-rules.js` → here), and the build **did** break on the first cut. Upstream has no
     such constraint: its published `dist/` is already compiled
   - **`useToast.test.tsx` restored** (4/4), the suite deferred at batch 7 on the unported `<Theme>`
-  - **`@astryx-svelte/theme-neutral` now emits `dist/index.js`** — the package's `.` export promised
+  - **`@astryx-sv/theme-neutral` now emits `dist/index.js`** — the package's `.` export promised
     a theme object and the build only ever wrote `theme.css`, so
-    `import { neutralTheme } from '@astryx-svelte/theme-neutral'` failed. It carries `__built: true`,
+    `import { neutralTheme } from '@astryx-sv/theme-neutral'` failed. It carries `__built: true`,
     as upstream's `astryx theme build` artifact does
   - **A docs-generator bug fixed on the way in.** `internal/theme-props.ts` publishes a `ThemeProps`
     (the return of `themeProps()`) and `theme.svelte` declares a module-private `ThemeProps` of its

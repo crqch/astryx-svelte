@@ -8,7 +8,7 @@
 	out. The values themselves are unchanged.
 -->
 <script lang="ts">
-	import { Calendar, Stack, Text, type ISODateString } from '@astryx-svelte/core';
+	import { Calendar, Stack, Text, type ISODateString } from '@astryx-sv/core';
 
 	const isWeekday = (date: Date) => {
 		const day = date.getDay();

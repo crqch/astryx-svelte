@@ -37,7 +37,7 @@
 	No icon substitutions: the splitter is the plugin's own chrome.
 -->
 <script lang="ts">
-	import { Table, pixel, proportional, useTableColumnResize } from '@astryx-svelte/core';
+	import { Table, pixel, proportional, useTableColumnResize } from '@astryx-sv/core';
 
 	interface User extends Record<string, unknown> {
 		id: string;

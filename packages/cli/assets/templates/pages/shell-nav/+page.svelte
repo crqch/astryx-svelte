@@ -40,7 +40,7 @@
 		VStack,
 		createStaticSource,
 		type TreeListItemData
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		DocumentTextIcon,
 		FolderIcon,

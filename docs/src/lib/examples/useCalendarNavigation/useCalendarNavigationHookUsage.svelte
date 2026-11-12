@@ -17,7 +17,7 @@
 		VStack,
 		type CalendarDay,
 		type ISODateString
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let focusDate = $state<ISODateString>('2026-06-01');
 

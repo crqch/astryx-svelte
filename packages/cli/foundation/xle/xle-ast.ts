@@ -106,7 +106,7 @@ export interface RegistryComponent {
 	/**
 	 * The identifier the generated module imports and writes as a tag. Upstream
 	 * stores `XDS${name}` here; this port stores the bare name, because that is
-	 * what `@astryx-svelte/core` actually exports. See registry-core.mjs.
+	 * what `@astryx-sv/core` actually exports. See registry-core.mjs.
 	 */
 	exportName: string;
 	dirName: string;

@@ -2,7 +2,7 @@
  * @file Colocated tests for path resolution.
  *
  * Ported case for case from upstream's suite. Two kinds of change: the
- * installed-package name becomes `@astryx-svelte/core`, and `listComponents`'
+ * installed-package name becomes `@astryx-sv/core`, and `listComponents`'
  * fixture moves to this port's layout — components under
  * `src/lib/components/<kebab>` rather than upstream's `src/<PascalName>`. That
  * case keeps its upstream name and its assertion (`hooks`/`theme`/`utils` never
@@ -46,8 +46,8 @@ describe('findCoreDir', () => {
 		expect(findCoreDir(nested)).toBe(coreDir);
 	});
 
-	it('finds node_modules/@astryx-svelte/core fallback', () => {
-		const nmCore = path.join(tmpDir, 'node_modules', '@astryx-svelte', 'core');
+	it('finds node_modules/@astryx-sv/core fallback', () => {
+		const nmCore = path.join(tmpDir, 'node_modules', '@astryx-sv', 'core');
 		fs.mkdirSync(nmCore, { recursive: true });
 
 		expect(findCoreDir(tmpDir)).toBe(nmCore);
@@ -125,14 +125,14 @@ describe('discoverExternalPackages', () => {
 		]);
 	});
 
-	it('skips @astryx-svelte/core', () => {
+	it('skips @astryx-sv/core', () => {
 		const nm = path.join(tmpDir, 'node_modules');
-		const coreDir = path.join(nm, '@astryx-svelte', 'core');
+		const coreDir = path.join(nm, '@astryx-sv', 'core');
 		fs.mkdirSync(coreDir, { recursive: true });
 		fs.writeFileSync(
 			path.join(coreDir, 'package.json'),
 			JSON.stringify({
-				name: '@astryx-svelte/core',
+				name: '@astryx-sv/core',
 				astryx: { docs: './src' }
 			})
 		);

@@ -5,7 +5,7 @@
 	registry only looks for `<BlockName>.svelte`, so this file is never listed.
 -->
 <script lang="ts">
-	import { HStack, Text, VStack, useLocale } from '@astryx-svelte/core';
+	import { HStack, Text, VStack, useLocale } from '@astryx-sv/core';
 
 	const ISSUED_ON = new Date(2026, 10, 2);
 	const AMOUNT_DUE = 1234.5;

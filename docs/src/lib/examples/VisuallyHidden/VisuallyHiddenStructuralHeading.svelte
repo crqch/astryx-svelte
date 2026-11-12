@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Card, HStack, Text, VStack, VisuallyHidden } from '@astryx-svelte/core';
+	import { Badge, Card, HStack, Text, VStack, VisuallyHidden } from '@astryx-sv/core';
 
 	const items = [
 		{ name: 'astryx-core', status: 'Passing', variant: 'success' },

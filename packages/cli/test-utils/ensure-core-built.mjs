@@ -1,8 +1,8 @@
 /**
- * @file Shared test helper: build @astryx-svelte/core once, race-free.
+ * @file Shared test helper: build @astryx-sv/core once, race-free.
  *
  * `astryx-svelte theme build` imports the compiled
- * `@astryx-svelte/core/theme/define` entry (there is no in-CLI fallback
+ * `@astryx-sv/core/theme/define` entry (there is no in-CLI fallback
  * generator), so any test exercising it needs a built core. The CI `test` job
  * runs `pnpm -r test` without necessarily having built core first, and Vitest
  * runs test files in parallel worker forks. When two build-theme suites each
@@ -45,7 +45,7 @@ function buildCore() {
 	// Bun ships a single native binary, so there is no Windows `.cmd` shim to
 	// work around here (unlike the `npm` spawn in
 	// `scripts/assert-core-ships-src.mjs`).
-	execFileSync('bun', ['run', '--filter', '@astryx-svelte/core', 'build'], {
+	execFileSync('bun', ['run', '--filter', '@astryx-sv/core', 'build'], {
 		cwd: REPO_ROOT,
 		stdio: 'pipe',
 		timeout: BUILD_TIMEOUT_MS

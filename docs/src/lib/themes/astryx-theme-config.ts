@@ -4,7 +4,7 @@
  *
  * **Why this is a separate file from `astryx-theme.ts`.** Two consumers need
  * this object: the app, which calls `defineTheme` through
- * `@astryx-svelte/core/theme`, and `scripts/build-astryx-theme.mjs`, which runs
+ * `@astryx-sv/core/theme`, and `scripts/build-astryx-theme.mjs`, which runs
  * under plain Node to compile the stylesheet. That subpath barrel re-exports
  * `theme.svelte`, and Node cannot load a `.svelte` file — so the script has to
  * reach `define-theme.js` in core's `dist/` directly, exactly as
@@ -42,7 +42,7 @@
  * sourced from the same constant the rest of the site reads.
  */
 
-import type { ThemeConfig, TokenValue } from '@astryx-svelte/core/theme';
+import type { ThemeConfig, TokenValue } from '@astryx-sv/core/theme';
 
 // === PRIMARY (high-emphasis foreground ink — drives accent too) ==============
 // Warm near-black that harmonizes with the cream body (light) and a warm

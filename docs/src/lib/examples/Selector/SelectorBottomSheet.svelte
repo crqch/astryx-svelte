@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Selector } from '@astryx-svelte/core';
+	import { Selector } from '@astryx-sv/core';
 
 	const OPTIONS = [
 		{ value: 'design', label: 'Design' },

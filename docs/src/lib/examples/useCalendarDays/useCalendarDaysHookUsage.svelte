@@ -10,7 +10,7 @@
 		Text,
 		useCalendarDays,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let weekStartsOn = $state<0 | 1>(0);
 

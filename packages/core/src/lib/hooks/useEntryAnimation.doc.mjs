@@ -56,6 +56,6 @@ export default {
 		]
 	},
 	relatedComponents: ['FieldStatus'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'motion & gestures'
 };

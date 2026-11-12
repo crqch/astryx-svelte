@@ -52,7 +52,7 @@ bun install
 ## 3. Re-baseline the class oracle
 
 ```sh
-bun run --filter @astryx-svelte/core test:parity
+bun run --filter @astryx-sv/core test:parity
 ```
 
 Mismatches here are expected — they are the diff. Work them with the `astryx-oracle` agent.

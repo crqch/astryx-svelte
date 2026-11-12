@@ -42,7 +42,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 /** The owner package name for built-in (core) components. */
-export const CORE_PACKAGE = '@astryx-svelte/core';
+export const CORE_PACKAGE = '@astryx-sv/core';
 
 /**
  * Top-level `src/lib` directories `discoverComponents` never lists from.
@@ -436,7 +436,7 @@ export function findComponentSource(coreDir, name) {
  *
  * The bare package root is a *correct* answer here, not a fallback: core
  * publishes one component barrel and eight subpaths, where upstream publishes a
- * subpath per component. `@astryx-svelte/core` is where `Button` actually lives.
+ * subpath per component. `@astryx-sv/core` is where `Button` actually lives.
  * @param {string} coreDir
  * @param {string} componentName
  * @returns {string}

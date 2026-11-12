@@ -61,6 +61,6 @@ export default {
 			}
 		]
 	},
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'utility'
 };

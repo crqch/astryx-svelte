@@ -24,7 +24,7 @@
 	makes, retiring with the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { Button, Card, Icon, Item, Stack, Text, useContainerReveal } from '@astryx-svelte/core';
+	import { Button, Card, Icon, Item, Stack, Text, useContainerReveal } from '@astryx-sv/core';
 
 	// Spreading getContainerProps() on the row gives it a scoped hover/focus-within
 	// trigger; getContentRevealProps() hides the actions at rest and reveals them

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { AlertDialog } from '@astryx-svelte/core';
+	import { AlertDialog } from '@astryx-sv/core';
 
 	let isLoading = $state(false);
 </script>

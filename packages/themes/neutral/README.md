@@ -1,36 +1,36 @@
-# @astryx-svelte/theme-neutral
+# @astryx-sv/theme-neutral
 
 The default Astryx look — muted and minimal.
 
-A theme for [astryx-svelte](https://github.com/devrohit06/astryx-svelte) — a Svelte 5 port of [Astryx](https://astryx.atmeta.com/),
+A theme for [astryx-svelte](https://github.com/crqch/astryx-svelte) — a Svelte 5 port of [Astryx](https://astryx.atmeta.com/),
 Meta's open source design system. Unofficial, and not affiliated with Meta.
 
 ## Install
 
 ```bash
-npm install @astryx-svelte/core @astryx-svelte/theme-neutral
+npm install @astryx-sv/core @astryx-sv/theme-neutral
 ```
 
 `@stylexjs/stylex` is a peer dependency and npm and bun install it for you. It is required at
 runtime — the components reach `stylex.props()` through `sx()` — so add it explicitly if your
 package manager does not resolve peers automatically.
 
-`@astryx-svelte/core` is a peer dependency. A theme is data plus one stylesheet; it renders
+`@astryx-sv/core` is a peer dependency. A theme is data plus one stylesheet; it renders
 nothing on its own.
 
 ## Use
 
 ```css
 /* src/app.css */
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 ```
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	import { Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import '../app.css';
 
 	const { children } = $props();
@@ -43,18 +43,18 @@ nothing on its own.
 
 `base.css` is not optional and is not a duplicate: it declares the cascade layer order and sets
 `color-scheme`, without which every `light-dark()` token is inert. And **your bundler must run the
-StyleX compiler** over `@astryx-svelte/core`, which is the one setup step that fails without an
+StyleX compiler** over `@astryx-sv/core`, which is the one setup step that fails without an
 error — the components render, unstyled. See
-[core's README](https://github.com/devrohit06/astryx-svelte/tree/main/packages/core#your-bundler-must-run-the-stylex-compiler).
+[core's README](https://github.com/crqch/astryx-svelte/tree/main/packages/core#your-bundler-must-run-the-stylex-compiler).
 
 ## Exports
 
-| Export                                   | What it is                                                                                                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `neutralTheme`                           | The theme object, pre-built. It carries `__built`, so `<Theme>` injects no CSS at runtime.                                                                                     |
-| `neutralIconRegistry`                    | The 28 semantic icon names mapped to Lucide glyphs. Already attached to `neutralTheme.icons`; exported separately for `registerIcons()` and for composing a theme of your own. |
-| `@astryx-svelte/theme-neutral/tokens`    | The same theme as plain data, without `icons`, in a module that imports nothing. Readable by plain Node, which the `.` entry is not — it reaches a `.svelte` registry.         |
-| `@astryx-svelte/theme-neutral/theme.css` | The pre-built stylesheet.                                                                                                                                                      |
+| Export                               | What it is                                                                                                                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `neutralTheme`                       | The theme object, pre-built. It carries `__built`, so `<Theme>` injects no CSS at runtime.                                                                                     |
+| `neutralIconRegistry`                | The 28 semantic icon names mapped to Lucide glyphs. Already attached to `neutralTheme.icons`; exported separately for `registerIcons()` and for composing a theme of your own. |
+| `@astryx-sv/theme-neutral/tokens`    | The same theme as plain data, without `icons`, in a module that imports nothing. Readable by plain Node, which the `.` entry is not — it reaches a `.svelte` registry.         |
+| `@astryx-sv/theme-neutral/theme.css` | The pre-built stylesheet.                                                                                                                                                      |
 
 ## Fidelity
 
@@ -65,16 +65,16 @@ run. Every declaration matches, at **0 mismatches**.
 
 The run prints the totals; this paragraph deliberately does not, because a count written into
 prose goes stale quietly and these ones had. Where the two totals differ, the remainder is the
-`color-scheme` rules that `@astryx-svelte/core`'s `base.css` owns rather than the theme. A
+`color-scheme` rules that `@astryx-sv/core`'s `base.css` owns rather than the theme. A
 dark-only theme declares no `[light, dark]` pairs, so upstream emits no `html[data-theme=…]`
 block for it and the totals are equal.
 
 ## Resources
 
-- [The documentation site](https://astryx-svelte.rohitk06.in/themes) — every theme rendered live,
+- [The documentation site](https://astryx.crqch.dev/themes) — every theme rendered live,
   side by side
 - [Astryx](https://astryx.atmeta.com/) — the design system this ports
-- [The repository](https://github.com/devrohit06/astryx-svelte)
+- [The repository](https://github.com/crqch/astryx-svelte)
 
 ## License
 

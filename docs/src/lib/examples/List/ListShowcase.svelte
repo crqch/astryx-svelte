@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { List, ListItem } from '@astryx-svelte/core';
+	import { List, ListItem } from '@astryx-sv/core';
 </script>
 
 <List>

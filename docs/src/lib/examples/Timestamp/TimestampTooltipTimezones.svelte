@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Timestamp, Stack, Text } from '@astryx-svelte/core';
+	import { Timestamp, Stack, Text } from '@astryx-sv/core';
 
 	const DATE = '2026-02-19T17:00:00Z';
 </script>

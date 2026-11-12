@@ -15,7 +15,7 @@
 		SegmentedControlItem,
 		VStack,
 		type MessagesByLocale
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import InvoiceList from './InvoiceList.svelte';
 
 	type Locale = 'en' | 'fr';

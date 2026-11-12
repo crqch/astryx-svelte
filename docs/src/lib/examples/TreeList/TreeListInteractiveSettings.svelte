@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Icon, TreeList } from '@astryx-svelte/core';
+	import { Icon, TreeList } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Cog6ToothIcon` and `ChevronRightIcon`. The

@@ -13,7 +13,7 @@
 		LayoutFooter,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 	let name = $state('web-prod-04');

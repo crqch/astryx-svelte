@@ -15,7 +15,7 @@
 		proportional,
 		type IconName,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import docsRegistry from '$lib/generated/docs-registry.js';
 	import type { ContentBlock } from '$lib/generated/types.js';
 	import InlineMarkdown from './inline-markdown.svelte';

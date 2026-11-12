@@ -9,7 +9,7 @@ import { stonePalettes, stoneTheme } from '../src/stone-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-stone',
+	packageName: '@astryx-sv/theme-stone',
 	themeExport: 'stoneTheme',
 	theme: stoneTheme,
 	// Upstream's `source.ts` publishes the raw ramps alongside the theme, so this

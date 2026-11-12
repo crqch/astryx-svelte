@@ -8,7 +8,7 @@
 	in every other ported block.
 -->
 <script lang="ts">
-	import { Grid, LightboxLayer, useLightbox } from '@astryx-svelte/core';
+	import { Grid, LightboxLayer, useLightbox } from '@astryx-sv/core';
 
 	const PHOTOS = [
 		{

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { AspectRatio, Center, Skeleton } from '@astryx-svelte/core';
+	import { AspectRatio, Center, Skeleton } from '@astryx-sv/core';
 </script>
 
 <Center width={600}>

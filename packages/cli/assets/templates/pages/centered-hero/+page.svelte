@@ -25,7 +25,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowRightIcon } from '@fvilers/heroicons-svelte/20/solid';
 
 	const IMAGE_URL = 'https://lookaside.facebook.com/assets/astryx/light-scene-horizontal-1.png';

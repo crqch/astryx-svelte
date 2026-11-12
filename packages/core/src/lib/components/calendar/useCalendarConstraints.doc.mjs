@@ -106,6 +106,6 @@ export default {
 	},
 	relatedComponents: ['Calendar'],
 	relatedHooks: ['useCalendarDays', 'useCalendarNavigation'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'utilities'
 };

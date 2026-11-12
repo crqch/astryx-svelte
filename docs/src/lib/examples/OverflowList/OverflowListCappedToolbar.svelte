@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Center, DropdownMenu, OverflowList } from '@astryx-svelte/core';
+	import { Button, Card, Center, DropdownMenu, OverflowList } from '@astryx-sv/core';
 
 	/**
 	 * `maxVisibleItems` caps the list at three even when more would fit, so the

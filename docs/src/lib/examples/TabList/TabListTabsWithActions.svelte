@@ -9,7 +9,7 @@
 	The block is the more faithful of the two.)
 -->
 <script lang="ts">
-	import { Button, Tab, TabList } from '@astryx-svelte/core';
+	import { Button, Tab, TabList } from '@astryx-sv/core';
 
 	let value = $state('all');
 </script>

@@ -9,7 +9,7 @@
 	bare numbers written out.
 -->
 <script lang="ts">
-	import type { ChatComposerInputHandle } from '@astryx-svelte/core';
+	import type { ChatComposerInputHandle } from '@astryx-sv/core';
 	import {
 		ChatComposer,
 		ChatComposerInput,
@@ -18,7 +18,7 @@
 		Text,
 		VStack,
 		useChatDictation
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let input = $state<ChatComposerInputHandle | null>(null);
 

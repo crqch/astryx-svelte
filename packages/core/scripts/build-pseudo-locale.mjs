@@ -12,7 +12,7 @@
  *
  * @input  src/lib/locales/en.json
  * @output src/lib/locales/pseudo.json, or exit 1 under `--check`
- * @position `bun run --filter @astryx-svelte/core build:pseudo`; `--check` runs in the gate
+ * @position `bun run --filter @astryx-sv/core build:pseudo`; `--check` runs in the gate
  *
  * ## Why this exists here at all
  *
@@ -86,9 +86,7 @@ if (check) {
 	try {
 		current = readFileSync(PSEUDO_PATH, 'utf8');
 	} catch {
-		console.error(
-			'pseudo.json is missing — run `bun run --filter @astryx-svelte/core build:pseudo`'
-		);
+		console.error('pseudo.json is missing — run `bun run --filter @astryx-sv/core build:pseudo`');
 		process.exit(1);
 	}
 	if (current !== rendered) {
@@ -101,7 +99,7 @@ if (check) {
 		if (missing.length === 0 && extra.length === 0) {
 			console.error('  same keys, different content — a message changed in en.json');
 		}
-		console.error('Run `bun run --filter @astryx-svelte/core build:pseudo`.');
+		console.error('Run `bun run --filter @astryx-sv/core build:pseudo`.');
 		process.exit(1);
 	}
 	console.log(`pseudo.json is current — ${Object.keys(pseudo).length} keys`);

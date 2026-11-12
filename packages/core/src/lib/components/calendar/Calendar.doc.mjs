@@ -62,7 +62,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'For a custom month view, use useCalendarNavigation and useCalendarDays from @astryx-svelte/core To show another calendar system, pass the same calendar to both and feed visibleCalendarMonths into useCalendarDays. The hooks default to gregory and never read the InternationalizationProvider calendar.'
+					'For a custom month view, use useCalendarNavigation and useCalendarDays from @astryx-sv/core To show another calendar system, pass the same calendar to both and feed visibleCalendarMonths into useCalendarDays. The hooks default to gregory and never read the InternationalizationProvider calendar.'
 			},
 			{
 				guidance: false,

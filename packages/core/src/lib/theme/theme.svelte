@@ -84,8 +84,8 @@
 	 * @example
 	 * ```svelte
 	 * <script lang="ts">
-	 *   import { Theme } from '@astryx-svelte/core';
-	 *   import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	 *   import { Theme } from '@astryx-sv/core';
+	 *   import { neutralTheme } from '@astryx-sv/theme-neutral';
 	 * <\/script>
 	 *
 	 * <Theme theme={neutralTheme} mode="dark">
@@ -199,7 +199,7 @@
 		}
 
 		// One-time perf hint per theme. The import lines and the closing sentence
-		// name *our* packages: `@astryx-svelte/theme-*` has no `/built` subpath
+		// name *our* packages: `@astryx-sv/theme-*` has no `/built` subpath
 		// (upstream's does) and this repo's CLI has no `theme build` command yet,
 		// so upstream's wording there would point at things that do not exist.
 		warnOnce(
@@ -207,8 +207,8 @@
 			'Theme',
 			`"${theme.name}" is using runtime style injection. ` +
 				`For better performance, use the pre-built theme:\n\n` +
-				`  import {${theme.name}Theme} from '@astryx-svelte/theme-${theme.name}';\n` +
-				`  import '@astryx-svelte/theme-${theme.name}/theme.css';\n\n` +
+				`  import {${theme.name}Theme} from '@astryx-sv/theme-${theme.name}';\n` +
+				`  import '@astryx-sv/theme-${theme.name}/theme.css';\n\n` +
 				`For custom themes, build the artifacts ahead of time rather than ` +
 				`defining the theme at runtime.`
 		);

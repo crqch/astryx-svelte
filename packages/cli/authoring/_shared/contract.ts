@@ -7,7 +7,7 @@
  *
  * Upstream checks them under a dedicated `tsconfig.authoring-contract.json`.
  * This port has one tsconfig, already `strict` with `checkJs`, so the lock fires
- * under `pnpm -F @astryx-svelte/cli check` — but *only* because `authoring/**`
+ * under `pnpm -F @astryx-sv/cli check` — but *only* because `authoring/**`
  * is in that config's `include`. Left out, every assertion below compiles as a
  * dead JSDoc comment and the lock silently does nothing. See the note there.
  */

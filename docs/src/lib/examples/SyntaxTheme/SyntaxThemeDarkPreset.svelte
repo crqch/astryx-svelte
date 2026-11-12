@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CodeBlock, SyntaxTheme } from '@astryx-svelte/core';
-	import { dracula } from '@astryx-svelte/core/theme/syntax';
+	import { CodeBlock, SyntaxTheme } from '@astryx-sv/core';
+	import { dracula } from '@astryx-sv/core/theme/syntax';
 
 	const code = `function greet(name: string) {
   return \`Hello, \${name}!\`;

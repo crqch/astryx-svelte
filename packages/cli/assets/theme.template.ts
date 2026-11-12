@@ -17,7 +17,7 @@
  * 1. WRAP THE APP. A theme does nothing until it is provided.
  *
  *      <script lang="ts">
- *        import { Theme } from '@astryx-svelte/core';
+ *        import { Theme } from '@astryx-sv/core';
  *        import { myTheme } from './theme';
  *      <\/script>
  *
@@ -79,9 +79,9 @@
  * - /packages/core/src/lib/theme/expand-motion-scale.ts
  */
 
-import { defineTheme } from '@astryx-svelte/core/theme/define';
-// import { dracula } from '@astryx-svelte/core/theme/syntax';
-// import { neutralTheme } from '@astryx-svelte/theme-neutral';
+import { defineTheme } from '@astryx-sv/core/theme/define';
+// import { dracula } from '@astryx-sv/core/theme/syntax';
+// import { neutralTheme } from '@astryx-sv/theme-neutral';
 
 export const myTheme = defineTheme({
 	/** Required. Becomes the `data-astryx-theme` attribute and the registry key. */
@@ -321,7 +321,7 @@ export const myTheme = defineTheme({
 
 	/**
 	 * Code highlighting: sets the --color-syntax-* tokens. Presets live in
-	 * `@astryx-svelte/core/theme/syntax`.
+	 * `@astryx-sv/core/theme/syntax`.
 	 */
 	// syntax: dracula,
 

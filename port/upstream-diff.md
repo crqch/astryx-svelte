@@ -49,7 +49,7 @@ theme). We set it on none of ten.
 
 With `exports` present, Node and every modern bundler ignore `main` entirely — which is exactly why
 this survived a release and a publint gate. Anything that does **not** understand `exports` could not
-resolve `@astryx-svelte/core` or any theme at all.
+resolve `@astryx-sv/core` or any theme at all.
 
 Added to core and all eight themes. The CLI correctly still has none: upstream's has none either.
 
@@ -59,7 +59,7 @@ Added to core and all eight themes. The CLI correctly still has none: upstream's
 consumer-facing package" whose job "may already be done by this repo's own theme build scripts". Both
 halves are wrong. It is `private: false`, versioned 0.3.0 in lockstep with core, sits in
 `.changeset/config.json`'s `fixed` group, and publishes four bundler integrations — `./babel`,
-`./postcss`, `./vite`, `./next`. Our `@astryx-svelte/core/vite` re-implemented one of the four.
+`./postcss`, `./vite`, `./next`. Our `@astryx-sv/core/vite` re-implemented one of the four.
 
 The inverse is also true and more useful: `lab`, `charts`, `vega` and `richtext` are all
 `private: true`, stranded at 0.1.x, outside the fixed group, and each says of itself that it is

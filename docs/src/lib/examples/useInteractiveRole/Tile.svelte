@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Card, Link, Text, useInteractiveRole } from '@astryx-svelte/core';
+	import { Card, Link, Text, useInteractiveRole } from '@astryx-sv/core';
 
 	interface Props {
 		href?: string;

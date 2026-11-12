@@ -1,4 +1,4 @@
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsDense = {
 	description: 'frame-first app layout: shell choice, region budgets, cards vs rows',
 	sections: [

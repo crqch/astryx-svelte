@@ -5,8 +5,8 @@
 	here, so each is declared above the component rather than inline.
 -->
 <script lang="ts">
-	import { CommandPalette, Kbd, Text, createStaticSource } from '@astryx-svelte/core';
-	import type { SearchableItem } from '@astryx-svelte/core';
+	import { CommandPalette, Kbd, Text, createStaticSource } from '@astryx-sv/core';
+	import type { SearchableItem } from '@astryx-sv/core';
 
 	type RichCommand = SearchableItem<{
 		group?: string;

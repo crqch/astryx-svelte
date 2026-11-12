@@ -94,7 +94,7 @@
 		useMediaQuery,
 		type IconName,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		AdjustmentsHorizontalIcon,
 		ChevronDownIcon,

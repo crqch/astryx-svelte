@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Pagination, Text } from '@astryx-svelte/core';
+	import { Pagination, Text } from '@astryx-sv/core';
 	import { useHeroReel } from './hero-reel-context.svelte.js';
 
 	/**

@@ -9,7 +9,7 @@
 	way upstream references one component twice.
 -->
 <script lang="ts">
-	import { NavIcon, TopNav, TopNavHeading, VStack } from '@astryx-svelte/core';
+	import { NavIcon, TopNav, TopNavHeading, VStack } from '@astryx-sv/core';
 </script>
 
 {#snippet appIcon()}

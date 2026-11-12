@@ -16,7 +16,7 @@
 		SideNavItem,
 		SideNavSection,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 

@@ -5,7 +5,7 @@
 	example's note.
 -->
 <script lang="ts">
-	import { Card, Grid, Heading, ScrollableArea, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Grid, Heading, ScrollableArea, Text, VStack } from '@astryx-sv/core';
 
 	const SECTIONS = [
 		{

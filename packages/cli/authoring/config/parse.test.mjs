@@ -26,7 +26,7 @@ describe('parseConfig (load boundary)', () => {
 
 	it('accepts a fully-populated valid config', () => {
 		const cfg = {
-			integrations: ['@astryx-svelte/core'],
+			integrations: ['@astryx-sv/core'],
 			issuesUrl: 'https://github.com/org/repo/issues',
 			hooks: { postCodemod: [{ name: 'build', buildCommand: () => {} }] },
 			experimental: { xle: { components: { Foo: { from: 'pkg', default: true } } } }

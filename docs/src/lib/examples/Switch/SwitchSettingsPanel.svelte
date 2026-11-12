@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Switch, VStack } from '@astryx-svelte/core';
+	import { Card, Switch, VStack } from '@astryx-sv/core';
 
 	let notifications = $state(false);
 	let darkMode = $state(true);

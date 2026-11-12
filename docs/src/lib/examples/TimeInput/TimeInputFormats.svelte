@@ -7,7 +7,7 @@
 	`TimeInputConstrained.svelte` for the full note.
 -->
 <script lang="ts">
-	import { Stack, Text, TimeInput, type ISOTimeString } from '@astryx-svelte/core';
+	import { Stack, Text, TimeInput, type ISOTimeString } from '@astryx-sv/core';
 
 	let time24h = $state<ISOTimeString | undefined>('14:30' as ISOTimeString);
 	let timeSec = $state<ISOTimeString | undefined>('14:30:45' as ISOTimeString);

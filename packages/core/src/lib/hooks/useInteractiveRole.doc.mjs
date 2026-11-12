@@ -79,6 +79,6 @@ export default {
 	},
 	relatedComponents: ['Token', 'Thumbnail', 'Item', 'ClickableCard'],
 	relatedHooks: ['useClickableContainer'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

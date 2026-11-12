@@ -333,7 +333,7 @@ export interface TemplateEntry {
 export interface ThemePackage {
 	/** `neutral`, `liquid-glass` — the CLI's name for it and the URL fragment. */
 	slug: string;
-	/** `@astryx-svelte/theme-neutral`. */
+	/** `@astryx-sv/theme-neutral`. */
 	package: string;
 	version: string;
 	description: string;
@@ -358,7 +358,7 @@ export interface ThemePackage {
 export interface LibraryPackage {
 	/** `core`, `cli` — the URL fragment, and the key into `PackageReadmes`. */
 	slug: string;
-	/** `@astryx-svelte/core`. The page's `h1` and the sidebar's label. */
+	/** `@astryx-sv/core`. The page's `h1` and the sidebar's label. */
 	name: string;
 	/** Upstream's derivation: scope stripped, first letter capitalised. Title only. */
 	displayName: string;
@@ -367,7 +367,7 @@ export interface LibraryPackage {
 	/**
 	 * True when the manifest is `private`, so npm cannot resolve it. Upstream
 	 * skips such a package entirely; this port renders it and says so, because
-	 * `@astryx-svelte/cli` is private and is still the CLI everything is driven
+	 * `@astryx-sv/cli` is private and is still the CLI everything is driven
 	 * by. The install block reads off this flag.
 	 */
 	isPrivate: boolean;

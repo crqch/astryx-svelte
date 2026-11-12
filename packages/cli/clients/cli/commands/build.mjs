@@ -26,7 +26,7 @@ import { build as buildApi } from '../../../api/build/build.mjs';
 
 /**
  * Emit the build playbook (shown when `build` is run with no query).
- * @param {string} run - The CLI invocation prefix (e.g. `npx @astryx-svelte/cli`).
+ * @param {string} run - The CLI invocation prefix (e.g. `npx @astryx-sv/cli`).
  */
 function printPlaybook(run) {
 	emit(

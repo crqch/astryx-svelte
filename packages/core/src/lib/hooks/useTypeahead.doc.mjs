@@ -103,6 +103,6 @@ export default {
 	},
 	relatedComponents: ['DropdownMenu', 'Selector', 'TreeList'],
 	relatedHooks: ['useListFocus', 'useGridFocus', 'useTreeFocus'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

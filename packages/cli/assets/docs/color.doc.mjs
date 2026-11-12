@@ -7,7 +7,7 @@
  * the surface, and `var(--token)` is how they are reached.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'color',
 	title: 'Color',
@@ -64,7 +64,7 @@ export const styles = stylex.create({
 				},
 				{
 					type: 'prose',
-					text: "Outside StyleX the same tokens work anywhere CSS does — a scoped `<style>` block, a global stylesheet, or an SVG `fill`. `tokenVar('--color-text-accent')` from `@astryx-svelte/core/theme` returns the same `var(...)` reference when a styling-library config needs it as a value."
+					text: "Outside StyleX the same tokens work anywhere CSS does — a scoped `<style>` block, a global stylesheet, or an SVG `fill`. `tokenVar('--color-text-accent')` from `@astryx-sv/core/theme` returns the same `var(...)` reference when a styling-library config needs it as a value."
 				}
 			]
 		},

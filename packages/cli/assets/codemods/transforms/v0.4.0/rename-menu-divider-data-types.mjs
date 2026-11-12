@@ -38,7 +38,7 @@
  *   the wrapper's length subtracted back off every offset. A source containing a
  *   literal `</script` is skipped rather than mis-parsed, as elsewhere.
  *
- * The import source check is `@astryx-svelte/core` where upstream's is
+ * The import source check is `@astryx-sv/core` where upstream's is
  * `@astryxdesign/core`, and it is a **prefix** match for the same reason
  * upstream's is: upstream matches its per-component subpaths
  * (`@astryxdesign/core/DropdownMenu`), and while this port exposes these types
@@ -63,7 +63,7 @@ const RENAMES = {
 	BreadcrumbMenuDivider: 'BreadcrumbMenuDividerData'
 };
 
-const PACKAGE_PREFIX = '@astryx-svelte/core';
+const PACKAGE_PREFIX = '@astryx-sv/core';
 
 /** Extensions parsed by wrapping the source in a synthetic `<script lang="ts">`. */
 const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs', '.cjs'];

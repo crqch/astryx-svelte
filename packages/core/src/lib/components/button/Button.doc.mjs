@@ -82,7 +82,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					"For a dedicated icon-only button, use IconButton. It is a separate component from Button, exported from '@astryx-svelte/core' alongside it."
+					"For a dedicated icon-only button, use IconButton. It is a separate component from Button, exported from '@astryx-sv/core' alongside it."
 			},
 			{
 				guidance: false,

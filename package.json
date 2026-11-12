@@ -19,6 +19,7 @@
 		"lint:root": "oxfmt --check port/*.md *.md && oxlint scripts .github .claude/hooks",
 		"format": "bun run --filter '*' format",
 		"check:publish": "bun scripts/check-publish.mjs",
+		"deploy:docs": "bun run --filter 'docs...' build && bun run --filter docs deploy",
 		"status": "bun scripts/status.mjs",
 		"status:full": "bun scripts/status.mjs --full",
 		"verify": "bun scripts/verify.mjs",

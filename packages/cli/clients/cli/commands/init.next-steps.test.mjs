@@ -23,12 +23,12 @@ describe('init Next steps theme guidance', () => {
 	const text = getNextSteps('npx astryx-svelte').join('\n');
 
 	it('mentions the base CSS import so the app is not left unstyled', () => {
-		expect(text).toContain("'@astryx-svelte/core/base.css'");
+		expect(text).toContain("'@astryx-sv/core/base.css'");
 	});
 
 	it('uses the theme path matching the runtime recommendation', () => {
-		expect(text).toContain("'@astryx-svelte/theme-neutral'");
-		expect(text).toContain("'@astryx-svelte/theme-neutral/theme.css'");
+		expect(text).toContain("'@astryx-sv/theme-neutral'");
+		expect(text).toContain("'@astryx-sv/theme-neutral/theme.css'");
 	});
 
 	it('mentions building custom themes via `astryx-svelte theme build`', () => {
@@ -36,6 +36,6 @@ describe('init Next steps theme guidance', () => {
 	});
 
 	it('does not steer users to a /built subpath the theme packages do not publish', () => {
-		expect(text).not.toContain("'@astryx-svelte/theme-neutral/built'");
+		expect(text).not.toContain("'@astryx-sv/theme-neutral/built'");
 	});
 });

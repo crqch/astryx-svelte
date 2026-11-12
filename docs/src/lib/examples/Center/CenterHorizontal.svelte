@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Heading, Icon, IconButton, Stack } from '@astryx-svelte/core';
-	import type { IconName } from '@astryx-svelte/core';
+	import { Card, Heading, Icon, IconButton, Stack } from '@astryx-sv/core';
+	import type { IconName } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Bold`/`Italic`/`Underline`/`ListBullet`/

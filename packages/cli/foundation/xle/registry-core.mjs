@@ -21,7 +21,7 @@
  *
  * Aliases are validated against the discovered registry — an alias whose
  * component doesn't exist on this branch is silently dropped. Ported
- * unchanged: all 122 targets resolve against `@astryx-svelte/core`, so the
+ * unchanged: all 122 targets resolve against `@astryx-sv/core`, so the
  * table needed no editing for the port.
  */
 export const ALIAS_TABLE = {

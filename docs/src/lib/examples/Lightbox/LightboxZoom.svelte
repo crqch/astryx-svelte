@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Lightbox, Thumbnail } from '@astryx-svelte/core';
+	import { Lightbox, Thumbnail } from '@astryx-sv/core';
 
 	/**
 	 * Upstream's `Thumbnail.onClick` is `onclick` here: the port keeps upstream's

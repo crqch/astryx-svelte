@@ -1,15 +1,15 @@
 {
-	"name": "@astryx-svelte/theme-chocolate",
-	"version": "0.5.2",
+	"name": "@astryx-sv/theme-chocolate",
+	"version": "0.7.13",
 	"description": "Chocolate theme for astryx-svelte \u2014 rich, cozy browns with Fraunces headings.",
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
+		"url": "https://github.com/crqch/astryx-svelte/issues"
 	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/themes/chocolate"
 	},
 	"files": [
@@ -47,13 +47,13 @@
 		"@lucide/svelte": "^1.25.0"
 	},
 	"devDependencies": {
-		"@astryx-svelte/core": "workspace:*",
+		"@astryx-sv/core": "workspace:*",
 		"@astryxdesign/theme-chocolate": "0.7.13",
 		"svelte": "^5.56.1",
 		"typescript": "^6.0.3"
 	},
 	"peerDependencies": {
-		"@astryx-svelte/core": "workspace:^",
+		"@astryx-sv/core": "workspace:^",
 		"svelte": "^5.0.0"
 	}
 }

@@ -1,7 +1,7 @@
 /**
  * @file Colocated types for the `build` command — source of truth for the
  * `build.help` (playbook signal) and `build.kit` (composition kit) JSON
- * responses. The public `@astryx-svelte/cli/api` surface re-exports them.
+ * responses. The public `@astryx-sv/cli/api` surface re-exports them.
  */
 
 /**

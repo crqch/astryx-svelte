@@ -9,7 +9,7 @@ import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
  * as upstream:
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface DividerVariantMap {
  *     accent: true;
  *   }

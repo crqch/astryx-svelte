@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Avatar, AvatarStatusDot, Stack } from '@astryx-svelte/core';
+	import { Avatar, AvatarStatusDot, Stack } from '@astryx-sv/core';
 </script>
 
 <Stack direction="horizontal" gap={4} vAlign="center">

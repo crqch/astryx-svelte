@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Text, ToggleButton, ToggleButtonGroup, VStack } from '@astryx-svelte/core';
+	import { Text, ToggleButton, ToggleButtonGroup, VStack } from '@astryx-sv/core';
 
 	let view = $state<string | null>('grid');
 	let filters = $state<string[]>(['active']);

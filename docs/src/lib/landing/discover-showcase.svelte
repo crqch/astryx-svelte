@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Card, Grid, Heading, Text } from '@astryx-svelte/core';
+	import { Button, Card, Grid, Heading, Text } from '@astryx-sv/core';
 	import componentRegistry from '$lib/generated/component-registry.js';
 	import AstryxWordmark from '../shell/astryx-wordmark.svelte';
 	import { componentsHref, topicHref } from '../shell/links.js';

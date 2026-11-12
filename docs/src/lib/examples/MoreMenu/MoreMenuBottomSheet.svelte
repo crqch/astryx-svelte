@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { MoreMenu } from '@astryx-svelte/core';
+	import { MoreMenu } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Pencil`, `DocumentDuplicate`, `Share` and

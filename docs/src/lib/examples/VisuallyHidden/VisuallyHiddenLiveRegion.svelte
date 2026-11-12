@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, HStack, Text, VStack, VisuallyHidden } from '@astryx-svelte/core';
+	import { Button, HStack, Text, VStack, VisuallyHidden } from '@astryx-sv/core';
 
 	const columns = ['Backlog', 'In progress', 'Done'] as const;
 

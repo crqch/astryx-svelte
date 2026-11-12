@@ -13,7 +13,7 @@
  * so a theme's registry has to live in a `.svelte` module.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'icons',
 	title: 'Icons',
@@ -79,7 +79,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Using custom SVG components',
 					code: `<script lang="ts">
-	import { Icon } from '@astryx-svelte/core';
+	import { Icon } from '@astryx-sv/core';
 	import Photo from '@lucide/svelte/icons/image';
 	import Heart from '@lucide/svelte/icons/heart';
 </script>
@@ -106,7 +106,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'icons.svelte — a theme icon registry',
 					code: `<script module lang="ts">
-	import type { IconRegistry } from '@astryx-svelte/core';
+	import type { IconRegistry } from '@astryx-sv/core';
 
 	export const brandIcons = { close, chevronDown } as Partial<IconRegistry>;
 </script>
@@ -128,7 +128,7 @@ export const docs = {
 					type: 'code',
 					lang: 'ts',
 					label: 'Registering them on a theme',
-					code: `import { defineTheme } from '@astryx-svelte/core/theme';
+					code: `import { defineTheme } from '@astryx-sv/core/theme';
 import { brandIcons } from './icons.svelte';
 
 export const brandTheme = defineTheme({

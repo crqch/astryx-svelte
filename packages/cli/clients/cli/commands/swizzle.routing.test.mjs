@@ -5,7 +5,7 @@
  *
  * `rewriteImports` is unit-tested in api/swizzle/swizzle.test.mjs. These tests
  * exercise the end-to-end command behavior by running the CLI in-process against
- * hermetic fixtures: a fake `@astryx-svelte/core` under node_modules plus, for
+ * hermetic fixtures: a fake `@astryx-sv/core` under node_modules plus, for
  * the integration cases, a configured integration package
  * (astryx-svelte.config.mjs + astryx-svelte.integration.mjs + a `components`
  * dir) — all under node_modules so the config/manifest loaders resolve normally.
@@ -25,17 +25,17 @@ import { __resetDiscoveryCache } from '../../../foundation/discovery/component-d
 import { __resetSwizzleSurfaceCache } from '../../../api/swizzle/swizzle.mjs';
 
 /**
- * Build a fake `@astryx-svelte/core` under <project>/node_modules with a single
+ * Build a fake `@astryx-sv/core` under <project>/node_modules with a single
  * swizzleable button directory (bare `button.svelte`, no doc).
  * @param {string} project
  */
 function buildFakeCore(project) {
-	const core = path.join(project, 'node_modules', '@astryx-svelte', 'core');
+	const core = path.join(project, 'node_modules', '@astryx-sv', 'core');
 	const buttonDir = path.join(core, 'src', 'lib', 'components', 'button');
 	fs.mkdirSync(buttonDir, { recursive: true });
 	fs.writeFileSync(
 		path.join(core, 'package.json'),
-		'{"name":"@astryx-svelte/core","version":"0.0.13"}'
+		'{"name":"@astryx-sv/core","version":"0.0.13"}'
 	);
 	fs.writeFileSync(
 		path.join(buttonDir, 'button.svelte'),
@@ -140,7 +140,7 @@ describe('swizzle — core feedback routing via config', () => {
 		expect(result.code).toBe(0);
 		const env = JSON.parse(result.stdout);
 		expect(env.type).toBe('swizzle.copy');
-		expect(env.data.package).toBe('@astryx-svelte/core');
+		expect(env.data.package).toBe('@astryx-sv/core');
 		expect(env.data.feedback.issuesUrl).toBe('https://github.com/acme/ds/issues');
 		// Escaping import rewritten to core; sibling import preserved.
 		const out = fs.readFileSync(
@@ -151,7 +151,7 @@ describe('swizzle — core feedback routing via config', () => {
 		// `../../styles/x` becomes `<pkg>/styles` — Node's own rule for a package
 		// with no export map. Against the real core the same specifier resolves to
 		// `<pkg>/theme`; api/swizzle/swizzle.test.mjs pins that.
-		expect(out).toContain(`from '@astryx-svelte/core/styles'`);
+		expect(out).toContain(`from '@astryx-sv/core/styles'`);
 		expect(out).toContain(`from './helper.js'`);
 	});
 
@@ -227,7 +227,7 @@ describe('swizzle — ambiguous ownership', () => {
 		const env = JSON.parse(result.stdout);
 		expect(env.code).toBe('ERR_AMBIGUOUS_COMPONENT');
 		const pkgs = (env.suggestions ?? []).map((/** @type {{name: string}} */ s) => s.name);
-		expect(pkgs).toContain('@astryx-svelte/core');
+		expect(pkgs).toContain('@astryx-sv/core');
 		expect(pkgs).toContain('@test/meta');
 	});
 
@@ -262,17 +262,17 @@ describe('swizzle — ambiguous ownership', () => {
 		});
 
 		const result = await runCli(
-			['--json', 'swizzle', 'button', '--package', '@astryx-svelte/core', '-f'],
+			['--json', 'swizzle', 'button', '--package', '@astryx-sv/core', '-f'],
 			project
 		);
 		expect(result.code).toBe(0);
 		const env = JSON.parse(result.stdout);
-		expect(env.data.package).toBe('@astryx-svelte/core');
+		expect(env.data.package).toBe('@astryx-sv/core');
 		const out = fs.readFileSync(
 			path.join(project, 'components', 'astryx', 'button', 'button.svelte'),
 			'utf-8'
 		);
-		expect(out).toContain(`from '@astryx-svelte/core/styles'`);
+		expect(out).toContain(`from '@astryx-sv/core/styles'`);
 	});
 });
 
@@ -287,12 +287,12 @@ describe('swizzle — ambiguous ownership', () => {
  * @param {string} project
  */
 function buildStyleXCore(project) {
-	const core = path.join(project, 'node_modules', '@astryx-svelte', 'core');
+	const core = path.join(project, 'node_modules', '@astryx-sv', 'core');
 	const componentsRoot = path.join(core, 'src', 'lib', 'components');
 	fs.mkdirSync(componentsRoot, { recursive: true });
 	fs.writeFileSync(
 		path.join(core, 'package.json'),
-		'{"name":"@astryx-svelte/core","version":"0.0.13"}'
+		'{"name":"@astryx-sv/core","version":"0.0.13"}'
 	);
 	// StyleX component.
 	const styledDir = path.join(componentsRoot, 'styled');

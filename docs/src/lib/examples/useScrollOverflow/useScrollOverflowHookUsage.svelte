@@ -8,7 +8,7 @@
 	attribute, since a `.svelte` file may not import StyleX.
 -->
 <script lang="ts">
-	import { Button, HStack, Switch, Token, VStack, useScrollOverflow } from '@astryx-svelte/core';
+	import { Button, HStack, Switch, Token, VStack, useScrollOverflow } from '@astryx-sv/core';
 
 	const FADE = 'var(--spacing-8)';
 	const FADE_FROM_LEFT = `linear-gradient(to right, transparent, black ${FADE})`;

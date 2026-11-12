@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CheckboxList, CheckboxListItem, Divider } from '@astryx-svelte/core';
+	import { CheckboxList, CheckboxListItem, Divider } from '@astryx-sv/core';
 
 	const DOCUMENTS = [
 		{ id: 'transactions', label: 'Transaction history' },

@@ -14,7 +14,7 @@
 		LayoutHeader,
 		Section,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Card width="100%" style="max-width: 400px">

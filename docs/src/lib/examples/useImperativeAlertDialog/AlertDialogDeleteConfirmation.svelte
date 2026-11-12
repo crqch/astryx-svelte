@@ -13,7 +13,7 @@
 		AlertDialog,
 		ImperativeAlertDialogLayer,
 		useImperativeAlertDialog
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const alert = useImperativeAlertDialog();
 

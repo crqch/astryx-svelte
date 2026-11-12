@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, List, ListItem, Text, TextInput, VStack } from '@astryx-svelte/core';
-	import { useAnnounce } from '@astryx-svelte/core/hooks';
+	import { Card, List, ListItem, Text, TextInput, VStack } from '@astryx-sv/core';
+	import { useAnnounce } from '@astryx-sv/core/hooks';
 
 	const PRODUCTS = [
 		'Desk lamp',

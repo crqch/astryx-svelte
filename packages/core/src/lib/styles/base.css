@@ -17,7 +17,7 @@
  * There are two ways to get this package's CSS, and the layer order has to be
  * right for both.
  *
- * `@astryx-svelte/core/astryx.css` is pre-compiled the way upstream compiles
+ * `@astryx-sv/core/astryx.css` is pre-compiled the way upstream compiles
  * theirs: one `@layer astryx-base`, priority expressed as `:not(#\#)`
  * specificity padding. That one needs `astryx-base` and nothing more.
  *

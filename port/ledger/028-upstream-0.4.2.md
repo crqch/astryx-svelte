@@ -360,7 +360,7 @@ remainder is a debt with the full list.
   `:scope > *:not([popover])`; the marker made four cases fail. Upstream restated the same
   selectors in the same release, which is a good sign the seam is real rather than ours.
 - **The CLI's bundled theme copies went stale** the moment the theme sources changed —
-  `test:themes-bundle` caught it, and `pnpm -F @astryx-svelte/cli generate-themes` is the fix.
+  `test:themes-bundle` caught it, and `pnpm -F @astryx-sv/cli generate-themes` is the fix.
 
 ## Rules promoted
 

@@ -14,7 +14,7 @@
 		ListItem,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Card width="100%" style="max-width: 500px">

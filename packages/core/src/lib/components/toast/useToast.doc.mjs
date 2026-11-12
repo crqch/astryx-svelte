@@ -43,6 +43,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Toast', 'Banner', 'AlertDialog'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

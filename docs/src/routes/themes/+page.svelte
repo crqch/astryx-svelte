@@ -30,7 +30,7 @@
 		Theme,
 		VStack,
 		type PopoverTriggerRenderProps
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { createAttachmentKey } from 'svelte/attachments';
 	import Seo from '$lib/seo/seo.svelte';
 	import MoonIcon from '$lib/shell/moon-icon.svelte';
@@ -73,7 +73,7 @@
 	 * `template-preview-dialog.svelte` records. The install action survives as the
 	 * "Use this theme" popover, but its command prints this port's real bin,
 	 * `astryx-svelte theme add <slug>`, rather than upstream's `npx
-	 * @astryxdesign/cli …`: `@astryx-svelte/cli` is private, so `npx` cannot resolve
+	 * @astryxdesign/cli …`: `@astryx-sv/cli` is private, so `npx` cannot resolve
 	 * it (the same substitution the template dialog makes).
 	 *
 	 * **The picker artwork is vendored.** Upstream's six themes have a dedicated

@@ -9,7 +9,7 @@ import { neutralTheme } from '../src/neutral-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-neutral',
+	packageName: '@astryx-sv/theme-neutral',
 	themeExport: 'neutralTheme',
 	theme: neutralTheme,
 	// Upstream's `theme-neutral` publishes no `*Palettes` export — only butter,

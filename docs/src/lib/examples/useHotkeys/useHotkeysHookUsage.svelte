@@ -21,7 +21,7 @@
 		TextInput,
 		useHotkeys,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let searchEl: HTMLElement | null = null;
 	let query = $state('');

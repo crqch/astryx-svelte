@@ -20,7 +20,7 @@
 		Timestamp,
 		Token,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const firstAnswer = `Sure! Here's the key pattern from **useReducer.ts**:`;
 	const secondAnswer = `The reducer is **pure and easy to test** — pass in state and action, assert on the output.`;

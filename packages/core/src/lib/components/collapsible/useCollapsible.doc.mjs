@@ -69,6 +69,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Collapsible', 'Card', 'Section'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

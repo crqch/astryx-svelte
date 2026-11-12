@@ -9,7 +9,7 @@
 	renders raw.
 -->
 <script lang="ts">
-	import { SideNav, SideNavItem } from '@astryx-svelte/core';
+	import { SideNav, SideNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet inboxIcon()}

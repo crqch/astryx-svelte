@@ -19,7 +19,7 @@ function writeTheme(dir, name) {
 	fs.mkdirSync(dir, { recursive: true });
 	const file = path.join(dir, 'theme.mjs');
 	// Plain object literal so the legacy regex+eval path can parse it
-	// without needing jiti / TS, and without depending on @astryx-svelte/core
+	// without needing jiti / TS, and without depending on @astryx-sv/core
 	// being built. The eval path explicitly supports this shape.
 	fs.writeFileSync(
 		file,

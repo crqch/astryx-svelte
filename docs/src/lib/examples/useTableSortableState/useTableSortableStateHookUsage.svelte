@@ -15,7 +15,7 @@
 		useTableSortable,
 		useTableSortableState,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface Order extends Record<string, unknown> {
 		id: string;

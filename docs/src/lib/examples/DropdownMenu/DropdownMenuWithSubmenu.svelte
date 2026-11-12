@@ -9,7 +9,7 @@
 		DropdownMenuSubMenu,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	/**
 	 * Upstream's block passes `icon="pencil"`, `icon="folder"` and `icon="trash"`.

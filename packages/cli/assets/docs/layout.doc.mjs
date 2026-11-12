@@ -5,7 +5,7 @@
  * `{#snippet header()}…{/snippet}` inside the component.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'layout',
 	title: 'Layout',
@@ -36,7 +36,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'A three-region tool frame',
 					code: `<script lang="ts">
-	import { AppShell, Layout, LayoutContent, LayoutPanel, SideNav } from '@astryx-svelte/core';
+	import { AppShell, Layout, LayoutContent, LayoutPanel, SideNav } from '@astryx-sv/core';
 </script>
 
 <!-- Frame: nav 256 | content flex | inspector 380 (resizable) -->

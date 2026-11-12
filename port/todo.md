@@ -122,11 +122,11 @@ them.
          caught by neither it nor `package.json`'s `files` denylist. Every fixture is correctly
          placed; the rule is narrower than the invariant it protects
 
-3. **`@astryx-svelte/build`.** Upstream's `build` package is seven files of framework-agnostic
+3. **`@astryx-sv/build`.** Upstream's `build` package is seven files of framework-agnostic
    JavaScript — a PostCSS plugin, a Babel config and a Vite plugin — and it ships on the stable
    release train at `0.4.5`, unlike the canary packages. The only piece needing translation rather
    than transcription is `next.js`, whose counterpart is SvelteKit.
-4. **`@astryx-svelte/richtext`.** Lexical's core is framework-agnostic; only `@lexical/react` is
+4. **`@astryx-sv/richtext`.** Lexical's core is framework-agnostic; only `@lexical/react` is
    not, and its plugins are thin wrappers over `editor.registerCommand` and node transforms. Ten of
    them need Svelte counterparts. Upstream ships this `private` and canary-only, so it is parity
    work with no release pressure behind it.

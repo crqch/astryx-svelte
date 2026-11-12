@@ -186,6 +186,6 @@ export default {
 	},
 	relatedComponents: ['Popover', 'DropdownMenu', 'HoverCard'],
 	relatedHooks: ['useLayer', 'useFocusTrap', 'useHoverCard', 'useTooltip'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

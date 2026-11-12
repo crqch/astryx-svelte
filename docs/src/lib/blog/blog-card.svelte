@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AspectRatio, Heading, Link, Text, VStack } from '@astryx-svelte/core';
+	import { AspectRatio, Heading, Link, Text, VStack } from '@astryx-sv/core';
 	import type { BlogPost } from './schema.js';
 	import { parseReleaseVersion } from './release.js';
 	import AuthorByline from './author-byline.svelte';

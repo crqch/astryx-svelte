@@ -31,7 +31,7 @@
  *
  * @input  packages/core/src/tests/*.svelte.test.ts
  * @output exit 0 with a reconciled total, or exit 1 naming the failing chunk
- * @position `bun run --filter @astryx-svelte/core test`; CI and .github/workflows/release.yml
+ * @position `bun run --filter @astryx-sv/core test`; CI and .github/workflows/release.yml
  */
 
 import * as fs from 'node:fs';

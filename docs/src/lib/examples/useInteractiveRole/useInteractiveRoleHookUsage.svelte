@@ -9,7 +9,7 @@
 	upstream declares it as one and a snippet cannot call a hook.
 -->
 <script lang="ts">
-	import { Card, Popover, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Popover, Text, VStack } from '@astryx-sv/core';
 	import Tile from './Tile.svelte';
 </script>
 

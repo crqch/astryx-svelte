@@ -27,7 +27,7 @@ import { colorVars } from '../../styles/tokens.stylex.js';
  * as upstream does:
  *
  * ```ts
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface SectionVariantMap {
  *     elevated: true;
  *   }

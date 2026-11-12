@@ -9,7 +9,7 @@
 	The snippet's closure state replaces upstream's per-call closure variables.
 -->
 <script lang="ts">
-	import { Button, Card, Switch, TextInput, VStack, useToast } from '@astryx-svelte/core';
+	import { Button, Card, Switch, TextInput, VStack, useToast } from '@astryx-sv/core';
 	import type { Snippet } from 'svelte';
 
 	const toast = useToast();

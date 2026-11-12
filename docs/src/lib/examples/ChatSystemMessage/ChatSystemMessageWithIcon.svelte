@@ -9,7 +9,7 @@
 	the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { ChatMessageList, ChatSystemMessage, Icon, Stack, Text } from '@astryx-svelte/core';
+	import { ChatMessageList, ChatSystemMessage, Icon, Stack, Text } from '@astryx-sv/core';
 </script>
 
 {#snippet userPlusIcon()}<Icon icon="info" />{/snippet}

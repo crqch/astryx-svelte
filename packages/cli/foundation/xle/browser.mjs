@@ -12,7 +12,7 @@
  *
  * @input  expression string + a serialized-or-hydrated registry (+ blocks)
  * @output checkExpression / expandExpression + the raw pipeline pieces
- * @position foundation/xle — exported as `@astryx-svelte/cli/xle`
+ * @position foundation/xle — exported as `@astryx-sv/cli/xle`
  */
 
 import { parse, detectForm, XLEParseError } from './parse.mjs';

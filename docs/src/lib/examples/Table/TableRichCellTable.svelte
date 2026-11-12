@@ -10,7 +10,7 @@
 	by which time the snippets are live. Same data, same columns, same order.
 -->
 <script lang="ts">
-	import { Badge, Link, Table, proportional, pixel, type TableColumn } from '@astryx-svelte/core';
+	import { Badge, Link, Table, proportional, pixel, type TableColumn } from '@astryx-sv/core';
 
 	interface User extends Record<string, unknown> {
 		id: string;

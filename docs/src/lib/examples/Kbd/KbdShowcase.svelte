@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Kbd } from '@astryx-svelte/core';
+	import { Kbd } from '@astryx-sv/core';
 </script>
 
 <Kbd keys="mod+k" />

@@ -8,6 +8,8 @@ node_modules
 dist
 .svelte-kit
 .vercel
+.wrangler
+.dev.vars
 # Adapter output, anchored. A bare `build` matches a directory of that name at
 # ANY depth, and the CLI has two of them — `packages/cli/api/build/` (the page
 # composition assistant) and `packages/cli/api/theme/build/` (the theme

@@ -44,7 +44,7 @@ export type BuiltinTextType =
  * rather than silently rendering on the `body` baseline.
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface CustomTextTypes {
  *     hero: true;
  *     caption: true;
@@ -89,7 +89,7 @@ export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
  * `type` falls back to `body`.
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface TextColorMap {
  *     brand: true;
  *     danger: true;

@@ -161,7 +161,7 @@ export type IndicatorComponent<F extends IndicatorFamily = IndicatorFamily> = Co
  *
  * @example
  * ```ts
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface IndicatorMap {
  *     'brand-star': 'singleSelection';
  *   }

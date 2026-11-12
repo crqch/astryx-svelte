@@ -11,7 +11,7 @@
 		Layout,
 		LayoutContent,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let openModal = $state(false);
 	let openPanel = $state(false);

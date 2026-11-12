@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TextArea } from '@astryx-svelte/core';
+	import { TextArea } from '@astryx-sv/core';
 
 	let value = $state(
 		'Excited to announce that our team just shipped the new dashboard! Check it out and let us know what you think.'

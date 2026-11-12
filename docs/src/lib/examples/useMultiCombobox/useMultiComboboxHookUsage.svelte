@@ -23,9 +23,9 @@
 		Token,
 		VStack,
 		useMultiCombobox
-	} from '@astryx-svelte/core';
-	import { useAnnounce } from '@astryx-svelte/core/hooks';
-	import { isImeKeyEvent } from '@astryx-svelte/core/utils';
+	} from '@astryx-sv/core';
+	import { useAnnounce } from '@astryx-sv/core/hooks';
+	import { isImeKeyEvent } from '@astryx-sv/core/utils';
 
 	const LABELS = [
 		{ value: 'bug', label: 'Bug' },

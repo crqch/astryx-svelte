@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Icon, SegmentedControl, SegmentedControlItem } from '@astryx-svelte/core';
+	import { Center, Icon, SegmentedControl, SegmentedControlItem } from '@astryx-sv/core';
 
 	let view = $state('board');
 </script>

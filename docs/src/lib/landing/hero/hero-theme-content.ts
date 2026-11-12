@@ -33,15 +33,15 @@
  * theme it does not. See port/debts.md, Known debts.
  */
 
-import type { DefinedTheme } from '@astryx-svelte/core/theme';
-import { butterTheme } from '@astryx-svelte/theme-butter';
-import { chocolateTheme } from '@astryx-svelte/theme-chocolate';
-import { gothicTheme } from '@astryx-svelte/theme-gothic';
-import { liquidGlassTheme } from '@astryx-svelte/theme-liquid-glass';
-import { matchaTheme } from '@astryx-svelte/theme-matcha';
-import { neutralTheme } from '@astryx-svelte/theme-neutral';
-import { stoneTheme } from '@astryx-svelte/theme-stone';
-import { y2kTheme } from '@astryx-svelte/theme-y2k';
+import type { DefinedTheme } from '@astryx-sv/core/theme';
+import { butterTheme } from '@astryx-sv/theme-butter';
+import { chocolateTheme } from '@astryx-sv/theme-chocolate';
+import { gothicTheme } from '@astryx-sv/theme-gothic';
+import { liquidGlassTheme } from '@astryx-sv/theme-liquid-glass';
+import { matchaTheme } from '@astryx-sv/theme-matcha';
+import { neutralTheme } from '@astryx-sv/theme-neutral';
+import { stoneTheme } from '@astryx-sv/theme-stone';
+import { y2kTheme } from '@astryx-sv/theme-y2k';
 import { astryxTheme } from '../../themes/astryx-theme.js';
 import { BRAND } from '../constants.js';
 
@@ -49,7 +49,7 @@ import { BRAND } from '../constants.js';
 const ASTRYX = 'astryx';
 
 /**
- * Sentinel for `@astryx-svelte/theme-liquid-glass`, which has **no upstream
+ * Sentinel for `@astryx-sv/theme-liquid-glass`, which has **no upstream
  * package name** to key on — it is this port's one deliberate non-upstream
  * theme (port/debts.md, Known debts).
  *
