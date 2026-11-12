@@ -108,6 +108,22 @@ export interface FixedLayerOptions extends BaseLayerOptions {
 	mode: 'fixed';
 }
 
+/**
+ * Context-mode options a core component may pass through internal use; not
+ * part of the public `useLayer` options. Upstream keeps these on
+ * `InternalContextLayerOptions` (`Layer/useLayer.tsx`), which the package
+ * barrel never exports; this module does the same by exporting the type from
+ * the module only.
+ */
+interface InternalContextLayerOptions extends ContextLayerOptions {
+	/**
+	 * Runs as the layer starts to close, while the browser still shows it: in
+	 * its `beforetoggle` to closed. A close that plays out after the layer is
+	 * hidden starts here.
+	 */
+	onCloseStart?: () => void;
+}
+
 /** The parts of the layer `<Layer>` needs — upstream's `render` closure. */
 interface LayerRenderable {
 	/**
@@ -362,7 +378,7 @@ export function contextPositionStyle(
 export function useLayer(options: () => ContextLayerOptions): ContextLayerReturn;
 export function useLayer(options: () => FixedLayerOptions): FixedLayerReturn;
 export function useLayer(
-	options: () => ContextLayerOptions | FixedLayerOptions
+	options: () => ContextLayerOptions | InternalContextLayerOptions | FixedLayerOptions
 ): ContextLayerReturn | FixedLayerReturn {
 	// Read once, untracked: a layer does not change positioning mode, and
 	// upstream's destructure is equally a one-time read of a render-stable prop.
@@ -403,6 +419,14 @@ export function useLayer(
 	// `LayerRenderable.fallbackStyle` for why this is state rather than a direct
 	// `popover.style.display` write.
 	let fallbackDisplay = $state<'block' | 'none' | undefined>(undefined);
+	// True while hide() itself is calling hidePopover: the synchronous
+	// `beforetoggle` that call fires must not start the close twice.
+	let hiding = false;
+
+	/** Upstream's internal `onCloseStart`, read at event time. */
+	function notifyCloseStart(): void {
+		(options() as InternalContextLayerOptions).onCloseStart?.();
+	}
 
 	function showPopoverElement(element: HTMLElement): void {
 		// Finding infra-4: the Popover API is unsupported on Safari <17 and
@@ -490,11 +514,20 @@ export function useLayer(
 	function hide(): void {
 		pendingShow = false;
 		if (isOpen) {
+			// A close that plays out after the layer is hidden starts here,
+			// while the browser still shows it. The `beforetoggle` handler below
+			// starts the browser's own hides.
+			notifyCloseStart();
 			// See the infra-4 note in `showPopoverElement`: mirror the same guard on
 			// hide so unsupported browsers degrade gracefully instead of throwing.
 			if (popover) {
 				if (typeof popover.hidePopover === 'function') {
-					popover.hidePopover();
+					hiding = true;
+					try {
+						popover.hidePopover();
+					} finally {
+						hiding = false;
+					}
 				} else {
 					fallbackDisplay = 'none';
 				}
@@ -588,6 +621,18 @@ export function useLayer(
 	const attachPopover: Attachment<HTMLElement> = (element) => {
 		popover = element;
 
+		// A hide the browser runs itself (light dismiss, `popover="auto"` stack
+		// eviction, an Escape its close watcher answers) never passes through
+		// hide(), so the `beforetoggle` to closed is where a dismissing motion
+		// starts while the browser still shows the element.
+		const handleBeforeToggle = (event: Event) => {
+			const toggleEvent = event as ToggleEvent;
+			if (toggleEvent.newState !== 'closed' || hiding || !isOpen) {
+				return;
+			}
+			notifyCloseStart();
+		};
+
 		const handleToggle = (event: Event) => {
 			const toggleEvent = event as ToggleEvent;
 			if (toggleEvent.newState === 'closed' && isOpen) {
@@ -599,6 +644,7 @@ export function useLayer(
 		};
 
 		element.addEventListener('toggle', handleToggle);
+		element.addEventListener('beforetoggle', handleBeforeToggle);
 
 		if (pendingShow) {
 			pendingShow = false;
@@ -611,6 +657,7 @@ export function useLayer(
 
 		return () => {
 			element.removeEventListener('toggle', handleToggle);
+			element.removeEventListener('beforetoggle', handleBeforeToggle);
 			if (popover === element) {
 				popover = null;
 			}

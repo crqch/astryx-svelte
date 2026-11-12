@@ -116,12 +116,23 @@ export function popoverSheetFallbackCloseXstyle(): StyleArg {
 }
 
 /**
- * The painted surface's own classes: the viewport cap, plus the scroll
- * container once its content overflows it. Upstream hands both to `usePopover`
- * as surface `xstyle`; here `<PopoverLayer>` owns the surface element.
+ * The painted surface's own classes: the viewport cap, the scroll container
+ * once its content overflows it, and the pointer presentation's entrance.
+ * Upstream 0.7.13 hands all three to `usePopover` as surface `xstyle`; here
+ * `<PopoverLayer>` owns the surface element. The entrance lives on the
+ * surface, not the anchored layer: Chromium lays an anchored element out
+ * again each time it restyles it, and the touch presentation turns this
+ * entrance off on the element it grows (popover-surface-motion.ts).
  */
-export function popoverSurfaceAttrs(hasOverflow: boolean): SvelteStyleAttrs {
-	return sx(styles.surfaceViewportFit, hasOverflow && styles.surfaceScrollable);
+export function popoverSurfaceAttrs(
+	hasOverflow: boolean,
+	placement: LayerPlacement = 'below'
+): SvelteStyleAttrs {
+	return sx(
+		styles.surfaceViewportFit,
+		hasOverflow && styles.surfaceScrollable,
+		layerAnimations[placement]
+	);
 }
 
 /**
@@ -135,15 +146,11 @@ export function popoverContentAttrs(xstyle: StyleArg): SvelteStyleAttrs {
 }
 
 /**
- * The layer container's `xstyle` — upstream's per-`render` array
- * `[popoverXstyle, layerAnimations[placement]]`, where `popoverXstyle = width ?
- * styles.customWidth(width) : styles.matchTrigger`. The gap is the layer's own
- * `offset` (0.7.13 moved it out of a `gap` margin).
+ * The anchored layer container's `xstyle` — upstream's per-`render` array
+ * `[popoverXstyle, xstyle]`, where `popoverXstyle = width ?
+ * styles.customWidth(width) : styles.matchTrigger`. The pointer entrance moved
+ * to the surface at 0.7.13; the gap is the layer's own `offset`.
  */
-export function popoverLayerXstyle(
-	width: number | string | undefined,
-	placement: LayerPlacement
-): StyleArg {
-	const widthStyle = width ? styles.customWidth(width) : styles.matchTrigger;
-	return [widthStyle, layerAnimations[placement]];
+export function popoverLayerXstyle(width: number | string | undefined): StyleArg {
+	return width ? styles.customWidth(width) : styles.matchTrigger;
 }

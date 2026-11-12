@@ -25,9 +25,9 @@
 		offset?: number | string;
 		/**
 		 * StyleX styles for the layer's positioned container — upstream's
-		 * `render` prop `xstyle` (the `[popoverXstyle, gap, layerAnimations]`
-		 * array `Popover` builds). Distinct from the hook's `xstyle` option,
-		 * which styles the inner content wrapper.
+		 * `render` prop `xstyle` (the `[popoverXstyle, gap]` array Popover builds;
+		 * the entrance moved to the surface at 0.7.13). Distinct from the hook's
+		 * `xstyle` option, which styles the inner content wrapper.
 		 */
 		xstyle?: StyleArg;
 		/**
@@ -171,7 +171,7 @@
 		};
 	});
 
-	const surface = $derived(popoverSurfaceAttrs(hasOverflow));
+	const surface = $derived(popoverSurfaceAttrs(hasOverflow, placement));
 </script>
 
 <Layer layer={popover.layer} {placement} {alignment} {offset} {xstyle} style={styleProp}>

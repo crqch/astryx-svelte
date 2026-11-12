@@ -1428,26 +1428,6 @@ differs. Two CTAs are repointed for the same reason: upstream's `/changelog` doe
 so "See what's new" opens this repository's releases, and "Learn how to contribute" opens the
 repository rather than Meta's community page.
 
-### Popover's touch presentation is not ported: it opens and closes without its grow/shrink
-
-- **units:** Popover
-- **kind:** unported
-- **retires:** when `Popover/popoverSurfaceMotion.ts`, `Popover/popoverSurfaceFrame.ts`,
-  `Popover/usePopoverSurfaceMotion.ts` and `privateAttributes/popoverExit.stylex.ts`
-  (the exit copy) are ported
-
-Under a finger upstream's Popover grows out of its source and shrinks back into it
-(`popoverSurfaceMotion.ts`), scaling about the point where the surface meets the source
-on the compositor, with the layer runtime's input hold taking touches while it grows and
-a `placePopoverExitCopy` copy playing the dismissal after the browser hides the element.
-This port's Popover renders the same surface, pointer entrance (`layerAnimations`) and
-dismissal, but no touch growth or shrink: the surface appears and disappears through the
-pointer presentation's CSS entrance only. `--duration-medium-min` / `--ease-entrance` and
-`--duration-exit` / `--ease-exit` are read nowhere in the component, where upstream's
-`POPOVER_ENTRANCE_TOKENS` / `POPOVER_EXIT_TOKENS` name them. The 31-case
-`Popover/PopoverPresentation.test.tsx` suite is likewise unported, and its count is in
-`port/status.md`.
-
 ### `MonthScroller` lands a month change with travel under Reduce Motion
 
 - **units:** DateInput

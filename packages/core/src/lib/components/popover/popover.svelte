@@ -201,7 +201,8 @@
 		popoverContentAttrs,
 		popoverLayerXstyle
 	} from './popover.stylex.js';
-	import { usePopover } from './use-popover.svelte.js';
+	import { usePopoverInternal } from './use-popover.svelte.js';
+	import { usePopoverSurfaceMotion } from './use-popover-surface-motion.svelte.js';
 	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import { usePresentationHold } from '../layer/presentation-hold.svelte.js';
 	import { PopoverBottomSheet, preloadPopoverBottomSheet } from './lazy-popover-bottom-sheet.js';
@@ -268,6 +269,21 @@
 
 	const id = $props.id();
 
+	const surfaceMotion = usePopoverSurfaceMotion();
+	// The element the popover is anchored to, whichever way it was attached:
+	// the touch presentation grows the popover out of it. Upstream's
+	// `anchorElementRef`.
+	let anchorElement: HTMLElement | null = null;
+
+	// Runs as the popover opens, before it paints. Upstream's
+	// `presentSurfaceRef`. The surface is the content div `usePopover` hands
+	// back; the layer element is the popover around it.
+	function presentSurface(): void {
+		const surface = popover.contentRef;
+		const layer = surface?.closest<HTMLElement>('[popover]') ?? null;
+		surfaceMotion.present(layer, anchorElement, surface);
+	}
+
 	const BUTTON_SELECTOR = 'button, [role="button"]';
 
 	/**
@@ -295,7 +311,7 @@
 	// The trigger's own name, which labels a sheet that has no `label` (DEC-8).
 	let triggerText = $state('');
 
-	const popover = usePopover(() => ({
+	const popover = usePopoverInternal(() => ({
 		id,
 		dialogLabel: label,
 		role,
@@ -305,11 +321,15 @@
 		hasCloseButton,
 		closeButtonLabel,
 		hasAutoFocus,
-		onShow: () => onOpenChange?.(true),
+		onShow: () => {
+			presentSurface();
+			onOpenChange?.(true);
+		},
 		onHide: () => {
 			lastHideTime = Date.now();
 			onOpenChange?.(false);
-		}
+		},
+		onCloseStart: surfaceMotion.closeStart
 	}));
 
 	// A controlled popover opens on the surface its presentation resolves to as
@@ -475,6 +495,7 @@
 	// inside for ARIA + handlers. Upstream's children-mode layout effect.
 	const attachAnchor: AttachmentType<HTMLElement> = (wrapper) => {
 		const detachAnchor = popover.attachTrigger(wrapper);
+		anchorElement = wrapper;
 
 		const button = findTriggerButton(wrapper);
 		if (!button) {
@@ -488,6 +509,9 @@
 
 		const detachButton = wireTriggerButton(button);
 		return () => {
+			if (anchorElement === wrapper) {
+				anchorElement = null;
+			}
 			detachButton();
 			detachAnchor?.();
 		};
@@ -498,11 +522,15 @@
 	// `setRenderTrigger`.
 	const attachRenderTrigger: AttachmentType<HTMLElement> = (element) => {
 		renderTriggerElement = element;
+		anchorElement = element;
 		triggerText = readTriggerText(element);
 		const detachAnchor = popover.attachTrigger(element);
 		return () => {
 			if (renderTriggerElement === element) {
 				renderTriggerElement = null;
+			}
+			if (anchorElement === element) {
+				anchorElement = null;
 			}
 			detachAnchor?.();
 		};
@@ -528,9 +556,13 @@
 			}
 
 			// Anchor positioning on the anchorRef element itself.
+			anchorElement = el;
 			const detachAnchor = popover.attachTrigger(el);
 			const detachButton = wireTriggerButton(button);
 			return () => {
+				if (anchorElement === el) {
+					anchorElement = null;
+				}
 				detachButton();
 				detachAnchor?.();
 			};
@@ -589,7 +621,7 @@
 	const anchorAttrs = popoverAnchorWrapperAttrs();
 	const contentAttrs = $derived(popoverContentAttrs(xstyle));
 	const themeClass = themeProps('popover').class;
-	const layerXstyle = $derived(popoverLayerXstyle(width, placement));
+	const layerXstyle = $derived(popoverLayerXstyle(width));
 
 	// `aria-haspopup` is the literal `'dialog'` here, NOT `popover.triggerProps`'s
 	// role-derived value, and `PopoverTriggerRenderProps` types it as that literal.

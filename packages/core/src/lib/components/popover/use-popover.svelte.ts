@@ -173,6 +173,19 @@ export interface UsePopoverOptions {
 }
 
 /**
+ * Options a core component may pass through internal use; not part of the
+ * public `usePopover` options. Upstream keeps `onCloseStart` on
+ * `InternalPopoverOptions`, which the package barrel never exports.
+ */
+interface InternalUsePopoverOptions extends UsePopoverOptions {
+	/**
+	 * Runs as the popover starts to close, while the browser still shows it.
+	 * A close that plays out after the popover is hidden starts here.
+	 */
+	onCloseStart?: () => void;
+}
+
+/**
  * Return type for `usePopover`.
  */
 export interface UsePopoverReturn {
@@ -276,6 +289,18 @@ export interface UsePopoverReturn {
  * ```
  */
 export function usePopover(options: () => UsePopoverOptions): UsePopoverReturn {
+	return usePopoverImplementation(options);
+}
+
+/**
+ * @internal For Popover; not exported from the package barrel. Its extra
+ * options are upstream's `InternalPopoverOptions` (`usePopoverInternal`).
+ */
+export function usePopoverInternal(options: () => InternalUsePopoverOptions): UsePopoverReturn {
+	return usePopoverImplementation(options);
+}
+
+function usePopoverImplementation(options: () => InternalUsePopoverOptions): UsePopoverReturn {
 	const t = useTranslator();
 
 	const role = $derived(options().role ?? 'dialog');
@@ -290,7 +315,8 @@ export function usePopover(options: () => UsePopoverOptions): UsePopoverReturn {
 		id: options().id,
 		lightDismiss: options().hasLightDismiss ?? true,
 		onShow: options().onShow,
-		onHide: options().onHide
+		onHide: options().onHide,
+		onCloseStart: options().onCloseStart
 	}));
 
 	// Track whether to skip auto-focus for the current open event. Upstream's
