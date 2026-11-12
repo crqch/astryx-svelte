@@ -2082,6 +2082,19 @@ its own translations. The remaining generated-initials rule is a named skip.
 The selector's bottom-sheet presentation is documented but renders the popover
 only, so the sheet's own `margin-inline` class is skipped in the CSS oracle.
 
+### The menu-press model does not reach the non-popover menu consumers
+
+- **units:** DropdownMenu/MenuBottomSheetActionList, NavHeadingMenu, TopNavMenu, TopNavHeading, SideNavHeading, BreadcrumbItem, Selector
+- **kind:** unported
+- **retires:** when upstream's `menuPressOnItems.ts` is ported and those consumers use it
+
+`useMenuPress` is ported and wired through the popover menus (`DropdownMenu`,
+`ContextMenu`, submenus, `TabMenu`). Upstream also gives the bottom-sheet action
+list and the navigation/breadcrumb/selector menus the same press model through
+`menuPressOnItems.ts`; those surfaces here still select on click only. The
+action list is the largest gap: its rows do not carry the slide-to-select model
+or the menu-press-lit paint.
+
 ### Upstream compiles its test fixtures into the published stylesheet
 
 - **units:** core published CSS
