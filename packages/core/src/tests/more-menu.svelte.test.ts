@@ -11,7 +11,7 @@ import SlotProbe from './fixtures/slot-probe.svelte';
  * re-derived at the **0.5.0** pin (the file is unchanged since v0.4.1, which is
  * where this header's count last came from). 16 → 21 is 0.4.x's five additions: the
  * two `#4477` open-modality cases and the three-case `placement and alignment`
- * block.
+ * block. One bottom-sheet forwarding case below was added at the 0.7.13 pin.
  *
  * DROPPED: **`supports forwardRef`**. Upstream threads a `ref` into the trigger
  * `button`'s props. `MoreMenuProps` is a closed `Pick<BaseProps, 'xstyle' |
@@ -297,7 +297,7 @@ describe('MoreMenu bottom-sheet presentation', () => {
 			props: { items: defaultItems, presentation: 'bottom-sheet' }
 		});
 
-		screen.getByRole('button', { name: 'More options' }).element().click();
+		(screen.getByRole('button', { name: 'More options' }).element() as HTMLElement).click();
 
 		await expect.element(screen.getByRole('dialog', { name: 'More options' })).toBeInTheDocument();
 		expect(showPopover).not.toHaveBeenCalled();

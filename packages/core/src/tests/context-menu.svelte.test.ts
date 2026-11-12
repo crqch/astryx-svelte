@@ -13,7 +13,7 @@ import { stubMatchMedia } from './stub-match-media.js';
  * count goes stale on every upstream release by construction:
  *
  * - upstream at the **0.5.0 pin: 43** cases
- * - here: **32**
+ * - here: **32**, plus the three bottom-sheet cases below added at the 0.7.13 pin
  *
  * The 32nd is 0.3.0's `closes the menu when Tab is pressed inside it`, ported
  * with the component change it covers (the APG menus-5 fix).
@@ -494,7 +494,7 @@ describe('ContextMenu bottom-sheet presentation', () => {
 				props: {
 					presentation: 'bottom-sheet',
 					label: 'Row actions',
-					items: [{ label: 'Edit' }]
+					items: [{ label: 'Edit', description: 'Change the title.', variant: 'destructive' }]
 				}
 			}
 		});
@@ -504,6 +504,7 @@ describe('ContextMenu bottom-sheet presentation', () => {
 		expect(actionList).not.toBeNull();
 		await vi.waitFor(() => expect(actionList).toHaveFocus());
 		expect(screen.getByRole('button', { name: 'Edit' }).element()).not.toHaveFocus();
+		expect(screen.getByText('Change the title.')).toBeInTheDocument();
 		expect(showPopover).not.toHaveBeenCalled();
 	});
 
@@ -525,13 +526,15 @@ describe('ContextMenu bottom-sheet presentation', () => {
 		});
 
 		await openSheet(screen);
-		screen.getByRole('button', { name: 'Move to project' }).element().click();
+		(screen.getByRole('button', { name: 'Move to project' }).element() as HTMLElement).click();
 
+		await expect
+			.element(screen.getByRole('heading', { name: 'Move to project' }))
+			.toBeInTheDocument();
 		const submenuHeading = screen.getByRole('heading', { name: 'Move to project' }).element();
-		expect(submenuHeading).toBeInTheDocument();
 		await vi.waitFor(() => expect(submenuHeading).toHaveFocus());
 
-		screen.getByRole('button', { name: 'Apollo launch' }).element().click();
+		(screen.getByRole('button', { name: 'Apollo launch' }).element() as HTMLElement).click();
 		expect(onMove).toHaveBeenCalledOnce();
 		await vi.waitFor(() =>
 			expect(screen.baseElement.querySelector('[role="dialog"]')).not.toBeInTheDocument()

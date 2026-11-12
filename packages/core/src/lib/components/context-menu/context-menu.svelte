@@ -373,6 +373,16 @@
 	});
 	const hasOverflow = $derived(menuOverflow());
 
+	// The sheet's content element carries `data-autofocus`, as upstream's does:
+	// focus lands on the action list, not on the first row. The shared
+	// `focusPanel` keeps native dialog focus on the panel when it is already
+	// inside, so the sheet names its content target here after it mounts.
+	$effect(() => {
+		if (!isOpen || !usesBottomSheet) return;
+		const frame = requestAnimationFrame(() => menuEl?.focus({ preventScroll: true }));
+		return () => cancelAnimationFrame(frame);
+	});
+
 	// A drilled-in sheet view's heading takes focus as the view changes; the
 	// root view does not steal it on open.
 	let previousSubmenuDepth = 0;
