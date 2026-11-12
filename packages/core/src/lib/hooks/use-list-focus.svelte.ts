@@ -128,6 +128,16 @@ export interface UseListFocusOptions {
 	hasRovingTabIndex?: boolean;
 
 	/**
+	 * Places the roving tab stop, for a composite whose stop is not simply the
+	 * first enabled item — a radio group whose checked item keeps the stop even
+	 * when that item, or the whole group, is disabled. The returned order's
+	 * first item holds `tabindex="0"` and the rest `-1`. Unset: the first
+	 * enabled item holds the stop, and no item does while every item is
+	 * disabled.
+	 */
+	tabStopOrder?: (list: HTMLElement) => ReadonlyArray<HTMLElement>;
+
+	/**
 	 * When true, arrow keys are not stolen from a nested text input/textarea
 	 * whose caret is not at the boundary in the direction of travel (or that has
 	 * a non-collapsed selection), and are never stolen from a nested
@@ -278,6 +288,33 @@ function isItemDisabled(el: HTMLElement): boolean {
 		(el as HTMLButtonElement).disabled === true ||
 		el.hasAttribute('disabled')
 	);
+}
+
+/** Whether an item sits inside a hidden or inert branch of the list. */
+function isHiddenWithin(el: HTMLElement, listEl: HTMLElement): boolean {
+	const hidden = el.parentElement?.closest<HTMLElement>('[hidden],[inert]');
+	return hidden != null && hidden !== listEl && listEl.contains(hidden);
+}
+
+/**
+ * A `tabStopOrder` for a group whose disabled items stay focusable, such as a
+ * row of disabled Buttons. The group keeps one Tab stop while every item is
+ * disabled: the item that holds the stop, else the first enabled item, else the
+ * first item. With an enabled item it places the stop as the default does.
+ */
+export function oneTabStopAmong(
+	itemSelector: string,
+	boundarySelector: string
+): (list: HTMLElement) => HTMLElement[] {
+	return (list) => {
+		const items = Array.from(list.querySelectorAll<HTMLElement>(itemSelector)).filter(
+			(el) => !isHiddenWithin(el, list) && el.closest(boundarySelector) === list
+		);
+		const enabled = items.filter((el) => !isItemDisabled(el));
+		const candidates = enabled.length > 0 ? enabled : items;
+		const stop = candidates.find((el) => el.getAttribute('tabindex') === '0') ?? candidates[0];
+		return stop == null ? items : [stop, ...items.filter((el) => el !== stop)];
+	};
 }
 
 /**
@@ -436,6 +473,18 @@ export function useListFocus(options: () => UseListFocusOptions = () => ({})): U
 	 * enabled; otherwise promote the first enabled item (tab-stop repair).
 	 */
 	function syncTabStops(): void {
+		const listEl = container;
+		const order = options().tabStopOrder;
+		if (listEl != null && order != null) {
+			const [stop, ...others] = order(listEl);
+			if (stop != null) {
+				setTabIndex(stop, 0);
+			}
+			for (const el of others) {
+				setTabIndex(el, -1);
+			}
+			return;
+		}
 		const items = getItems();
 		const enabled = items.filter((el) => !isItemDisabled(el));
 		if (enabled.length === 0) {
@@ -609,16 +658,31 @@ export function useListFocus(options: () => UseListFocusOptions = () => ({})): U
 
 		const currentIndex = getCurrentIndex();
 		const items = getItems();
+		let nextFrom = currentIndex === -1 ? 0 : currentIndex + 1;
+		let prevFrom = currentIndex === -1 ? items.length - 1 : currentIndex - 1;
+		// Focus on an owner-placed stop outside `items`, such as a disabled
+		// checked radio, moves to the enabled item beside it in document order.
+		const active = document.activeElement;
+		if (
+			currentIndex === -1 &&
+			options().tabStopOrder != null &&
+			active != null &&
+			container?.contains(active)
+		) {
+			const after = items.findIndex(
+				(item) => (active.compareDocumentPosition(item) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+			);
+			nextFrom = after === -1 ? items.length : after;
+			prevFrom = nextFrom - 1;
+		}
 
 		if (isNext) {
-			const from = currentIndex === -1 ? 0 : currentIndex + 1;
-			const next = findEnabledIndex(items, from, 1, wrap);
+			const next = findEnabledIndex(items, nextFrom, 1, wrap);
 			if (next !== -1) {
 				focusIndex(items, next);
 			}
 		} else if (isPrev) {
-			const from = currentIndex === -1 ? items.length - 1 : currentIndex - 1;
-			const prev = findEnabledIndex(items, from, -1, wrap);
+			const prev = findEnabledIndex(items, prevFrom, -1, wrap);
 			if (prev !== -1) {
 				focusIndex(items, prev);
 			}

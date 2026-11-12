@@ -1,25 +1,31 @@
 {
-	"name": "@astryx-svelte/cli",
+	"name": "@astryx-sv/cli",
 	"displayName": "CLI",
-	"version": "0.5.2",
+	"version": "0.7.13",
 	"description": "Scaffold projects, browse templates, generate themes, and get agent-ready docs from the command line.",
-	"type": "module",
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
+	"bugs": {
+		"url": "https://github.com/crqch/astryx-svelte/issues"
+	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/cli"
-	},
-	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
-	},
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
-	"publishConfig": {
-		"access": "public"
 	},
 	"bin": {
 		"astryx-svelte": "./bin/astryx-svelte.mjs"
 	},
+	"files": [
+		"bin",
+		"api",
+		"assets",
+		"authoring",
+		"clients",
+		"foundation",
+		"!**/*.test.mjs"
+	],
+	"type": "module",
 	"exports": {
 		".": "./bin/astryx-svelte.mjs",
 		"./json": {
@@ -58,28 +64,19 @@
 			"import": "./foundation/xle/browser.mjs"
 		}
 	},
-	"files": [
-		"bin",
-		"api",
-		"assets",
-		"authoring",
-		"clients",
-		"foundation",
-		"!**/*.test.mjs"
-	],
-	"engines": {
-		"node": ">=22"
+	"publishConfig": {
+		"access": "public"
 	},
 	"scripts": {
-		"astryx-svelte": "node bin/astryx-svelte.mjs",
+		"astryx-svelte": "bun bin/astryx-svelte.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write .",
+		"lint": "oxfmt --check . && oxlint .",
+		"format": "oxfmt --write .",
 		"test:unit": "vitest",
-		"test:core-src": "node scripts/assert-core-ships-src.mjs",
-		"generate-themes": "node scripts/generate-cli-themes.mjs",
-		"test:themes-bundle": "node scripts/generate-cli-themes.mjs --check",
-		"test": "npm run test:unit -- --run && npm run test:core-src && npm run test:themes-bundle"
+		"test:core-src": "bun scripts/assert-core-ships-src.mjs",
+		"generate-themes": "bun scripts/generate-cli-themes.mjs",
+		"test:themes-bundle": "bun scripts/generate-cli-themes.mjs --check",
+		"test": "vitest --run && bun run test:core-src && bun run test:themes-bundle"
 	},
 	"dependencies": {
 		"commander": "^14.0.0",
@@ -88,36 +85,33 @@
 		"zimmerframe": "^1.1.4",
 		"zod": "^4.0.0"
 	},
+	"devDependencies": {
+		"@astryx-sv/core": "workspace:*",
+		"@astryx-sv/theme-neutral": "workspace:*",
+		"@fvilers/heroicons-svelte": "2.1.5-fix.3",
+		"@lucide/svelte": "^1.25.0",
+		"@types/node": "^22",
+		"svelte": "^5.56.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.10"
+	},
 	"peerDependencies": {
-		"@astryx-svelte/core": "*",
-		"@astryx-svelte/theme-neutral": "*",
+		"@astryx-sv/core": "*",
+		"@astryx-sv/theme-neutral": "*",
 		"svelte": "^5.0.0"
 	},
 	"peerDependenciesMeta": {
-		"@astryx-svelte/core": {
+		"@astryx-sv/core": {
 			"optional": true
 		},
-		"@astryx-svelte/theme-neutral": {
+		"@astryx-sv/theme-neutral": {
 			"optional": true
 		},
 		"svelte": {
 			"optional": true
 		}
 	},
-	"devDependencies": {
-		"@astryx-svelte/core": "workspace:*",
-		"@astryx-svelte/theme-neutral": "workspace:*",
-		"@eslint/js": "^10.0.1",
-		"@fvilers/heroicons-svelte": "2.1.5-fix.3",
-		"@lucide/svelte": "^1.25.0",
-		"@types/node": "^22",
-		"eslint": "^10.4.1",
-		"eslint-config-prettier": "^10.1.8",
-		"globals": "^17.6.0",
-		"prettier": "^3.8.3",
-		"svelte": "^5.56.1",
-		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.60.1",
-		"vitest": "^4.1.10"
+	"engines": {
+		"node": ">=22"
 	}
 }

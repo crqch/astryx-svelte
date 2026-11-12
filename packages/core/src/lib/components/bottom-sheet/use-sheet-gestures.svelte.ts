@@ -1077,6 +1077,19 @@ export function useSheetGestures(options: UseSheetGesturesOptions): UseSheetGest
 			return;
 		}
 		const scroller = event.currentTarget as HTMLElement;
+		// A press inside a sheet nested in this sheet's content is that sheet's
+		// own gesture, not this one's. Its events bubble through this body, so
+		// without this guard the covered host arms a drag and captures the pointer
+		// out from under the inner handle.
+		const scrollerDialog = scroller.closest('dialog');
+		if (
+			scrollerDialog != null &&
+			event.target instanceof Element &&
+			event.target.closest('dialog') !== scrollerDialog
+		) {
+			armedBody = null;
+			return;
+		}
 		if (scroller.scrollTop > 0) {
 			armedBody = null;
 			return;
@@ -1327,7 +1340,8 @@ export function useSheetGestures(options: UseSheetGesturesOptions): UseSheetGest
 			options.isOpen() && (isDragging || isScrollAreaReconciling || reducedMotion.matches)
 				? 'transition: none'
 				: null,
-			'touch-action: none',
+			// One-finger drags are the sheet's; a pinch stays the browser's.
+			'touch-action: pinch-zoom',
 			'overscroll-behavior: contain'
 		]
 			.filter((declaration) => declaration !== null)
@@ -1335,7 +1349,7 @@ export function useSheetGestures(options: UseSheetGesturesOptions): UseSheetGest
 	);
 
 	const handleProps: SheetHandleProps = {
-		style: 'touch-action: none; cursor: grab',
+		style: 'touch-action: pinch-zoom; cursor: grab',
 		oncontextmenu: handleContextMenu,
 		onlostpointercapture: handleLostPointerCapture,
 		onpointerdown: handlePointerDown,

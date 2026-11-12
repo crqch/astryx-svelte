@@ -23,13 +23,16 @@ export default {
 				states: ['checked', 'disabled']
 			},
 			{
-				className: 'astryx-checkbox',
-				visualProps: ['size'],
-				states: ['checked', 'disabled'],
-				deprecatedFor: 'checkbox-indicator'
-			},
-			{
 				className: 'astryx-checkbox-label'
+			}
+		],
+		vars: [
+			{
+				name: '--_indicator-press-image',
+				description:
+					"The row's touch press image, handed down to a first-party indicator that paints its own press. Set from the press paint only while the row itself is pressed, or, under a CheckboxList row that owns the press, from that row's press paint. Only this row declares it.",
+				default: 'none',
+				private: true
 			}
 		]
 	},
@@ -178,7 +181,8 @@ export default {
 		{
 			name: 'size',
 			type: "'sm' | 'md'",
-			description: 'The size of the checkbox. sm for compact layouts, md for default.',
+			description:
+				'The size of the checkbox. sm for compact layouts, md for default. Under a coarse pointer a labelled checkbox’s target grows toward 44 px through an invisible hit area. It never shrinks below the row and stops at half the gap to a closer neighbour; nothing changes size.',
 			default: "'md'"
 		},
 		{
@@ -195,7 +199,7 @@ export default {
 			name: 'labelIcon',
 			type: 'Snippet',
 			description:
-				'Icon to display before the label text. See `astryx docs icons` for valid semantic names.'
+				'Semantic icon name or custom content displayed before the label text. See `astryx docs icons` for valid semantic names.'
 		},
 		{
 			name: 'status',

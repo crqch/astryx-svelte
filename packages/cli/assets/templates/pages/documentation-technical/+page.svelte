@@ -38,7 +38,7 @@
 		VStack,
 		useMediaQuery,
 		type OutlineItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		ChevronDownIcon,
 		ClipboardDocumentIcon,

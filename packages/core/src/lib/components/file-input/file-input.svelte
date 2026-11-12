@@ -1,7 +1,7 @@
 <script lang="ts" module>
-	import type { BaseProps } from '../../base-props.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { TranslatorFn } from '../../i18n/use-translator.svelte.js';
 
@@ -11,13 +11,15 @@
 	export type FileInputStatusType = InputStatusType;
 
 	/**
-	 * Upstream omits `'onChange' | 'defaultValue' | 'value'` from `BaseProps`
-	 * because React's `HTMLAttributes` carries all three. Svelte's carries
-	 * `onchange` but neither `value` nor `defaultValue`, so only the one omission
-	 * is needed. Parameterised to `HTMLInputElement` because `rest` spreads onto
-	 * the native file input.
+	 * Upstream omits `'onChange' | 'defaultValue' | 'value'` from
+	 * `FieldInputBaseProps` because React's `HTMLAttributes` carries all three.
+	 * Svelte's carries `onchange` but neither `value` nor `defaultValue`, so only
+	 * the one omission is needed. Parameterised to `HTMLInputElement` because
+	 * `rest` spreads onto the native file input; the base type carries the
+	 * Field-composed styling contract, so root `xstyle`/`class`/`style` are not
+	 * accepted and `container*`/`control*` are.
 	 */
-	export interface FileInputProps extends Omit<BaseProps<HTMLInputElement>, 'onchange'> {
+	export interface FileInputProps extends Omit<FieldInputBaseProps<HTMLInputElement>, 'onchange'> {
 		/** Label text for the field (always rendered for accessibility). */
 		label: string;
 		/**
@@ -201,6 +203,7 @@
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
 	import Spinner from '../spinner/spinner.svelte';
@@ -254,11 +257,25 @@
 		isOptional = false,
 		labelTooltip,
 		width,
-		xstyle,
-		class: className,
-		style: styleProp,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		...rest
 	}: FileInputProps = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout decision reactive.
+	const field = useFieldInputStyling('FileInput', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	const t = useTranslator();
 
@@ -472,7 +489,14 @@
 
 	const theme = $derived(themeProps('file-input', { mode, status: status?.type ?? null }));
 	const triggerAttrs = $derived(
-		fileInputTriggerAttrs(isDropzone, isDisabled, isDragOver, status?.type, xstyle)
+		fileInputTriggerAttrs(
+			isDropzone,
+			isDisabled,
+			isDragOver,
+			isLoading,
+			status?.type,
+			controlXstyle
+		)
 	);
 	const hiddenInputAttrs = fileInputHiddenInputAttrs();
 	const fileNameDropzoneAttrs = fileInputFileNameDropzoneAttrs();
@@ -500,6 +524,9 @@
 	{statusVariant}
 	{labelTooltip}
 	{width}
+	xstyle={fieldContainer.xstyle}
+	class={fieldContainer.className}
+	style={fieldContainer.style}
 >
 	<!--
 		A **non-interactive** container. It used to be the operable control itself
@@ -525,8 +552,8 @@
 		ondragleave={isDropzone ? handleDragLeave : undefined}
 		ondrop={isDropzone ? handleDrop : undefined}
 		{...theme}
-		class={cx(theme.class, triggerAttrs.class, className)}
-		style={mergeStyle(triggerAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, triggerAttrs.class, controlClassName)}
+		style={mergeStyle(triggerAttrs.style, controlStyle)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		<!--
@@ -564,7 +591,7 @@
 			></button>
 		</VisuallyHidden>
 		<input
-			{...rest}
+			{...fieldRest}
 			bind:this={input}
 			{id}
 			type="file"
@@ -585,7 +612,12 @@
 					{fileNames}
 				</div>
 			{:else}
-				<Icon icon="arrowUp" size="md" color="secondary" />
+				<Icon
+					icon="arrowUp"
+					size="md"
+					color="secondary"
+					{...themeProps('file-input-icon', { mode })}
+				/>
 				<span class={placeholderDropzoneAttrs.class} style={placeholderDropzoneAttrs.style}>
 					{isDragOver ? t('@astryx.fileInput.dropHint') : displayPlaceholder}
 				</span>
@@ -596,7 +628,12 @@
 			</span>
 			<Spinner size="sm" />
 		{:else}
-			<Icon icon="arrowUp" size="sm" color="secondary" />
+			<Icon
+				icon="arrowUp"
+				size="sm"
+				color="secondary"
+				{...themeProps('file-input-icon', { mode })}
+			/>
 			<span class={compactLabelAttrs.class} style={compactLabelAttrs.style}>
 				{fileNames ?? displayPlaceholder}
 			</span>

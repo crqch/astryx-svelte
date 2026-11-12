@@ -128,14 +128,16 @@
 		isTimeInRange,
 		parseISOTime
 	} from '../../utils/time-parser.js';
+	import { calendarDayOfMonth, formatCalendarMonthLabel } from '../../utils/calendar-system.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import {
-		DATE_FORMAT_LONG,
-		DATE_FORMAT_MONTH_YEAR,
 		DATE_FORMAT_WEEKDAY_ONLY,
 		plainDateFormat,
 		plainDateFromISO,
+		plainDateToISO,
 		plainDateToday
 	} from '../../utils/plain-date.js';
+	import { useTypedDate } from '../date-input/use-typed-date.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
@@ -159,8 +161,7 @@
 	import {
 		DEFAULT_MONTH_REACH,
 		clampIndex,
-		fromMonthIndex,
-		monthIndexOf
+		createMonthModel
 	} from '../date-input/month-geometry.js';
 	import {
 		touchDateTimeArrowIconAttrs,
@@ -235,10 +236,15 @@
 		// Desktop-only: the touch Date panel shows one swipe-paged month at a time.
 		numberOfMonths: _numberOfMonths,
 		weekStartsOn: weekStartsOnProp = 0,
+		calendar: calendarProp,
 		width,
 		xstyle,
 		class: className,
 		style: styleProp,
+		// Surface policy belongs to `DateTimeInput`; destructured only to keep them
+		// out of `...rest`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		...rest
 	}: DateTimeInputProps = $props();
 
@@ -329,6 +335,17 @@
 		dateConstraints
 	}));
 
+	const calendar = useCalendarSystem(() => calendarProp, 'DateTimeInput');
+	const monthModel = $derived(createMonthModel(calendar()));
+	const typedDate = useTypedDate(() => ({
+		source: 'DateTimeInput',
+		calendar: calendarProp,
+		format: 'date_long',
+		min: calendarMin,
+		max: calendarMax,
+		isDateDisabled: constraints.isDateDisabled
+	}));
+
 	let isSheetOpen = $state(false);
 	let activePanel = $state<TouchDateTimePanel>('date');
 	let isWheelOpen = $state(false);
@@ -374,18 +391,20 @@
 	// The reachable range. Anchored once — this is upstream's state initializer,
 	// and recomputing it as the selection moves would shift every pane's scroll
 	// offset under the user mid-gesture.
+	// Indexes belong to the calendar; DateTimeInput remounts this surface when
+	// the calendar changes.
 	// svelte-ignore state_referenced_locally
-	const anchorMonthIndex = monthIndexOf(
+	const anchorMonthIndex = monthModel.indexOf(
 		parseValidISODate(splitDateTime(value).date) ?? plainDateToday()
 	);
 	const minMonthIndex = $derived(
 		calendarMin != null
-			? monthIndexOf(plainDateFromISO(calendarMin))
+			? monthModel.indexOf(plainDateFromISO(calendarMin))
 			: anchorMonthIndex - DEFAULT_MONTH_REACH
 	);
 	const maxMonthIndex = $derived(
 		calendarMax != null
-			? monthIndexOf(plainDateFromISO(calendarMax))
+			? monthModel.indexOf(plainDateFromISO(calendarMax))
 			: anchorMonthIndex + DEFAULT_MONTH_REACH
 	);
 
@@ -397,15 +416,15 @@
 		clampIndex(
 			anchorMonthIndex,
 			splitDateTime(min).date != null
-				? monthIndexOf(plainDateFromISO(splitDateTime(min).date as ISODateString))
+				? monthModel.indexOf(plainDateFromISO(splitDateTime(min).date as ISODateString))
 				: anchorMonthIndex - DEFAULT_MONTH_REACH,
 			splitDateTime(max).date != null
-				? monthIndexOf(plainDateFromISO(splitDateTime(max).date as ISODateString))
+				? monthModel.indexOf(plainDateFromISO(splitDateTime(max).date as ISODateString))
 				: anchorMonthIndex + DEFAULT_MONTH_REACH
 		)
 	);
 
-	const parts = $derived(fromMonthIndex(monthIndex));
+	const parts = $derived(monthModel.yearMonthAt(monthIndex));
 	const canStepBack = $derived(monthIndex > minMonthIndex);
 	const canStepForward = $derived(monthIndex < maxMonthIndex);
 
@@ -429,16 +448,13 @@
 			)
 		)
 	);
+	const keptDay = $derived(selectedDate == null ? 1 : calendarDayOfMonth(calendar(), selectedDate));
 	const monthYearLabel = $derived(
-		plainDateFormat(
-			{ year: parts.year, month: parts.month, day: 1 },
-			DATE_FORMAT_MONTH_YEAR,
-			locale()
-		)
+		formatCalendarMonthLabel(calendar(), monthModel.monthAt(monthIndex), locale(), keptDay)
 	);
 
 	const dateDisplayValue = $derived(
-		selectedDate == null ? '' : plainDateFormat(selectedDate, DATE_FORMAT_LONG, locale())
+		selectedDate == null ? '' : typedDate.formatCommitted(plainDateToISO(selectedDate))
 	);
 
 	const timeDisplayValue = $derived.by(() => {
@@ -531,7 +547,7 @@
 	function handleResetInSheet(): void {
 		fireChange(undefined);
 		draftTime = undefined;
-		const currentMonth = monthIndexOf(today);
+		const currentMonth = monthModel.indexOf(today);
 		if (currentMonth < minMonthIndex || currentMonth > maxMonthIndex) {
 			return;
 		}
@@ -915,6 +931,7 @@
 						{#key `${minMonthIndex}:${maxMonthIndex}`}
 							<MonthScroller
 								bind:this={scroller}
+								{monthModel}
 								{minMonthIndex}
 								{maxMonthIndex}
 								initialMonthIndex={monthIndex}
@@ -951,9 +968,11 @@
 							style={wheelSpacerAttrs.style}
 						></div>
 						<MonthYearWheels
+							{monthModel}
 							{monthIndex}
 							{minMonthIndex}
 							{maxMonthIndex}
+							{keptDay}
 							onChange={handleWheelChange}
 							monthLabel={t('@astryx.dateInput.monthWheel')}
 							yearLabel={t('@astryx.dateInput.yearWheel')}

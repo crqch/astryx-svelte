@@ -1,11 +1,10 @@
 import type { DateRange, ISODateString, PlainDate } from '../../utils/date-types.js';
 import {
-	plainDateAddMonths,
-	plainDateFromISO,
-	plainDateIsAfter,
-	plainDateIsBefore,
-	plainDateSetFirstOfMonth
-} from '../../utils/plain-date.js';
+	calendarAddMonths,
+	calendarMonthOf,
+	type CalendarSystem
+} from '../../utils/calendar-system.js';
+import { plainDateFromISO, plainDateIsAfter, plainDateIsBefore } from '../../utils/plain-date.js';
 
 /**
  * Ported from Astryx's `Calendar/getInitialFocusDate.ts`.
@@ -28,6 +27,8 @@ export interface InitialFocusDateOptions {
 	numberOfMonths: number;
 	/** Today, injected so the caller keeps a single memoized source of "now". */
 	today: PlainDate;
+	/** The calendar system whose months the panes show. Default: `gregory`. */
+	calendar?: CalendarSystem;
 }
 
 /**
@@ -49,7 +50,7 @@ export interface InitialFocusDateOptions {
  * never crosses `min`'s month.
  */
 export function getInitialFocusDate(options: InitialFocusDateOptions): PlainDate {
-	const { focusDate, value, min, max, numberOfMonths, today } = options;
+	const { focusDate, value, min, max, numberOfMonths, today, calendar = 'gregory' } = options;
 
 	if (focusDate) {
 		return plainDateFromISO(focusDate);
@@ -68,8 +69,12 @@ export function getInitialFocusDate(options: InitialFocusDateOptions): PlainDate
 
 	if (maxDate && plainDateIsAfter(today, maxDate)) {
 		const lastPaneOffset = Math.max(0, numberOfMonths - 1);
-		const shifted = plainDateAddMonths(plainDateSetFirstOfMonth(maxDate), -lastPaneOffset);
-		if (minDate && plainDateIsBefore(shifted, plainDateSetFirstOfMonth(minDate))) {
+		const shifted = calendarAddMonths(
+			calendar,
+			calendarMonthOf(calendar, maxDate),
+			-lastPaneOffset
+		).start;
+		if (minDate && plainDateIsBefore(shifted, calendarMonthOf(calendar, minDate).start)) {
 			return minDate;
 		}
 		return shifted;

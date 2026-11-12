@@ -27,6 +27,56 @@ export default {
 	group: 'Dialog',
 	category: 'Overlay',
 	isHiddenFromOverview: true,
+	theming: {
+		targets: [
+			{
+				className: 'astryx-dialog-header'
+			},
+			{
+				className: 'astryx-dialog-header-start-content'
+			},
+			{
+				className: 'astryx-dialog-header-title-block'
+			},
+			{
+				className: 'astryx-dialog-header-end-content'
+			},
+			{
+				className: 'astryx-dialog-header-close-icon'
+			}
+		]
+	},
+	usage: {
+		description:
+			'Use DialogHeader to give a dialog a labelled title area and optional close control.',
+		anatomy: [
+			{
+				name: 'Header row',
+				required: true,
+				description: 'Arranges the title block, optional start/end content, and close control.'
+			},
+			{
+				name: 'Start content',
+				required: false,
+				description: 'Wraps optional leading content.'
+			},
+			{
+				name: 'Title block',
+				required: true,
+				description: 'Groups the title and optional subtitle.'
+			},
+			{
+				name: 'End content',
+				required: false,
+				description: 'Groups optional trailing content with the optional close control.'
+			},
+			{
+				name: 'Close icon',
+				required: false,
+				description: 'Visual close glyph inside the close button.'
+			}
+		]
+	},
 	playground: {
 		defaults: {
 			title: 'Delete file?',
@@ -39,12 +89,13 @@ export default {
 			name: 'title',
 			type: 'string',
 			description:
-				'Dialog title (receives focus on open and labels the dialog via aria-labelledby).'
+				'Dialog title, rendered inside the focusable h2 (receives focus on open; its text content labels the dialog via aria-labelledby unless the Dialog has an explicit aria-label/aria-labelledby). Keep it inline, non-interactive, and non-empty.'
 		},
 		{
 			name: 'subtitle',
 			type: 'string',
-			description: 'Subtitle below the title.'
+			description:
+				'Subtitle below the title. Accepts inline content such as a Link; avoid block elements.'
 		},
 		{
 			name: 'onOpenChange',
@@ -60,6 +111,12 @@ export default {
 			name: 'endContent',
 			type: 'Snippet',
 			description: 'Content after the title, before close button.'
+		},
+		{
+			name: 'endContentEdgeCompensation',
+			type: "'inline' | 'block' | 'all'",
+			description:
+				'Selects compensation axes for the end-content slot. Omit to preserve automatic close-action compensation.'
 		},
 		{
 			name: 'hasDivider',

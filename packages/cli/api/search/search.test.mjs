@@ -1,11 +1,11 @@
 /**
  * @file Colocated tests for the `search` leaf (api/search/search.mjs), run
- * against the real `@astryx-svelte/core` registry. This locks the envelope,
+ * against the real `@astryx-sv/core` registry. This locks the envelope,
  * ranking invariants, the `--type`/limit handling, and the error paths.
  *
  * The API validates its own inputs (not just the CLI): a non-positive/non-integer
  * `limit`, an empty query, and a bad `--type` all throw AstryxError with the
- * ERR_INVALID_ARGUMENT code, so a direct `@astryx-svelte/cli/api` caller gets the
+ * ERR_INVALID_ARGUMENT code, so a direct `@astryx-sv/cli/api` caller gets the
  * same contract as `astryx-svelte search` on the command line.
  *
  * Ported case for case: 11/11, verbatim. The `template` domain appears in

@@ -832,12 +832,12 @@ const ledger = existsSync('port/ledger')
 const gates = [];
 if (full) {
 	gates.push(
-		runStage('Class oracle', 'pnpm', ['-F', '@astryx-svelte/core', 'test:parity']),
-		runStage('CSS oracle', 'pnpm', ['-F', '@astryx-svelte/core', 'test:css']),
-		runStage('Theme oracle', 'pnpm', ['-F', '@astryx-svelte/theme-neutral', 'test']),
+		runStage('Class oracle', 'pnpm', ['-F', '@astryx-sv/core', 'test:parity']),
+		runStage('CSS oracle', 'pnpm', ['-F', '@astryx-sv/core', 'test:css']),
+		runStage('Theme oracle', 'pnpm', ['-F', '@astryx-sv/theme-neutral', 'test']),
 		runStage('Test collection', 'pnpm', [
 			'-F',
-			'@astryx-svelte/core',
+			'@astryx-sv/core',
 			'exec',
 			'vitest',
 			'list',
@@ -1421,7 +1421,7 @@ pnpm install
 ## 3. Re-baseline the class oracle
 
 ```sh
-pnpm -F @astryx-svelte/core test:parity
+pnpm -F @astryx-sv/core test:parity
 ```
 
 Mismatches here are expected — they are the diff. Work them with the `astryx-oracle` agent.
@@ -1507,7 +1507,7 @@ version number — which npm does not let you re-use.
 
 Watch for `EOTP`: a classic *Publish* token fails on an account with 2FA enforced for writes, and it
 fails at the last possible step, after the full gate has run. `NPM_TOKEN` must be an **Automation**
-token or a Granular Access Token with write access to the `@astryx-svelte` scope.
+token or a Granular Access Token with write access to the `@astryx-sv` scope.
 
 ## 5. Tag from a merged `main`
 

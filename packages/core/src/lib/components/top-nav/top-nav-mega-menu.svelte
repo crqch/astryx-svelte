@@ -35,6 +35,7 @@
 
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import Grid from '../grid/grid.svelte';
 	import Icon from '../icon/icon.svelte';
@@ -111,6 +112,8 @@
 
 	const slot = useTopNavSlot();
 
+	// Drawer mode's header toggle is the pressable surface.
+	const pressable = usePressFeedback();
 	const isDrawer = $derived(renderMode() === 'drawer');
 	const isMobileBar = $derived(renderMode() === 'mobile-bar');
 
@@ -198,6 +201,7 @@
 		<!-- Header toggle — same pattern as TopNavMenu drawer -->
 		<button
 			type="button"
+			{...pressable}
 			onclick={() => (isExpanded = !isExpanded)}
 			aria-expanded={isExpanded}
 			aria-controls="{drawerMenuId}-items"

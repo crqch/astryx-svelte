@@ -10,17 +10,7 @@ export default {
 	displayName: 'Layout Content',
 	subComponentOf: 'Layout',
 	description: 'Scrollable main content area.',
-	keywords: [
-		'layout',
-		'container',
-		'content',
-		'flex',
-		'box',
-		'wrapper',
-		'scaffold',
-		'page',
-		'shell'
-	],
+	keywords: ['layout', 'container', 'content', 'flex', 'box', 'wrapper', 'page', 'regions'],
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
@@ -32,25 +22,32 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Internal padding using the spacing scale. Overrides the default padding from the layout container.'
 		},
 		{
 			name: 'isScrollable',
 			type: 'boolean',
-			description: 'Enable scrollable overflow.',
+			description:
+				'Enable scrollable overflow. With arithmetic contentWidth values, the scrollport spans through every open side while context-aware insets keep children aligned.',
 			default: 'true'
 		},
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Accessible label for the landmark element.'
+			description:
+				'Accessible label for the landmark element. While the region scrolls, it also names the scrolling region, which otherwise takes a translated "Content".'
 		},
 		{
 			name: 'role',
 			type: 'AriaRole',
 			description: 'ARIA landmark role.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the content region element.'
 		}
 	]
 };

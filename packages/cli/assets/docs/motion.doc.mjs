@@ -4,7 +4,7 @@
  * `durationVars`/`easeVars`, which this port publishes from no subpath.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'motion',
 	title: 'Motion',

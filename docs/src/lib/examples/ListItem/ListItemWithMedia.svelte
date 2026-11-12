@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Avatar, Badge, Icon, List, ListItem } from '@astryx-svelte/core';
+	import { Avatar, Badge, Icon, List, ListItem } from '@astryx-sv/core';
 </script>
 
 <List header="Team" hasDividers>

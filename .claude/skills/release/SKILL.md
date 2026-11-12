@@ -7,7 +7,7 @@ Release `$ARGUMENTS` (a version, e.g. `0.4.1`).
 
 `.github/workflows/release.yml` owns the mechanics: it fires on `v*`, re-runs the full CI gate
 (a tag can be pushed at any commit, including one CI never saw), then publishes with
-`pnpm publish -r --access public --no-git-checks`. It must be pnpm, not npm — only pnpm rewrites the
+`bun scripts/publish.mjs`, which runs `bun publish` in every public package. Bun rewrites the
 `workspace:` protocol in the theme peer dependencies to a real range at pack time. **No
 `--provenance`**: this repository is private, and npm's Sigstore transparency log rejects provenance
 from a private source repo, failing at the last step of the job after everything else has passed.
@@ -22,10 +22,10 @@ All ten publish together — core, the CLI and eight themes — because every pa
 version of the upstream Astryx release it ports, so one tag names the whole release. There is no
 bump script: edit the `version` field of all ten `package.json` files by hand (the 0.3.1 -> 0.4.1
 cut touched exactly those ten plus `CHANGELOG.md`, nothing else — cross-package deps are
-`workspace:^` / `workspace:*` and pnpm rewrites those at pack time). Then verify they agree:
+`workspace:^` / `workspace:*` and Bun rewrites those at pack time). Then verify they agree:
 
 ```sh
-pnpm check:publish --version <version>
+bun run check:publish --version <version>
 ```
 
 This does not set the version — it is the gate that confirms every manifest already matches
@@ -42,8 +42,8 @@ machine-readable parity target is the exact `@astryxdesign/*` pin, already in th
 ## 3. Gate
 
 ```sh
-pnpm verify
-pnpm check:publish --version <version>
+bun run verify
+bun run check:publish --version <version>
 ```
 
 `check:publish` catches two things publint does not: a package with no README (npm renders a blank
@@ -59,7 +59,7 @@ surfaces without burning a version number — which npm does not let you re-use.
 Watch for `EOTP`: a classic _Publish_ token fails on an account with 2FA enforced for writes, and it
 fails only after authenticating and uploading the tarball — the last possible step, after the full
 gate has already run. `NPM_TOKEN` must be an **Automation** token or a Granular Access Token with
-write access to the `@astryx-svelte` scope.
+write access to the `@astryx-sv` scope.
 
 ## 5. Tag from a merged `main`
 

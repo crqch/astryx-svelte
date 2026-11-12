@@ -41,6 +41,12 @@
 	import Button from '../button/button.svelte';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
+	import { GROUP_PRESS_POINTERS } from '../../hooks/use-group-press-tracking.svelte.js';
+	import {
+		setPressGroupBandContext,
+		setPressGroupContext,
+		usePressGroupContext
+	} from '../../hooks/press-group-context.svelte.js';
 	import { useToggleButtonGroup } from './toggle-button-group-context.svelte.js';
 	import {
 		toggleButtonLabelAttrs,
@@ -82,6 +88,21 @@
 
 	const group = useToggleButtonGroup();
 	const groupValue = $derived(group?.());
+	// In a group, the group tracks only a toggle with a value. A toggle without
+	// one keeps its own press. Outside a group, the toggle follows its parent.
+	const parentContext = usePressGroupContext();
+	const parentPointers = $derived(parentContext?.() ?? null);
+	const groupPointers = $derived(
+		groupValue == null
+			? parentPointers
+			: groupValue.tracksPress === true && value != null
+				? GROUP_PRESS_POINTERS
+				: null
+	);
+	// The group's hit layer is the touch band of each toggle it tracks.
+	const isInGroupBand = $derived(groupValue != null && groupPointers != null);
+	setPressGroupContext(() => groupPointers);
+	setPressGroupBandContext(() => isInGroupBand);
 
 	const committedPressed = $derived(
 		groupValue != null && value != null

@@ -3,7 +3,7 @@
  * Svelte markup and a `.stylex.ts` module reading `var(--shadow-*)`.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'elevation',
 	title: 'Elevation',
@@ -94,7 +94,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Raising a surface with the elevation prop',
 					code: `<script lang="ts">
-	import { Card, ChatComposer, IconButton } from '@astryx-svelte/core';
+	import { Card, ChatComposer, IconButton } from '@astryx-sv/core';
 </script>
 
 <!-- Flat by default; raise only when the surface needs to float. -->

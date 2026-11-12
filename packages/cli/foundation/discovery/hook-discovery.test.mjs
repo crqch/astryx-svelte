@@ -1,6 +1,6 @@
 /**
  * @file Colocated tests for hook-discovery, run against the real
- * `@astryx-svelte/core` source tree plus throwaway fixtures. Pins the category
+ * `@astryx-sv/core` source tree plus throwaway fixtures. Pins the category
  * grouping, the missing-src guarding (which differs from component-discovery),
  * and the Levenshtein fuzzy-fallback in findHookDoc.
  *

@@ -9,6 +9,7 @@ import RenderContentHarness from './fixtures/toast-render-content.svelte';
 import NestedViewports from './fixtures/toast-nested-viewports.svelte';
 import TwoViewports from './fixtures/toast-two-viewports.svelte';
 import LongBody from './fixtures/toast-long-body.svelte';
+import ToastFlows from './fixtures/toast-flows.svelte';
 import Toast from '$lib/components/toast/toast.svelte';
 import EffectDispatch from './fixtures/toast-effect-dispatch.svelte';
 import { __resetLiveRegionsForTest, type AnnouncePoliteness } from '$lib/hooks/use-announce.js';
@@ -42,15 +43,21 @@ import type { ToastViewportProps } from '$lib/components/toast/toast-viewport.sv
  * `fireEvent.pointerDown(el, {...})` becomes a dispatched `PointerEvent` and its
  * hand-built touch objects become real `Touch`/`TouchEvent`s, because Chromium
  * implements both and jsdom implements neither — which is also what makes the
- * three `defaultPrevented` assertions mean something here: they observe the
- * `{passive: false}` `touchmove` listener actually taking effect rather than a
- * flag on a synthetic object.
+ * `defaultPrevented` assertions mean something here: they observe a non-passive
+ * `touchmove` listener actually taking effect rather than a flag on a synthetic
+ * object.
  *
- * Two things a real browser forces, both noted at the helpers below:
- * `setPointerCapture` throws for a pointer id the compositor never saw, so it is
- * stubbed on the prototype; and a computed `transform` is a matrix, so
- * upstream's `not.toContain('translateX')` — which cannot fail here — is
- * restated as a read of the matrix's own horizontal translation.
+ * Two environment differences are load-bearing. `setPointerCapture` throws for
+ * a pointer id the compositor never saw, so it is stubbed on the prototype; and
+ * a computed `transform` is a matrix, so upstream's
+ * `not.toContain('translateX')` — which cannot fail here — is restated as a read
+ * of the matrix's own horizontal translation. A third is this browser's input
+ * mode: a desktop Chromium has no `ontouchstart`, so the sensor host does not
+ * route the synthetic TouchEvents to the card's pan. The card's own listener
+ * therefore makes the pan's one-way first-move decision (see
+ * `use-toast-gesture.ts`), which is what lets a page-owned first touch stay
+ * page-owned — and `claim.state` is still what tells it the pan failed when a
+ * real pointer move got there first.
  *
  * The sibling `Toast/useToast.test.tsx` still lives in `use-toast.svelte.test.ts`.
  *
@@ -168,6 +175,7 @@ function pen(
 		clientY: number;
 		button?: number;
 		pointerType?: string;
+		timeStamp?: number;
 	}
 ): PointerEvent {
 	const event = new PointerEvent(type, {
@@ -179,6 +187,10 @@ function pen(
 		clientY: init.clientY,
 		button: init.button ?? 0
 	});
+	// Chromium timestamps an event from the time origin, not from the test's
+	// clock, and `EventInit` has no `timeStamp`. Shadow it so a case can pin
+	// input timing the way jsdom's `Date.now()`-based stamps already do.
+	Object.defineProperty(event, 'timeStamp', { value: init.timeStamp ?? Date.now() });
 	element.dispatchEvent(event);
 	return event;
 }
@@ -194,7 +206,7 @@ function pen(
 function touch(
 	element: HTMLElement,
 	type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
-	init: { clientY: number; clientX?: number; identifier?: number }
+	init: { clientY: number; clientX?: number; identifier?: number; timeStamp?: number }
 ): TouchEvent {
 	const point = new Touch({
 		identifier: init.identifier ?? 31,
@@ -210,6 +222,49 @@ function touch(
 		targetTouches: settled ? [] : [point],
 		changedTouches: [point]
 	});
+	Object.defineProperty(event, 'timeStamp', { value: init.timeStamp ?? Date.now() });
+	element.dispatchEvent(event);
+	return event;
+}
+
+/**
+ * A multi-contact touch event, for the cases upstream builds by hand: a second
+ * finger, or a lift while another contact remains. Each contact is a real
+ * `Touch`, so the card's listeners see the same shape a browser gives them.
+ */
+function dispatchTouch(
+	element: HTMLElement,
+	type: 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel',
+	touches: { identifier: number; clientX: number; clientY: number }[],
+	changedTouches: { identifier: number; clientX: number; clientY: number }[] = touches,
+	timeStamp = Date.now()
+): TouchEvent {
+	const points = touches.map(
+		(touch) =>
+			new Touch({
+				identifier: touch.identifier,
+				target: element,
+				clientX: touch.clientX,
+				clientY: touch.clientY
+			})
+	);
+	const changed = changedTouches.map(
+		(touch) =>
+			new Touch({
+				identifier: touch.identifier,
+				target: element,
+				clientX: touch.clientX,
+				clientY: touch.clientY
+			})
+	);
+	const event = new TouchEvent(type, {
+		bubbles: true,
+		cancelable: true,
+		touches: points,
+		targetTouches: points,
+		changedTouches: changed
+	});
+	Object.defineProperty(event, 'timeStamp', { value: timeStamp });
 	element.dispatchEvent(event);
 	return event;
 }
@@ -509,8 +564,16 @@ async function settleAnnouncements(): Promise<void> {
 }
 
 afterEach(() => {
+	vi.mocked(document.hasFocus).mockRestore?.();
 	vi.useRealTimers();
 	__resetLiveRegionsForTest();
+});
+
+// jsdom reports no window focus until an element is focused, but a test page
+// stands for a focused window: a toast raised while the window is blurred
+// starts held (FR2), which the blur tests set up on purpose.
+beforeEach(() => {
+	vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 });
 
 describe('Toast responsive layout', () => {
@@ -563,7 +626,9 @@ describe('Toast responsive layout', () => {
 		) as HTMLElement;
 
 		expect(getComputedStyle(layoutRow).flexWrap).toBe('nowrap');
-		expect(getComputedStyle(layoutRow).alignItems).toBe('flex-start');
+		// Chromium 158 normalises flex alignment keywords to their flow-* spelling
+		// for a block container; accept both spellings of the same used value.
+		expect(['flex-start', 'flow-start']).toContain(getComputedStyle(layoutRow).alignItems);
 		expect(getComputedStyle(body).minWidth).toBe('0px');
 		expect(getComputedStyle(body).overflowWrap).toBe('anywhere');
 		expect(getComputedStyle(endArea).alignItems).toBe('center');
@@ -642,14 +707,35 @@ describe('ToastViewport placement', () => {
 		const { viewport } = await renderPlacement();
 
 		expect(getComputedStyle(viewport).bottom).toBe('0px');
-		expect(getComputedStyle(viewport).alignItems).toBe('flex-end');
+		expect(['flex-end', 'flow-end']).toContain(getComputedStyle(viewport).alignItems);
+		expectSpansInlineAxisWithoutOverflowing(viewport);
+	});
+
+	// The viewport is positioned by spanning the inline axis and aligning within
+	// itself, which only works if the box actually spans. `popover` makes that
+	// conditional: the UA stylesheet gives every popover `width: fit-content`,
+	// and a shrink-wrapped box cannot honour both inset edges — it resolves
+	// against the start edge, and an end-aligned toast lands on the LEFT.
+	//
+	// jsdom resolves no UA popover styles and no cascade, so it cannot reproduce
+	// that. What it CAN hold is the reset itself: the declaration is what stops
+	// the UA rule applying, so its absence is the regression. Chromium computes
+	// `width: auto` to a used pixel value, so the declaration is read from the
+	// rules that apply to the landmark (see `rulesMatching`), and the rendered
+	// consequence is the inline span checked beside it.
+	it('resets the UA popover width so the viewport can span the inline axis', async () => {
+		const { viewport } = await renderPlacement();
+
+		expect(someRuleFor([viewport], 'width: auto')).toBe(true);
+		expect(someRuleFor([viewport], 'width: fit-content')).toBe(false);
+		expect(getComputedStyle(viewport).width).not.toBe('fit-content');
 		expectSpansInlineAxisWithoutOverflowing(viewport);
 	});
 
 	it('maps explicit top and bottom placements to their configured edge', async () => {
 		const top = await renderPlacement({ position: 'topEnd' });
 		expect(getComputedStyle(top.viewport).top).toBe('0px');
-		expect(getComputedStyle(top.viewport).alignItems).toBe('flex-end');
+		expect(['flex-end', 'flow-end']).toContain(getComputedStyle(top.viewport).alignItems);
 		expect(getComputedStyle(top.viewport).flexDirection).toBe('column-reverse');
 		top.screen.unmount();
 
@@ -659,7 +745,7 @@ describe('ToastViewport placement', () => {
 			body: 'Bottom start'
 		});
 		expect(getComputedStyle(bottom.viewport).bottom).toBe('0px');
-		expect(getComputedStyle(bottom.viewport).alignItems).toBe('flex-start');
+		expect(['flex-start', 'flow-start']).toContain(getComputedStyle(bottom.viewport).alignItems);
 		bottom.screen.unmount();
 	});
 });
@@ -719,6 +805,76 @@ describe('ToastViewport visible limit', () => {
 		capped.screen.unmount();
 	});
 });
+
+describe('dismissing a toast that has no mounted row', () => {
+	it('reports a hidden toast once when it is dismissed twice before the viewport renders again', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'hidden-twice', maxVisible: 1, onHide }
+		});
+		(screen.getByText('Show A', { exact: true }).element() as HTMLElement).click();
+		(screen.getByText('Show B', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(screen.locator.getByText('Toast A', { exact: true }).query()).toBeNull();
+
+		// Both calls land in one batch, before the list renders without A.
+		(screen.getByText('Dismiss A twice', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+
+	it('frees the slot of a toast dismissed while it was hidden past maxVisible', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'hidden-slot', maxVisible: 2, onHide }
+		});
+		for (const label of ['Show A', 'Show B', 'Show C']) {
+			(screen.getByText(label, { exact: true }).element() as HTMLElement).click();
+		}
+		await tick();
+		// Only the newest two are shown: A is hidden past the limit.
+		expect(screen.locator.getByText('Toast A', { exact: true }).query()).toBeNull();
+
+		(screen.getByText('Dismiss A', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(onHide).toHaveBeenCalledTimes(1);
+		expect(onHide).toHaveBeenCalledWith('manual');
+
+		// C leaves. A was dismissed, so it must not come back to hold the slot
+		// as an empty row: B is the only toast left.
+		const toastC = getToastWrapperByText('Toast C');
+		(toastC.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		completeExit(toastC.dataset.toastId ?? '');
+		await tick();
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(1);
+		expect(screen.locator.getByText('Toast B', { exact: true }).query()).not.toBeNull();
+
+		// Once B leaves too, nothing is left: no row, no empty landmark.
+		const toastB = getToastWrapperByText('Toast B');
+		(toastB.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		completeExit(toastB.dataset.toastId ?? '');
+		await tick();
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+		expect(notificationRegions()).toHaveLength(0);
+		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+
+	it('never shows a toast dismissed before it rendered, and reports it once', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'dismiss-before-render', onHide }
+		});
+		(screen.getByText('Show and dismiss', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+		expect(notificationRegions()).toHaveLength(0);
+		expect(onHide).toHaveBeenCalledTimes(1);
+		expect(onHide).toHaveBeenCalledWith('manual');
+	});
+});
 describe('ToastViewport keyboard reach + focus', () => {
 	it('F6 moves focus into the newest toast', async () => {
 		const screen = await renderViewport([{ options: INFO_A, triggerLabel: 'Trigger A' }]);
@@ -740,6 +896,62 @@ describe('ToastViewport keyboard reach + focus', () => {
 			.getByRole('button', { name: 'Dismiss notification', exact: true })
 			.element() as HTMLElement;
 		expect(document.activeElement).toBe(dismiss);
+	});
+
+	it('keeps focus in the replacement when a control inside a toast raises its repeat and dismisses it', async () => {
+		const screen = await render(ToastFlows, {
+			props: { flow: 'offline', maxVisible: 2 }
+		});
+		(screen.getByText('Show two', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		(screen.getByText('Show offline', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		// Alpha waits hidden; Bravo and Offline show.
+		const retry = screen
+			.getByRole('button', { name: 'Retry', exact: true })
+			.element() as HTMLElement;
+		retry.focus();
+		retry.click();
+		await tick();
+		// Toast.spec.md FR8: the repeat updates the card in place, so the pressed
+		// Retry stays focused in it; dismissing the replaced toast leaves the row
+		// to the replacement, and focus does not jump to a neighbour.
+		const replacement = getToastWrapperByText('Still offline');
+		expect(document.activeElement).toBe(retry);
+		expect(replacement.contains(retry)).toBe(true);
+		expect(screen.locator.getByText('Offline', { exact: true }).query()).toBeNull();
+	});
+
+	it('moves focus into the replacement when a control inside the only toast raises its repeat and dismisses it', async () => {
+		const screen = await render(ToastFlows, { props: { flow: 'offline-only' } });
+		(screen.getByText('Show offline', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const retry = screen
+			.getByRole('button', { name: 'Retry', exact: true })
+			.element() as HTMLElement;
+		retry.focus();
+		retry.click();
+		await tick();
+		// FR10: the replacement is the remaining toast, so focus goes into it.
+		expect(getToastWrapperByText('Still offline').contains(document.activeElement)).toBe(true);
+	});
+
+	it('moves focus to a toast that shows when a control inside a toast raises two toasts at the cap and dismisses its own', async () => {
+		const screen = await render(ToastFlows, {
+			props: { flow: 'upload', maxVisible: 1 }
+		});
+		(screen.getByText('Save', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const uploadButton = screen
+			.getByRole('button', { name: 'Upload', exact: true })
+			.element() as HTMLElement;
+		uploadButton.focus();
+		uploadButton.click();
+		await tick();
+		// FR10: with one visible place, "Uploaded" shows and "Uploading" waits
+		// hidden, so focus goes to "Uploaded", not to the hidden toast or the
+		// region.
+		expect(getToastWrapperByText('Uploaded').contains(document.activeElement)).toBe(true);
 	});
 
 	it('dismissing a focused toast moves focus to a remaining toast, not body', async () => {
@@ -798,6 +1010,205 @@ describe('ToastViewport keyboard reach + focus', () => {
 		// No toasts left — focus returns to the element focused before F6.
 		expect(document.activeElement).toBe(trigger);
 	});
+
+	it('restores focus after a toast reached with Tab rather than F6 is dismissed', async () => {
+		const screen = await renderViewport([{ options: INFO_A, triggerLabel: 'Trigger A' }]);
+		const trigger = screen.getByText('Trigger A', { exact: true }).element() as HTMLElement;
+		trigger.focus();
+		trigger.click();
+		await tick();
+		const dismiss = screen
+			.getByRole('button', { name: 'Dismiss notification', exact: true })
+			.element() as HTMLElement;
+		// Tab (or a click) moves focus straight to the toast's control.
+		dismiss.focus();
+		const toastId = toastIds()[0];
+
+		dismiss.click();
+		await tick();
+		completeExit(toastId);
+		await tick();
+
+		expect(document.activeElement).toBe(trigger);
+	});
+
+	// FR8: an overwrite updates the card in place under the same key, so focus
+	// inside it stays on the same control.
+	it('keeps focus on a control inside a toast that an overwrite updates', async () => {
+		const screen = await render(ToastFlows, { props: { flow: 'overwrite' } });
+		(screen.getByText('Start', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const cancel = screen
+			.getByRole('button', { name: 'Cancel upload', exact: true })
+			.element() as HTMLElement;
+		cancel.focus();
+
+		(screen.getByText('Progress', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const viewport = notificationRegions()[0];
+		expect(viewport.textContent).toContain('Uploading 60%');
+		expect(cancel.isConnected).toBe(true);
+		expect(document.activeElement).toBe(cancel);
+	});
+
+	// FR2, FR8: an overwrite that turns the card into one that auto-hides keeps
+	// the timer held while focus is inside it.
+	it('keeps an overwritten toast held while focus is inside when it starts auto-hiding', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const screen = await render(ToastFlows, {
+				props: { flow: 'overwrite-autohide', onHide }
+			});
+			(screen.getByText('Start', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			const cancel = screen
+				.getByRole('button', { name: 'Cancel upload', exact: true })
+				.element() as HTMLElement;
+			cancel.focus();
+
+			(screen.getByText('Finish', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			vi.advanceTimersByTime(5000);
+			await tick();
+
+			expect(onHide).not.toHaveBeenCalled();
+			expect(document.activeElement).toBe(cancel);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	// FR2: an update that removes the focused control drops its focus hold, so
+	// a control-free, auto-hiding replacement still hides on time.
+	it('auto-hides a control-free replacement after the update removes the focused control', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const screen = await render(ToastFlows, {
+				props: { flow: 'overwrite-autohide-quiet', onHide }
+			});
+			const start = screen.getByText('Start', { exact: true }).element() as HTMLElement;
+			start.focus();
+			start.click();
+			await tick();
+			(
+				screen.getByRole('button', { name: 'Cancel upload', exact: true }).element() as HTMLElement
+			).focus();
+
+			// A control-free, auto-hiding replacement: the focus hold must go with
+			// the control.
+			(screen.getByText('Finish', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			vi.advanceTimersByTime(2500);
+			await tick();
+
+			expect(onHide).toHaveBeenCalledWith('auto');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	// FR2: a window hold taken while the toast auto-hid does not outlive the
+	// listeners an update that turns auto-hide off removes.
+	it('auto-hides again after an update turns auto-hide off and on across a window blur', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const screen = await render(ToastFlows, {
+				props: { flow: 'network', onHide }
+			});
+			(screen.getByText('Sync', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			window.dispatchEvent(new Event('blur'));
+			(screen.getByText('Lose network', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			window.dispatchEvent(new Event('focus'));
+			(screen.getByText('Reconnect', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			vi.advanceTimersByTime(2500);
+			await tick();
+
+			expect(onHide).toHaveBeenCalledWith('auto');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	// FR9: the viewport is the one announcement owner, so a card updated in
+	// place carries no live region of its own.
+	it('announces an overwrite once, through the viewport only', async () => {
+		const screen = await render(ToastFlows, { props: { flow: 'overwrite' } });
+		(screen.getByText('Start', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		(screen.getByText('Progress', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		// The toast's text sits in no live region inside its row: only the
+		// viewport's own announcer speaks it.
+		const row = getToastWrapperByText('Uploading 60%');
+		const body = [...row.querySelectorAll<HTMLElement>('*')].find(
+			(element) => element.children.length === 0 && element.textContent?.trim() === 'Uploading 60%'
+		) as HTMLElement;
+		const liveAncestor = body.closest('[aria-live], [role="status"], [role="alert"]');
+		expect(liveAncestor == null || !row.contains(liveAncestor)).toBe(true);
+	});
+
+	// FR8, FR10: when the overwrite removes the focused control, focus moves as
+	// FR10 hands it off, never to the page body.
+	it('hands focus off when an overwrite removes the focused control', async () => {
+		const screen = await render(ToastFlows, { props: { flow: 'overwrite-remove' } });
+		const start = screen.getByText('Start', { exact: true }).element() as HTMLElement;
+		start.focus();
+		start.click();
+		await tick();
+		(
+			screen.getByRole('button', { name: 'Cancel upload', exact: true }).element() as HTMLElement
+		).focus();
+
+		(screen.getByText('Finish', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		expect(document.activeElement).not.toBe(document.body);
+		expect(document.activeElement).toBe(start);
+	});
+
+	// FR10: dismissing a focused toast beside a control-free one never drops
+	// focus to the page body; with no control to take it, the remembered
+	// element does.
+	it('restores the remembered element when only a control-free toast remains', async () => {
+		const screen = await render(ToastFlows, { props: { flow: 'quiet-and-b' } });
+		(screen.getByText('Trigger quiet', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const trigger = screen.getByText('Trigger B', { exact: true }).element() as HTMLElement;
+		trigger.focus();
+		trigger.click();
+		await tick();
+		const dismiss = screen
+			.getByRole('button', { name: 'Dismiss notification', exact: true })
+			.element() as HTMLElement;
+		dismiss.focus();
+		const toastId = dismiss.closest('[data-toast-id]')?.getAttribute('data-toast-id') as string;
+
+		dismiss.click();
+		await tick();
+		completeExit(toastId);
+		await tick();
+
+		expect(document.activeElement).not.toBe(document.body);
+		expect(document.activeElement).toBe(trigger);
+	});
+
+	// UNPORTED: `keeps the return target while focus visits portaled toast
+	// content`. Upstream renders `createPortal(<button>Portaled</button>,
+	// document.body)` inside `renderContent`; React bubbles the portal's focus
+	// events through the toast's own React tree, which is how the viewport knows
+	// focus has come back from content that sits outside its DOM. Svelte has no
+	// portal primitive that preserves that event path, and moving a node to
+	// `document.body` with an action (the closest emulation) makes the focus
+	// return look like a fresh entry from outside, so the case would assert a
+	// different mechanism. It needs a portal equivalent, not a test.
 });
 
 describe('Toast blur timer pause', () => {
@@ -841,6 +1252,44 @@ describe('Toast blur timer pause', () => {
 			expect(screen.container.textContent).not.toContain('Auto toast');
 			expect(onHide).toHaveBeenCalledExactlyOnceWith('auto');
 		} finally {
+			vi.useRealTimers();
+		}
+	});
+});
+
+describe('Toast raised while the window is blurred', () => {
+	// FR2: a toast raised while the document does not have focus starts held,
+	// so it cannot expire before the user returns to the window.
+	it('starts its auto-hide timer held until the window regains focus', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		const hasFocus = vi.spyOn(document, 'hasFocus').mockReturnValue(false);
+		try {
+			const screen = await renderViewport([{ options: AUTO_TOAST, triggerLabel: 'Trigger Auto' }]);
+			(screen.getByText('Trigger Auto', { exact: true }).element() as HTMLElement).click();
+			await tick();
+			const viewport = notificationRegions()[0];
+			const heldId = toastIds()[0];
+			vi.advanceTimersByTime(30_000);
+			await tick();
+			// An exit that had started would finish here and remove the toast.
+			if (heldId) {
+				completeExit(heldId);
+				await tick();
+			}
+			expect(viewport.textContent).toContain('Auto toast');
+
+			hasFocus.mockReturnValue(true);
+			window.dispatchEvent(new Event('focus'));
+			vi.advanceTimersByTime(10_000);
+			await tick();
+			const toastId = toastIds()[0];
+			if (toastId) {
+				completeExit(toastId);
+				await tick();
+			}
+			expect(viewport.textContent).not.toContain('Auto toast');
+		} finally {
+			hasFocus.mockRestore();
 			vi.useRealTimers();
 		}
 	});
@@ -1010,6 +1459,220 @@ describe('toast announcements via singleton live regions', () => {
 		expect(screen.container.textContent).toContain('Kept');
 		expect(screen.container.textContent).not.toContain('Dropped');
 	});
+
+	it('drops an ignored-collision toast while its namesake is still leaving', async () => {
+		recorder = recordAnnouncements();
+		const screen = await renderViewport([
+			{
+				options: {
+					uniqueID: 'offline',
+					collisionBehavior: 'ignore',
+					isAutoHide: false,
+					body: 'You are offline'
+				},
+				triggerLabel: 'Show 1'
+			},
+			{
+				options: {
+					uniqueID: 'offline',
+					collisionBehavior: 'ignore',
+					isAutoHide: false,
+					body: 'Still offline'
+				},
+				triggerLabel: 'Show 2'
+			}
+		]);
+		(screen.getByText('Show 1', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const first = getToastWrapperByText('You are offline');
+		(first.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// FR8: a leaving toast still holds its uniqueID, so the ignored namesake
+		// is neither shown nor announced.
+		(screen.getByText('Show 2', { exact: true }).element() as HTMLElement).click();
+		await settleAnnouncements();
+		expect(recorder.calls).toHaveLength(1);
+		expect(screen.locator.getByText('Still offline', { exact: true }).query()).toBeNull();
+		completeExit(first.dataset.toastId ?? '');
+		await tick();
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+	});
+
+	it('lets a leaving toast finish its exit when a new toast arrives with no cap', async () => {
+		const screen = await render(Harness, {
+			props: {
+				triggers: [
+					{ options: { isAutoHide: false, body: 'Saved' }, triggerLabel: 'Show 1' },
+					{ options: { isAutoHide: false, body: 'Uploaded' }, triggerLabel: 'Show 2' }
+				],
+				maxVisible: 0
+			}
+		});
+		(screen.getByText('Show 1', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const first = getToastWrapperByText('Saved');
+		const firstId = first.dataset.toastId ?? '';
+		(first.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// maxVisible={0} shows every toast (FR7), so the closing toast keeps its
+		// row and collapses (FR5) while the new one arrives.
+		(screen.getByText('Show 2', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(getToastWrapperByText('Saved').dataset.toastId).toBe(firstId);
+		expect(screen.locator.getByText('Uploaded', { exact: true }).query()).not.toBeNull();
+		completeExit(firstId);
+		await tick();
+		expect(screen.locator.getByText('Saved', { exact: true }).query()).toBeNull();
+		expect(screen.locator.getByText('Uploaded', { exact: true }).query()).not.toBeNull();
+	});
+
+	it('drops a second ignore toast with the same uniqueID raised in the same handler', async () => {
+		recorder = recordAnnouncements();
+		const screen = await render(ToastFlows, { props: { flow: 'two-ignored' } });
+		(screen.getByText('Show twice', { exact: true }).element() as HTMLElement).click();
+		await settleAnnouncements();
+		// FR8 and ORD1: the ignored namesake is neither shown nor announced, even
+		// before the first toast renders.
+		expect(recorder.calls).toEqual([['You are offline', 'polite']]);
+		const rows = [...document.querySelectorAll('[data-toast-id]')];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain('You are offline');
+	});
+
+	it('leaves no row behind when a new toast takes the last visible slot from a leaving one', async () => {
+		const screen = await render(Harness, {
+			props: {
+				triggers: [
+					{ options: { isAutoHide: false, body: 'Saved' }, triggerLabel: 'Show 1' },
+					{ options: { isAutoHide: false, body: 'Uploaded' }, triggerLabel: 'Show 2' }
+				],
+				maxVisible: 1
+			}
+		});
+		(screen.getByText('Show 1', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const first = getToastWrapperByText('Saved');
+		(first.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// A new toast arrives at once; with one visible slot it takes the place of
+		// the leaving toast, which can no longer finish its exit on screen.
+		(screen.getByText('Show 2', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const second = getToastWrapperByText('Uploaded');
+		(second.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		completeExit(second.dataset.toastId ?? '');
+		await tick();
+		// Nothing is left: no row comes back, and the landmark is gone.
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+		expect(notificationRegions()).toHaveLength(0);
+	});
+
+	it('reports the namesake once when one handler shows a repeat and dismisses the namesake', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'repeat-and-dismiss', onHide }
+		});
+		(screen.getByText('Show first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		(screen.getByText('Repeat and dismiss', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		// The repeat replaces its namesake in place, and the namesake's dismissal
+		// reports it once.
+		expect(onHide).toHaveBeenCalledTimes(1);
+		const rows = [...document.querySelectorAll('[data-toast-id]')];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain('Still offline');
+	});
+
+	it('leaves no row behind when one handler raises a toast at the cap and dismisses the one it pushed out', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'undo', maxVisible: 1, onHide }
+		});
+		(screen.getByText('Delete', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		(screen.getByText('Undo', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(onHide).toHaveBeenCalledTimes(1);
+		const restored = getToastWrapperByText('Restored');
+		(restored.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		completeExit(restored.dataset.toastId ?? '');
+		await tick();
+		// Nothing is left: no row comes back, and the landmark is gone.
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(0);
+		expect(notificationRegions()).toHaveLength(0);
+	});
+
+	it('reports a leaving toast once when it is dismissed again after a new toast pushed it out of view', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'push-dismiss', maxVisible: 1, onHide }
+		});
+		(screen.getByText('Show first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		// It starts leaving, and reports it.
+		(screen.getByText('Dismiss first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(onHide).toHaveBeenCalledTimes(1);
+		// A new toast takes the only visible slot: the leaving one leaves the list.
+		(screen.getByText('Show second', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		// Its dismissal again reports nothing more.
+		(screen.getByText('Dismiss first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(onHide).toHaveBeenCalledTimes(1);
+		const rows = [...document.querySelectorAll('[data-toast-id]')];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain('Uploaded');
+	});
+
+	it('reports nothing for a toast replaced before it rendered, however often one handler dismisses it', async () => {
+		const onHide = vi.fn();
+		const screen = await render(ToastFlows, {
+			props: { flow: 'replace-dismiss', onHide }
+		});
+		(
+			screen.getByText('Show, replace and dismiss', { exact: true }).element() as HTMLElement
+		).click();
+		await tick();
+		// FR3: a toast replaced through uniqueID is not dismissed and reports no
+		// onHide.
+		expect(onHide).not.toHaveBeenCalled();
+		const rows = [...document.querySelectorAll('[data-toast-id]')];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain('Still offline');
+	});
+
+	it('replaces a leaving namesake in place under overwrite and announces it again', async () => {
+		recorder = recordAnnouncements();
+		const screen = await renderViewport([
+			{
+				options: { uniqueID: 'upload', isAutoHide: false, body: 'Upload 30%' },
+				triggerLabel: 'Show 1'
+			},
+			{
+				options: { uniqueID: 'upload', isAutoHide: false, body: 'Upload 31%' },
+				triggerLabel: 'Show 2'
+			}
+		]);
+		(screen.getByText('Show 1', { exact: true }).element() as HTMLElement).click();
+		await settleAnnouncements();
+		expect(recorder.calls).toEqual([['Upload 30%', 'polite']]);
+		const first = getToastWrapperByText('Upload 30%');
+		(first.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// FR8: an overwrite replaces its namesake in place even while it is
+		// leaving, and is announced again.
+		(screen.getByText('Show 2', { exact: true }).element() as HTMLElement).click();
+		await settleAnnouncements();
+		expect(recorder.calls.at(-1)).toEqual(['Upload 31%', 'polite']);
+		expect(screen.locator.getByText('Upload 30%', { exact: true }).query()).toBeNull();
+		const rows = [...document.querySelectorAll('[data-toast-id]')];
+		expect(rows).toHaveLength(1);
+		expect(rows[0].textContent).toContain('Upload 31%');
+	});
 });
 
 describe('toast timer lifecycle (#3589)', () => {
@@ -1033,6 +1696,113 @@ describe('toast timer lifecycle (#3589)', () => {
 		dismiss.click();
 		await tick();
 		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+
+	// spec:Toast FR2/AR3: each pause condition is held on its own, so one
+	// ending never resumes the timer while another still holds.
+	async function showPausableToast(onHide: () => void) {
+		const screen = await render(ToastFlows, { props: { flow: 'pausable', onHide } });
+		(screen.getByText('Show held', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		// The row's wrapper holds the clip, which holds the card.
+		const wrapper = getToastWrapperByText('Held');
+		const card = wrapper.firstElementChild?.firstElementChild;
+		if (!(card instanceof HTMLElement)) {
+			throw new Error('toast card not found');
+		}
+		const action = screen
+			.getByRole('button', { name: 'Undo', exact: true })
+			.element() as HTMLElement;
+		return { screen, card, action };
+	}
+
+	function enter(card: HTMLElement): void {
+		card.dispatchEvent(new MouseEvent('mouseenter'));
+	}
+
+	function leave(card: HTMLElement): void {
+		card.dispatchEvent(new MouseEvent('mouseleave'));
+	}
+
+	it('keeps the timer paused while focus is inside after the pointer leaves', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const { card, action } = await showPausableToast(onHide);
+			enter(card);
+			action.focus();
+			leave(card);
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).not.toHaveBeenCalled();
+			// Focus leaving the card releases the last hold.
+			action.blur();
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).toHaveBeenCalledWith('auto');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('keeps the timer paused while the pointer is over it after the window regains focus', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const { card } = await showPausableToast(onHide);
+			window.dispatchEvent(new Event('blur'));
+			enter(card);
+			window.dispatchEvent(new Event('focus'));
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).not.toHaveBeenCalled();
+			leave(card);
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).toHaveBeenCalledWith('auto');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('releases the focus hold when the focused control is removed', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const { card, action } = await showPausableToast(onHide);
+			enter(card);
+			action.focus();
+			// A control that unmounts while focused fires no blur.
+			action.remove();
+			leave(card);
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).toHaveBeenCalledWith('auto');
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it('keeps the timer paused while focus moves between controls inside the card', async () => {
+		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+		try {
+			const onHide = vi.fn();
+			const { screen, action } = await showPausableToast(onHide);
+			const dismiss = screen
+				.getByRole('button', { name: 'Dismiss notification', exact: true })
+				.element() as HTMLElement;
+			action.focus();
+			vi.advanceTimersByTime(2_000);
+			await tick();
+			dismiss.focus();
+			// Moving between the card's own controls neither restarts nor resumes
+			// the timer.
+			vi.advanceTimersByTime(60_000);
+			await tick();
+			expect(onHide).not.toHaveBeenCalled();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it('keeps a window-blur pause alive when another toast arrives', async () => {
@@ -1278,7 +2048,195 @@ describe('Toast native motion contract', () => {
 		expect(wrapperStyle.maxWidth).toBe('400px');
 		expect(wrapperStyle.minWidth).toBe('0px');
 		expect(getComputedStyle(collapsible).minHeight).toBe('0px');
-		expect(getComputedStyle(collapsible).overflow).toBe('hidden');
+		// Upstream reads `hidden` here because jsdom runs no transitions: the row
+		// is still in its entry state. `renderMotionToast` awaits that entry, and
+		// the row then releases the paint clip so the card's shadow shows — the
+		// lifecycle itself is the case after this one.
+		expect(getComputedStyle(collapsible).overflow).toBe('visible');
+	});
+
+	it('releases the shadow clip only while the toast is settled', async () => {
+		const screen = await render(Harness, {
+			props: {
+				triggers: [{ options: { body: 'Shadow lifecycle', isAutoHide: false } }]
+			}
+		});
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const wrapper = getToastWrapperByText('Shadow lifecycle');
+		const inner = wrapper.firstElementChild as HTMLElement;
+
+		// Entry starts with the row's clip boundary.
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		wrapper.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('visible');
+
+		(wrapper.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// Dismissal restores the clip boundary synchronously. The wrapper keeps
+		// its normal hit boundary, so a second click while the toast is still
+		// visible is absorbed by the toast rather than falling through to an
+		// obscured control underneath.
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+		expect(getComputedStyle(wrapper).pointerEvents).toBe('auto');
+	});
+
+	it('ignores a grid-template-rows transition bubbling from a descendant', async () => {
+		// `grid-template-rows` is not private to the wrapper: any descendant may
+		// animate its own grid, and transitionend bubbles. Reading a descendant's
+		// event as the row's own releases the clip before the row has opened, and
+		// during exit it unmounts the toast mid-collapse.
+		const screen = await render(Harness, {
+			props: {
+				triggers: [{ options: { body: 'Bubbled transition', isAutoHide: false } }]
+			}
+		});
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const wrapper = getToastWrapperByText('Bubbled transition');
+		const inner = wrapper.firstElementChild as HTMLElement;
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		inner.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('hidden');
+
+		// The wrapper's own transition still settles it.
+		wrapper.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(inner).overflow).toBe('visible');
+
+		// Same guard on the exit path: a descendant's event must not cut the
+		// collapse short and unmount the toast early.
+		(wrapper.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		inner.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(screen.getByText('Bubbled transition', { exact: true }).query()).not.toBeNull();
+	});
+
+	it('updates a settled toast in place when an overwrite replaces it through uniqueID', async () => {
+		// FR8: an overwrite keeps the replaced toast's row, so the card updates in
+		// place: the row stays settled (no second entry transition) and carries
+		// the new toast's id.
+		const screen = await renderViewport(
+			[
+				{ options: { uniqueID: 'save', body: 'Saving changes' }, triggerLabel: 'Show v1' },
+				{ options: { uniqueID: 'save', body: 'Changes saved' }, triggerLabel: 'Show v2' }
+			],
+			'bottomEnd'
+		);
+
+		(screen.getByText('Show v1', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const first = getToastWrapperByText('Saving changes');
+		const firstId = first.getAttribute('data-toast-id');
+		first.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(first.firstElementChild as HTMLElement).overflow).toBe('visible');
+
+		(screen.getByText('Show v2', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const second = getToastWrapperByText('Changes saved');
+		expect(second).toBe(first);
+		expect(second.getAttribute('data-toast-id')).not.toBe(firstId);
+		expect(getComputedStyle(second.firstElementChild as HTMLElement).overflow).toBe('visible');
+		expect(document.querySelectorAll('[data-toast-id]')).toHaveLength(1);
+	});
+
+	it('drops settled state when a toast is evicted and later resurfaces', async () => {
+		// A toast beyond `maxVisible` unmounts without ever being dismissed, so
+		// neither removeToast nor handleExited runs for it. When the stack drains
+		// and it resurfaces, it mounts a fresh row that has to run its own entry
+		// transition — a settled id left over from its previous life would
+		// release the clip immediately, painting the card's shadow (and taking
+		// pointer input) outside the row that is still opening.
+		const screen = await render(Harness, {
+			props: {
+				triggers: [
+					{ options: { body: 'First', isAutoHide: false }, triggerLabel: 'Show first' },
+					{ options: { body: 'Second', isAutoHide: false }, triggerLabel: 'Show second' }
+				],
+				maxVisible: 1
+			}
+		});
+		(screen.getByText('Show first', { exact: true }).element() as HTMLElement).click();
+		await tick();
+
+		const first = getToastWrapperByText('First');
+		first.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(first.firstElementChild as HTMLElement).overflow).toBe('visible');
+
+		// Evicted: still in the list, no longer rendered.
+		(screen.getByText('Show second', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(screen.getByText('First', { exact: true }).query()).toBeNull();
+
+		// Drain the stack so it comes back.
+		const second = getToastWrapperByText('Second');
+		second.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		(second.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		second.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+
+		const resurfaced = getToastWrapperByText('First');
+		expect(getComputedStyle(resurfaced.firstElementChild as HTMLElement).overflow).toBe('hidden');
+
+		// And it settles again on its own transition, rather than being stuck.
+		resurfaced.dispatchEvent(
+			new TransitionEvent('transitionend', {
+				propertyName: 'grid-template-rows',
+				bubbles: true
+			})
+		);
+		await tick();
+		expect(getComputedStyle(resurfaced.firstElementChild as HTMLElement).overflow).toBe('visible');
 	});
 
 	it('keeps reduced motion transitions eventful for exit cleanup', async () => {
@@ -1463,6 +2421,25 @@ describe('Toast swipe dismissal', () => {
 		return { screen, visualToast, onHide };
 	}
 
+	/**
+	 * A clock the gesture's input timestamps read from. Upstream's cases call
+	 * this because jsdom stamps an event with `Date.now()`; Chromium stamps from
+	 * the time origin, so the helpers shadow each event's `timeStamp` with this
+	 * same clock. A 400ms `advance` is then 400ms of gesture time, exactly as on
+	 * jsdom.
+	 */
+	function mockClock(start = 1_000) {
+		let time = start;
+		return {
+			get now() {
+				return time;
+			},
+			advance(ms: number) {
+				time += ms;
+			}
+		};
+	}
+
 	it('dismisses on a pen swipe toward the configured block edge past the threshold', async () => {
 		const { visualToast, onHide } = await renderSwipeToast();
 
@@ -1485,31 +2462,180 @@ describe('Toast swipe dismissal', () => {
 			'Swipe toast',
 			400
 		);
-		// Upstream installs this spy before rendering, where React's render path
-		// happens to read no clock. Rendering into a real browser does — the two
-		// queued values were consumed before the gesture began, and the flick then
-		// measured zero elapsed time. Scoped to the gesture, the two reads it
-		// mocks are exactly the two the hook makes: `beginGesture`'s start stamp
-		// and `endGesture`'s, 20ms apart.
-		const now = vi.spyOn(Date, 'now').mockReturnValueOnce(1_000).mockReturnValueOnce(1_020);
-		try {
-			pen(visualToast, 'pointerdown', { pointerId: 8, clientX: 0, clientY: 0 });
-			pen(visualToast, 'pointermove', { pointerId: 8, clientX: 0, clientY: 60 });
-			pen(visualToast, 'pointerup', { pointerId: 8, clientX: 0, clientY: 60 });
+		// The card is 400px tall, so its threshold is 160px; 60px over 20ms is a
+		// flick at 3px/ms.
+		pen(visualToast, 'pointerdown', { pointerId: 8, clientX: 0, clientY: 0, timeStamp: 1_000 });
+		pen(visualToast, 'pointermove', { pointerId: 8, clientX: 0, clientY: 60, timeStamp: 1_020 });
+		pen(visualToast, 'pointerup', { pointerId: 8, clientX: 0, clientY: 60, timeStamp: 1_020 });
 
-			expect(onHide).toHaveBeenCalledWith('manual');
-			expect(visualToast.style.getPropertyValue('--_toast-swipe-exit-y')).toBe('120%');
-		} finally {
-			now.mockRestore();
-		}
+		expect(onHide).toHaveBeenCalledWith('manual');
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-exit-y')).toBe('120%');
+	});
+
+	// A one-line toast is 56 px tall, and 40% of that is below the 48 px floor.
+	// A short swipe dismisses it only as a flick.
+	it('dismisses a quick pen flick on a one-line toast', async () => {
+		const clock = mockClock();
+		const { visualToast, onHide } = await renderSwipeToast(
+			SWIPE_TOAST,
+			'bottomEnd',
+			'Swipe toast',
+			56
+		);
+
+		pen(visualToast, 'pointerdown', {
+			pointerId: 9,
+			clientX: 0,
+			clientY: 0,
+			timeStamp: clock.now
+		});
+		clock.advance(30);
+		pen(visualToast, 'pointermove', {
+			pointerId: 9,
+			clientX: 0,
+			clientY: 40,
+			timeStamp: clock.now
+		});
+		pen(visualToast, 'pointerup', {
+			pointerId: 9,
+			clientX: 0,
+			clientY: 40,
+			timeStamp: clock.now
+		});
+
+		expect(onHide).toHaveBeenCalledWith('manual');
+		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+
+	it('dismisses a quick touch flick on a one-line toast at the top', async () => {
+		const clock = mockClock();
+		const { visualToast, onHide } = await renderSwipeToast(
+			SWIPE_TOAST,
+			'topEnd',
+			'Swipe toast',
+			56
+		);
+		touch(visualToast, 'touchstart', {
+			clientY: 100,
+			identifier: 32,
+			timeStamp: clock.now
+		});
+		clock.advance(15);
+		const move = touch(visualToast, 'touchmove', {
+			clientY: 80,
+			identifier: 32,
+			timeStamp: clock.now
+		});
+		clock.advance(15);
+		touch(visualToast, 'touchmove', { clientY: 60, identifier: 32, timeStamp: clock.now });
+		touch(visualToast, 'touchend', { clientY: 60, identifier: 32, timeStamp: clock.now });
+
+		expect(move.defaultPrevented).toBe(true);
+		expect(onHide).toHaveBeenCalledWith('manual');
+		expect(onHide).toHaveBeenCalledTimes(1);
+	});
+
+	it('times a flick by its input events, not by when the handlers run', async () => {
+		// Browsers can run move handlers well after the finger moved. Here the
+		// 40 px flick takes 30 ms, and the page dispatches its moves and lift 60 ms
+		// after touch-down.
+		const clock = mockClock();
+		const { visualToast, onHide } = await renderSwipeToast(
+			SWIPE_TOAST,
+			'topEnd',
+			'Swipe toast',
+			56
+		);
+		touch(visualToast, 'touchstart', { clientY: 100, identifier: 33, timeStamp: clock.now });
+		clock.advance(15);
+		const firstMove = new TouchEvent('touchmove', { bubbles: true, cancelable: true });
+		Object.defineProperty(firstMove, 'touches', {
+			value: [new Touch({ identifier: 33, target: visualToast, clientX: 10, clientY: 80 })]
+		});
+		Object.defineProperty(firstMove, 'changedTouches', {
+			value: [new Touch({ identifier: 33, target: visualToast, clientX: 10, clientY: 80 })]
+		});
+		Object.defineProperty(firstMove, 'timeStamp', { value: clock.now });
+		clock.advance(15);
+		const secondMove = new TouchEvent('touchmove', { bubbles: true, cancelable: true });
+		Object.defineProperty(secondMove, 'touches', {
+			value: [new Touch({ identifier: 33, target: visualToast, clientX: 10, clientY: 60 })]
+		});
+		Object.defineProperty(secondMove, 'changedTouches', {
+			value: [new Touch({ identifier: 33, target: visualToast, clientX: 10, clientY: 60 })]
+		});
+		Object.defineProperty(secondMove, 'timeStamp', { value: clock.now });
+		const lift = new TouchEvent('touchend', { bubbles: true, cancelable: true });
+		Object.defineProperty(lift, 'touches', { value: [] });
+		Object.defineProperty(lift, 'changedTouches', {
+			value: [new Touch({ identifier: 33, target: visualToast, clientX: 10, clientY: 60 })]
+		});
+		Object.defineProperty(lift, 'timeStamp', { value: clock.now });
+		clock.advance(30);
+		visualToast.dispatchEvent(firstMove);
+		visualToast.dispatchEvent(secondMove);
+		visualToast.dispatchEvent(lift);
+
+		expect(onHide).toHaveBeenCalledWith('manual');
+	});
+
+	it('snaps back after a slow short drag on a one-line toast', async () => {
+		const clock = mockClock();
+		const { visualToast, onHide } = await renderSwipeToast(
+			SWIPE_TOAST,
+			'bottomEnd',
+			'Swipe toast',
+			56
+		);
+
+		pen(visualToast, 'pointerdown', {
+			pointerId: 10,
+			clientX: 0,
+			clientY: 0,
+			timeStamp: clock.now
+		});
+		clock.advance(400);
+		pen(visualToast, 'pointermove', {
+			pointerId: 10,
+			clientX: 0,
+			clientY: 40,
+			timeStamp: clock.now
+		});
+		pen(visualToast, 'pointerup', {
+			pointerId: 10,
+			clientX: 0,
+			clientY: 40,
+			timeStamp: clock.now
+		});
+
+		expect(onHide).not.toHaveBeenCalled();
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
 	});
 
 	it('snaps back without dismissing after a short drag', async () => {
+		// A slow drag: 24 px over 400 ms is far below flick speed.
+		const clock = mockClock();
 		const { visualToast, onHide } = await renderSwipeToast();
 
-		pen(visualToast, 'pointerdown', { pointerId: 7, clientX: 0, clientY: 0 });
-		pen(visualToast, 'pointermove', { pointerId: 7, clientX: 0, clientY: 24 });
-		pen(visualToast, 'pointerup', { pointerId: 7, clientX: 0, clientY: 24 });
+		pen(visualToast, 'pointerdown', {
+			pointerId: 7,
+			clientX: 0,
+			clientY: 0,
+			timeStamp: clock.now
+		});
+		clock.advance(400);
+		pen(visualToast, 'pointermove', {
+			pointerId: 7,
+			clientX: 0,
+			clientY: 24,
+			timeStamp: clock.now
+		});
+		pen(visualToast, 'pointerup', {
+			pointerId: 7,
+			clientX: 0,
+			clientY: 24,
+			timeStamp: clock.now
+		});
 
 		expect(onHide).not.toHaveBeenCalled();
 		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
@@ -1603,8 +2729,10 @@ describe('Toast swipe dismissal', () => {
 		pen(visualToast, 'pointerup', { pointerId: 7, clientX: 0, clientY: 40 });
 
 		expect(onHide).toHaveBeenCalledWith('manual');
-		expect(visualToast.style.getPropertyValue('--_toast-swipe-opacity')).toBe('0.700');
-		expect(visualToast.style.getPropertyValue('--_toast-swipe-scale')).toBe('0.985');
+		// The exit animation owns the final translation: the live-drag fade and
+		// scale are cleared rather than left on a standalone card.
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-opacity')).toBe('');
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-scale')).toBe('');
 		expect(visualToast.style.getPropertyValue('--_toast-swipe-exit-y')).toBe('calc(-1 * 120%)');
 		expect(horizontalDriftOf(visualToast)).toBe(0);
 	});
@@ -1628,6 +2756,45 @@ describe('Toast swipe dismissal', () => {
 		expect(onHide).toHaveBeenCalledWith('manual');
 	});
 
+	it("ends the swipe when the gesture host leaves the touch to the page, in Chromium's pointer-before-touch order", async () => {
+		const { visualToast, onHide } = await renderSwipeToast();
+		const finger = { pointerId: 9, pointerType: 'touch' };
+
+		pen(visualToast, 'pointerdown', { ...finger, clientX: 10, clientY: 100 });
+		touch(visualToast, 'touchstart', { clientY: 100, identifier: 34 });
+		// Chromium sends the finger's pointermoves inside its touch slop and holds
+		// back the touchmoves. The first sample goes 1 px away from the edge, so
+		// the pan's one-way first move fails and the page keeps the touch.
+		pen(visualToast, 'pointermove', { ...finger, clientX: 10, clientY: 99 });
+		let move = touch(visualToast, 'touchmove', { clientY: 117, identifier: 34 });
+		expect(move.defaultPrevented).toBe(false);
+		pen(visualToast, 'pointermove', { ...finger, clientX: 10, clientY: 160 });
+		touch(visualToast, 'touchmove', { clientY: 160, identifier: 34 });
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
+		touch(visualToast, 'touchend', { clientY: 160, identifier: 34 });
+		expect(onHide).not.toHaveBeenCalled();
+	});
+
+	it('swipes normally on the next touch after a first touch the page took', async () => {
+		const { visualToast, onHide } = await renderSwipeToast();
+
+		// The first touch moves sideways first, so the page keeps it.
+		touch(visualToast, 'touchstart', { clientX: 10, clientY: 100, identifier: 35 });
+		let move = touch(visualToast, 'touchmove', { clientX: 13, clientY: 100, identifier: 35 });
+		expect(move.defaultPrevented).toBe(false);
+		touch(visualToast, 'touchmove', { clientX: 13, clientY: 160, identifier: 35 });
+		touch(visualToast, 'touchend', { clientX: 13, clientY: 160, identifier: 35 });
+		expect(onHide).not.toHaveBeenCalled();
+
+		// The next touch moves toward the edge first, so the swipe owns it.
+		touch(visualToast, 'touchstart', { clientX: 10, clientY: 100, identifier: 36 });
+		move = touch(visualToast, 'touchmove', { clientX: 10, clientY: 101, identifier: 36 });
+		expect(move.defaultPrevented).toBe(true);
+		touch(visualToast, 'touchmove', { clientX: 10, clientY: 160, identifier: 36 });
+		touch(visualToast, 'touchend', { clientX: 10, clientY: 160, identifier: 36 });
+		expect(onHide).toHaveBeenCalledWith('manual');
+	});
+
 	it('resets an accepted touch gesture on native touchcancel', async () => {
 		const { visualToast, onHide } = await renderSwipeToast();
 
@@ -1643,14 +2810,83 @@ describe('Toast swipe dismissal', () => {
 		expect(visualToast.style.getPropertyValue('--_toast-swipe-opacity')).toBe('');
 	});
 
-	it('removes native touch listeners when a Toast unmounts', async () => {
-		const { screen, visualToast } = await renderSwipeToast();
-		const removeListener = vi.spyOn(visualToast, 'removeEventListener');
+	it('abandons a one-finger swipe when a second touch starts', async () => {
+		const { visualToast, onHide } = await renderSwipeToast();
+		const first = { identifier: 51, clientX: 10, clientY: 0 };
+		const second = { identifier: 52, clientX: 30, clientY: 40 };
 
-		screen.unmount();
+		dispatchTouch(visualToast, 'touchstart', [first]);
+		dispatchTouch(visualToast, 'touchmove', [{ ...first, clientY: 40 }]);
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('40px');
 
-		for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
-			expect(removeListener).toHaveBeenCalledWith(type, expect.any(Function));
+		dispatchTouch(visualToast, 'touchstart', [first, second], [second]);
+		const multitouchMove = dispatchTouch(visualToast, 'touchmove', [first, second]);
+
+		expect(multitouchMove.defaultPrevented).toBe(false);
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-opacity')).toBe('');
+		expect(onHide).not.toHaveBeenCalled();
+	});
+
+	it('does not dismiss when another touch remains outside the Toast', async () => {
+		const { visualToast, onHide } = await renderSwipeToast();
+		const first = { identifier: 61, clientX: 10, clientY: 0 };
+		const second = { identifier: 62, clientX: 200, clientY: 200 };
+
+		dispatchTouch(visualToast, 'touchstart', [first], [first]);
+		dispatchTouch(
+			visualToast,
+			'touchmove',
+			[{ ...first, clientY: 60 }],
+			[{ ...first, clientY: 60 }]
+		);
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('60px');
+
+		// The second contact began outside the Toast, so its touchstart did not
+		// reach the Toast listener. Ending the tracked finger must still cancel
+		// while that other contact remains active.
+		dispatchTouch(visualToast, 'touchend', [second], [{ ...first, clientY: 60 }]);
+
+		expect(onHide).not.toHaveBeenCalled();
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-opacity')).toBe('');
+	});
+
+	it('does not let a pen event with the same numeric ID control a touch gesture', async () => {
+		const { visualToast, onHide } = await renderSwipeToast();
+		const point = { identifier: 7, clientX: 10, clientY: 0 };
+
+		dispatchTouch(visualToast, 'touchstart', [point]);
+		pen(visualToast, 'pointermove', { pointerId: 7, clientX: 10, clientY: 60 });
+		pen(visualToast, 'pointerup', { pointerId: 7, clientX: 10, clientY: 60 });
+
+		expect(onHide).not.toHaveBeenCalled();
+		expect(visualToast.style.getPropertyValue('--_toast-swipe-y')).toBe('');
+
+		dispatchTouch(visualToast, 'touchcancel', []);
+	});
+
+	it('leaves no touch listener on the card once a Toast unmounts', async () => {
+		const addListener = vi.spyOn(HTMLElement.prototype, 'addEventListener');
+		const removeListener = vi.spyOn(HTMLElement.prototype, 'removeEventListener');
+		try {
+			const { screen, visualToast } = await renderSwipeToast();
+			screen.unmount();
+			const touchListeners = (spy: typeof addListener) =>
+				spy.mock.calls
+					.filter(
+						([type], call) => spy.mock.contexts[call] === visualToast && type.startsWith('touch')
+					)
+					.map(([type, listener]) => [type, listener]);
+			const added = touchListeners(addListener);
+			const removed = touchListeners(removeListener);
+			// The gesture host's own listener shows that the spies see the card.
+			expect(added.length).toBeGreaterThan(0);
+			expect(removed).toHaveLength(added.length);
+			expect(removed).toEqual(expect.arrayContaining(added));
+		} finally {
+			addListener.mockRestore();
+			removeListener.mockRestore();
 		}
 	});
 
@@ -1732,38 +2968,27 @@ describe('Toast swipe dismissal', () => {
 	});
 });
 
-describe('Toast live-region fallback semantics', () => {
-	it('keeps standalone info Toast content in a polite status region', async () => {
-		await render(Toast, {
-			props: {
-				type: 'info',
-				body: 'Saved',
-				isAutoHide: false,
-				autoHideDuration: 5000,
-				onDismiss: () => {}
-			}
-		});
+describe('ToastViewport with no toasts', () => {
+	// iOS Safari keeps a toolbar color that it took from the viewport while
+	// the viewport has a box.
+	it('has no box once its last toast has left, and a box for the next toast', async () => {
+		const screen = await renderViewport([{ options: SWIPE_TOAST }]);
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		const viewport = notificationRegions()[0];
+		expect(getComputedStyle(viewport).display).toBe('flex');
 
-		const visualToast = getVisualToastByText('Saved');
-		expect(visualToast).toHaveAttribute('role', 'status');
-		expect(visualToast).toHaveAttribute('aria-live', 'polite');
-		expect(visualToast).toHaveAttribute('aria-atomic', 'true');
-	});
+		const wrapper = getToastWrapperByText('Swipe toast');
+		(wrapper.querySelector('button[aria-label="Dismiss notification"]') as HTMLElement).click();
+		await tick();
+		// The leaving toast keeps the box until its exit ends.
+		expect(getComputedStyle(viewport).display).toBe('flex');
+		completeExit(wrapper.dataset.toastId ?? '');
+		await tick();
+		expect(getComputedStyle(viewport).display).toBe('none');
 
-	it('keeps standalone error Toast content in an assertive alert region', async () => {
-		await render(Toast, {
-			props: {
-				type: 'error',
-				body: 'Upload failed',
-				isAutoHide: false,
-				autoHideDuration: 5000,
-				onDismiss: () => {}
-			}
-		});
-
-		const visualToast = getVisualToastByText('Upload failed');
-		expect(visualToast).toHaveAttribute('role', 'alert');
-		expect(visualToast).toHaveAttribute('aria-live', 'assertive');
-		expect(visualToast).toHaveAttribute('aria-atomic', 'true');
+		(screen.getByText('Trigger', { exact: true }).element() as HTMLElement).click();
+		await tick();
+		expect(getComputedStyle(viewport).display).toBe('flex');
 	});
 });

@@ -31,15 +31,20 @@ const styles = stylex.create({
 		whiteSpace: 'pre-wrap',
 		wordBreak: 'break-word',
 		overflowY: 'auto',
+		// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+		// control sits under 16px, and only iOS WebKit implements
+		// -webkit-touch-callout to key the coarse-pointer floor to it.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: `${LINE_HEIGHT_PX}px`,
 		fontFamily: typographyVars['--font-family-body'],
 		color: colorVars['--color-text-primary'],
 		caretColor: colorVars['--color-accent'],
-		padding: spacingVars['--spacing-1']
+		paddingInline: spacingVars['--spacing-1']
 	},
 	placeholder: {
 		position: 'absolute',
@@ -48,14 +53,17 @@ const styles = stylex.create({
 		insetInlineEnd: 0,
 		pointerEvents: 'none',
 		color: colorVars['--color-text-secondary'],
+		// Same iOS-only floor as the editable region it stands in for.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: `${LINE_HEIGHT_PX}px`,
 		fontFamily: typographyVars['--font-family-body'],
 		userSelect: 'none',
-		padding: spacingVars['--spacing-1']
+		paddingInline: spacingVars['--spacing-1']
 	},
 	disabled: {
 		opacity: 0.5,
@@ -63,7 +71,9 @@ const styles = stylex.create({
 	},
 	tokenSpan: {
 		display: 'inline-flex',
-		verticalAlign: 'middle'
+		alignItems: 'center',
+		height: '1lh',
+		verticalAlign: 'top'
 	}
 });
 
@@ -83,7 +93,7 @@ export function chatComposerInputPlaceholderAttrs(): SvelteStyleAttrs {
 }
 
 /**
- * The token chip's own span. `insertToken` writes the same two declarations
+ * The token chip's own span. `insertToken` writes the same four declarations
  * imperatively onto the span it creates (it cannot carry a compiled class), so
  * the two must stay in step.
  */

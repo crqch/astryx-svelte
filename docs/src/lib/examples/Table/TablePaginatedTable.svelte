@@ -24,7 +24,7 @@
 		proportional,
 		useTablePagination,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface User extends Record<string, unknown> {
 		id: string;

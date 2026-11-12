@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Typeahead } from '@astryx-svelte/core';
-	import type { SearchableItem, SearchSource } from '@astryx-svelte/core';
+	import { Center, Typeahead } from '@astryx-sv/core';
+	import type { SearchableItem, SearchSource } from '@astryx-sv/core';
 
 	const items: SearchableItem[] = [
 		{ id: '1', label: 'New York' },

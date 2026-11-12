@@ -21,7 +21,9 @@ export default {
 		'search',
 		'modal',
 		'dialog',
-		'navigation'
+		'navigation',
+		'commandmenu',
+		'cmdk'
 	],
 	group: 'CommandPalette',
 	category: 'Overlay',

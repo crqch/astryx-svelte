@@ -16,7 +16,7 @@ import { runCli } from '../../../test-utils/run-cli.mjs';
 
 /**
  * Build a minimal fake project: <root>/project/ contains a
- * node_modules/@astryx-svelte/core with a `src/lib/components/button` directory
+ * node_modules/@astryx-sv/core with a `src/lib/components/button` directory
  * so findCoreDir + listComponents both succeed, and <root>/outside/ is the
  * would-be traversal target.
  * @param {string} tmpDir
@@ -24,7 +24,7 @@ import { runCli } from '../../../test-utils/run-cli.mjs';
 function buildFakeRepo(tmpDir) {
 	const project = path.join(tmpDir, 'project');
 	const outside = path.join(tmpDir, 'outside');
-	const core = path.join(project, 'node_modules', '@astryx-svelte', 'core');
+	const core = path.join(project, 'node_modules', '@astryx-sv', 'core');
 	const buttonDir = path.join(core, 'src', 'lib', 'components', 'button');
 	fs.mkdirSync(buttonDir, { recursive: true });
 	fs.mkdirSync(outside, { recursive: true });
@@ -32,7 +32,7 @@ function buildFakeRepo(tmpDir) {
 		path.join(buttonDir, 'button.svelte'),
 		`<!-- fake source -->\n<button>hi</button>\n`
 	);
-	fs.writeFileSync(path.join(core, 'package.json'), '{"name":"@astryx-svelte/core"}');
+	fs.writeFileSync(path.join(core, 'package.json'), '{"name":"@astryx-sv/core"}');
 	return { project, outside };
 }
 

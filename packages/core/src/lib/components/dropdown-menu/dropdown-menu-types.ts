@@ -55,4 +55,6 @@ export interface DropdownMenuSection {
 }
 
 export type DropdownMenuOption =
-	DropdownMenuItemData | DropdownMenuDividerData | DropdownMenuSection;
+	| DropdownMenuItemData
+	| DropdownMenuDividerData
+	| DropdownMenuSection;

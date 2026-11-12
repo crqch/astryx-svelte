@@ -10,7 +10,7 @@
 	renders raw.
 -->
 <script lang="ts">
-	import { SideNav, SideNavCollapseButton, SideNavItem } from '@astryx-svelte/core';
+	import { SideNav, SideNavCollapseButton, SideNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet homeIcon()}

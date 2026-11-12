@@ -53,6 +53,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { EDGE_COMP_ATTR } from '../../internal/edge-compensation.stylex.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
 	import { useTabListContext } from './tab-list-context.svelte.js';
@@ -91,6 +92,7 @@
 		xstyle,
 		class: className,
 		style: styleProp,
+		onclick: onClickProp,
 		...rest
 	}: TabProps = $props();
 
@@ -106,9 +108,34 @@
 	const isTabRole = $derived(isTabsPattern && !isLink);
 	const displayIcon = $derived(isSelected && selectedIcon ? selectedIcon : icon);
 	const hasVisibleLabel = $derived(!isLabelHidden && label !== '');
+	const isDisabled = $derived(rest['aria-disabled'] === true || rest['aria-disabled'] === 'true');
+	// The tab itself is the pressable: the hover layer inherits its strength.
+	const pressable = usePressFeedback();
 
-	function handleSelect(): void {
-		tabList().onChange(value);
+	/**
+	 * The caller props a disabled, focusable tab hands its element: every event
+	 * handler is dropped except focus and blur, so the control runs no caller
+	 * callback, as a natively disabled one runs none. `onclick` is composed in
+	 * `handleSelect` instead, where its own `preventDefault` is honoured.
+	 */
+	function callerProps(props: Record<string, unknown>, disabled: boolean): Record<string, unknown> {
+		if (!disabled) {
+			return props;
+		}
+		return Object.fromEntries(
+			Object.entries(props).filter(([key]) => !/^on/i.test(key) || /^on(focus|blur)/i.test(key))
+		);
+	}
+
+	function handleSelect(event: MouseEvent & { currentTarget: EventTarget & HTMLElement }): void {
+		if (isDisabled) {
+			event.preventDefault();
+			return;
+		}
+		onClickProp?.(event as MouseEvent & { currentTarget: EventTarget & HTMLButtonElement });
+		if (!event.defaultPrevented) {
+			tabList().onChange(value);
+		}
 	}
 
 	useDevWarning(
@@ -143,7 +170,7 @@
 	const indicatorTheme = $derived(
 		themeProps('tab-indicator', { selected: isSelected ? 'selected' : null })
 	);
-	const attrs = $derived(tabAttrs(size, isSelected, isFill, xstyle));
+	const attrs = $derived(tabAttrs(size, isSelected, isFill, isDisabled, xstyle));
 	const hoverBgAttrs = $derived(tabHoverBgAttrs(size));
 	const iconAttrs = $derived(tabIconAttrs(size));
 	const indicatorAttrs = $derived(tabIndicatorAttrs(isSelected));
@@ -154,7 +181,8 @@
 
 	/** Upstream's `sharedProps` — everything both branches carry. */
 	const sharedProps = $derived({
-		...rest,
+		...callerProps(rest, isDisabled),
+		...pressable,
 		...(isLabelHidden ? { 'aria-label': label } : {}),
 		[EDGE_COMP_ATTR]: '',
 		'data-tab-value': value,
@@ -220,7 +248,16 @@
 	></span>
 {/snippet}
 
-{#if isLink}
+{#if isLink && isDisabled}
+	<!--
+		A disabled link tab must not reach a router component: some routers reject a
+		missing destination, while others treat it as the current route. A plain
+		anchor without href preserves the element shape but cannot navigate.
+	-->
+	<a onclick={handleSelect} {...sharedProps}>
+		{@render tabContent()}
+	</a>
+{:else if isLink}
 	<LinkElement component={linkResolved.component} props={anchorProps}>
 		{@render tabContent()}
 	</LinkElement>

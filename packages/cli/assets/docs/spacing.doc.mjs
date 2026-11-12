@@ -5,7 +5,7 @@
  * port that publishes no `spacingVars` export (see color.doc.mjs).
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'spacing',
 	title: 'Spacing',
@@ -49,7 +49,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Spacing via component props (preferred)',
 					code: `<script lang="ts">
-	import { Stack } from '@astryx-svelte/core';
+	import { Stack } from '@astryx-sv/core';
 </script>
 
 <Stack gap={4}>

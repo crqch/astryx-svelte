@@ -7,7 +7,7 @@
 	bare literal does not satisfy it.
 -->
 <script lang="ts">
-	import { DateTimeInput, Stack, type ISODateTimeString } from '@astryx-svelte/core';
+	import { DateTimeInput, Stack, type ISODateTimeString } from '@astryx-sv/core';
 
 	let errorVal = $state<ISODateTimeString | undefined>('2026-01-25T09:00' as ISODateTimeString);
 	let warningVal = $state<ISODateTimeString | undefined>('2026-12-25T14:00' as ISODateTimeString);

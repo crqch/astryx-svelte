@@ -30,7 +30,7 @@
 		Text,
 		Tooltip,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import ComponentPreviewTheme from './component-preview-theme.svelte';
 	import { templateImporterFor } from './example-modules.js';
 
@@ -98,7 +98,7 @@
 	 * other than upstream's words.
 	 *
 	 * Upstream prints `npx @astryxdesign/cli template <slug> ./src/app/<slug>`.
-	 * Both halves are wrong here. `@astryx-svelte/cli` is a **private** package,
+	 * Both halves are wrong here. `@astryx-sv/cli` is a **private** package,
 	 * so `npx` cannot resolve it — the same fact `package-actions.svelte` refuses
 	 * to print an `npm install` over — and the bare bin is what upstream itself
 	 * hard-codes at all but five of its own command hints (port/todo.md, 2026-08-08).

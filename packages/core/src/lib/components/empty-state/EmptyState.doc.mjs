@@ -70,6 +70,12 @@ export default {
 		],
 		anatomy: [
 			{
+				name: 'Container',
+				required: true,
+				description:
+					'The centered root that owns spacing, reading order, and the compact layout variant.'
+			},
+			{
 				name: 'Icon',
 				required: false,
 				description:
@@ -103,7 +109,8 @@ export default {
 		{
 			name: 'title',
 			type: 'string',
-			description: 'Primary message rendered as an <h3> heading inside the empty state.',
+			description:
+				'Primary message rendered as the configured heading level inside the empty state.',
 			required: true
 		},
 		{
@@ -125,7 +132,7 @@ export default {
 		},
 		{
 			name: 'headingLevel',
-			type: '6 | 2 | 4 | 1 | 3 | 5',
+			type: '4 | 6 | 2 | 1 | 3 | 5',
 			description:
 				'Controls only the rendered HTML heading tag (h1-h6) so the title fits the document outline. This is a semantic change for accessibility and does not change the visual size of the title, which stays fixed regardless of level.',
 			default: '3'

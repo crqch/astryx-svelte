@@ -36,28 +36,20 @@
 	 */
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
 	const injectedThemes = new Map<string, { styles: HTMLStyleElement[]; count: number }>();
-
-	/**
-	 * How many injected themes are relying on the `--color-data-*` defaults.
-	 *
-	 * The defaults are one document-wide `:root` block shared by every theme, not
-	 * a per-theme stylesheet, so they get their own count: injected once, and
-	 * removed only when the last theme holding a reference goes away. Tearing
-	 * them down with whichever `<Theme>` happened to inject them would strip the
-	 * palette from the themes still mounted. Upstream's `Theme.tsx` keeps exactly
-	 * this counter beside its `injectedThemes` set.
-	 */
-	let dataTokenDefaultsRefCount = 0;
-	let dataTokenDefaultsStyle: HTMLStyleElement | null = null;
 </script>
 
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { NAMESPACE, dataAttr } from '../internal/naming.js';
+	import {
+		reducedMotionMarkProps,
+		setRootReducedMotionMark
+	} from '../private-attributes/reduced-motion.js';
 	import { warnOnce } from '../utils/dev-warning.js';
-	import { generateDataTokenDefaultsCSS, generateThemeCSS } from './generate-theme-rules.js';
+	import { generateThemeCSS } from './generate-theme-rules.js';
 	import { isNestedTheme, markThemeNested, setThemeContext } from './theme-context.js';
 	import { registerTheme } from './theme-registry.js';
+	import { REDUCED_MOTION_PROPERTY, resolveMotionKnobs } from './theme-motion.js';
 	import { themeWrapperAttrs } from './theme.stylex.js';
 
 	/**
@@ -92,8 +84,8 @@
 	 * @example
 	 * ```svelte
 	 * <script lang="ts">
-	 *   import { Theme } from '@astryx-svelte/core';
-	 *   import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	 *   import { Theme } from '@astryx-sv/core';
+	 *   import { neutralTheme } from '@astryx-sv/theme-neutral';
 	 * <\/script>
 	 *
 	 * <Theme theme={neutralTheme} mode="dark">
@@ -108,6 +100,12 @@
 	const isNested = isNestedTheme();
 	markThemeNested();
 	setThemeContext(() => ({ theme, mode }));
+
+	// resolveMotionKnobs resolves no public theme to 'always', so no theme
+	// marks its root.
+	const reducesMotion = $derived(
+		resolveMotionKnobs(theme.__axes?.motion).reducedMotion === 'always'
+	);
 
 	// Makes the theme resolvable by *name*, which is what a consumer outside the
 	// component tree has to go on. Upstream's, and what it put in place of the
@@ -179,23 +177,17 @@
 		const themeKey = `astryx-theme-${theme.name}`;
 
 		/**
-		 * Drops one hold on this theme's stylesheets, and the last one out also
-		 * drops the theme's hold on the shared `--color-data-*` block.
+		 * Drops one hold on this theme's stylesheets.
 		 *
 		 * Shared by both branches below rather than written into each, because
 		 * the `<Theme>` that injected the tags need not be the one that unmounts
-		 * last: a joiner's cleanup can be the one that empties the count, and it
-		 * has to release the base block when it is.
+		 * last.
 		 */
 		const release = (entry: { styles: HTMLStyleElement[]; count: number }): void => {
 			entry.count -= 1;
 			if (entry.count > 0) return;
 			for (const style of entry.styles) style.remove();
 			injectedThemes.delete(themeKey);
-			if (--dataTokenDefaultsRefCount === 0) {
-				dataTokenDefaultsStyle?.remove();
-				dataTokenDefaultsStyle = null;
-			}
 		};
 
 		// Already injected by another `<Theme>` on this theme: join its count and
@@ -207,7 +199,7 @@
 		}
 
 		// One-time perf hint per theme. The import lines and the closing sentence
-		// name *our* packages: `@astryx-svelte/theme-*` has no `/built` subpath
+		// name *our* packages: `@astryx-sv/theme-*` has no `/built` subpath
 		// (upstream's does) and this repo's CLI has no `theme build` command yet,
 		// so upstream's wording there would point at things that do not exist.
 		warnOnce(
@@ -215,8 +207,8 @@
 			'Theme',
 			`"${theme.name}" is using runtime style injection. ` +
 				`For better performance, use the pre-built theme:\n\n` +
-				`  import {${theme.name}Theme} from '@astryx-svelte/theme-${theme.name}';\n` +
-				`  import '@astryx-svelte/theme-${theme.name}/theme.css';\n\n` +
+				`  import {${theme.name}Theme} from '@astryx-sv/theme-${theme.name}';\n` +
+				`  import '@astryx-sv/theme-${theme.name}/theme.css';\n\n` +
 				`For custom themes, build the artifacts ahead of time rather than ` +
 				`defining the theme at runtime.`
 		);
@@ -236,20 +228,6 @@
 			document.head.appendChild(style);
 			return style;
 		};
-
-		// The `--color-data-*` defaults, in `@layer astryx-base` where StyleX puts
-		// the core token defaults, so a theme's own data token outranks them by
-		// layer rather than by specificity. One document-wide `:root` block shared
-		// by every theme, so it carries no theme name and no `id` marker and is
-		// counted separately — see `dataTokenDefaultsRefCount`. Appended, never
-		// prepended, so it cannot declare `astryx-base` ahead of `reset`; a
-		// consumer that loaded `base.css` has the order pinned there regardless.
-		if (dataTokenDefaultsRefCount++ === 0) {
-			dataTokenDefaultsStyle = document.createElement('style');
-			dataTokenDefaultsStyle.setAttribute(dataAttr('theme-base'), '');
-			dataTokenDefaultsStyle.textContent = `@layer ${NAMESPACE}-base {\n${generateDataTokenDefaultsCSS()}\n}`;
-			document.head.appendChild(dataTokenDefaultsStyle);
-		}
 
 		const styles: HTMLStyleElement[] = [];
 		// Prose first, so the reset layer is declared before the theme layer.
@@ -280,6 +258,7 @@
 
 		const currentMode = mode;
 		const themeName = theme.name;
+		const isReducedMotion = reducesMotion;
 
 		if (currentMode === 'light' || currentMode === 'dark') {
 			document.documentElement.setAttribute('data-theme', currentMode);
@@ -287,14 +266,22 @@
 			document.documentElement.removeAttribute('data-theme');
 		}
 		document.documentElement.setAttribute(dataAttr('theme'), themeName);
+		setRootReducedMotionMark(document.documentElement, isReducedMotion);
+		if (isReducedMotion) {
+			document.documentElement.style.setProperty(REDUCED_MOTION_PROPERTY, '1');
+		} else {
+			document.documentElement.style.removeProperty(REDUCED_MOTION_PROPERTY);
+		}
 
 		return () => {
 			document.documentElement.removeAttribute('data-theme');
 			document.documentElement.removeAttribute(dataAttr('theme'));
+			setRootReducedMotionMark(document.documentElement, false);
+			document.documentElement.style.removeProperty(REDUCED_MOTION_PROPERTY);
 		};
 	});
 
-	const attrs = $derived(themeWrapperAttrs(mode));
+	const attrs = $derived(themeWrapperAttrs(mode, reducesMotion));
 </script>
 
 <div
@@ -302,6 +289,7 @@
 		[dataAttr('theme')]: theme.name,
 		'data-theme': mode === 'system' ? undefined : mode
 	}}
+	{...reducedMotionMarkProps(reducesMotion)}
 	class={attrs.class}
 	style={attrs.style}
 >

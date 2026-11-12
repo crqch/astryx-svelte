@@ -1,6 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
-import { spacingVars } from '../../styles/tokens.stylex.js';
+import { focusVars, spacingVars } from '../../styles/tokens.stylex.js';
 
 /**
  * Ported from Astryx's `SideNav/SideNav.tsx` styles.
@@ -132,7 +132,17 @@ const styles = stylex.create({
 		position: 'relative',
 		display: 'flex',
 		flexShrink: 0,
-		height: '100%'
+		height: '100%',
+		overflow: 'clip'
+	},
+	resizableHandle: {
+		// Keep the shared ring inside the clipping boundary. The wrapper cannot
+		// use overflow-clip-margin: that paint allowance also contributes the
+		// overlay's half-pixel spill to AppShell's scrollable overflow.
+		outlineOffset: {
+			default: '0',
+			':focus-visible': `calc(0px - ${focusVars['--focus-outline-width']})`
+		}
 	},
 	// Topbar mode — horizontal layout for mobile top bar
 	topbar: {
@@ -217,3 +227,6 @@ export function sideNavDrawerFooterIconsAttrs(): SvelteStyleAttrs {
 export function sideNavResizableContainerAttrs(): SvelteStyleAttrs {
 	return sx(styles.resizableContainer);
 }
+
+/** `xstyle` for the overlay resize handle, keeping its ring inside the clip. */
+export const sideNavResizableHandleStyle: StyleArg = styles.resizableHandle;

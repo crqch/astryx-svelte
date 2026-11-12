@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, HStack, Text, useTheme, VStack } from '@astryx-svelte/core';
+	import { Card, HStack, Text, useTheme, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Upstream destructures `{name, mode, token}`. `UseThemeReturn` exposes `name`

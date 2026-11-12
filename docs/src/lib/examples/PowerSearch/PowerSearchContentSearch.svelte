@@ -6,8 +6,8 @@
 	are upstream's, unchanged. `useState` → `$state`.
 -->
 <script lang="ts">
-	import { PowerSearch } from '@astryx-svelte/core';
-	import type { PowerSearchConfig, PowerSearchFilter } from '@astryx-svelte/core';
+	import { PowerSearch } from '@astryx-sv/core';
+	import type { PowerSearchConfig, PowerSearchFilter } from '@astryx-sv/core';
 
 	const statusValues = [
 		{ value: 'open', label: 'Open' },

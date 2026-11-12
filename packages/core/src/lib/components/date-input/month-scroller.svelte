@@ -2,6 +2,8 @@
 	import type { DayOfWeek, ISODateString, PlainDate } from '../../utils/date-types.js';
 
 	export interface MonthScrollerProps {
+		/** The calendar's months, by index. */
+		monthModel: MonthModel;
 		/** First reachable month, as a month index. */
 		minMonthIndex: number;
 		/** Last reachable month, as a month index. */
@@ -34,7 +36,7 @@
 </script>
 
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { flushSync, untrack } from 'svelte';
 	import { useDirection } from '../../i18n/use-direction.svelte.js';
 	import {
 		plainDateAddDays,
@@ -43,10 +45,15 @@
 		plainDateToISO
 	} from '../../utils/plain-date.js';
 	import MonthPane from './month-pane.svelte';
+	import {
+		playReducedMotionDip,
+		reducedMotionFade,
+		type ReducedMotionDip
+	} from '../../motion/reduced-motion.js';
 	import { useOwnScrollGesture } from './use-own-scroll-gesture.svelte.js';
 	import { useScrollSettle } from './use-scroll-settle.svelte.js';
 	import {
-		monthIndexOf,
+		type MonthModel,
 		paneWindow,
 		rowAtScrollOffset,
 		rowsIn,
@@ -69,6 +76,7 @@
 	 * keeps it out of `DateInput/index.ts`.
 	 */
 	let {
+		monthModel,
 		minMonthIndex,
 		maxMonthIndex,
 		initialMonthIndex,
@@ -118,6 +126,12 @@
 	 * touches the scroller, or once the steered scroll has arrived.
 	 */
 	let steeredRow: number | null = null;
+
+	/**
+	 * The Reduced Motion dip a smooth month change is playing, if any. A newer
+	 * step cancels it, so only the latest change lands.
+	 */
+	let dip: ReducedMotionDip | null = null;
 
 	// Keyboard focus moves by date, not by cell index, so it crosses month
 	// boundaries the way a calendar should. Null until the user takes the grid
@@ -199,6 +213,11 @@
 			return;
 		}
 		const row = Math.min(rowCount - 1, Math.max(0, monthIndex - minMonthIndex));
+		// A newer step replaces the previous dip; only its landing runs.
+		if (dip != null) {
+			dip.cancel();
+			dip = null;
+		}
 		if (Math.abs(row - centerRowValue) > OVERSCAN) {
 			// Beyond the mounted window there is no pane at the target offset, and
 			// `scroll-snap-type: mandatory` will not leave the scroller resting
@@ -209,6 +228,36 @@
 			pendingScroll = row;
 			centerRowValue = row;
 			centerRow = row;
+			return;
+		}
+		// Under Reduce Motion the month changes without travel: at once on a fine
+		// primary pointer, under an opacity dip on a coarse one. A steered scroll
+		// would still travel, so the dip lands it instead.
+		const fade = behavior === 'smooth' ? reducedMotionFade(node) : null;
+		if (fade != null) {
+			const land = (): void => {
+				steeredRow = null;
+				if (row === centerRowValue) {
+					node.scrollTo({ left: scrollOffsetForRow(row, paneSize, isRTL), behavior: 'auto' });
+					return;
+				}
+				// Mount the window around the target first; the effect above lands
+				// the scroll once its pane exists. Flush that synchronously, before
+				// `playReducedMotionDip` starts its fade-in — upstream's `flushSync`.
+				flushSync(() => {
+					pendingScroll = row;
+					centerRowValue = row;
+					centerRow = row;
+				});
+			};
+			if (fade.duration === 0) {
+				land();
+				return;
+			}
+			dip = playReducedMotionDip(node, fade, () => {
+				dip = null;
+				land();
+			});
 			return;
 		}
 		steeredRow = row;
@@ -361,6 +410,10 @@
 		// passes are the user's doing and every one of them is worth reporting.
 		const onTouchStart = (): void => {
 			steeredRow = null;
+			if (dip != null) {
+				dip.cancel();
+				dip = null;
+			}
 		};
 		const onScroll = (): void => {
 			if (frame != null) {
@@ -406,6 +459,10 @@
 				cancelAnimationFrame(frame);
 				frame = undefined;
 			}
+			if (dip != null) {
+				dip.cancel();
+				dip = null;
+			}
 		};
 	});
 
@@ -413,13 +470,13 @@
 	// by month is PageUp/PageDown; everything else is the APG grid vocabulary.
 	function moveFocus(from: PlainDate, deltaDays: number): void {
 		const next = plainDateAddDays(from, deltaDays);
-		const nextIndex = monthIndexOf(next);
+		const nextIndex = monthModel.indexOf(next);
 		if (nextIndex < minMonthIndex || nextIndex > maxMonthIndex) {
 			return;
 		}
 		shouldRestoreFocus = true;
 		focusedDate = next;
-		if (nextIndex !== monthIndexOf(from)) {
+		if (nextIndex !== monthModel.indexOf(from)) {
 			scrollToMonth(nextIndex, 'smooth');
 		}
 	}
@@ -502,6 +559,7 @@
 		{#if paneSize > 0}
 			{#each rowsIn(visibleRows) as row (row)}
 				<MonthPane
+					{monthModel}
 					monthIndex={minMonthIndex + row}
 					insetInlineStart={row * paneSize}
 					inlineSize={paneSize}

@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Stack, Text, Tokenizer } from '@astryx-svelte/core';
-	import type { SearchableItem, SearchSource } from '@astryx-svelte/core';
+	import { Stack, Text, Tokenizer } from '@astryx-sv/core';
+	import type { SearchableItem, SearchSource } from '@astryx-sv/core';
 
 	const skills: SearchableItem[] = [
 		{ id: '1', label: 'React' },

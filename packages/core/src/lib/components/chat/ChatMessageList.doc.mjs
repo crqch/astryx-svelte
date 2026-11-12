@@ -31,6 +31,14 @@ export default {
 	group: 'Chat',
 	category: 'Chat',
 	isHiddenFromOverview: true,
+	playground: {
+		wrapper: {
+			component: 'Stack',
+			props: {
+				width: 480
+			}
+		}
+	},
 	props: [
 		{
 			name: 'children',
@@ -57,7 +65,7 @@ export default {
 		},
 		{
 			name: 'gap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Gap between top-level message rows. Defaults to the selected density; override for LLM event streams or independent rows that need different spacing from density.'
 		},

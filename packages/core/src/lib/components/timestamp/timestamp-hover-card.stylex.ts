@@ -58,6 +58,19 @@ const styles = stylex.create({
 		padding: 0,
 		whiteSpace: 'nowrap'
 	},
+	// A value carrying the action cell spans the value and action columns and
+	// shares the card's tracks, so the copy buttons still align.
+	// Without subgrid, a flex row keeps the button at the row's end.
+	valueCells: {
+		gridColumn: 'span 2',
+		display: {
+			default: 'flex',
+			'@supports (grid-template-columns: subgrid)': 'grid'
+		},
+		justifyContent: 'space-between',
+		gridTemplateColumns: 'subgrid',
+		alignItems: 'center'
+	},
 	// The trailing action cell holds the copy button (or nothing, on a
 	// read-only row). It lives in its own grid column so buttons align.
 	action: {
@@ -110,9 +123,9 @@ export function timestampHoverCardLabelAttrs(): SvelteStyleAttrs {
 	return sx(styles.label);
 }
 
-/** The `<dd>` value cell. */
-export function timestampHoverCardValueAttrs(): SvelteStyleAttrs {
-	return sx(styles.value);
+/** The `<dd>` value cell, spanning the action column when the card has one. */
+export function timestampHoverCardValueAttrs(hasActionColumn: boolean): SvelteStyleAttrs {
+	return sx(styles.value, hasActionColumn && styles.valueCells);
 }
 
 /** The trailing action cell holding a row's copy button. */

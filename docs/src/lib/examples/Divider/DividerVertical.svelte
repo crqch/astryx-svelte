@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Divider, HStack, Section, StackItem, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Divider, HStack, Section, StackItem, Text, VStack } from '@astryx-sv/core';
 
 	/** Upstream's `dividerFill` `CSSProperties` object, as a style string. */
 	const dividerFill = 'align-self: stretch; height: auto';

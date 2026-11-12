@@ -1,8 +1,8 @@
 /**
  * @file Consumer utilities for parsing Astryx CLI JSON output.
  *
- * Exported via `@astryx-svelte/cli/json`:
- *   import { parseResponse, isError, assertResponse } from '@astryx-svelte/cli/json';
+ * Exported via `@astryx-sv/cli/json`:
+ *   import { parseResponse, isError, assertResponse } from '@astryx-sv/cli/json';
  */
 
 /**

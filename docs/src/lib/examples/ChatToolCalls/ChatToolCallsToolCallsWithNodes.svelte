@@ -7,8 +7,8 @@
 	what the registry keys on and a Svelte component takes its name from the file.
 -->
 <script lang="ts">
-	import type { ChatToolCallItem } from '@astryx-svelte/core';
-	import { ChatToolCalls, Stack } from '@astryx-svelte/core';
+	import type { ChatToolCallItem } from '@astryx-sv/core';
+	import { ChatToolCalls, Stack } from '@astryx-sv/core';
 
 	const singleCall: ChatToolCallItem[] = [
 		{ name: 'bash', target: 'git status', status: 'complete', duration: '1.2s' }

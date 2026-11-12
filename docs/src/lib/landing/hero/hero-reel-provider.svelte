@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { ThemeMode } from '@astryx-svelte/core';
-	import { useMediaQuery } from '@astryx-svelte/core/hooks';
+	import type { ThemeMode } from '@astryx-sv/core';
+	import { useMediaQuery } from '@astryx-sv/core/hooks';
 	import { setHeroReel, type HeroReelState } from './hero-reel-context.svelte.js';
 	import {
 		HERO_THEME_SLIDES,

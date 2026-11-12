@@ -12,6 +12,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import type { CollapsibleGroupDensity } from './collapsible-group-context.svelte.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 
 const styles = stylex.create({
 	root: {
@@ -39,7 +40,11 @@ const styles = stylex.create({
 	// Capsize: trim leading from text triggers.
 	triggerLabel: {
 		textBoxEdge: 'cap alphabetic',
-		textBoxTrim: 'trim-both'
+		textBoxTrim: 'trim-both',
+		// Fill the row rather than hug the label, so a composed trigger can put
+		// something out at the far edge, next to the chevron. Growing only; the
+		// flex floor stays at `auto`.
+		flexGrow: 1
 	},
 	// Disabled trigger — non-interactive, dimmed. `aria-disabled` (not native
 	// `disabled`) blocks activation via the handler while staying perceivable.
@@ -69,6 +74,27 @@ const styles = stylex.create({
 	},
 	chevronClosed: {
 		transform: 'rotate(0deg)'
+	},
+	// Leading chevron. `space-between` puts nothing between the arrow and the
+	// label — they are adjacent flex children — so the gap is the chevron's own.
+	chevronStart: {
+		marginInlineEnd: spacingVars['--spacing-2']
+	},
+	// A leading arrow rotates a quarter turn rather than a half: it points into
+	// the row when closed and turns down when open. RTL mirrors it so "into the
+	// row" still means towards the content, spelled out per state because a bare
+	// `transform` would otherwise overwrite the rotation.
+	chevronStartOpen: {
+		transform: {
+			default: 'rotate(90deg)',
+			':is([dir="rtl"] *)': 'scaleX(-1) rotate(90deg)'
+		}
+	},
+	chevronStartClosed: {
+		transform: {
+			default: 'rotate(0deg)',
+			':is([dir="rtl"] *)': 'scaleX(-1) rotate(0deg)'
+		}
 	},
 	contentHidden: {
 		display: 'none'
@@ -130,6 +156,10 @@ export function collapsibleTriggerAttrs(
 	return focusOutlineProps.focusVisible(
 		styles.trigger,
 		density != null && triggerDensity[density],
+		// The system's pressed overlay on the disclosure row. The trigger has no
+		// hover surface of its own, so this is the one background it paints, and
+		// only while it is pressed.
+		!isDisabled && interactionOverlayStyles.pressedBackgroundColor,
 		isDisabled && styles.triggerDisabled
 	);
 }
@@ -149,15 +179,22 @@ export function collapsibleTriggerLabelAttrs(): SvelteStyleAttrs {
 export const collapsibleChevronStyle = styles.chevron;
 export const collapsibleChevronOpenStyle = styles.chevronOpen;
 export const collapsibleChevronClosedStyle = styles.chevronClosed;
+export const collapsibleChevronStartStyle = styles.chevronStart;
+export const collapsibleChevronStartOpenStyle = styles.chevronStartOpen;
+export const collapsibleChevronStartClosedStyle = styles.chevronStartClosed;
 
-/** The content region, hidden when collapsed, with optional density padding. */
+/**
+ * The content region, with optional density padding. It stays rendered, and
+ * visible, while a close plays its exit; `isShown` is the open state or the
+ * exit's hold, never the open state alone.
+ */
 export function collapsibleContentAttrs(
 	density: CollapsibleGroupDensity | null,
-	isOpen: boolean
+	isShown: boolean
 ): SvelteStyleAttrs {
 	return sx(
 		styles.content,
 		density != null && contentDensity[density],
-		!isOpen && styles.contentHidden
+		!isShown && styles.contentHidden
 	);
 }

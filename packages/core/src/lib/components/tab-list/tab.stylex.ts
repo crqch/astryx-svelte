@@ -12,6 +12,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { tabScope } from './tab.markers.stylex.js';
 import type { TabListSize } from './tab-list-context.svelte.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 
 /**
@@ -26,6 +27,12 @@ import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
  * from the marker module's path — the oracle diffs that key as marker-normalised
  * CSS.
  */
+// The touch press's paint, declared by the shared overlay styles on the
+// element the controller writes to (`pressedAlpha`) at the press's strength,
+// 1 while on and 1 → 0 over the release, and inherited resolved by the layer
+// that paints it. See interaction-overlay.stylex.ts.
+const pressedOverlayImage = 'var(--_press-paint-image)';
+
 const styles = stylex.create({
 	base: {
 		position: 'relative',
@@ -64,6 +71,35 @@ const styles = stylex.create({
 			default: 'transparent',
 			[stylex.when.ancestor(':hover', tabScope)]: {
 				'@media (hover: hover)': colorVars['--color-overlay-hover']
+			},
+			// Pressed: the same layer steps up to the pressed overlay, read off the
+			// tab the way the hover is, so a press paints on a finger too. Repeated
+			// inside the hover-capable branch so it outranks the hover rule there
+			// (a media-nested rule carries extra generated priority; see
+			// interaction-overlay.stylex.ts).
+			[stylex.when.ancestor(':active', tabScope)]: {
+				default: colorVars['--color-overlay-pressed'],
+				'@media (hover: hover)': colorVars['--color-overlay-pressed'],
+				// Under a coarse pointer the touch press model writes
+				// `data-astryx-press` on the tab instead, and paints as an image
+				// below.
+				'@media (pointer: coarse)': 'transparent'
+			}
+		},
+		// The touch press, as an image layer over the colour: an image change is
+		// discrete, so the layer's colour transition cannot fade the onset in,
+		// and the strength the tab's `pressedAlpha` arms own (1 while on, 1 → 0
+		// over the release) is what moves. Coarse pointers only, like the colour
+		// arms above; see interaction-overlay.stylex.ts.
+		backgroundImage: {
+			default: null,
+			[stylex.when.ancestor('[data-astryx-press="on"]', tabScope)]: {
+				default: null,
+				'@media (pointer: coarse)': pressedOverlayImage
+			},
+			[stylex.when.ancestor('[data-astryx-press="fading"]', tabScope)]: {
+				default: null,
+				'@media (pointer: coarse)': pressedOverlayImage
 			}
 		},
 		transitionProperty: 'background-color',
@@ -125,20 +161,29 @@ const styles = stylex.create({
 	}
 });
 
+// A minimum, not a fixed height: a tab grows with a larger text size, so its
+// label is never clipped.
 const sizeStyles = stylex.create({
-	sm: { height: sizeVars['--size-element-sm'] },
-	md: { height: sizeVars['--size-element-md'] },
-	lg: { height: sizeVars['--size-element-lg'] }
+	sm: { minHeight: sizeVars['--size-element-sm'] },
+	md: { minHeight: sizeVars['--size-element-md'] },
+	lg: { minHeight: sizeVars['--size-element-lg'] }
 });
 
-// Hover bg uses the standard element size (one step smaller than tab)
+// The hover background fills the tab (inset 0) and is never shorter than the
+// element size.
 const hoverSizeStyles = stylex.create({
-	sm: { height: sizeVars['--size-element-sm'] },
-	md: { height: sizeVars['--size-element-md'] },
-	lg: { height: sizeVars['--size-element-lg'] }
+	sm: { minHeight: sizeVars['--size-element-sm'] },
+	md: { minHeight: sizeVars['--size-element-md'] },
+	lg: { minHeight: sizeVars['--size-element-lg'] }
 });
 
 const layoutStyles = stylex.create({
+	// A hugging tab keeps its label's width. Without this the strip's flex
+	// shrinks every tab below its text before overflow can scroll, and on a
+	// narrow screen the labels draw over one another.
+	hug: {
+		flexShrink: 0
+	},
 	fill: {
 		flex: 1,
 		justifyContent: 'center'
@@ -156,14 +201,18 @@ export function tabAttrs(
 	size: TabListSize,
 	isSelected: boolean,
 	isFill: boolean,
+	isDisabled: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return focusOutlineProps.focusVisible(
 		styles.base,
 		sizeStyles[size],
 		isSelected && styles.selected,
-		isFill && layoutStyles.fill,
-		tabScope,
+		isFill ? layoutStyles.fill : layoutStyles.hug,
+		!isDisabled && tabScope,
+		// The touch press's strength and release live on the tab the controller
+		// writes to; the hover layer inherits and paints it.
+		!isDisabled && interactionOverlayStyles.pressedAlpha,
 		xstyle
 	);
 }

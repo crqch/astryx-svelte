@@ -9,12 +9,17 @@ const styles = stylex.create({
 		justifyContent: 'space-between',
 		gap: spacingVars['--spacing-3']
 	},
-	// Compensate for the icon button's visual padding on the actions area
-	actionsCompensation: {
-		marginBlock: `calc(-1 * ${spacingVars['--spacing-2']})`,
+	// Compensate for the medium icon button's visual padding on the end slot.
+	endBlockEdgeCompensation: {
+		marginBlock: `calc(-1 * ${spacingVars['--spacing-2']})`
+	},
+	endInlineEdgeCompensation: {
 		marginInlineEnd: `calc(-1 * ${spacingVars['--spacing-2']})`
 	},
 	titleWrapper: {
+		display: 'flex',
+		flexDirection: 'column',
+		gap: spacingVars['--spacing-0'],
 		flex: 1,
 		minWidth: 0,
 		// Visual centering: align title center with close button center
@@ -42,9 +47,20 @@ export function dialogHeaderTitleWrapperAttrs(): SvelteStyleAttrs {
 	return sx(styles.titleWrapper);
 }
 
-/** The actions cluster. `compensate` pulls the icon button's padding back in. */
-export function dialogHeaderActionsAttrs(compensate: boolean): SvelteStyleAttrs {
-	return sx(styles.actions, compensate && styles.actionsCompensation);
+/**
+ * The actions cluster. `compensateBlock` / `compensateInline` pull the icon
+ * button's padding back on each axis independently, as upstream's
+ * `endContentEdgeCompensation` prop does.
+ */
+export function dialogHeaderActionsAttrs(
+	compensateBlock: boolean,
+	compensateInline: boolean
+): SvelteStyleAttrs {
+	return sx(
+		styles.actions,
+		compensateBlock && styles.endBlockEdgeCompensation,
+		compensateInline && styles.endInlineEdgeCompensation
+	);
 }
 
 /** Passed to the title `Heading` as `xstyle` — removes its focus outline. */

@@ -14,7 +14,9 @@
 	 *
 	 * The three steps are written out literally in both arms rather than looped,
 	 * because a loop would put *both* arms behind a block and there would be
-	 * nothing left to compare.
+	 * nothing left to compare. The explicit width keeps the stepper out of its
+	 * compact presentation, which the browser viewport would otherwise trigger
+	 * for three steps at 414px.
 	 */
 	const { grouped = false, ...rest }: Omit<StepperProps, 'children'> & { grouped?: boolean } =
 		$props();
@@ -27,11 +29,11 @@
 {/snippet}
 
 {#if grouped}
-	<Stepper {...rest}>
+	<Stepper style="width: 800px" {...rest}>
 		{@render onTrackSteps()}
 	</Stepper>
 {:else}
-	<Stepper {...rest}>
+	<Stepper style="width: 800px" {...rest}>
 		<Step step={0} label="Cart" />
 		<Step step={1} label="Shipping" />
 		<Step step={2} label="Payment" />

@@ -9,7 +9,7 @@
 	happen to be exact. Retires with the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { ChatSendButton, Icon, Stack, Text } from '@astryx-svelte/core';
+	import { ChatSendButton, Icon, Stack, Text } from '@astryx-sv/core';
 </script>
 
 {#snippet paperAirplaneIcon()}<Icon icon="arrowUp" size="sm" />{/snippet}

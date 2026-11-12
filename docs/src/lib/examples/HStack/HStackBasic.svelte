@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, HStack } from '@astryx-svelte/core';
+	import { Badge, HStack } from '@astryx-sv/core';
 </script>
 
 <HStack gap={2} vAlign="center">

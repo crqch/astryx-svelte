@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Grid, Text, VStack } from '@astryx-svelte/core';
+	import { Card, Grid, Text, VStack } from '@astryx-sv/core';
 
 	const cards = [
 		{ title: 'Getting Started', description: 'Learn the basics of the platform.' },

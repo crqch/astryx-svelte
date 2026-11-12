@@ -49,7 +49,7 @@ export type ReferenceContentBlock =
  *
  * Every reference .doc.mjs must export a single `docs` constant:
  *
- *   /** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} *\/
+ *   /** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} *\/
  *   export const docs = { ... };
  */
 export interface ReferenceDoc {

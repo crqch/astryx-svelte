@@ -9,7 +9,7 @@ import { matchaTheme } from '../src/matcha-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-matcha',
+	packageName: '@astryx-sv/theme-matcha',
 	themeExport: 'matchaTheme',
 	theme: matchaTheme,
 	// The registry is named, not imported: this script runs under plain Node,

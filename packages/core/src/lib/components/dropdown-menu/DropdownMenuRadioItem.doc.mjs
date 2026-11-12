@@ -25,17 +25,32 @@ export default {
 	group: 'DropdownMenu',
 	category: 'Action',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			value: 'option-1',
+			label: 'Option 1'
+		},
+		wrapper: {
+			component: 'DropdownMenuRadioGroup',
+			props: {
+				value: 'option-1',
+				label: 'Radio group'
+			}
+		}
+	},
 	props: [
 		{
 			name: 'value',
 			type: 'string',
 			description:
-				"The value this item represents within its group. The group's value matches against this to determine the checked state."
+				"The value this item represents within its group. The group's value matches against this to determine the checked state.",
+			required: true
 		},
 		{
 			name: 'label',
 			type: 'string | Snippet',
-			description: 'Primary label text identifying the option.'
+			description: 'Primary label text identifying the option.',
+			required: true
 		},
 		{
 			name: 'description',
@@ -46,19 +61,25 @@ export default {
 			name: 'icon',
 			type: 'Snippet | IconName',
 			description:
-				'Icon to display before the label. See `npx astryx docs icons` for valid semantic names.'
+				'Icon to display before the label. See `astryx docs icons` for valid semantic names.'
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
 			description:
-				'Whether this individual radio item is disabled. Disabled items stay focusable (via aria-disabled) so they remain discoverable by keyboard and assistive technology, but selection is blocked.',
+				'Whether this individual radio item is disabled. A disabled item stays in the accessibility tree as disabled (aria-disabled), and the arrow keys and typeahead reach it so keyboard users find it. The pointer highlight skips it, and selection is blocked.',
 			default: 'false'
 		},
 		{
 			name: 'endContent',
 			type: 'Snippet',
 			description: 'Content to render after the label and description, such as a badge or metadata.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description:
+				'Ref forwarded to the row root, the element carrying role="menuitemradio". Register the row with an element-keyed observer or overlay.'
 		}
 	]
 };

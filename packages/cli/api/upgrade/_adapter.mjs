@@ -60,7 +60,7 @@ const execFileAsync = promisify(execFile);
  * no second entry to look for — inventing a legacy alias would be a lookup that
  * can never succeed. The loop shape is kept for the day there is one.
  */
-const TARGET_PACKAGES = ['@astryx-svelte/core'];
+const TARGET_PACKAGES = ['@astryx-sv/core'];
 
 /**
  * Detect the installed target version from node_modules.

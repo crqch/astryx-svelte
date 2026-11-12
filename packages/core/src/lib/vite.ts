@@ -6,7 +6,7 @@
  *
  * ```ts
  * // vite.config.ts
- * import { astryx } from '@astryx-svelte/core/vite';
+ * import { astryx } from '@astryx-sv/core/vite';
  * import { sveltekit } from '@sveltejs/kit/vite';
  *
  * export default defineConfig({ plugins: [astryx(), sveltekit()] });
@@ -34,7 +34,7 @@
  * @input  the consumer's vite config
  * @output the StyleX plugin, plus the two settings that keep Vite from routing
  *         this package around it
- * @position `@astryx-svelte/core/vite`
+ * @position `@astryx-sv/core/vite`
  */
 
 import stylexPlugin from '@stylexjs/unplugin/vite';
@@ -47,13 +47,13 @@ import type { PluginOption } from 'vite';
 const stylex = stylexPlugin as unknown as (options?: Record<string, unknown>) => PluginOption;
 
 /** Packages whose `.stylex.js` modules must reach the compiler. */
-const ASTRYX_PACKAGES = ['@astryx-svelte/core'];
+const ASTRYX_PACKAGES = ['@astryx-sv/core'];
 
 export interface AstryxViteOptions {
 	/**
 	 * Further packages that ship uncompiled `.stylex.js` and must be routed
 	 * through the compiler — your own component library built on Astryx, for
-	 * instance. `@astryx-svelte/core` is always included.
+	 * instance. `@astryx-sv/core` is always included.
 	 */
 	include?: string[];
 	/**

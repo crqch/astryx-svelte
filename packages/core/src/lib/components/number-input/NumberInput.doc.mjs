@@ -73,7 +73,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					"Wrap a disabled NumberInput in Tooltip to explain why it's disabled; disabled controls swallow the hover events the wrapper needs. Use the disabledMessage prop instead."
+					"Wrap a disabled NumberInput in Tooltip to explain why it's disabled. Use the disabledMessage prop, which attaches the reason to the field itself."
 			}
 		],
 		anatomy: [
@@ -164,7 +164,7 @@ export default {
 			name: 'isReadOnly',
 			type: 'boolean',
 			description:
-				'Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set.',
+				'Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and keeps its form value. Stepping is off in every form while read-only: arrow keys, the wheel, and the number steppers. isDisabled takes precedence when both are set.',
 			default: 'false'
 		},
 		{
@@ -239,7 +239,8 @@ export default {
 		{
 			name: 'hasNumberSteppers',
 			type: 'boolean',
-			description: 'Shows increment and decrement buttons at the end of the input.',
+			description:
+				'Shows increment and decrement buttons at the end of the input on fine pointers. Hidden on coarse pointers (such as touch screens); text entry and keyboard stepping remain available. Holding a button with a mouse or a pen repeats the step and commits once, when the hold ends.',
 			default: 'false'
 		},
 		{
@@ -294,6 +295,38 @@ export default {
 			name: 'onEnter',
 			type: '() => void',
 			description: 'Callback fired when the user presses the Enter key.'
+		},
+		{
+			name: 'containerXstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

@@ -23,7 +23,7 @@
 		Stack,
 		Text,
 		Token
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let isStreaming = $state(false);
 </script>

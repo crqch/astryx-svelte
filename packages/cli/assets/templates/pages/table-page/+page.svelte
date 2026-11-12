@@ -40,9 +40,9 @@
 		VStack,
 		pixel,
 		proportional
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowDownTrayIcon, FunnelIcon, PlusIcon } from '@fvilers/heroicons-svelte/24/outline';
-	import type { PowerSearchFilter, TableColumn } from '@astryx-svelte/core';
+	import type { PowerSearchFilter, TableColumn } from '@astryx-sv/core';
 
 	interface DogRow extends Record<string, unknown> {
 		id: string;

@@ -82,7 +82,7 @@
 		 *
 		 * @example
 		 * ```ts
-		 * import { createStaticSource } from '@astryx-svelte/core';
+		 * import { createStaticSource } from '@astryx-sv/core';
 		 * const mentionTrigger = {
 		 *   character: '@',
 		 *   searchSource: createStaticSource(users),

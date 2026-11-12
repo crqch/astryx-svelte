@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Dialog, DialogHeader, Layout, LayoutContent, Text } from '@astryx-svelte/core';
+	import { Card, Dialog, DialogHeader, Layout, LayoutContent, Text } from '@astryx-sv/core';
 </script>
 
 <Dialog isOpen isInline onOpenChange={() => {}}>

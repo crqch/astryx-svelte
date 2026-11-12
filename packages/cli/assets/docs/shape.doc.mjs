@@ -3,7 +3,7 @@
  * CSS, and the radius scale is framework-neutral.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'shape',
 	title: 'Shape',

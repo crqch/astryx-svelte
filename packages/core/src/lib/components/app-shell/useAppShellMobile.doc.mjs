@@ -100,6 +100,6 @@ export default {
 	},
 	relatedComponents: ['AppShell', 'MobileNav', 'MobileNavToggle', 'TopNav', 'SideNav'],
 	relatedHooks: ['useMediaQuery'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'layout'
 };

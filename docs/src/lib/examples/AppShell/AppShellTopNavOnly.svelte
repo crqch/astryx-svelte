@@ -18,7 +18,7 @@
 		TopNavHeading,
 		TopNavItem,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet cubeIcon()}<Icon icon="stop" size="sm" />{/snippet}

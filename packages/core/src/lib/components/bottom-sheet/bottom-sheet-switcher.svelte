@@ -157,6 +157,17 @@
 	let triggerEl: HTMLElement | null = null;
 	// svelte-ignore state_referenced_locally
 	let committedActiveSheet: string | null = activeSheet;
+	// A flow that was present on load dims at once (AST-013 FR13). Upstream's
+	// `useSettledOpen(activeSheet, activeSheet, null)`; the latch clears on the
+	// first close, so later hand-offs and opens animate.
+	// svelte-ignore state_referenced_locally
+	let opensSettled = $state(activeSheet != null);
+
+	$effect(() => {
+		if (activeSheet == null) {
+			opensSettled = false;
+		}
+	});
 
 	/**
 	 * `$state.raw` throughout: upstream replaces each of these wholesale and never
@@ -506,6 +517,7 @@
 		get hasScrim() {
 			return hasScrim;
 		},
+		getDialog: () => dialogEl ?? null,
 		onActiveSheetChange: (sheetId) => onActiveSheetChange(sheetId),
 		getSheetPhase,
 		getSheetAlignmentOffset,
@@ -571,7 +583,10 @@
 	}
 
 	const dialogAttrs = $derived(
-		bottomSheetDialogAttrs(isFlowVisible, hasScrim, isFlowVisible && activeSheet == null, xstyle)
+		bottomSheetDialogAttrs(isFlowVisible, hasScrim, isFlowVisible && activeSheet == null, xstyle, {
+			isEntrySettled: opensSettled && isFlowVisible,
+			isSwitcherFlow: true
+		})
 	);
 	const ariaLabel = $derived(
 		(rest['aria-label'] as string | undefined) ??

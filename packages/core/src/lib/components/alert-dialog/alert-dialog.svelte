@@ -50,14 +50,22 @@
 	import Button from '../button/button.svelte';
 	import Dialog from '../dialog/dialog.svelte';
 	import Heading from '../heading/heading.svelte';
-	import HStack from '../stack/hstack.svelte';
+	import Stack from '../stack/stack.svelte';
 	import Layout from '../layout/layout.svelte';
 	import LayoutContent from '../layout/layout-content.svelte';
 	import LayoutFooter from '../layout/layout-footer.svelte';
 	import Text from '../text/text.svelte';
+	import { createAttachmentKey } from 'svelte/attachments';
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useActionGroupTracking } from '../../hooks/use-action-group-tracking.svelte.js';
+	import { GROUP_PRESS_POINTERS } from '../../hooks/use-group-press-tracking.svelte.js';
+	import { setPressGroupContext } from '../../hooks/press-group-context.svelte.js';
+	import { alertController } from '../../motion/uikit/alert.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
+	import { alertDialogActionXstyle, alertDialogActionsXstyle } from './alert-dialog.stylex.js';
 
 	/**
 	 * A confirmation dialog for destructive or irreversible actions.
@@ -107,6 +115,44 @@
 	const t = useTranslator();
 	const cancelLabel = $derived(cancelLabelFromProps ?? t('@astryx.alertDialog.cancel'));
 
+	const SMALL_SCREEN_QUERY = '(max-width: 640px)';
+	// Width stays delegated to Dialog: this query exists only so AlertDialog can
+	// keep narrow visual, DOM, and tab order aligned for its destructive/cancel
+	// semantics without coupling action order to pointer or hover capability.
+	const isSmallScreen = useMediaQuery(() => SMALL_SCREEN_QUERY);
+	// Only under the touch presentation does a press slide across the actions.
+	// A desktop press stays the native button's.
+	const isTouch = useMediaQuery(() => TOUCH_QUERY);
+	const isTracking = $derived(isOpen && isInline !== true && isTouch.matches);
+
+	// Through the group's context, each action's Button writes the press-group
+	// marker from its first render. So the tracker is its only painter.
+	let actionsEl = $state<HTMLElement | null>(null);
+	const ACTIONS_ATTACHMENT = createAttachmentKey();
+	const actionsAttachment = {
+		[ACTIONS_ATTACHMENT]: (node: HTMLElement) => {
+			actionsEl = node;
+			return () => {
+				if (actionsEl === node) {
+					actionsEl = null;
+				}
+			};
+		}
+	};
+	useActionGroupTracking(
+		() => actionsEl,
+		() => ({
+			// The actions row holds only the two buttons.
+			itemSelector: 'button',
+			highlightOnsetMs: alertController.actions.highlightOnsetMs,
+			highlightExpansion: alertController.actions.highlightExpansion,
+			// A mouse press acts as a native button's under any presentation.
+			pointerTypes: GROUP_PRESS_POINTERS,
+			isEnabled: isTracking
+		})
+	);
+	setPressGroupContext(() => (isTracking ? GROUP_PRESS_POINTERS : null));
+
 	// Upstream mints two `useId`s; `$props.id()` may be called only once per
 	// component, so the pair is derived from one — the same shape `InputGroup`
 	// and `RadioListItem` already use.
@@ -117,6 +163,8 @@
 	const theme = themeProps('alert-dialog');
 
 	const dialogRole = $derived(isInline ? 'group' : 'alertdialog');
+	const actionXstyle = $derived(alertDialogActionXstyle(isSmallScreen.matches));
+	const actionsXstyle = $derived(alertDialogActionsXstyle(isTracking));
 
 	function handleCancel(): void {
 		onOpenChange(false);
@@ -130,22 +178,55 @@
 	</LayoutContent>
 {/snippet}
 
+{#snippet cancelButton()}
+	<!--
+		Dialog focuses `[data-autofocus]` itself after `showModal()`, because the
+		native `autofocus` attribute runs while the dialog is still invisible.
+		Cancel is the least destructive choice, so it is the one preselected.
+	-->
+	<Button
+		variant="ghost"
+		label={cancelLabel}
+		onclick={handleCancel}
+		xstyle={actionXstyle}
+		data-autofocus
+	/>
+{/snippet}
+
+{#snippet actionButton()}
+	<Button
+		variant={actionVariant}
+		label={actionLabel}
+		onclick={onAction}
+		isLoading={isActionLoading}
+		xstyle={actionXstyle}
+	/>
+{/snippet}
+
 {#snippet footer()}
 	<LayoutFooter>
-		<HStack gap={2} hAlign="end">
-			<!--
-			Dialog focuses `[data-autofocus]` itself after `showModal()`, because the
-			native `autofocus` attribute runs while the dialog is still invisible.
-			Cancel is the least destructive choice, so it is the one preselected.
+		<!--
+			Generic Dialog footers should wrap, but their consumers own action
+			semantics and order. AlertDialog keeps this destructive-above-Cancel
+			narrow order because confirmation actions have component-specific
+			meaning here.
 		-->
-			<Button variant="ghost" label={cancelLabel} onclick={handleCancel} data-autofocus />
-			<Button
-				variant={actionVariant}
-				label={actionLabel}
-				onclick={onAction}
-				isLoading={isActionLoading}
-			/>
-		</HStack>
+		<Stack
+			{...actionsAttachment}
+			xstyle={actionsXstyle}
+			direction={isSmallScreen.matches ? 'vertical' : 'horizontal'}
+			gap={2}
+			hAlign={isSmallScreen.matches ? 'stretch' : 'end'}
+			wrap={isSmallScreen.matches ? 'nowrap' : 'wrap'}
+		>
+			{#if isSmallScreen.matches}
+				{@render actionButton()}
+				{@render cancelButton()}
+			{:else}
+				{@render cancelButton()}
+				{@render actionButton()}
+			{/if}
+		</Stack>
 	</LayoutFooter>
 {/snippet}
 

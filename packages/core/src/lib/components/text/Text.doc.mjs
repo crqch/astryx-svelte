@@ -24,7 +24,7 @@ export default {
 		targets: [
 			{
 				className: 'astryx-heading',
-				visualProps: ['level', 'color', 'type']
+				visualProps: ['level', 'color', 'type', 'weight']
 			},
 			{
 				className: 'astryx-text',
@@ -33,6 +33,26 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Text',
+				required: true,
+				description:
+					'Polymorphic text element that renders the supplied content with themed typography.'
+			},
+			{
+				name: 'Heading',
+				required: false,
+				description:
+					'Referenced Heading member that renders the supplied content as a semantic h1–h6 element.'
+			},
+			{
+				name: 'Truncation tooltip',
+				required: false,
+				description:
+					'Tooltip-owned surface available only when Text or Heading is measured as truncated and truncation tooltips are enabled.'
+			}
+		],
 		description:
 			'Text renders styled body text and headings from the theme. Use Text with a semantic type for body copy, labels, and captions, and Heading for section titles that output the correct h1–h6 element.',
 		bestPractices: [
@@ -92,7 +112,7 @@ export default {
 	props: [
 		{
 			name: 'type',
-			type: 'TextType',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
 			description:
 				"Semantic text type. Determines size, weight, and line-height from the theme. 'inherit' takes all three from the surrounding text instead. Themes may add custom types. Note: this prop is called `type`, not `variant`.",
 			default: "'body'"
@@ -151,7 +171,7 @@ export default {
 			name: 'wordBreak',
 			type: "'break-word' | 'break-all'",
 			description:
-				"Word break behavior when truncating. Defaults to 'break-all' for single-line truncation, 'break-word' otherwise."
+				"Word break behavior when truncating. Defaults to 'break-all' for single-line truncation, 'break-word' otherwise. Without truncation, a token longer than its line (a URL, an ID) wraps (`overflow-wrap: break-word`), so in ordinary flow text does not make the page scroll sideways. Inside a flex row, give the flex child `min-width: 0` so it can shrink. A container you style with `overflow-wrap: anywhere` does not reach this text; Astryx's own containers pass their wrap through."
 		},
 		{
 			name: 'textWrap',

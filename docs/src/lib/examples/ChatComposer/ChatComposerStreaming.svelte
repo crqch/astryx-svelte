@@ -6,7 +6,7 @@
 	than a `$bindable`, which is what upstream's is.
 -->
 <script lang="ts">
-	import { ChatComposer, Stack, Text } from '@astryx-svelte/core';
+	import { ChatComposer, Stack, Text } from '@astryx-sv/core';
 
 	let isStreaming = $state(false);
 	let value = $state('Click the send button to start streaming.');

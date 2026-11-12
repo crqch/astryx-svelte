@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import {
 	borderVars,
@@ -17,6 +18,7 @@ import {
 	typographyVars
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 
 /**
  * Ported from Astryx's `DateRangeInput/DateRangeInput.tsx`, where the styles are
@@ -44,9 +46,13 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			// A coarse pointer means a touch device, where a sub-16px font makes
-			// mobile Safari zoom the viewport on focus.
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+			// control sits under 16px, and only iOS WebKit implements
+			// -webkit-touch-callout to key the coarse-pointer floor to it. A coarse
+			// pointer alone is not the signal — a tablet with a mouse matches it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -85,8 +91,28 @@ const styles = stylex.create({
 	iconButtonDisabled: {
 		cursor: 'default'
 	},
+	// The popover content scrolls inside the layer's block cap, so a stacked
+	// calendar stays reachable on a short screen.
+	popoverScroll: {
+		overflowY: 'auto',
+		overscrollBehavior: 'contain',
+		maxBlockSize: stylex.firstThatWorks(
+			`calc(${layerViewportInset.maxBlockSize})`,
+			`calc(${layerViewportInset.maxBlockSizeFallback})`
+		)
+	},
 	popoverLayout: {
-		display: 'flex'
+		display: 'flex',
+		// When the presets and a one-month calendar do not fit side by side, the
+		// row wraps and the presets stack above the calendar, in DOM order. The
+		// preset group draws a divider on its inline end and its block end. A
+		// negative margin moves each divider 1 border width past the group's margin
+		// box, and this row clips at its edges. Thus only the divider between the
+		// two parts shows: the inline-end one side by side, the block-end one when
+		// stacked. The row clips, not the scroller, so the overhang is never
+		// scrollable overflow.
+		flexWrap: 'wrap',
+		overflow: 'clip'
 	},
 	presetSidebar: {
 		display: 'flex',
@@ -96,7 +122,25 @@ const styles = stylex.create({
 		borderInlineEndWidth: borderVars['--border-width'],
 		borderInlineEndStyle: 'solid',
 		borderInlineEndColor: colorVars['--color-border-emphasized'],
+		borderBlockEndWidth: borderVars['--border-width'],
+		borderBlockEndStyle: 'solid',
+		borderBlockEndColor: colorVars['--color-border-emphasized'],
+		marginInlineEnd: `calc(-1 * ${borderVars['--border-width']})`,
+		marginBlockEnd: `calc(-1 * ${borderVars['--border-width']})`,
+		// Alone on its line, the group fills the line, so its inline-end divider
+		// reaches the clipped edge.
+		flexGrow: 1,
 		minWidth: 140
+	},
+	calendarPane: {
+		// Gives back the border width the preset group's margin takes, so the
+		// calendar keeps its side-by-side position.
+		marginInlineStart: borderVars['--border-width'],
+		// The row wraps on the calendar's one-month width, and the calendar then
+		// takes the free space, so its months sit in a row where they fit. The
+		// large factor keeps the preset group at its own width beside it.
+		flexBasis: 'min-content',
+		flexGrow: 1_000_000
 	},
 	presetButton: {
 		display: 'block',
@@ -129,7 +173,7 @@ const styles = stylex.create({
 	},
 	presetButtonActive: {
 		backgroundColor: colorVars['--color-accent-muted'],
-		color: colorVars['--color-accent']
+		color: colorVars['--color-text-accent']
 	}
 });
 
@@ -166,6 +210,7 @@ export function dateRangeInputWrapperAttrs(
 		inputWrapperStyles.base,
 		sizeStyles[size],
 		isEffectivelyDisabled && inputWrapperStyles.disabled,
+		isEffectivelyDisabled && inputDisabledFocusStyles.withinRing,
 		statusType && inputStatusBorderStyles[statusType],
 		statusType && !isEffectivelyDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType],
@@ -207,10 +252,25 @@ export function dateRangeInputPopoverLayoutAttrs(): SvelteStyleAttrs {
 	return sx(styles.popoverLayout);
 }
 
+/**
+ * The popover's scrolling shell, capped at the layer's block size so a stacked
+ * calendar stays reachable on a short screen.
+ */
+export function dateRangeInputPopoverScrollAttrs(): SvelteStyleAttrs {
+	return sx(styles.popoverScroll);
+}
+
 /** The bordered preset rail. */
 export function dateRangeInputPresetSidebarAttrs(): SvelteStyleAttrs {
 	return sx(styles.presetSidebar);
 }
+
+/**
+ * `xstyle` for the calendar beside the preset rail. Passed to `Calendar`, so the
+ * key survives as an object rather than folding into an inline string — the
+ * arrangement `popover` and `divider` already take.
+ */
+export const dateRangeInputCalendarPaneStyle: StyleArg = styles.calendarPane;
 
 /**
  * One preset row; the applied preset takes the accent treatment, and a preset

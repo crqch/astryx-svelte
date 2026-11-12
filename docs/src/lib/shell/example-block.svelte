@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Card, CodeBlock, Section, Tab, TabList, Text } from '@astryx-svelte/core';
+	import { Card, CodeBlock, Section, Tab, TabList, Text } from '@astryx-sv/core';
 	import ComponentPreviewTheme from './component-preview-theme.svelte';
 	import ExamplePreview from './example-preview.svelte';
 	import InlineMarkdown from './inline-markdown.svelte';

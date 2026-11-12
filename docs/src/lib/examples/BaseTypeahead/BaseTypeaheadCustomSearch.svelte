@@ -3,15 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		BaseTypeahead,
-		createStaticSource,
-		HStack,
-		Icon,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
-	import type { SearchableItem } from '@astryx-svelte/core';
+	import { BaseTypeahead, createStaticSource, HStack, Icon, Text, VStack } from '@astryx-sv/core';
+	import type { SearchableItem } from '@astryx-sv/core';
 
 	/**
 	 * Three translations, all this port's standing shapes. Upstream passes

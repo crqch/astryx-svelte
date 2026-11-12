@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, OverflowList } from '@astryx-svelte/core';
+	import { Button, OverflowList } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes the buttons as `children`; this port takes `items` plus an

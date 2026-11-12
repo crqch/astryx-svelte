@@ -17,8 +17,17 @@
 		onOpenChange?: (isOpen: boolean) => unknown;
 		/** Content before the title (e.g. a back button). */
 		startContent?: Snippet;
-		/** Content after the title, before the close button (e.g. action buttons). */
+		/**
+		 * Content after the title, before the close button (e.g. action buttons).
+		 */
 		endContent?: Snippet;
+		/**
+		 * Overrides automatic end-slot compensation. When omitted, the slot keeps
+		 * its existing behavior: rendering the close action applies block and
+		 * logical inline-end compensation. Use `inline`, `block`, or `all` to
+		 * select the axes explicitly.
+		 */
+		endContentEdgeCompensation?: 'inline' | 'block' | 'all';
 		/**
 		 * Adds a themed bottom border. Defaults to the parent `Layout`'s
 		 * `defaultHasDividers` context value.
@@ -35,6 +44,7 @@
 	import Heading from '../heading/heading.svelte';
 	import Text from '../text/text.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { themeProps } from '../../internal/theme-props.js';
 	import { useDialogContext } from './dialog-context.svelte.js';
 	import {
 		dialogHeaderContainerAttrs,
@@ -60,6 +70,7 @@
 		onOpenChange,
 		startContent,
 		endContent,
+		endContentEdgeCompensation,
 		hasDivider,
 		xstyle,
 		class: className,
@@ -88,9 +99,28 @@
 	});
 
 	const container = dialogHeaderContainerAttrs();
+	const containerTheme = themeProps('dialog-header');
+	const startTheme = themeProps('dialog-header-start-content');
+	const titleTheme = themeProps('dialog-header-title-block');
+	const endTheme = themeProps('dialog-header-end-content');
 	const titleWrapper = dialogHeaderTitleWrapperAttrs();
-	const startActions = dialogHeaderActionsAttrs(false);
-	const endActions = $derived(dialogHeaderActionsAttrs(onOpenChange != null));
+	// Upstream's two axes are independent: without an override the close action
+	// compensates both, and `endContentEdgeCompensation` selects either or both
+	// explicitly.
+	const shouldCompensateEndBlock = $derived(
+		endContentEdgeCompensation == null
+			? onOpenChange != null
+			: endContentEdgeCompensation === 'block' || endContentEdgeCompensation === 'all'
+	);
+	const shouldCompensateEndInline = $derived(
+		endContentEdgeCompensation == null
+			? onOpenChange != null
+			: endContentEdgeCompensation === 'inline' || endContentEdgeCompensation === 'all'
+	);
+	const startActions = dialogHeaderActionsAttrs(false, false);
+	const endActions = $derived(
+		dialogHeaderActionsAttrs(shouldCompensateEndBlock, shouldCompensateEndInline)
+	);
 </script>
 
 <LayoutHeader
@@ -100,20 +130,43 @@
 	style={styleProp}
 	{...rest as LayoutHeaderProps}
 >
-	<div class={container.class} style={container.style}>
+	<div
+		{...containerTheme}
+		class={[containerTheme.class, container.class].join(' ')}
+		style={container.style}
+	>
 		{#if startContent}
-			<div class={startActions.class} style={startActions.style}>{@render startContent()}</div>
+			<div
+				{...startTheme}
+				class={[startTheme.class, startActions.class].join(' ')}
+				style={startActions.style}
+			>
+				{@render startContent()}
+			</div>
 		{/if}
-		<div class={titleWrapper.class} style={titleWrapper.style}>
-			<Heading id={titleId} level={2} tabindex={-1} xstyle={titleFocusableStyle} {...titleAttach}
-				>{title}</Heading
+		<div
+			{...titleTheme}
+			class={[titleTheme.class, titleWrapper.class].join(' ')}
+			style={titleWrapper.style}
+		>
+			<Heading
+				id={titleId}
+				level={2}
+				tabindex={-1}
+				data-autofocus={shouldAutoFocus ? 'dialog-title' : undefined}
+				xstyle={titleFocusableStyle}
+				{...titleAttach}>{title}</Heading
 			>
 			{#if subtitle}
 				<Text type="body" size="sm" color="secondary">{subtitle}</Text>
 			{/if}
 		</div>
 		{#if endContent || onOpenChange}
-			<div class={endActions.class} style={endActions.style}>
+			<div
+				{...endTheme}
+				class={[endTheme.class, endActions.class].join(' ')}
+				style={endActions.style}
+			>
 				{#if endContent}{@render endContent()}{/if}
 				{#if onOpenChange}
 					<Button
@@ -123,7 +176,11 @@
 						isIconOnly
 						onclick={() => onOpenChange?.(false)}
 					>
-						{#snippet icon()}<Icon icon="close" color="inherit" />{/snippet}
+						{#snippet icon()}<Icon
+								icon="close"
+								color="inherit"
+								{...themeProps('dialog-header-close-icon')}
+							/>{/snippet}
 					</Button>
 				{/if}
 			</div>

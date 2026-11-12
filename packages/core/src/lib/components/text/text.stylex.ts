@@ -36,16 +36,42 @@ export type BuiltinTextType =
 	| 'inherit';
 
 /**
- * Semantic text type.
+ * Augmentation seam for theme-provided semantic text types.
  *
- * Themes may define custom types via component overrides. Those render on the
- * `body` StyleX baseline and take their visual treatment from theme CSS
- * (`.astryx-text.<custom-type>`), which is why this stays open to any string.
+ * `astryx theme build` generates this augmentation when it detects new
+ * `type:*` values in a theme's component overrides. Without an augmentation
+ * the type is closed to the built-ins, so a misspelled type is a type error
+ * rather than silently rendering on the `body` baseline.
+ *
+ * @example
+ * declare module '@astryx-sv/core' {
+ *   interface CustomTextTypes {
+ *     hero: true;
+ *     caption: true;
+ *   }
+ * }
  */
-export type TextType = BuiltinTextType | (string & {});
+export interface CustomTextTypes {}
+
+/**
+ * Semantic text type: one of the built-ins or a theme-registered custom type.
+ * A custom type renders on the `body` StyleX baseline and takes its visual
+ * treatment from theme CSS (`.astryx-text[data-type="<custom-type>"]`).
+ */
+export type TextType = BuiltinTextType | (keyof CustomTextTypes & string);
 
 export type TextSize =
-	'4xs' | '3xs' | '2xs' | 'xsm' | 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
+	| '4xs'
+	| '3xs'
+	| '2xs'
+	| 'xsm'
+	| 'sm'
+	| 'base'
+	| 'lg'
+	| 'xl'
+	| '2xl'
+	| '3xl'
+	| '4xl';
 
 export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
 
@@ -63,7 +89,7 @@ export type TextWeight = 'normal' | 'medium' | 'semibold' | 'bold';
  * `type` falls back to `body`.
  *
  * @example
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface TextColorMap {
  *     brand: true;
  *     danger: true;
@@ -85,7 +111,12 @@ export interface TextColorMap {
  * styles (see {@link resolveStyleColor}).
  */
 export type BuiltinTextColor =
-	'primary' | 'secondary' | 'disabled' | 'placeholder' | 'accent' | 'inherit';
+	| 'primary'
+	| 'secondary'
+	| 'disabled'
+	| 'placeholder'
+	| 'accent'
+	| 'inherit';
 
 /** Text colour. Extensible via {@link TextColorMap}. */
 export type TextColor = keyof TextColorMap;
@@ -239,9 +270,25 @@ export const sizeByLevelStyles = stylex.create({
 // Display, truncation, wrapping, decoration
 // =============================================================================
 
+// Text that is not truncated. A token longer than its line (a URL, an ID)
+// wraps instead of overflowing, so in ordinary flow text does not force
+// horizontal scrolling at 320 CSS px (WCAG 2.2 1.4.10; Text and Heading FR3).
+// `break-word` keeps min-content, so tables and auto-sized columns lay out
+// ordinary words as before; a flex child still needs `min-width: 0` from its
+// container. A container that wraps with `anywhere` (an empty state, a toast,
+// a banner) sets the private `--_astryx-text-overflow-wrap` beside its own
+// `overflow-wrap`, so Text inside it keeps `anywhere`.
+const NON_TRUNCATED_OVERFLOW_WRAP = 'var(--_astryx-text-overflow-wrap, break-word)';
+
 export const displayStyles = stylex.create({
-	inline: { display: 'inline' },
-	block: { display: 'block' }
+	inline: {
+		display: 'inline',
+		overflowWrap: NON_TRUNCATED_OVERFLOW_WRAP
+	},
+	block: {
+		display: 'block',
+		overflowWrap: NON_TRUNCATED_OVERFLOW_WRAP
+	}
 });
 
 export const truncationStyles = stylex.create({

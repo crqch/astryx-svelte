@@ -73,7 +73,7 @@
 		proportional,
 		resolveColumnWidths,
 		useResizable
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ChartBarIcon } from '@fvilers/heroicons-svelte/24/solid';
 	import { EllipsisHorizontalIcon, XMarkIcon } from '@fvilers/heroicons-svelte/24/outline';
 	import type {
@@ -81,10 +81,10 @@
 		PowerSearchFilter,
 		ResizableProps,
 		TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	// Plain inline styles using Astryx design-token CSS variables (declared at
-	// :root by `@astryx-svelte/core`'s stylesheet). No StyleX compiler required.
+	// :root by `@astryx-sv/core`'s stylesheet). No StyleX compiler required.
 	// The group-header background + cursor live on the colSpan TableCell (which
 	// reliably forwards `style`) so they fill the full row width.
 	const groupHeaderCell =

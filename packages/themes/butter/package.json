@@ -1,20 +1,21 @@
 {
-	"name": "@astryx-svelte/theme-butter",
-	"version": "0.5.2",
-	"description": "Butter theme for astryx-svelte — warm, creamy yellows with a friendly blue accent.",
+	"name": "@astryx-sv/theme-butter",
+	"version": "0.7.13",
+	"description": "Butter theme for astryx-svelte \u2014 warm, creamy yellows with a friendly blue accent.",
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
+	"bugs": {
+		"url": "https://github.com/crqch/astryx-svelte/issues"
+	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/themes/butter"
 	},
-	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
-	},
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
-	"publishConfig": {
-		"access": "public"
-	},
+	"files": [
+		"dist",
+		"src"
+	],
 	"type": "module",
 	"main": "./dist/index.js",
 	"exports": {
@@ -30,32 +31,29 @@
 		},
 		"./theme.css": "./dist/theme.css"
 	},
-	"files": [
-		"dist",
-		"src"
-	],
+	"publishConfig": {
+		"access": "public"
+	},
 	"scripts": {
-		"build": "node --experimental-strip-types scripts/build-theme.mjs",
+		"build": "bun scripts/build-theme.mjs",
 		"check": "tsc --noEmit -p tsconfig.json",
-		"lint": "prettier --check .",
-		"format": "prettier --write .",
-		"test:parity": "node scripts/compare-upstream.mjs",
-		"test:icons": "node scripts/check-icons.mjs",
-		"test": "npm run build && npm run test:parity && npm run test:icons"
+		"lint": "oxfmt --check . && oxlint .",
+		"format": "oxfmt --write .",
+		"test:parity": "bun scripts/compare-upstream.mjs",
+		"test:icons": "bun scripts/check-icons.mjs",
+		"test": "bun run build && bun run test:parity && bun run test:icons"
 	},
 	"dependencies": {
 		"@lucide/svelte": "^1.25.0"
 	},
-	"peerDependencies": {
-		"@astryx-svelte/core": "workspace:^",
-		"svelte": "^5.0.0"
-	},
 	"devDependencies": {
-		"@astryx-svelte/core": "workspace:*",
-		"@astryxdesign/theme-butter": "0.5.2",
-		"prettier": "^3.8.3",
-		"prettier-plugin-svelte": "^4.1.0",
+		"@astryx-sv/core": "workspace:*",
+		"@astryxdesign/theme-butter": "0.7.13",
 		"svelte": "^5.56.1",
 		"typescript": "^6.0.3"
+	},
+	"peerDependencies": {
+		"@astryx-sv/core": "workspace:^",
+		"svelte": "^5.0.0"
 	}
 }

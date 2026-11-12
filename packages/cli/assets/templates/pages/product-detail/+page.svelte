@@ -42,7 +42,7 @@
 		SelectableCard,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { MinusIcon, PlusIcon, StarIcon } from '@fvilers/heroicons-svelte/24/outline';
 	import { StarIcon as StarIconSolid } from '@fvilers/heroicons-svelte/24/solid';
 

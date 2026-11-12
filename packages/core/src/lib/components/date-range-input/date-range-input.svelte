@@ -7,8 +7,10 @@
 		DateRange,
 		DayOfWeek,
 		DayOfWeekName,
-		ISODateString
+		ISODateString,
+		PlainDate
 	} from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 	import type { DateRangeInputSize } from './date-range-input.stylex.js';
 	import type { Locale } from '../../i18n/types.js';
 
@@ -169,6 +171,15 @@
 		 * @default 0
 		 */
 		weekStartsOn?: DayOfWeek | DayOfWeekName;
+		/**
+		 * The calendar the trigger text and the popover calendar show, such as
+		 * `'persian'` or `'hebrew'`. `value`, `onChange`, `min`, `max`, and presets
+		 * stay Gregorian ISO dates in every calendar. Calendars other than
+		 * `gregory`, `iso8601`, `buddhist`, `roc`, and `japanese` need `Temporal`;
+		 * without it the field shows Gregorian dates.
+		 * @default the InternationalizationProvider's calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
 	}
 
 	/**
@@ -176,19 +187,28 @@
 	 * neither.
 	 *
 	 * The year is dropped from both endpoints only when the range sits entirely
-	 * within the *current* year, so a historical range stays unambiguous.
+	 * within the *current* year, so a historical range stays unambiguous. Years
+	 * are years of `calendar`.
 	 */
-	function formatRangeDisplay(range: DateRange | null, locale: Locale): string {
+	function formatRangeDisplay(
+		range: DateRange | null,
+		locale: Locale,
+		calendar: CalendarSystem,
+		today: PlainDate
+	): string {
 		if (!range) {
 			return '';
 		}
 		const start = plainDateFromISO(range.start);
 		const end = plainDateFromISO(range.end);
-		const currentYear = plainDateToday().year;
-		const sameYear = start.year === end.year && start.year === currentYear;
+		const sameYear =
+			calendarYearMonthOf(calendar, calendarMonthOf(calendar, start)).year ===
+				calendarYearMonthOf(calendar, calendarMonthOf(calendar, end)).year &&
+			calendarYearMonthOf(calendar, calendarMonthOf(calendar, start)).year ===
+				calendarYearMonthOf(calendar, calendarMonthOf(calendar, today)).year;
 
 		const fmt = sameYear ? DATE_FORMAT_SHORT : DATE_FORMAT_SHORT_WITH_YEAR;
-		return `${plainDateFormat(start, fmt, locale)} – ${plainDateFormat(end, fmt, locale)}`;
+		return `${formatCalendarDate(calendar, start, fmt, locale)} – ${formatCalendarDate(calendar, end, fmt, locale)}`;
 	}
 
 	function isRangeEqual(a: DateRange | null, b: DateRange | null): boolean {
@@ -208,10 +228,15 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
 	import {
+		calendarMonthOf,
+		calendarYearMonthOf,
+		formatCalendarDate
+	} from '../../utils/calendar-system.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
+	import {
 		DATE_FORMAT_SHORT,
 		DATE_FORMAT_SHORT_WITH_YEAR,
 		plainDateDiffDays,
-		plainDateFormat,
 		plainDateFromISO,
 		plainDateToday
 	} from '../../utils/plain-date.js';
@@ -231,8 +256,10 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import {
+		dateRangeInputCalendarPaneStyle,
 		dateRangeInputIconButtonAttrs,
 		dateRangeInputPopoverLayoutAttrs,
+		dateRangeInputPopoverScrollAttrs,
 		dateRangeInputPresetButtonAttrs,
 		dateRangeInputPresetSidebarAttrs,
 		dateRangeInputTriggerAttrs,
@@ -285,6 +312,7 @@
 		// Deliberately no default: it is forwarded raw, and `Calendar` owns both the
 		// `= 0` fallback and the name→number normalisation.
 		weekStartsOn,
+		calendar: calendarProp,
 		width,
 		xstyle,
 		class: className,
@@ -302,6 +330,7 @@
 
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(() => calendarProp, 'DateRangeInput');
 	const placeholder = $derived(placeholderFromProps ?? t('@astryx.dateRangeInput.placeholder'));
 	const resolveSize = useSize();
 	const size = $derived(resolveSize(sizeProp, 'md'));
@@ -354,7 +383,10 @@
 			.join(' ') || undefined
 	);
 
-	const displayValue = $derived(formatRangeDisplay(optimistic.current, locale()));
+	const today = plainDateToday();
+	const displayValue = $derived(
+		formatRangeDisplay(optimistic.current, locale(), calendar(), today)
+	);
 
 	const popover = usePopover(() => ({
 		id: popoverID,
@@ -438,6 +470,7 @@
 	const toggleAttrs = $derived(dateRangeInputIconButtonAttrs(isEffectivelyDisabled));
 	const triggerAttrs = $derived(dateRangeInputTriggerAttrs(!displayValue, isEffectivelyDisabled));
 	const layoutAttrs = dateRangeInputPopoverLayoutAttrs();
+	const scrollAttrs = dateRangeInputPopoverScrollAttrs();
 	const sidebarAttrs = dateRangeInputPresetSidebarAttrs();
 </script>
 
@@ -542,51 +575,57 @@
 		<InputStatusIcon {statusIcon} />
 	</div>
 	<PopoverLayer {popover} placement="below" alignment="start">
-		<div class={layoutAttrs.class} style={layoutAttrs.style}>
-			{#if presets && presets.length > 0}
-				<div
-					role="group"
-					aria-label={t('@astryx.dateRangeInput.presetDateRanges')}
-					class={sidebarAttrs.class}
-					style={sidebarAttrs.style}
-				>
-					{#each presets as preset (preset.label)}
-						{@const presetRange = preset.getRange()}
-						{@const isActive = isRangeEqual(value, presetRange)}
-						{@const isPresetDisabled = !isRangeWithinSpan(presetRange)}
-						{@const presetAttrs = dateRangeInputPresetButtonAttrs(isActive, isPresetDisabled)}
-						<!--
-							These presets are independent action buttons navigated by Tab,
-							not a single-tab-stop listbox — so they are a labeled group of
-							buttons, and the currently-applied preset is marked with
-							aria-current (not aria-selected, a listbox concept that
-							contradicted the Tab interaction) (forms-5).
-						-->
-						<button
-							type="button"
-							aria-current={isActive ? 'true' : undefined}
-							disabled={isPresetDisabled}
-							onclick={() => handlePresetClick(preset)}
-							class={presetAttrs.class}
-							style={presetAttrs.style}
-						>
-							{preset.label}
-						</button>
-					{/each}
-				</div>
-			{/if}
-			<Calendar
-				{maxRangeSpan}
-				{minRangeSpan}
-				mode="range"
-				value={value ?? undefined}
-				onChange={handleRangeSelect}
-				{min}
-				{max}
-				{dateConstraints}
-				{numberOfMonths}
-				{weekStartsOn}
-			/>
+		<div class={scrollAttrs.class} style={scrollAttrs.style}>
+			<div class={layoutAttrs.class} style={layoutAttrs.style}>
+				{#if presets && presets.length > 0}
+					<div
+						role="group"
+						aria-label={t('@astryx.dateRangeInput.presetDateRanges')}
+						{...themeProps('date-range-input-presets')}
+						class={cx(themeProps('date-range-input-presets').class, sidebarAttrs.class)}
+						style={sidebarAttrs.style}
+					>
+						{#each presets as preset (preset.label)}
+							{@const presetRange = preset.getRange()}
+							{@const isActive = isRangeEqual(value, presetRange)}
+							{@const isPresetDisabled = !isRangeWithinSpan(presetRange)}
+							{@const presetAttrs = dateRangeInputPresetButtonAttrs(isActive, isPresetDisabled)}
+							{@const presetTheme = themeProps('date-range-input-preset')}
+							<!--
+								These presets are independent action buttons navigated by Tab,
+								not a single-tab-stop listbox — so they are a labeled group of
+								buttons, and the currently-applied preset is marked with
+								aria-current (not aria-selected, a listbox concept that
+								contradicted the Tab interaction) (forms-5).
+							-->
+							<button
+								type="button"
+								aria-current={isActive ? 'true' : undefined}
+								disabled={isPresetDisabled}
+								onclick={() => handlePresetClick(preset)}
+								class={cx(presetTheme.class, presetAttrs.class)}
+								style={presetAttrs.style}
+							>
+								{preset.label}
+							</button>
+						{/each}
+					</div>
+				{/if}
+				<Calendar
+					{maxRangeSpan}
+					{minRangeSpan}
+					mode="range"
+					value={value ?? undefined}
+					onChange={handleRangeSelect}
+					calendar={calendar()}
+					{min}
+					{max}
+					{dateConstraints}
+					{numberOfMonths}
+					{weekStartsOn}
+					xstyle={presets && presets.length > 0 ? dateRangeInputCalendarPaneStyle : undefined}
+				/>
+			</div>
 		</div>
 	</PopoverLayer>
 

@@ -10,7 +10,7 @@ export default {
 	displayName: 'Dropdown Menu Divider',
 	subComponentOf: 'DropdownMenu',
 	description:
-		'A horizontal rule separating groups of rows in a compound menu. Renders role="separator", so it is never a stop in the arrow-key order. The data-driven equivalent is the `{type: "divider"}` entry in `items`; both modes render this component, so they look and theme identically.',
+		'A horizontal rule separating groups of rows in a compound menu. Renders role="separator", so it is never a stop in the arrow-key order. The data-driven equivalent is the `{type: "divider"}` entry in `items`; both modes render this component, so they look and theme identically. Host attributes and DOM handlers (id, data-*, aria-*) reach the separator; its role and orientation stay component-owned.',
 	keywords: [
 		'dropdown',
 		'menu',

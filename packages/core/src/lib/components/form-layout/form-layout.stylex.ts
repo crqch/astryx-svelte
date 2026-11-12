@@ -25,7 +25,8 @@ const styles = stylex.create({
 		[HORIZONTAL_LABELS_COLLAPSE]: {
 			display: 'flex',
 			flexDirection: 'column',
-			gap: spacingVars['--spacing-4']
+			gap: spacingVars['--spacing-4'],
+			alignItems: 'stretch'
 		}
 	}
 });

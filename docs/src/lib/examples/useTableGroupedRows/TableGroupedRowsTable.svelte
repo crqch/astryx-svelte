@@ -34,7 +34,7 @@
 		proportional,
 		useTableGroupedRows,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface Person extends Record<string, unknown> {
 		id: string;

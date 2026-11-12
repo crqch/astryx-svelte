@@ -8,7 +8,7 @@
 	the same ones the demo routes make. Retires with the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { ChatMessageList, ChatSystemMessage, Icon } from '@astryx-svelte/core';
+	import { ChatMessageList, ChatSystemMessage, Icon } from '@astryx-sv/core';
 </script>
 
 {#snippet userPlusIcon()}<Icon icon="info" />{/snippet}

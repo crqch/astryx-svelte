@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 import { container, type SpacingToken } from '../../internal/container.stylex.js';
+import { containerCornerStyles } from '../../internal/container-corners.stylex.js';
 import type { SpacingStep } from '../../internal/types.js';
 import {
 	paddingStyles,
@@ -66,7 +67,22 @@ const styles = stylex.create({
 		position: 'fixed',
 		margin: 'auto',
 		padding: 0,
-		border: 'none',
+		// The backdrop does not blur the page. Forced colors override the
+		// backdrop's colour, so a 1px border keeps the modal separate from the
+		// page. It is a border, not an outline: the focus ring
+		// (focusOutlineProps) owns the outline longhands on this element.
+		borderWidth: {
+			default: 0,
+			'@media (forced-colors: active)': 1
+		},
+		borderStyle: {
+			default: 'none',
+			'@media (forced-colors: active)': 'solid'
+		},
+		borderColor: {
+			default: null,
+			'@media (forced-colors: active)': 'CanvasText'
+		},
 		backgroundColor: colorVars['--color-background-surface'],
 		'--_dialog-radius': radiusVars['--radius-container'],
 		borderRadius: 'var(--_dialog-radius)',
@@ -76,8 +92,18 @@ const styles = stylex.create({
 		height: 'fit-content',
 		overscrollBehavior: 'contain',
 		opacity: 0,
-		animationDuration: durationVars['--duration-medium-max'],
-		animationTimingFunction: easeVars['--ease-standard'],
+		// Under reduced motion on a touch screen the entrance is the shared
+		// reduced-motion cross-fade, 200 ms on easeInOut whatever the theme's
+		// duration (design:reduced-motion DR2, DR4).
+		animationDuration: {
+			default: durationVars['--duration-medium-max'],
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': '200ms'
+		},
+		animationTimingFunction: {
+			default: easeVars['--ease-standard'],
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+				'cubic-bezier(0.42, 0, 0.58, 1)'
+		},
 		animationFillMode: 'backwards'
 	},
 	// Applied via isOpen prop — avoids :where([open]) attribute selectors
@@ -86,19 +112,23 @@ const styles = stylex.create({
 	open: {
 		display: 'flex',
 		opacity: 1,
-		// Disable the entry keyframe animation under
-		// `prefers-reduced-motion: reduce` so the dialog appears instantly
-		// instead of translating/scaling in (same pattern as layerAnimations).
+		// Under `prefers-reduced-motion: reduce` the dialog never travels or
+		// scales in (design:reduced-motion DR1): on a touch screen it fades in
+		// where it lands (DR2), and with a mouse it appears at once (DR3).
 		animationName: {
 			default: enterDirectional,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': enterFullscreen,
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none'
 		}
 	},
-	// Backdrop using ::backdrop pseudo-element
+	// A dialog present on page load opens where it rests (spec:AST-013 FR13).
+	openSettled: {
+		animationName: 'none'
+	},
+	// No backdrop-filter: a full-viewport blur is costly to repaint.
 	backdrop: {
 		'::backdrop': {
-			backgroundColor: colorVars['--color-overlay'],
-			backdropFilter: 'blur(2px)'
+			backgroundColor: colorVars['--color-overlay']
 		}
 	},
 	fullscreen: {
@@ -106,14 +136,18 @@ const styles = stylex.create({
 		height: '100dvh',
 		maxWidth: '100dvw',
 		maxHeight: '100dvh',
+		'--_dialog-radius': '0px',
 		borderRadius: 0,
+		// Nothing of the page shows around a full-screen dialog: no edge.
+		borderWidth: 0,
 		margin: 0,
 		inset: 0
 	},
 	fullscreenOpen: {
 		animationName: {
 			default: enterFullscreen,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': enterFullscreen,
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none'
 		}
 	},
 	fullscreenSafeArea: {
@@ -136,10 +170,15 @@ const styles = stylex.create({
 		overflow: 'hidden',
 		borderRadius: 'inherit'
 	},
+	innerCorners: {
+		'--_container-corner-block-start': 'var(--_dialog-radius)',
+		'--_container-corner-block-end': 'var(--_dialog-radius)'
+	},
 	// Inline wrapper mirrors the dialog's visual styles without <dialog> behavior
 	inlineWrapper: {
 		padding: 0,
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		backgroundColor: colorVars['--color-background-surface'],
 		'--_dialog-radius': radiusVars['--radius-container'],
 		borderRadius: 'var(--_dialog-radius)',
@@ -276,6 +315,8 @@ export interface DialogRootOptions {
 	standardSizing: DialogSizing | null;
 	/** Only applied when set and not fullscreen. */
 	position?: Readonly<DialogPosition>;
+	/** The dialog was present on load, so it opens where it rests (AST-013 FR13). */
+	opensSettled?: boolean;
 	xstyle?: StyleArg;
 }
 
@@ -285,6 +326,7 @@ export function dialogAttrs({
 	isFullscreen,
 	standardSizing,
 	position,
+	opensSettled = false,
 	xstyle
 }: DialogRootOptions): SvelteStyleAttrs {
 	// Upstream resolves the offsets at the `stylex.props` call site (an IIFE) for
@@ -309,6 +351,7 @@ export function dialogAttrs({
 			),
 		isFullscreen && styles.fullscreen,
 		isFullscreen && isOpen && styles.fullscreenOpen,
+		opensSettled && isOpen && styles.openSettled,
 		xstyle
 	);
 }
@@ -372,6 +415,8 @@ export function dialogInnerAttrs({
 		explicit && containerPaddingInlineVarStyles[effectivePadding],
 		explicit && containerPaddingBlockStartVarStyles[effectivePadding],
 		explicit && containerPaddingBlockEndVarStyles[effectivePadding],
-		isFullscreen && styles.fullscreenSafeArea
+		isFullscreen && styles.fullscreenSafeArea,
+		styles.innerCorners,
+		containerCornerStyles.publish
 	);
 }

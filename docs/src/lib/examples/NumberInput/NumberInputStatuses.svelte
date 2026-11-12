@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { NumberInput, VStack } from '@astryx-svelte/core';
+	import { NumberInput, VStack } from '@astryx-sv/core';
 
 	let error = $state<number | null>(-5);
 	let warning = $state<number | null>(150);

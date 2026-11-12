@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Divider, Heading, Popover, Switch, VStack } from '@astryx-svelte/core';
+	import { Button, Divider, Heading, Popover, Switch, VStack } from '@astryx-sv/core';
 
 	let notifications = $state(true);
 	let darkMode = $state(false);

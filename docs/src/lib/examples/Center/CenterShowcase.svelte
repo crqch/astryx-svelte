@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Heading, Stack, Text } from '@astryx-svelte/core';
+	import { Center, Heading, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Center axis="both" width="100%" height={240}>

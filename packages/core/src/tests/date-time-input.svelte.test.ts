@@ -280,8 +280,9 @@ describe('DateTimeInput', () => {
 		const onChange = vi.fn();
 		const screen = await render(DateTimeInput, { props: { label: 'Meeting', onChange } });
 		const dateInput = dateInputIn(screen.container);
-		await changeValue(dateInput, '03/15/2026');
-		onChange.mockClear();
+		// A two-digit year commits only on Enter or blur.
+		await changeValue(dateInput, '03/15/26');
+		expect(onChange).not.toHaveBeenCalled();
 
 		// The composing keydown (isComposing / legacy keyCode 229) that commits an
 		// IME candidate must not be read as "commit the typed date".
@@ -1161,14 +1162,15 @@ describe('DateTimeInput', () => {
 			const screen = await render(DateTimeInput, {
 				props: { label: 'When', onChange: noop }
 			});
+			// 0.7.13 resolves CLDR abbreviated names when they fit the header.
 			expect(await openAndReadWeekdays(screen.container)).toEqual([
-				'Su',
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa'
+				'Sun',
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat'
 			]);
 		});
 
@@ -1177,13 +1179,13 @@ describe('DateTimeInput', () => {
 				props: { label: 'When', onChange: noop, weekStartsOn: 1 }
 			});
 			expect(await openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 
@@ -1192,13 +1194,13 @@ describe('DateTimeInput', () => {
 				props: { label: 'When', onChange: noop, weekStartsOn: 'mon' }
 			});
 			expect(await openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 	});
@@ -1305,7 +1307,7 @@ describe('DateTimeInput', () => {
 			const css = generateThemeCss(theme);
 
 			expect(css).toContain('.astryx-date-time-input-date-segment {');
-			expect(css).toContain('.astryx-date-time-input-date-segment.lg');
+			expect(css).toContain('.astryx-date-time-input-date-segment[data-lg="lg"]');
 			expect(css).toContain('.astryx-date-time-input-time-segment {');
 			expect(css).toContain('block-size: var(--size-element-lg)');
 			expect(css).toContain('padding-inline: var(--spacing-4)');
@@ -1395,7 +1397,7 @@ describe('DateTimeInput', () => {
 			const css = generateThemeCss(theme);
 
 			expect(css).toContain('.astryx-date-time-input-toggle-icon {');
-			expect(css).toContain('.astryx-date-time-input-toggle-icon.expanded');
+			expect(css).toContain('.astryx-date-time-input-toggle-icon[data-state="expanded"]');
 			expect(css).toContain('.astryx-date-time-input-clock-icon {');
 			expect(css).toContain('width: 14px');
 			expect(css).toContain('color: var(--color-icon-primary)');

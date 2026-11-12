@@ -29,7 +29,7 @@ export const entries: EntryGenerator = () => [
 /** Upstream's `CORE_STRIP_SECTIONS` — sections the site renders itself. */
 const CORE_STRIP_SECTIONS = ['Quick Start', 'Resources', 'Astryx CLI'];
 
-const REPO_CLONE = 'git clone https://github.com/devrohit06/astryx-svelte\ncd astryx-svelte';
+const REPO_CLONE = 'git clone https://github.com/crqch/astryx-svelte\ncd astryx-svelte';
 
 /**
  * Upstream's `getInstallSteps`, with the branch this port needs: **no package
@@ -70,7 +70,7 @@ function installStepsFor(slug: string, name: string, released: boolean) {
 				{ label: 'Not on npm yet — run it from a clone', code: REPO_CLONE },
 				{
 					label: 'Once it is published',
-					code: `npm install ${name} @astryx-svelte/theme-neutral @stylexjs/stylex`
+					code: `npm install ${name} @astryx-sv/theme-neutral @stylexjs/stylex`
 				},
 				importStep
 			];

@@ -14,6 +14,27 @@ export default {
 	keywords: ['topnav', 'navbar', 'appbar', 'header', 'toolbar', 'navigation', 'menubar', 'topbar'],
 	group: 'Navigation',
 	category: 'Navigation',
+	playground: {
+		defaults: {
+			label: 'Products',
+			items: [
+				{
+					title: 'Analytics',
+					description: 'Usage metrics and trends',
+					href: '#'
+				},
+				{
+					title: 'Automation',
+					description: 'Workflows and rules',
+					href: '#'
+				},
+				{
+					title: 'Billing',
+					href: '#'
+				}
+			]
+		}
+	},
 	props: [
 		{
 			name: 'label',
@@ -24,7 +45,8 @@ export default {
 		{
 			name: 'items',
 			type: 'TopNavMenuItemData[]',
-			description: 'Menu items to display in the hover popover.',
+			description:
+				'Menu items to display in the hover popover. Item href values follow the shared navigation rule described on Link; rejected destinations remain visible without navigation.',
 			required: true
 		},
 		{

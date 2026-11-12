@@ -34,6 +34,7 @@
 	import NestedEditor from './nested-editor.svelte';
 	import {
 		editPopoverChipRowStyle,
+		editPopoverChipRowWrappedStyle,
 		editPopoverContainerAttrs,
 		editPopoverContentAttrs,
 		editPopoverFieldSelectorAttrs,
@@ -238,6 +239,9 @@
 	const operatorValue = $derived<OperatorValue | undefined>(currentOperator?.value);
 	const isEmptyType = $derived(operatorValue?.type === 'empty');
 	const isNestedType = $derived(operatorValue?.type === 'nested');
+	const hasDateTimeValue = $derived(
+		operatorValue?.type === 'date_absolute' && operatorValue.isDateOnly === false
+	);
 
 	// For empty type, auto-save on mount.
 	//
@@ -354,7 +358,10 @@
 {:else}
 	<div {...editPopoverContainerAttrs()} onkeydown={handleKeyDown}>
 		<div {...editPopoverContentAttrs()}>
-			<HStack gap={2} xstyle={editPopoverChipRowStyle}>
+			<HStack
+				gap={2}
+				xstyle={[editPopoverChipRowStyle, hasDateTimeValue && editPopoverChipRowWrappedStyle]}
+			>
 				{@render fieldSelector()}
 				{#if showOperatorSelector && operatorOptions.length > 0}
 					<div {...editPopoverOperatorSelectorAttrs()}>
@@ -370,7 +377,7 @@
 					</div>
 				{/if}
 				{#if operatorValue && !isEmptyType}
-					<div bind:this={valueEditorEl} {...editPopoverValueEditorAttrs()}>
+					<div bind:this={valueEditorEl} {...editPopoverValueEditorAttrs(hasDateTimeValue)}>
 						<PowerSearchValueEditor
 							{operatorValue}
 							filterValue={partialFilter.value}

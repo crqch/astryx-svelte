@@ -20,7 +20,7 @@
 		Text,
 		Timestamp,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet copyIcon()}<Icon icon="copy" size="sm" />{/snippet}

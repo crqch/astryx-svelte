@@ -72,6 +72,12 @@ export default {
 			type: '(event: MouseEvent) => void',
 			description:
 				'Mouse up handler to attach to the container (handles middle-click navigation for href).'
+		},
+		{
+			name: 'onpointerdown',
+			type: '(event: PointerEvent<HTMLElement>) => void',
+			description:
+				'Pointer down handler to attach to the container. On a container that paints its press with usePressFeedback, it drops a touch press that starts on a nested interactive element, which does not activate the container. A mouse :active press paint is unchanged. Without it, the container keeps its click rules and its pressed state for every press.'
 		}
 	],
 	usage: {
@@ -81,12 +87,17 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Attach both onClick and onMouseUp to the container element for full click handling including middle-click.'
+					'Attach onClick, onMouseUp and onPointerDown to the container element: full click handling including middle-click, and no touch pressed state for a press on a nested control.'
 			},
 			{
 				guidance: true,
 				description:
 					'Use inside ClickableCard or SelectableCard for the standard card interaction pattern.'
+			},
+			{
+				guidance: true,
+				description:
+					'For a pressable surface without Card chrome, such as a quoted message that jumps on press, compose it yourself: this hook on the surface; `usePressFeedback()` and `interactionOverlayStyles.backgroundColor` (from `@astryx-sv/core/utils`) on the same element for the hover tint and touch press; a native `<button>` (or an `<a>` for a destination) inside `VisuallyHidden` as the named control and interactiveRef; and `focusOutlineStyles.focusWithin` (from `@astryx-sv/core/utils`) on the surface for the shared focus ring, the one ClickableCard draws. The `Core/Hooks/useClickableContainer` story has the full recipe.'
 			},
 			{
 				guidance: false,
@@ -97,6 +108,6 @@ export default {
 	},
 	relatedComponents: ['ClickableCard', 'SelectableCard'],
 	relatedHooks: ['useInputContainer'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

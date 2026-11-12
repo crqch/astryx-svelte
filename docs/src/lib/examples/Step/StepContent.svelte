@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Step, Stepper, TextInput } from '@astryx-svelte/core';
+	import { Button, Step, Stepper, TextInput } from '@astryx-sv/core';
 </script>
 
 <!--

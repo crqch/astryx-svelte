@@ -18,7 +18,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Section padding={4}>

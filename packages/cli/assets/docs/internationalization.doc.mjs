@@ -20,7 +20,7 @@
  *     convention rather than a rule that will not fire.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'internationalization',
 	title: 'Internationalization',
@@ -35,14 +35,14 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: 'Internationalization ships with `@astryx-svelte/core`. There is nothing to install. Wrap your app in `<InternationalizationProvider>` and set the active `locale`; astryx components pick up localized strings from that provider.'
+					text: 'Internationalization ships with `@astryx-sv/core`. There is nothing to install. Wrap your app in `<InternationalizationProvider>` and set the active `locale`; astryx components pick up localized strings from that provider.'
 				},
 				{
 					type: 'code',
 					lang: 'svelte',
 					label: 'Wrap your app',
 					code: `<script lang="ts">
-	import { InternationalizationProvider } from '@astryx-svelte/core/i18n';
+	import { InternationalizationProvider } from '@astryx-sv/core/i18n';
 
 	let { children } = $props();
 </script>
@@ -60,8 +60,8 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Load an astryx locale catalog',
 					code: `<script lang="ts">
-	import { InternationalizationProvider } from '@astryx-svelte/core/i18n';
-	import fr from '@astryx-svelte/core/locales/fr-FR.json';
+	import { InternationalizationProvider } from '@astryx-sv/core/i18n';
+	import fr from '@astryx-sv/core/locales/fr-FR.json';
 
 	let { children } = $props();
 </script>
@@ -72,7 +72,7 @@ export const docs = {
 				},
 				{
 					type: 'prose',
-					text: 'Astryx ships `en`, `fr-FR`, and a generated `pseudo` locale today, with more first-party translations on the roadmap. Until a locale is available from `@astryx-svelte/core/locales/*`, apps can pass a local catalog with the same shape. See `@astryx-svelte/core/locales/en.json` for the current key inventory. Missing keys fall back through the locale chain to English (for example, `pt-BR` walks to `pt`, then to shipped `en`).'
+					text: 'Astryx ships `en`, `fr-FR`, and a generated `pseudo` locale today, with more first-party translations on the roadmap. Until a locale is available from `@astryx-sv/core/locales/*`, apps can pass a local catalog with the same shape. See `@astryx-sv/core/locales/en.json` for the current key inventory. Missing keys fall back through the locale chain to English (for example, `pt-BR` walks to `pt`, then to shipped `en`).'
 				},
 				{
 					type: 'prose',
@@ -93,8 +93,8 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Toggle between locales',
 					code: `<script lang="ts">
-	import { Button, InternationalizationProvider } from '@astryx-svelte/core';
-	import fr from '@astryx-svelte/core/locales/fr-FR.json';
+	import { Button, InternationalizationProvider } from '@astryx-sv/core';
+	import fr from '@astryx-sv/core/locales/fr-FR.json';
 
 	let locale = $state<'en' | 'fr-FR'>('en');
 </script>
@@ -160,7 +160,7 @@ export const docs = {
 					lang: 'ts',
 					label: 'Set <html dir> in a SvelteKit server hook',
 					code: `// src/app.html has: <html lang="%lang%" dir="%dir%">
-import { getLocaleDirection } from '@astryx-svelte/core/i18n';
+import { getLocaleDirection } from '@astryx-sv/core/i18n';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -219,10 +219,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 					lang: 'svelte',
 					label: 'Astryx + svelte-i18n side by side',
 					code: `<script lang="ts">
-	import { Button, Selector } from '@astryx-svelte/core';
-	import { InternationalizationProvider } from '@astryx-svelte/core/i18n';
+	import { Button, Selector } from '@astryx-sv/core';
+	import { InternationalizationProvider } from '@astryx-sv/core/i18n';
 	import { t } from 'svelte-i18n';
-	import astryxFr from '@astryx-svelte/core/locales/fr-FR.json';
+	import astryxFr from '@astryx-sv/core/locales/fr-FR.json';
 
 	// Consumer strings resolve through svelte-i18n's \`$t\` store.
 	// The Selector's trigger placeholder, search-box placeholder and
@@ -269,7 +269,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					type: 'code',
 					lang: 'ts',
 					label: 'messages.ts — your catalogs',
-					code: `import type { Catalog, MessagesByLocale } from '@astryx-svelte/core/i18n';
+					code: `import type { Catalog, MessagesByLocale } from '@astryx-sv/core/i18n';
 
 const en: Catalog = {
 	'@myapp.actions.save': { defaultMessage: 'Save' }
@@ -286,8 +286,8 @@ export const messages: MessagesByLocale = { en, 'fr-FR': fr };`
 					lang: 'svelte',
 					label: 'Translate app strings with astryx',
 					code: `<script lang="ts">
-	import { Button } from '@astryx-svelte/core';
-	import { InternationalizationProvider, useTranslator } from '@astryx-svelte/core/i18n';
+	import { Button } from '@astryx-sv/core';
+	import { InternationalizationProvider, useTranslator } from '@astryx-sv/core/i18n';
 	import { messages } from './messages.js';
 
 	const t = useTranslator();
@@ -299,7 +299,7 @@ export const messages: MessagesByLocale = { en, 'fr-FR': fr };`
 				},
 				{
 					type: 'prose',
-					text: '`Catalog` types a single locale file; `MessagesByLocale` types the map passed to `messages`. A catalog entry uses the same `{defaultMessage, description?}` shape as `@astryx-svelte/core/locales/en.json`.'
+					text: '`Catalog` types a single locale file; `MessagesByLocale` types the map passed to `messages`. A catalog entry uses the same `{defaultMessage, description?}` shape as `@astryx-sv/core/locales/en.json`.'
 				}
 			]
 		},
@@ -316,8 +316,8 @@ export const messages: MessagesByLocale = { en, 'fr-FR': fr };`
 					lang: 'svelte',
 					label: 'Turn on pseudo-localization',
 					code: `<script lang="ts">
-	import { InternationalizationProvider } from '@astryx-svelte/core/i18n';
-	import pseudo from '@astryx-svelte/core/locales/pseudo.json';
+	import { InternationalizationProvider } from '@astryx-sv/core/i18n';
+	import pseudo from '@astryx-sv/core/locales/pseudo.json';
 
 	let { children } = $props();
 </script>
@@ -346,7 +346,7 @@ export const messages: MessagesByLocale = { en, 'fr-FR': fr };`
 					lang: 'svelte',
 					label: 'Read an astryx string',
 					code: `<script lang="ts">
-	import { useTranslator } from '@astryx-svelte/core/i18n';
+	import { useTranslator } from '@astryx-sv/core/i18n';
 
 	const t = useTranslator();
 </script>
@@ -377,15 +377,15 @@ export const messages: MessagesByLocale = { en, 'fr-FR': fr };`
 				},
 				{
 					type: 'prose',
-					text: 'Render one fixed glyph and wrap it in the shared `rtlStyles.mirror` from `@astryx-svelte/core/utils` (a `scaleX(-1)` that only applies under `[dir="rtl"]`). It flips from the ancestor `dir` through the cascade, so it works on the server with no hydration flash. Do not pick `chevronLeft` vs `chevronRight` in JS. This is how Pagination, Calendar, and Carousel handle their chevrons.'
+					text: 'Render one fixed glyph and wrap it in the shared `rtlStyles.mirror` from `@astryx-sv/core/utils` (a `scaleX(-1)` that only applies under `[dir="rtl"]`). It flips from the ancestor `dir` through the cascade, so it works on the server with no hydration flash. Do not pick `chevronLeft` vs `chevronRight` in JS. This is how Pagination, Calendar, and Carousel handle their chevrons.'
 				},
 				{
 					type: 'code',
 					lang: 'svelte',
 					label: 'Mirror a directional icon with CSS',
 					code: `<script lang="ts">
-	import { Icon } from '@astryx-svelte/core';
-	import { rtlStyles } from '@astryx-svelte/core/utils';
+	import { Icon } from '@astryx-sv/core';
+	import { rtlStyles } from '@astryx-sv/core/utils';
 	import { sx } from './internal/sx.js';
 </script>
 

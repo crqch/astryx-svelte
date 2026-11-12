@@ -21,7 +21,7 @@ export default {
 	category: 'Utility',
 	usage: {
 		description:
-			'Renders content in the accessibility tree while hiding it visually. Use for accessible names on icon-only controls, aria-live announcement regions, and supplementary screen-reader context. Deliberately has no styling props; the whole point is to stay invisible.',
+			'Renders content in the accessibility tree while hiding it visually. Use for accessible names on icon-only controls, aria-live announcement regions, and supplementary screen-reader context. Deliberately has no styling props; the whole point is to stay invisible. `xstyle` is still accepted and ignored, only so code written against 0.7.2 keeps compiling; a planned minor removes it.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -53,7 +53,7 @@ export default {
 		},
 		{
 			name: 'as',
-			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'button' | 'article' | 'dialog' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'base' | 'body' | 'code' | 'time' | 'section' | 'input' | 'strong' | 'div' | 'li' | 'span' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'embed' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'map' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'pre' | 'progress' | 'q' | 'rp' | 'rt' | 'ruby' | 's' | 'samp' | 'script' | 'select' | 'source' | 'sub' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
+			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'dialog' | 'button' | 'article' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'section' | 'base' | 'body' | 'code' | 'sub' | 'progress' | 'ruby' | 'strong' | 'embed' | 'pre' | 'time' | 'input' | 'div' | 'li' | 'span' | 'map' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'q' | 'rp' | 'rt' | 's' | 'samp' | 'script' | 'select' | 'source' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
 			description: 'HTML tag to render as. Use a block element for live regions.',
 			default: "'span'"
 		}

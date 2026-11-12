@@ -1,4 +1,5 @@
 import type { SelectorOptionData } from './types.js';
+import { isImeKeyEvent } from '../../utils/ime.js';
 
 /**
  * Ported from the second half of Astryx's `Selector/hooks.ts`.
@@ -81,6 +82,48 @@ interface UseComboboxResult {
 	onItemSelect: (item: SelectorOptionData) => void;
 	/** Move the highlight to a hovered option. */
 	onItemMouseEnter: (item: SelectorOptionData, index: number) => void;
+	/**
+	 * Combobox semantics for a single-line field the caller renders itself.
+	 * Upstream's `getFieldProps`, translated to Svelte's lowercase event
+	 * attributes.
+	 */
+	getFieldProps: (handlers?: ComboboxFieldHandlers) => ComboboxFieldProps;
+	/** Listbox semantics for the caller's list container. */
+	getListboxProps: () => ComboboxListboxProps;
+	/** Option semantics for the row at `index`. */
+	getOptionProps: (index: number) => ComboboxOptionProps;
+}
+
+/** The caller's own handlers for its field, run after the hook's. */
+interface ComboboxFieldHandlers {
+	onKeyDown?: (event: KeyboardEvent) => void;
+}
+
+/** Spread onto the caller's field. */
+interface ComboboxFieldProps {
+	role: 'combobox';
+	'aria-autocomplete': 'list';
+	'aria-expanded': boolean;
+	'aria-controls'?: string;
+	'aria-activedescendant'?: string;
+	onkeydown: (event: KeyboardEvent) => void;
+}
+
+/** Spread onto the caller's listbox, which the caller names. */
+interface ComboboxListboxProps {
+	id: string;
+	role: 'listbox';
+	onmousedown: (event: MouseEvent) => void;
+}
+
+/** Spread onto the caller's option at one index. */
+interface ComboboxOptionProps {
+	id: string;
+	role: 'option';
+	'aria-selected': boolean;
+	'aria-disabled'?: true;
+	onmousemove: () => void;
+	onclick: () => void;
 }
 
 /**
@@ -275,6 +318,132 @@ export function useCombobox(options: () => UseComboboxOptions): UseComboboxResul
 		}
 	}
 
+	function getFieldProps(handlers: ComboboxFieldHandlers = {}): ComboboxFieldProps {
+		const listboxId = options().listboxId;
+		const isListboxShown = options().isOpen && options().selectableItems.length > 0;
+		const activeDescendant =
+			isListboxShown && highlightedIndex >= 0 && highlightedIndex < options().selectableItems.length
+				? getItemId(highlightedIndex)
+				: undefined;
+
+		return {
+			role: 'combobox',
+			'aria-autocomplete': 'list',
+			'aria-expanded': isListboxShown,
+			'aria-controls': isListboxShown ? listboxId : undefined,
+			'aria-activedescendant': activeDescendant,
+			onkeydown: (event: KeyboardEvent) => {
+				onFieldKeyDown(event);
+				if (!event.defaultPrevented) {
+					handlers.onKeyDown?.(event);
+				}
+			}
+		};
+	}
+
+	/**
+	 * Upstream's field model (AST-075), distinct from `onKeyDown`'s trigger
+	 * model: a single-line field keeps every key the list does not need.
+	 *
+	 * - A chord is the field's own command, except Escape;
+	 * - an IME composition owns every key, Escape included;
+	 * - ArrowDown on a closed field shows the hidden list;
+	 * - with the list shown only the arrows (wrapping), Enter and Escape are
+	 *   claimed. Home/End stay with the caret until their behaviour is decided
+	 *   (AST-075 OQ2).
+	 */
+	function onFieldKeyDown(e: KeyboardEvent): void {
+		const o = options();
+		if ((o.isDisabled ?? false) || isImeKeyEvent(e)) {
+			return;
+		}
+		if ((e.shiftKey || e.ctrlKey || e.altKey || e.metaKey) && e.key !== 'Escape') {
+			return;
+		}
+		const enabledIndices = getEnabledIndices();
+		if (!o.isOpen) {
+			// A single-line field has no caret work for ArrowDown, so it shows the
+			// hidden list.
+			if (e.key === 'ArrowDown' && o.selectableItems.length > 0) {
+				o.onOpen();
+				e.preventDefault();
+				highlightedIndex = enabledIndices[0] ?? -1;
+			}
+			return;
+		}
+		switch (e.key) {
+			case 'ArrowDown':
+			case 'ArrowUp': {
+				// The list keeps the arrows even with nothing to move to, so they
+				// never move the caret under an open list.
+				e.preventDefault();
+				if (enabledIndices.length === 0) {
+					break;
+				}
+				// Wraps at either end, as the typeahead input does; with nothing
+				// active, ArrowDown starts at the first option and ArrowUp at the
+				// last.
+				const count = enabledIndices.length;
+				const position = enabledIndices.indexOf(highlightedIndex);
+				const next =
+					e.key === 'ArrowDown'
+						? (position + 1) % count
+						: position < 0
+							? count - 1
+							: (position - 1 + count) % count;
+				highlightedIndex = enabledIndices[next];
+				break;
+			}
+			case 'Enter': {
+				// Only a pick stops the field's own Enter (a send, a newline).
+				const item = highlightedIndex >= 0 ? o.selectableItems[highlightedIndex] : null;
+				if (item != null && !item.disabled) {
+					e.preventDefault();
+					selectItem(item);
+				}
+				break;
+			}
+			case 'Escape':
+				// Claimed, so an enclosing layer stays open on this press.
+				e.preventDefault();
+				closeAndReset();
+				break;
+			default:
+				// Every other key reaches the field unchanged.
+				break;
+		}
+	}
+
+	function getListboxProps(): ComboboxListboxProps {
+		return {
+			id: options().listboxId,
+			role: 'listbox',
+			// A press anywhere in the list keeps focus in the field.
+			onmousedown: (event: MouseEvent) => event.preventDefault()
+		};
+	}
+
+	function getOptionProps(index: number): ComboboxOptionProps {
+		const item = options().selectableItems[index];
+		const isOptionDisabled = item?.disabled === true;
+		return {
+			id: getItemId(index),
+			role: 'option',
+			'aria-selected': index === highlightedIndex,
+			...(isOptionDisabled ? { 'aria-disabled': true as const } : {}),
+			onmousemove: () => {
+				if (item != null && !isOptionDisabled) {
+					onItemMouseEnter(item, index);
+				}
+			},
+			onclick: () => {
+				if (item != null) {
+					selectItem(item);
+				}
+			}
+		};
+	}
+
 	return {
 		get highlightedIndex() {
 			return highlightedIndex;
@@ -286,6 +455,9 @@ export function useCombobox(options: () => UseComboboxOptions): UseComboboxResul
 		onTriggerClick,
 		onKeyDown,
 		onItemSelect: selectItem,
-		onItemMouseEnter
+		onItemMouseEnter,
+		getFieldProps,
+		getListboxProps,
+		getOptionProps
 	};
 }

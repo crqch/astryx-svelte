@@ -40,7 +40,7 @@
 
 	const cellAttrs = groupHeaderCellAttrs();
 	const innerAttrs = $derived(groupHeaderInnerAttrs(renderGroupHeader != null));
-	const chevronAttrs = groupChevronAttrs();
+	const chevronAttrs = $derived(groupChevronAttrs(renderGroupHeader != null));
 	const labelAttrs = groupLabelAttrs();
 	const countAttrs = groupCountAttrs();
 	const chevronXstyle = $derived([
@@ -74,11 +74,14 @@
 			aria-expanded={!collapsed}
 		>
 			<!--
+				16px, not the 12px this started at. The chevron is the control for
+				the whole section and sits beside a heading, so at 12 it read as
+				decoration on the label rather than the thing you press.
 				The rotation rides on the glyph rather than a wrapper span so the
 				`astryx-icon` target reaches both the mark and its open/closed
 				transform (#4838).
 			-->
-			<Icon icon="chevronRight" size="xsm" xstyle={chevronXstyle} />
+			<Icon icon="chevronRight" size="sm" xstyle={chevronXstyle} />
 		</button>
 		{#if renderGroupHeader}
 			{@render renderGroupHeader(groupKey, count, collapsed)}

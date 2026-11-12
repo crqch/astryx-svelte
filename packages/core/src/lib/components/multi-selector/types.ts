@@ -30,3 +30,9 @@ export interface MultiSelectorStatus {
 	/** Optional message to display below the selector. */
 	message?: string;
 }
+
+/** One selected option as handed to `formatValue`: its value and resolved label. */
+export interface MultiSelectorSelectedItem {
+	value: string;
+	label: string;
+}

@@ -18,6 +18,10 @@
 		target?: string;
 		isDisabled?: boolean;
 		isSelected?: boolean;
+		/** Consumer styles for the row element. See `TreeListItemData`. */
+		xstyle?: StyleArg;
+		className?: string;
+		style?: string;
 		hasChildren: boolean;
 		/**
 		 * Whether the tree has any expandable item at all. A leaf only reserves the
@@ -29,6 +33,12 @@
 		isLast: boolean;
 		ancestorsIsLast: ReadonlyArray<boolean>;
 		isExpanded: boolean;
+		/**
+		 * The row collapsed and its child group is playing its exit: the group
+		 * stays rendered (the exit makes it inert) until it ends, and its rows
+		 * leave the tree's keyboard order at once.
+		 */
+		isExiting?: boolean;
 		onToggle?: (id: string) => void;
 		density: TreeListDensity;
 		/**
@@ -52,13 +62,18 @@
 </script>
 
 <script lang="ts">
-	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { cx, mergeStyle, type StyleArg } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { spacingVars } from '../../styles/tokens.stylex.js';
 	import Icon from '../icon/icon.svelte';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import {
+		hasInteractiveAncestor,
+		useClickableContainer
+	} from '../../hooks/use-clickable-container.svelte.js';
 	import TreeListBranches from './tree-list-branches.svelte';
 	import {
 		treeItemBranchesAttrs,
@@ -74,6 +89,7 @@
 		treeItemEndContentAttrs,
 		treeItemInvisibleAnchorAttrs,
 		treeItemInvisibleButtonAttrs,
+		treeItemIndentedContentAttrs,
 		treeItemLabelAttrs,
 		treeItemRowWrapperAttrs,
 		treeItemStartContentAttrs,
@@ -86,6 +102,9 @@
 		description,
 		startContent,
 		endContent,
+		xstyle,
+		className,
+		style: styleProp,
 		onClick,
 		href,
 		target,
@@ -97,6 +116,7 @@
 		isLast,
 		ancestorsIsLast,
 		isExpanded,
+		isExiting = false,
 		onToggle,
 		density,
 		variant,
@@ -116,6 +136,9 @@
 
 	function handleToggle(e: MouseEvent): void {
 		e.stopPropagation();
+		if (isDisabled) {
+			return;
+		}
 		onToggle?.(id);
 	}
 
@@ -123,8 +146,11 @@
 		if (isDisabled) {
 			return;
 		}
-		const el = e.target as HTMLElement;
-		if (el.closest('button, a, input, select, textarea')) {
+		// Controls inside the row, native or role-based, keep their own
+		// activation; the same rule link rows get from the enlarged-surface hook
+		// below (`spec:AST-085` FR7). A hand-rolled tag list would miss
+		// `[role="switch"]` and every other role-based control.
+		if (hasInteractiveAncestor(e.target as Element, e.currentTarget as Element)) {
 			return;
 		}
 		if (onClick != null) {
@@ -134,14 +160,46 @@
 		}
 	}
 
+	/** The row surface, the container the link-row click delegation reads. */
+	let rowEl = $state<HTMLDivElement | null>(null);
+	// A link row (an `href` and no other row action) is an enlarged surface for
+	// its link: the indent is part of the row, so a click anywhere in it must
+	// follow the link, as Enter already does. Built on the shared
+	// enlarged-surface hook: it skips nested controls and text selections,
+	// re-dispatches the click on the anchor with its modifier keys, and stops
+	// the original so ancestors see one click per press. Middle-click has no
+	// synthetic equivalent, so the second instance takes the hook's href path.
+	const forwardsToLink = $derived(href != null && onClick == null && !canToggle);
+	const linkDelegate = useClickableContainer(() => ({
+		container: forwardsToLink ? rowEl : null,
+		interactive: forwardsToLink && rowEl ? rowEl.querySelector<HTMLElement>('a[href]') : null,
+		disabled: isDisabled || !forwardsToLink
+	}));
+	const linkMiddleClick = useClickableContainer(() => ({
+		container: forwardsToLink ? rowEl : null,
+		href,
+		target,
+		disabled: isDisabled || !forwardsToLink
+	}));
+
+	function handleAction(e: MouseEvent): void {
+		// Disabled stays focusable (spec:AST-085 FR1) but inert (FR2): the native
+		// click still reaches this handler, which is where activation is blocked.
+		if (isDisabled) {
+			return;
+		}
+		onClick?.(e);
+	}
+
 	// Per-level indent distance. The per-level step is the public, themeable
 	// `--tree-list-indent` lever (default `--spacing-4`, set on the tree-list
 	// root). Leaves add a fixed chevron-column offset (chevron width + gap) so
 	// their labels line up with sibling parents' labels; that offset is tied to
 	// the chevron's own dimensions, not the indent step, so it does not scale
-	// with the lever. Published as the private `--_tree-indent` and consumed by
-	// `contentWrapper`'s stylesheet `margin-inline-start` (kept out of the inline
-	// style so the theme layer can override it — see upstream #4308).
+	// with the lever. Published as the private `--_tree-indent` on the row and
+	// consumed by the `indentedContent` wrapper's stylesheet
+	// `padding-inline-start`, so a theme or caller padding on the row composes
+	// with the indent instead of replacing it.
 	const reservesChevronColumn = $derived(!hasChildren && hasExpandableItems);
 	const indentDistance = $derived(
 		reservesChevronColumn
@@ -157,17 +215,14 @@
 		})
 	);
 
+	const pressable = usePressFeedback();
+	const hasInteractiveStyles = $derived(isInteractive || (hasChildren && onClick == null));
 	const wrapperAttrs = treeItemWrapperAttrs();
 	const childGroupAttrs = treeItemChildGroupAttrs();
 	const branchesAttrs = treeItemBranchesAttrs();
 	const rowWrapperAttrs = treeItemRowWrapperAttrs();
 	const contentWrapperAttrs = $derived(
-		treeItemContentWrapperAttrs(
-			density,
-			isInteractive || (hasChildren && onClick == null),
-			isDisabled,
-			isSelected
-		)
+		treeItemContentWrapperAttrs(density, hasInteractiveStyles, isDisabled, isSelected, xstyle)
 	);
 	const anchorAttrs = treeItemInvisibleAnchorAttrs();
 	const buttonAttrs = treeItemInvisibleButtonAttrs();
@@ -176,6 +231,7 @@
 	const descriptionAttrs = $derived(treeItemDescriptionAttrs(density));
 	const startAttrs = treeItemStartContentAttrs();
 	const endAttrs = treeItemEndContentAttrs();
+	const indentedAttrs = treeItemIndentedContentAttrs();
 	const chevronContainerAttrs = treeItemChevronContainerAttrs();
 	const chevronButtonAttrs = treeItemChevronButtonAttrs();
 	const chevronXstyle = $derived([
@@ -192,11 +248,16 @@
 	);
 
 	// The polymorphic link props for the invisible-anchor branch; custom
-	// components also get a `to={href}` alias, as `Item`'s do.
+	// components also get a `to={href}` alias, as `Item`'s do. A disabled item's
+	// anchor has no destination, so neither the row's forwarded activation nor a
+	// screen reader's click can navigate (`spec:AST-085` FR2); it keeps the link
+	// role without the router link component, and sits in the same DOM position
+	// so focus survives the change.
 	const anchorProps = $derived({
-		href,
-		...(linkResolved.isNative ? {} : { to: href }),
-		target,
+		href: isDisabled ? undefined : href,
+		...(linkResolved.isNative ? {} : { to: isDisabled ? undefined : href }),
+		target: isDisabled ? undefined : target,
+		role: isDisabled ? 'link' : undefined,
 		'aria-disabled': isDisabled || undefined,
 		'aria-labelledby': labelId,
 		'aria-describedby': description != null ? descriptionId : undefined,
@@ -248,6 +309,8 @@
 
 <li
 	role="treeitem"
+	aria-labelledby={labelId}
+	aria-describedby={description != null ? descriptionId : undefined}
 	aria-expanded={hasChildren ? isExpanded : undefined}
 	aria-selected={isSelected || undefined}
 	aria-disabled={isDisabled || undefined}
@@ -274,78 +337,92 @@
 			control inside. That is why no key handler is needed here.
 		-->
 		<div
+			bind:this={rowEl}
+			{...hasInteractiveStyles ? pressable : undefined}
 			{...theme}
-			class="{theme.class} {contentWrapperAttrs.class}"
-			style={mergeStyle(contentWrapperAttrs.style, `--_tree-indent:${indentDistance}`)}
-			onclick={onClick != null || canToggle ? handleClick : undefined}
+			class={cx(theme.class, contentWrapperAttrs.class, className)}
+			style={mergeStyle(contentWrapperAttrs.style, `--_tree-indent:${indentDistance}`, styleProp)}
+			onclick={forwardsToLink
+				? linkDelegate.onclick
+				: onClick != null || canToggle
+					? handleClick
+					: undefined}
+			onmouseup={forwardsToLink ? linkMiddleClick.onmouseup : undefined}
 		>
-			{#if hasChildren}
-				{#if canToggle}
-					<!--
-						Real toggle button whenever expand/collapse is supported, so the row
-						can be expanded from the keyboard even when the item has no
-						onClick/href (row-level onClick is the only click path in that case,
-						but there is no focusable element to receive Enter/Space). The row's
-						handleClick ignores clicks originating inside a <button>, so this
-						never double-toggles.
-					-->
+			<div class={indentedAttrs.class} style={indentedAttrs.style}>
+				{#if hasChildren}
+					{#if canToggle}
+						<!--
+							Real toggle button whenever expand/collapse is supported, so the row
+							can be expanded from the keyboard even when the item has no
+							onClick/href (row-level onClick is the only click path in that case,
+							but there is no focusable element to receive Enter/Space). The row's
+							handleClick ignores clicks originating inside a <button>, so this
+							never double-toggles.
+						-->
+						<button
+							type="button"
+							aria-expanded={isExpanded}
+							aria-label={t('@astryx.treeList.toggleChildren')}
+							data-tree-toggle=""
+							aria-disabled={isDisabled || undefined}
+							tabindex={-1}
+							onclick={handleToggle}
+							{...chevronTheme}
+							class={cx(chevronTheme.class, chevronButtonAttrs.class)}
+							style={chevronButtonAttrs.style}
+						>
+							{@render chevronGlyph()}
+						</button>
+					{:else}
+						<!-- Non-interactive chevron only when toggling is not wired up at all -->
+						<span
+							{...chevronTheme}
+							class={cx(chevronTheme.class, chevronContainerAttrs.class)}
+							style={chevronContainerAttrs.style}
+						>
+							{@render chevronGlyph()}
+						</span>
+					{/if}
+				{/if}
+				{#if startContent != null}
+					<span class={startAttrs.class} style={startAttrs.style}>{@render startContent()}</span>
+				{/if}
+				{#if href != null}
+					<LinkElement component={linkResolved.component} props={anchorProps}>
+						{@render labelAndDescription()}
+					</LinkElement>
+				{:else if onClick != null}
 					<button
 						type="button"
-						aria-expanded={isExpanded}
-						aria-label={t('@astryx.treeList.toggleChildren')}
-						data-tree-toggle=""
-						disabled={isDisabled}
+						onclick={handleAction}
+						aria-disabled={isDisabled || undefined}
+						aria-labelledby={labelId}
+						aria-describedby={description != null ? descriptionId : undefined}
 						tabindex={-1}
-						onclick={handleToggle}
-						{...chevronTheme}
-						class={cx(chevronTheme.class, chevronButtonAttrs.class)}
-						style={chevronButtonAttrs.style}
+						class={buttonAttrs.class}
+						style={buttonAttrs.style}
 					>
-						{@render chevronGlyph()}
+						{@render labelAndDescription()}
 					</button>
 				{:else}
-					<!-- Non-interactive chevron only when toggling is not wired up at all -->
-					<span
-						{...chevronTheme}
-						class={cx(chevronTheme.class, chevronContainerAttrs.class)}
-						style={chevronContainerAttrs.style}
-					>
-						{@render chevronGlyph()}
+					<span class={contentAttrs.class} style={contentAttrs.style}>
+						{@render labelAndDescription()}
 					</span>
 				{/if}
-			{/if}
-			{#if startContent != null}
-				<span class={startAttrs.class} style={startAttrs.style}>{@render startContent()}</span>
-			{/if}
-			{#if href != null}
-				<LinkElement component={linkResolved.component} props={anchorProps}>
-					{@render labelAndDescription()}
-				</LinkElement>
-			{:else if onClick != null}
-				<button
-					type="button"
-					onclick={onClick}
-					disabled={isDisabled}
-					aria-labelledby={labelId}
-					aria-describedby={description != null ? descriptionId : undefined}
-					tabindex={-1}
-					class={buttonAttrs.class}
-					style={buttonAttrs.style}
-				>
-					{@render labelAndDescription()}
-				</button>
-			{:else}
-				<span class={contentAttrs.class} style={contentAttrs.style}>
-					{@render labelAndDescription()}
-				</span>
-			{/if}
-			{#if endContent != null}
-				<span class={endAttrs.class} style={endAttrs.style}>{@render endContent()}</span>
-			{/if}
+				{#if endContent != null}
+					<span class={endAttrs.class} style={endAttrs.style}>{@render endContent()}</span>
+				{/if}
+			</div>
 		</div>
 	</div>
-	{#if isExpanded && renderedChildren != null}
-		<ul role="group" class={childGroupAttrs.class} style={childGroupAttrs.style}>
+	{#if (isExpanded || isExiting) && renderedChildren != null}
+		<ul
+			role="group"
+			data-tree-exiting={isExiting ? '' : undefined}
+			class={childGroupAttrs.class}
+			style={childGroupAttrs.style}
+		>
 			{@render renderedChildren()}
 		</ul>
 	{/if}

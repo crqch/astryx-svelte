@@ -6,6 +6,7 @@ import {
 	spacingVars,
 	typeScaleVars
 } from '../../styles/tokens.stylex.js';
+import { rtlStyles } from '../../utils/rtl.stylex.js';
 
 /**
  * Ported from Astryx's `TopNav/TopNavMegaMenuFeaturedCard.tsx` styles.
@@ -49,6 +50,10 @@ const styles = stylex.create({
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		color: colorVars['--color-text-accent'],
 		textDecoration: 'none'
+	},
+	// A transform needs a box: an inline span would not mirror.
+	linkArrow: {
+		display: 'inline-block'
 	}
 });
 
@@ -80,4 +85,9 @@ export function featuredCardDescriptionAttrs(): SvelteStyleAttrs {
 /** The trailing call-to-action link. */
 export function featuredCardLinkAttrs(): SvelteStyleAttrs {
 	return sx(styles.link);
+}
+
+/** The mirrored arrow inside the call-to-action link. */
+export function featuredCardLinkArrowAttrs(): SvelteStyleAttrs {
+	return sx(styles.linkArrow, rtlStyles.mirror);
 }

@@ -1,10 +1,11 @@
 import * as stylex from '@stylexjs/stylex';
-import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { cx, mergeStyle, sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import {
 	borderVars,
 	colorVars,
 	durationVars,
 	easeVars,
+	focusVars,
 	fontWeightVars,
 	radiusVars,
 	spacingVars,
@@ -12,6 +13,7 @@ import {
 	typographyVars
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { scrollableAreaOverflowStyles } from '../../hooks/use-scrollable-area.stylex.js';
 
 /**
  * Ported from Astryx's `CodeBlock/CodeBlock.tsx`, where the styles are inline in
@@ -86,6 +88,30 @@ const styles = stylex.create({
 		backgroundColor: 'var(--color-syntax-background)',
 		overflow: 'hidden'
 	},
+	// The viewport is a flex item of the column root. Its implied min-height
+	// would be its content while it fits (the shared capability keeps it
+	// `overflow: clip` then), so a root sized from outside could never make it
+	// shrink and scroll; 0 lets the root's bound reach it.
+	viewport: {
+		minHeight: 0
+	},
+	// The root clips (overflow: hidden, for its corners), so the viewport's
+	// keyboard ring sits inside its own box instead of around it.
+	viewportFocusRingInset: {
+		outlineOffset: {
+			default: null,
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
+	},
+	// With no header, Copy sits in its own inline-end column beside the code
+	// viewport rather than over it, so no line, scrolled or wrapped, runs under
+	// the button. The column is as wide as its content; the single row still
+	// lets a root sized from outside bound the viewport.
+	rootCorner: {
+		display: 'grid',
+		gridTemplateColumns: 'minmax(0, 1fr) auto',
+		gridTemplateRows: 'minmax(0, 1fr)'
+	},
 	headerRow: {
 		display: 'flex',
 		alignItems: 'center',
@@ -103,7 +129,8 @@ const styles = stylex.create({
 		minWidth: 0,
 		// Reset default <button> appearance for the collapsible title control.
 		padding: 0,
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		backgroundColor: 'transparent',
 		color: 'inherit',
 		font: 'inherit',
@@ -127,10 +154,6 @@ const styles = stylex.create({
 		color: 'var(--color-syntax-comment)',
 		margin: 0,
 		lineHeight: typeScaleVars['--text-supporting-leading']
-	},
-	scrollContainer: {
-		overflowX: 'auto',
-		overflowY: 'auto'
 	},
 	codeWrapper: {
 		display: 'flex',
@@ -196,6 +219,10 @@ const styles = stylex.create({
 	code: {
 		display: 'block',
 		flex: 1,
+		// The block grows to its longest line, so a row's paint (diff tint,
+		// highlightLines) spans the full scroll width instead of stopping at the
+		// viewport edge when the reader scrolls a long line.
+		minWidth: 'max-content',
 		paddingBlock: spacingVars['--spacing-3'],
 		paddingInline: spacingVars['--spacing-4'],
 		margin: 0,
@@ -207,6 +234,8 @@ const styles = stylex.create({
 		overflowWrap: 'normal'
 	},
 	codeWrapped: {
+		// Wrapped lines never overflow, and max-content would stop them wrapping.
+		minWidth: 'auto',
 		whiteSpace: 'pre-wrap',
 		wordBreak: 'break-all',
 		overflowWrap: 'break-word'
@@ -266,6 +295,70 @@ const styles = stylex.create({
 		marginInline: `calc(-1 * ${spacingVars['--spacing-4']})`,
 		paddingInline: spacingVars['--spacing-4']
 	},
+	// Diff change rows: the whole row is tinted so added and removed lines read
+	// at a glance; the text keeps its ordinary colour, which stays readable on
+	// the tint where the semantic text colours would not, and the leading +/-
+	// glyph stays in the text as the cue that needs no colour. A caller's
+	// highlightLines row is declared after these and keeps its background.
+	lineAdded: {
+		backgroundColor: 'var(--color-syntax-added)',
+		marginInline: `calc(-1 * ${spacingVars['--spacing-4']})`,
+		paddingInline: spacingVars['--spacing-4'],
+		'::before': { color: 'var(--color-syntax-added-marker)' }
+	},
+	lineRemoved: {
+		backgroundColor: 'var(--color-syntax-removed)',
+		marginInline: `calc(-1 * ${spacingVars['--spacing-4']})`,
+		paddingInline: spacingVars['--spacing-4'],
+		'::before': { color: 'var(--color-syntax-removed-marker)' }
+	},
+	// Hunk and file headers stay visible but quiet: a muted row with secondary
+	// text, never change paint.
+	lineDiffHeader: {
+		backgroundColor: 'var(--color-syntax-diff-header)',
+		// The syntax theme's own secondary colour: text-secondary in the default
+		// theme, the theme's punctuation colour in a defined one.
+		color: 'var(--color-syntax-punctuation)',
+		marginInline: `calc(-1 * ${spacingVars['--spacing-4']})`,
+		paddingInline: spacingVars['--spacing-4']
+	},
+	// The glyph column: the +, - or space of every line sits in its own track
+	// before the code, so the code column starts at the same inline offset on
+	// every line and the content's indentation reads exactly as written. The
+	// glyph is laid out as text but not selectable; the copy button still
+	// copies the original source with its glyphs.
+	lineDiff: {
+		display: 'grid',
+		gridTemplateColumns: '1ch 1fr',
+		columnGap: spacingVars['--spacing-2']
+	},
+	// With line numbers the gutter's gap (which the full-height divider sits
+	// in) has to stay between the number and the marker, so the grid has no
+	// gap of its own and the marker carries both gaps as margins.
+	lineDiffNumbered: {
+		// `auto`, not `1ch`: the marker's gap margins have to widen its track.
+		gridTemplateColumns: 'var(--_codeblock-gutter-width) auto 1fr',
+		columnGap: 0
+	},
+	// The glyph is the source's own text: read by assistive technology, kept
+	// out of a drag selection (copy returns the exact source anyway).
+	diffMarker: {
+		color: colorVars['--color-text-secondary'],
+		userSelect: 'none',
+		whiteSpace: 'pre'
+	},
+	diffMarkerNumbered: {
+		marginInlineStart: `calc(${spacingVars['--spacing-3']} + ${borderVars['--border-width']} + ${spacingVars['--spacing-4']})`,
+		marginInlineEnd: spacingVars['--spacing-2']
+	},
+	// On a tinted row the glyph is the cue a reader without colour depends on,
+	// so it takes the row's marker slot like the line number does.
+	diffMarkerAdded: {
+		color: 'var(--color-syntax-added-marker)'
+	},
+	diffMarkerRemoved: {
+		color: 'var(--color-syntax-removed-marker)'
+	},
 	sizeSm: {
 		fontSize: typeScaleVars['--text-supporting-size']
 	},
@@ -279,10 +372,32 @@ const styles = stylex.create({
 		// reaches it via the `codeblock-copy-button` target on the Button.
 		color: 'var(--color-syntax-comment)'
 	},
-	copyButtonAbsolute: {
-		position: 'absolute',
-		top: spacingVars['--spacing-2'],
-		insetInlineEnd: spacingVars['--spacing-2']
+	// The controls of a headerless block: caller controls, then Copy, in the
+	// second column (cornerClusterMd/Sm give its height).
+	cornerCluster: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-1'],
+		alignSelf: 'start',
+		marginInline: spacingVars['--spacing-2']
+	},
+	// The header's controls: caller controls, then Copy.
+	headerControls: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-1'],
+		flexShrink: 0
+	},
+	// The cluster is exactly as tall as the first line's row (its block padding
+	// on both sides plus its line box), and centres its controls in it, so any
+	// control height sits on the first line: a one-line block reads as one row
+	// with even space above and below, and a block that grows keeps its
+	// controls where they were.
+	cornerClusterMd: {
+		blockSize: `calc(2 * ${spacingVars['--spacing-3']} + ${typeScaleVars['--text-code-size']} * ${typeScaleVars['--text-code-leading']})`
+	},
+	cornerClusterSm: {
+		blockSize: `calc(2 * ${spacingVars['--spacing-3']} + ${typeScaleVars['--text-supporting-size']} * ${typeScaleVars['--text-code-leading']})`
 	}
 });
 
@@ -303,9 +418,16 @@ const sizeStyles = { sm: styles.sizeSm, md: styles.sizeMd } as const;
 export function codeBlockRootAttrs(
 	width: string,
 	container: CodeBlockContainer,
+	hasCorner: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
-	return sx(styles.root, dynamicStyles.width(width), containerStyles[container], xstyle);
+	return sx(
+		styles.root,
+		hasCorner && styles.rootCorner,
+		dynamicStyles.width(width),
+		containerStyles[container],
+		xstyle
+	);
 }
 
 /** The sticky header row holding the title and (when there is a header) the copy button. */
@@ -328,6 +450,16 @@ export function codeBlockCollapseChevronAttrs(): SvelteStyleAttrs {
 	return sx(styles.collapseChevron);
 }
 
+/** The header's controls column: caller controls, then Copy. */
+export function codeBlockHeaderControlsAttrs(): SvelteStyleAttrs {
+	return sx(styles.headerControls);
+}
+
+/** The headerless block's top-corner controls column, sized to the first line. */
+export function codeBlockCornerClusterAttrs(size: CodeBlockSize): SvelteStyleAttrs {
+	return sx(styles.cornerCluster, size === 'sm' ? styles.cornerClusterSm : styles.cornerClusterMd);
+}
+
 /**
  * Handed to the chevron `Icon`'s `xstyle`, and to `IconButton`'s, the way
  * upstream hands over `styles.collapseChevronIcon` / `styles.copyButton`
@@ -337,7 +469,6 @@ export function codeBlockCollapseChevronAttrs(): SvelteStyleAttrs {
 export const codeBlockCollapseChevronIconStyle = styles.collapseChevronIcon;
 export const codeBlockCollapseChevronExpandedStyle = styles.collapseChevronExpanded;
 export const codeBlockCopyButtonStyle = styles.copyButton;
-export const codeBlockCopyButtonAbsoluteStyle = styles.copyButtonAbsolute;
 
 /** The `grid-template-rows` animation host for the collapsible region. */
 export function codeBlockCollapseGridAttrs(isCollapsed: boolean): SvelteStyleAttrs {
@@ -349,9 +480,23 @@ export function codeBlockCollapseInnerAttrs(): SvelteStyleAttrs {
 	return sx(styles.collapseInner);
 }
 
-/** The scrollable, focusable `role="group"` container. */
-export function codeBlockScrollContainerAttrs(): SvelteStyleAttrs {
-	return sx(styles.scrollContainer);
+/**
+ * The scrollable, focusable `role="group"` viewport.
+ *
+ * Upstream hands this element to `useScrollableArea`, which owns the overflow
+ * declarations dynamically. This port keeps the always-scrollable element it
+ * has always had, so the overflow pair comes from the same shared dynamic style
+ * the hook uses rather than a second static key upstream does not declare.
+ * The focus ring is the shared one, with its offset pulled inside the root's
+ * clipped corners.
+ */
+export function codeBlockViewportAttrs(): SvelteStyleAttrs {
+	const focus = focusOutlineProps.focusVisible(styles.viewport, styles.viewportFocusRingInset);
+	const overflow = sx(scrollableAreaOverflowStyles('auto', 'auto'));
+	return {
+		class: cx(focus.class, overflow.class),
+		style: mergeStyle(focus.style, overflow.style)
+	};
 }
 
 /** The flex row between the scroll container and `<code>`. */
@@ -380,15 +525,42 @@ export function codeBlockLineChunkAttrs(): SvelteStyleAttrs {
 	return sx(styles.lineChunk);
 }
 
-/** One line row. */
+/**
+ * One line row.
+ *
+ * The diff keys below are upstream 0.7.13's declarations, applied in upstream's
+ * order. `isDiff` is not ported yet, so the component passes no `diffKind`; the
+ * keys still belong to this module's `styles` group and the oracle diffs them.
+ */
 export function codeBlockLineAttrs(
 	hasLineNumbers: boolean,
-	isHighlighted: boolean
+	isHighlighted: boolean,
+	diffKind: 'added' | 'removed' | 'header' | 'context' | null = null
 ): SvelteStyleAttrs {
 	return sx(
 		styles.line,
 		hasLineNumbers && styles.lineNumbered,
+		diffKind != null && styles.lineDiff,
+		diffKind != null && hasLineNumbers && styles.lineDiffNumbered,
+		diffKind === 'added' && styles.lineAdded,
+		diffKind === 'removed' && styles.lineRemoved,
+		diffKind === 'header' && styles.lineDiffHeader,
+		// Last on purpose: a highlight replaces a diff tint rather than stacking
+		// on it, so tokens keep their single-paint contrast.
 		isHighlighted && styles.lineHighlighted
+	);
+}
+
+/** The glyph column of a diff row, before the line's content. */
+export function codeBlockDiffMarkerAttrs(
+	hasLineNumbers: boolean,
+	diffKind: 'added' | 'removed' | 'header' | 'context'
+): SvelteStyleAttrs {
+	return sx(
+		styles.diffMarker,
+		hasLineNumbers && styles.diffMarkerNumbered,
+		diffKind === 'added' && styles.diffMarkerAdded,
+		diffKind === 'removed' && styles.diffMarkerRemoved
 	);
 }
 

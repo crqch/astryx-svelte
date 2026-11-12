@@ -38,6 +38,24 @@
 		 */
 		hasDivider?: boolean;
 		/**
+		 * Bleeds the strip out to its container's content edges.
+		 *
+		 * Both halves are computed from the `--container-padding-*` custom
+		 * properties a padded Layout container publishes. The strip's box is pulled
+		 * out through the container's inline padding, so a `hasDivider` underline —
+		 * or the header's own divider, when the strip is docked on it — spans the
+		 * full content width. The strip then pads back in by whatever that bleed
+		 * exceeds a stop's own inline padding, so the first and last label still
+		 * land on the container's content inset rather than 4px short of it.
+		 *
+		 * Outside a padded container the properties are unset, the pad-back clamps
+		 * to zero, and the strip is left exactly as it was. Block-edge docking stays
+		 * with the surrounding layout because it cannot be detected through nested
+		 * wrappers without pulling a mid-content strip into its siblings.
+		 * @default false
+		 */
+		isFullBleed?: boolean;
+		/**
 		 * What happens when the tabs are wider than the strip.
 		 *
 		 * `'auto'` lets the component choose; today it always scrolls. `'scroll'`
@@ -112,6 +130,7 @@
 		size: sizeProp,
 		layout = 'hug',
 		hasDivider = false,
+		isFullBleed = false,
 		// NOT re-declared in `TabListProps`, unlike upstream, which restates it on
 		// the interface for its doc comment. `BaseProps` already publishes it, as
 		// upstream's does — restating it here would *narrow* Svelte's
@@ -177,6 +196,11 @@
 	// stop when none is tabbable.
 	const list = useListFocus(() => ({
 		itemSelector: TAB_STOP_SELECTOR,
+		// The strip is the boundary: a TabMenu's dropdown renders inline in the
+		// same DOM subtree (native popover, not a portal), so without this its
+		// key events would bubble into the strip's own navigation and its items
+		// would be swept into the roving order.
+		boundarySelector: '.astryx-tab-list, [popover]',
 		orientation: isTabList ? 'horizontal' : 'both',
 		hasRovingTabIndex: true
 	}));
@@ -260,6 +284,9 @@
 	// A plain `let`, not `$state`: upstream's `useRef` exists to hold a value
 	// across renders without causing one, which a closure variable already is.
 	let revealedValue: string | null = null;
+	// The tab whose focus revealed it (see `handleRootFocus`), while it keeps
+	// focus.
+	let focusRevealedValue: string | null = null;
 	$effect(() => {
 		const strip = stripEl;
 		const next = value;
@@ -272,6 +299,14 @@
 			return;
 		}
 		revealedValue = next;
+		if (next != null && focusRevealedValue === next) {
+			// A press or an arrow focused this tab first, and focusing it revealed
+			// it. Measuring now would force the new selection's style and layout
+			// inside the press, before it can paint. The next frame lays them out
+			// anyway, so finish there: the selected weight can still widen the tab.
+			const frame = requestAnimationFrame(() => untrack(revealSelectedTab));
+			return () => cancelAnimationFrame(frame);
+		}
 		// `untrack` so a selection change is what re-runs this, as upstream's
 		// dependency list says — not the reveal's own reads of `hasScroll` or of
 		// the scroll state its `scrollBy` then changes.
@@ -328,11 +363,14 @@
 		// The browser scrolls a focused element into view only when it is entirely
 		// outside the scrollport, so arrowing onto a half-visible stop leaves it cut
 		// off under the fade. Finish the job it started.
-		revealStop((e.target as HTMLElement | null)?.closest(TAB_STOP_SELECTOR) ?? null);
+		const stop = (e.target as HTMLElement | null)?.closest<HTMLElement>(TAB_STOP_SELECTOR) ?? null;
+		revealStop(stop);
+		focusRevealedValue = stop?.dataset.tabValue ?? null;
 	}
 
 	function handleRootBlur(e: FocusEvent): void {
 		onBlurProp?.(e as FocusEvent & { currentTarget: EventTarget & HTMLElement });
+		focusRevealedValue = null;
 		if (e.defaultPrevented) {
 			return;
 		}
@@ -409,8 +447,8 @@
 	const theme = $derived(themeProps('tab-list', { size }));
 	const stripTheme = themeProps('tab-strip');
 	const arrowTheme = themeProps('tab-scroll-button');
-	const navAttrs = $derived(tabListNavAttrs(layout === 'fill', hasDivider, xstyle));
-	const stripAttrs = $derived(tabStripAttrs(hasScroll, fade));
+	const navAttrs = $derived(tabListNavAttrs(layout === 'fill', hasDivider, isFullBleed, xstyle));
+	const stripAttrs = $derived(tabStripAttrs(hasScroll, isFullBleed, fade));
 	const arrowStartAttrs = $derived(tabScrollButtonAttrs('start', size));
 	const arrowEndAttrs = $derived(tabScrollButtonAttrs('end', size));
 </script>

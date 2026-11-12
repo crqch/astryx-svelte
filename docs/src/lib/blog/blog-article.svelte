@@ -14,7 +14,7 @@
 		Section,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type { BlogPost } from './schema.js';
 	import { POST_TYPE_LABELS } from './schema.js';
 	import InlineMarkdown from '$lib/shell/inline-markdown.svelte';

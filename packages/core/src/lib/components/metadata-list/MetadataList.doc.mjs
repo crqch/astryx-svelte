@@ -16,7 +16,9 @@ export default {
 		'properties',
 		'details',
 		'attributes',
-		'summary'
+		'summary',
+		'descriptionlist',
+		'descriptions'
 	],
 	group: 'MetadataList',
 	category: 'Table & List',
@@ -93,8 +95,9 @@ export default {
 			name: 'label',
 			type: 'MetadataListLabelConfig',
 			description:
-				"Label display configuration. position controls label placement, width sets a custom label column width. Defaults to { position: 'top' } for multi-column layouts.",
-			default: "{ position: 'start' } (single-column) / { position: 'top' } (multi-column)"
+				"Label display configuration. position controls label placement, width sets a custom label column width. Defaults to { position: 'top' } for multi-column layouts. Position is ignored in horizontal mode, which always uses { position: 'top' }.",
+			default:
+				"{ position: 'start' } (vertical single-column) / { position: 'top' } (multi-column or horizontal)"
 		},
 		{
 			name: 'maxNumOfItems',

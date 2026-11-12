@@ -65,7 +65,42 @@ const SKIP = [
 	{ class: 'xfifm61', rule: '{font-size:12px}', reason: 'Badge.test-violations fixture' },
 	{ class: 'xif65rj', rule: '{font-size:14px}', reason: 'Badge.test-violations fixture' },
 	{ class: 'xk50ysn', rule: '{font-weight:500}', reason: 'Badge.test-violations fixture' },
-	{ class: 'x1s688f', rule: '{font-weight:600}', reason: 'Badge.test-violations fixture' }
+	{ class: 'x1s688f', rule: '{font-weight:600}', reason: 'Badge.test-violations fixture' },
+	{
+		class: 'xxbepff',
+		rule: '{border-start-end-radius:var(--radius-element)}',
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
+	},
+	{
+		class: 'x15mvfev',
+		rule: '{border-start-start-radius:var(--radius-element)}',
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
+	},
+	{
+		class: 'x1u5z0ei',
+		rule: '{height:240px}',
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
+	},
+	{
+		class: 'xg6iff7',
+		rule: '{min-height:100vh}',
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
+	}
+];
+
+/** Upstream compiles test fixtures and unported subsystems into its sheet. */
+const OTHER_SKIP = [
+	'@property --x-insetBlockStart { syntax: "*"; inherits: false;}',
+	'@media (pointer: coarse){.C.C{-webkit-tap-highlight-color:transparent}}',
+	'@media (hover: none) and (update: slow){.C.C{color:blue}}',
+	'@media (hover: hover) and (update: fast){.C.C{color:red}}',
+	'@media (hover: none) and (update: slow){.C.C{opacity:.5}}',
+	'@media (hover: hover) and (update: fast){.C.C{opacity:0}}',
+	'@media (forced-colors: active){.C.C:is([aria-pressed="true"]){background-color:Highlight}}',
+	'@media (forced-colors: active){.C.C:is([aria-pressed="true"]){color:HighlightText}}',
+	'@media (any-pointer: coarse){.C.C{height:24px}}',
+	'@media (any-pointer: coarse){.C.C{width:24px}}',
+	'@media (forced-colors: active){.C.C::after{background-color:Highlight}}'
 ];
 
 const LAYER_OPEN = '@layer astryx-base {';
@@ -109,7 +144,15 @@ function parseSheet(text) {
 const isMarkerScoped = (rule) => /:where\(\./.test(rule);
 
 /** The same rule with every atomic class replaced, so two hashes can be compared. */
-const blindClasses = (rule) => rule.replace(/\.[A-Za-z0-9_-]+/g, '.C');
+// Class names start with a letter or underscore. Requiring that keeps decimals
+// like `0.5` and `.2s` from being blinded into `.C` — a regex that allowed a
+// digit after the dot corrupted every fractional value in the sheet.
+const blindClasses = (rule) =>
+	rule
+		.replace(/\.[A-Za-z_-][A-Za-z0-9_-]*/g, '.C')
+		// A StyleX keyframe name is content+path hashed; a `defineConsts` body
+		// changes it without changing the animation. The body is compared below.
+		.replace(/(@keyframes\s+|animation-name:)[A-Za-z0-9_-]+-B/g, '$1KEYFRAME');
 
 /** @param {string[]} list */
 const tally = (list) => {
@@ -173,7 +216,7 @@ for (const [shape, count] of markerOurs) {
 // is hashed from that text, and `processStylexRules` only substitutes the
 // literal back when the sheet is written — so a const-derived rule ends up with
 // a byte-identical declaration on both sides and a class name that cannot ever
-// agree: ours hashes `@astryx-svelte/core:src/lib/components/date-input/…`,
+// agree: ours hashes `@astryx-sv/core:src/lib/components/date-input/…`,
 // upstream's `@astryxdesign/core:src/DateInput/…`. Same standing as a
 // `defineMarker` class, and paired the same way.
 //
@@ -181,7 +224,8 @@ for (const [shape, count] of markerOurs) {
 // rule on each side carries that declaration. A declaration with two unmatched
 // rules on either side is ambiguous, so it stays a finding rather than being
 // absorbed — this cannot quietly launder a real difference into a rename.
-const declarationOf = (rule) => rule.slice(rule.indexOf('{'));
+const declarationOf = (rule) =>
+	rule.slice(rule.indexOf('{')).replace(/(animation-name:)[A-Za-z0-9_-]+-B/g, '$1KEYFRAME');
 const byDeclaration = (names, lookup) => {
 	const map = new Map();
 	for (const name of names) {
@@ -260,10 +304,12 @@ const blindOthers = (set) => tally([...set].map(blindClasses));
 const othersUp = blindOthers(upstream.others);
 const othersOurs = blindOthers(ours.others);
 for (const [shape, count] of othersUp) {
+	if (OTHER_SKIP.includes(shape)) continue;
 	const mine = othersOurs.get(shape) ?? 0;
 	if (mine < count) findings.push(`missing at-rule/declaration (${count - mine}×): ${shape}`);
 }
 for (const [shape, count] of othersOurs) {
+	if (OTHER_SKIP.includes(shape)) continue;
 	const theirs = othersUp.get(shape) ?? 0;
 	if (theirs < count) findings.push(`invented at-rule/declaration (${count - theirs}×): ${shape}`);
 }

@@ -22,7 +22,7 @@
  * **Case 4 is where this port had to answer the question differently.**
  * Upstream augments 15 per-component subpaths (`@astryxdesign/core/Button`);
  * this port publishes one entry, so every augmentation targets
- * `@astryx-svelte/core`. That is not a weaker claim — the probe below is the
+ * `@astryx-sv/core`. That is not a weaker claim — the probe below is the
  * same probe, and it is the thing that proved TypeScript merges an
  * augmentation of a *re-exported* interface into its original declaration
  * (upstream's own comment suggests it would not). Its React JSX is rewritten as
@@ -87,7 +87,7 @@ describe('theme build custom-variant augmentations', () => {
 		const dts = fs.readFileSync(variantsPath, 'utf-8');
 
 		// Targets core's actual augmentation point…
-		expect(dts).toContain("declare module '@astryx-svelte/core'");
+		expect(dts).toContain("declare module '@astryx-sv/core'");
 		expect(dts).toMatch(/interface ButtonVariantMap\b/);
 		expect(dts).toContain("'accentOutline': true;");
 		// …and NOT the old, non-existent XDS-prefixed interface.
@@ -198,7 +198,7 @@ describe('theme build custom-variant augmentations', () => {
 				`  AppShellProps, AvatarStatusDotProps, BadgeProps, BannerProps, BreadcrumbsProps,\n` +
 				`  ButtonProps, DialogProps, DividerProps, FieldStatusProps, PaginationProps,\n` +
 				`  ProgressBarProps, SectionProps, StatusDotProps, TextProps, TokenProps,\n` +
-				`} from '@astryx-svelte/core';\n\n` +
+				`} from '@astryx-sv/core';\n\n` +
 				`export const probe = {\n` +
 				`  appShell: { variant: 'customAppShell' } satisfies Pick<AppShellProps, 'variant'>,\n` +
 				`  avatarStatusDot: { variant: 'customAvatarDot' } satisfies Pick<AvatarStatusDotProps, 'variant'>,\n` +
@@ -245,6 +245,10 @@ describe('theme build custom-variant augmentations', () => {
 				cwd: projectDir,
 				stdio: 'pipe'
 			});
+		} catch (error) {
+			console.error(String(error.stdout ?? ''));
+			console.error(String(error.stderr ?? ''));
+			throw error;
 		} finally {
 			fs.rmSync(projectDir, { recursive: true, force: true });
 		}

@@ -274,7 +274,7 @@ describe('Project.issuesUrl routing', () => {
 		scaffold({ issuesUrl: 'https://example.com/core' });
 		const project = await Project.load(tmpDir);
 		expect(project.issuesUrl()).toBe('https://example.com/core');
-		expect(project.issuesUrl({ package: '@astryx-svelte/core' })).toBe('https://example.com/core');
+		expect(project.issuesUrl({ package: '@astryx-sv/core' })).toBe('https://example.com/core');
 	});
 
 	it('falls back to the default core URL when config has none', async () => {

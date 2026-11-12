@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Card, Grid, Heading, Text } from '@astryx-svelte/core';
+	import { Button, Card, Grid, Heading, Text } from '@astryx-sv/core';
 	import componentRegistry from '$lib/generated/component-registry.js';
 	import AstryxWordmark from '../shell/astryx-wordmark.svelte';
 	import { componentsHref, topicHref } from '../shell/links.js';
@@ -23,9 +23,13 @@
 	 */
 
 	// Public component count, rounded down to the nearest 10 for marketing copy.
-	// Sourced from the generated registry so it stays accurate as the library grows.
+	// Upstream's filter — `!hidden && !name.startsWith('use')` — sourced from the
+	// generated registry so it stays accurate as the library grows.
 	const CORE_COMPONENT_COUNT_ROUNDED =
-		Math.floor(componentRegistry.filter((entry) => !entry.isHook).length / 10) * 10;
+		Math.floor(
+			componentRegistry.filter((entry) => !entry.hidden && !entry.name.startsWith('use')).length /
+				10
+		) * 10;
 
 	let stage = $state<HTMLDivElement | null>(null);
 	let spread = $state(false);

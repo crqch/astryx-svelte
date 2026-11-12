@@ -10,7 +10,7 @@ export default {
 	displayName: 'Command Palette Empty',
 	subComponentOf: 'CommandPalette',
 	description:
-		'Empty state display for the results area. Rendered automatically by CommandPalette for no-results and no-query states.',
+		'Empty state display for the results area. CommandPalette renders it automatically when a search returns no results, or when there is no query and bootstrap() returns nothing.',
 	keywords: [
 		'command',
 		'spotlight',
@@ -22,7 +22,9 @@ export default {
 		'search',
 		'modal',
 		'dialog',
-		'navigation'
+		'navigation',
+		'commandmenu',
+		'cmdk'
 	],
 	group: 'CommandPalette',
 	category: 'Overlay',

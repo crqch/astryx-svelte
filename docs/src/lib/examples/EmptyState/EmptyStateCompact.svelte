@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, EmptyState, HStack, Icon } from '@astryx-svelte/core';
+	import { Button, EmptyState, HStack, Icon } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `InboxIcon`; the registry has no inbox glyph, so

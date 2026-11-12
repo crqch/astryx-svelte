@@ -64,7 +64,7 @@ import { ERROR_CODES } from '../../foundation/response/error-codes.mjs';
 const DOCS_DIR = path.join(CLI_ROOT, 'assets', 'docs');
 
 /** Default import specifier for a util whose doc names none. */
-const DEFAULT_UTIL_IMPORT = '@astryx-svelte/core/hooks';
+const DEFAULT_UTIL_IMPORT = '@astryx-sv/core/hooks';
 
 /**
  * A search candidate gathered from one content domain. Extra underscore-
@@ -680,7 +680,7 @@ export async function search(query, options = {}) {
 
 	const coreDir = findCoreDir(cwd);
 	if (!coreDir) {
-		throw new AstryxError('Could not find @astryx-svelte/core package');
+		throw new AstryxError('Could not find @astryx-sv/core package');
 	}
 
 	// Gather candidates from each requested domain in parallel.

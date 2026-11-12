@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ContextMenu, ContextMenuItem } from '@astryx-svelte/core';
+	import { ContextMenu, ContextMenuItem } from '@astryx-sv/core';
 </script>
 
 <ContextMenu>

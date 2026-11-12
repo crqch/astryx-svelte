@@ -1,11 +1,16 @@
 import type { Snippet } from 'svelte';
 import { createCellSlotBinder, createSlotBinder } from '../../../../internal/bind-snippet.js';
 import { useTranslator } from '../../../../i18n/index.js';
+import {
+	hasInteractiveAncestor,
+	hasTextSelection
+} from '../../../../hooks/use-clickable-container.svelte.js';
 import { pixel } from '../../column-utils.js';
 import { resolveContextActions } from '../../table-context-menu.svelte';
 import type {
 	BodyCellRenderProps,
 	BodyRowRenderProps,
+	HeaderCellRenderProps,
 	TableColumn,
 	TablePlugin
 } from '../../table-types.js';
@@ -19,6 +24,12 @@ import {
 	type ExpandedPanelArg,
 	type ExpansionCellArg
 } from './row-expansion-slots.svelte';
+import {
+	expansionChevronCellStyle,
+	expansionChevronHeaderCellStyle,
+	expansionClickableRowStyle,
+	expansionExpandedRowCellStyle
+} from './row-expansion.stylex.js';
 
 /**
  * Ported from Astryx's
@@ -125,6 +136,25 @@ export interface UseTableRowExpansionConfig<T extends Record<string, unknown>> {
 	 * context-menu action, and never render a panel. @default all rows expandable
 	 */
 	getIsItemExpandable?: (item: T) => boolean;
+	/**
+	 * Background behind the detail panel.
+	 *
+	 * - `transparent` (default): the panel paints nothing and takes whatever
+	 *   surface is behind the table.
+	 * - `muted`: a wash marking the panel as commentary on the row above rather
+	 *   than another row of data.
+	 * @default 'transparent'
+	 */
+	panelVariant?: 'muted' | 'transparent';
+	/**
+	 * Toggle a row by clicking anywhere on it, not only on its chevron.
+	 *
+	 * Pointer-only convenience layered over the chevron: keyboard and
+	 * assistive-tech users toggle via the chevron button (which stays the
+	 * accessible control).
+	 * @default false (only the chevron toggles expansion).
+	 */
+	hasRowClickExpansion?: boolean;
 }
 
 // =============================================================================
@@ -225,9 +255,19 @@ export function useTableRowExpansion<T extends Record<string, unknown>>(
 			return withExpansion;
 		},
 
+		transformHeaderCell(
+			props: HeaderCellRenderProps,
+			column: TableColumn<T>
+		): HeaderCellRenderProps {
+			// Keep the chevron column at its fixed width.
+			return column.key === EXPANSION_COLUMN_KEY
+				? { ...props, xstyle: [...props.xstyle, expansionChevronHeaderCellStyle] }
+				: props;
+		},
+
 		transformBodyCell(
 			props: BodyCellRenderProps,
-			_column: TableColumn<T>,
+			column: TableColumn<T>,
 			item: T
 		): BodyCellRenderProps {
 			// Contribute the expand/collapse action on every cell; BaseTable
@@ -242,6 +282,14 @@ export function useTableRowExpansion<T extends Record<string, unknown>>(
 			const priorActions = props.contextMenuActions;
 			return {
 				...props,
+				xstyle: [
+					...props.xstyle,
+					// The chevron centres itself in its column.
+					...(column.key === EXPANSION_COLUMN_KEY ? [expansionChevronCellStyle] : []),
+					// Hand the row divider to the panel below, so the line closes the
+					// row-plus-panel pair instead of splitting it.
+					...(isExpanded ? [expansionExpandedRowCellStyle] : [])
+				],
 				contextMenuActions: () => [
 					...resolveContextActions(priorActions),
 					{
@@ -259,10 +307,56 @@ export function useTableRowExpansion<T extends Record<string, unknown>>(
 			if (!isItemExpandable(item)) {
 				return props;
 			}
-			const { expandedKeys, getRowKey } = config();
+			const { expandedKeys, getRowKey, hasRowClickExpansion, panelVariant } = config();
 			const key = getRowKey(item);
-			if (!expandedKeys.has(key)) {
-				return props;
+			// The row a glide measures from, found again after the commit.
+			const keyed: BodyRowRenderProps = {
+				...props,
+				htmlProps: { ...props.htmlProps, 'data-expansion-key': key }
+			};
+
+			// Whole-row-click expansion (opt-in), applied before the collapsed
+			// early return: a collapsed row is precisely the one a click has to
+			// reach, since opening it is the whole point.
+			const isExpanded = expandedKeys.has(key);
+			const withClick: BodyRowRenderProps = hasRowClickExpansion
+				? {
+						...keyed,
+						htmlProps: {
+							...keyed.htmlProps,
+							onclick: (event: MouseEvent) => {
+								// Don't hijack clicks on interactive cell content or a text
+								// selection. Both rules come from `useClickableContainer`, the
+								// same pair every clickable surface in the system uses.
+								const row = event.currentTarget as HTMLElement;
+								const target = event.target;
+								if (!(target instanceof Element)) {
+									return;
+								}
+								if (target !== row && hasInteractiveAncestor(target, row)) {
+									return;
+								}
+								// A click inside a contenteditable region is an edit action,
+								// not a row toggle.
+								if (
+									target !== row &&
+									target.closest('[contenteditable]:not([contenteditable="false"])')
+								) {
+									return;
+								}
+								if (hasTextSelection(row)) {
+									return;
+								}
+								(keyed.htmlProps.onclick as ((e: MouseEvent) => void) | undefined)?.(event);
+								config().onToggle(key);
+							}
+						},
+						xstyle: [...(keyed.xstyle ?? []), expansionClickableRowStyle]
+					}
+				: keyed;
+
+			if (!isExpanded) {
+				return withClick;
 			}
 
 			// Upstream's `key={`${key}-expanded`}` on the panel `<tr>` is what this
@@ -270,12 +364,13 @@ export function useTableRowExpansion<T extends Record<string, unknown>>(
 			const panel = bindExpandedPanel(`${key}-expanded`, () => ({
 				item,
 				columnCount,
+				isMuted: panelVariant === 'muted',
 				renderExpanded: config().renderExpanded as unknown as Snippet<[Record<string, unknown>]>
 			}));
 
 			const previous = props.afterRow;
 			return {
-				...props,
+				...withClick,
 				afterRow: previous ? bindAfterRow(`${key}-after-row`, () => ({ previous, panel })) : panel
 			};
 		}

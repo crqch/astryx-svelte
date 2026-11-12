@@ -27,6 +27,18 @@ export default {
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			size: 'fill'
+		},
+		wrapper: {
+			component: 'HStack',
+			props: {
+				gap: 2,
+				width: 300
+			}
+		}
+	},
 	props: [
 		{
 			name: 'size',
@@ -39,7 +51,7 @@ export default {
 			name: 'isScrollable',
 			type: 'boolean',
 			description:
-				'Enables scrollable overflow (overflow: auto). StackItem already applies the flex min-height/min-width reset, so <StackItem size="fill" isScrollable> is a complete scroll region. Matches isScrollable on LayoutContent and LayoutPanel.',
+				'Enables scrollable overflow (overflow: auto). StackItem already applies the flex min-height/min-width reset, so <StackItem size="fill" isScrollable> is a complete scroll region. Matches isScrollable on LayoutContent and LayoutPanel. While its content overflows, a div or span item is a group named by aria-label, or by a translated "Content"; another element keeps its own role.',
 			default: 'false'
 		},
 		{
@@ -50,7 +62,7 @@ export default {
 		},
 		{
 			name: 'as',
-			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'button' | 'article' | 'dialog' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'base' | 'body' | 'code' | 'time' | 'section' | 'input' | 'strong' | 'div' | 'li' | 'span' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'embed' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'map' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'pre' | 'progress' | 'q' | 'rp' | 'rt' | 'ruby' | 's' | 'samp' | 'script' | 'select' | 'source' | 'sub' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
+			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'dialog' | 'button' | 'article' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'section' | 'base' | 'body' | 'code' | 'sub' | 'progress' | 'ruby' | 'strong' | 'embed' | 'pre' | 'time' | 'input' | 'div' | 'li' | 'span' | 'map' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'q' | 'rp' | 'rt' | 's' | 'samp' | 'script' | 'select' | 'source' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
 			description: 'HTML element to render as the item wrapper.',
 			default: "'div'"
 		},
@@ -58,6 +70,27 @@ export default {
 			name: 'children',
 			type: 'Snippet',
 			description: 'Item content.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'Class name added to the item element, after the component styles.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description: 'Inline styles for the item element.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description: 'Ref to the rendered item element.'
 		}
 	]
 };

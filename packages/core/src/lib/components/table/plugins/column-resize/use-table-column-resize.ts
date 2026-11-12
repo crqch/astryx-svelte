@@ -2,10 +2,15 @@ import { createSlotBinder } from '../../../../internal/bind-snippet.js';
 import { mergeStyle } from '../../../../internal/sx.js';
 import { withProps } from '../../../../internal/with-props.js';
 import { observeResize, unobserveResize } from '../../../../internal/shared-resize-observer.js';
-import type { HeaderCellRenderProps, TableColumn, TablePlugin } from '../../table-types.js';
+import type {
+	HeaderCellRenderProps,
+	HeaderRowRenderProps,
+	TableColumn,
+	TablePlugin
+} from '../../table-types.js';
 import ColumnResizeMeasure from './column-resize-measure.svelte';
 import { resizeOverlay, type ResizeOverlayArg } from './column-resize-slots.svelte';
-import { headerCellRelativeStyle } from './column-resize.stylex.js';
+import { headerCellRelativeStyle, headerRowStyle } from './column-resize.stylex.js';
 import {
 	isProportionalColumn,
 	resolveColumnMinWidth,
@@ -173,8 +178,24 @@ export function useTableColumnResize<T extends Record<string, unknown>>(
 
 		if (table && typeof ResizeObserver !== 'undefined') {
 			observeResize(table, () => {
-				const height = table.getBoundingClientRect().height;
-				table.style.setProperty('--table-resize-height', `${height}px`);
+				const rect = table.getBoundingClientRect();
+				table.style.setProperty('--table-resize-height', `${rect.height}px`);
+
+				/*
+				 * Each handle hangs from its own cell's content box, so they do not
+				 * all start at the same y. Publish the largest drop: every handle then
+				 * ends at or just above the table's bottom edge, where ending a
+				 * fraction short is invisible but overhanging is not — it shows up as
+				 * a few px of stray scrolling in the wrapper.
+				 *
+				 * Reading the handles here cannot feed back into this observer: they
+				 * are absolutely positioned, so their height never moves the table.
+				 */
+				let offset = 0;
+				for (const handle of table.querySelectorAll<HTMLElement>('[data-resize-handle]')) {
+					offset = Math.max(offset, handle.getBoundingClientRect().top - rect.top);
+				}
+				table.style.setProperty('--table-resize-offset', `${offset}px`);
 			});
 			// Upstream needs `observedTableRef` plus an unmount effect to reach this
 			// element again; the attachment's teardown already closes over it.
@@ -196,6 +217,10 @@ export function useTableColumnResize<T extends Record<string, unknown>>(
 	return {
 		transformTableContext() {
 			return provider;
+		},
+
+		transformHeaderRow(props: HeaderRowRenderProps): HeaderRowRenderProps {
+			return { ...props, xstyle: [...props.xstyle, headerRowStyle] };
 		},
 
 		transformHeaderCell(

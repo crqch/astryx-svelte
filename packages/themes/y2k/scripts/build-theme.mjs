@@ -9,7 +9,7 @@ import { y2kPalettes, y2kTheme } from '../src/y2k-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-y2k',
+	packageName: '@astryx-sv/theme-y2k',
 	themeExport: 'y2kTheme',
 	theme: y2kTheme,
 	// Upstream's `source.ts` publishes the raw ramps alongside the theme, so this

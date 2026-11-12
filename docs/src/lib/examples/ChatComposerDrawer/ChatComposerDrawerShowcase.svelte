@@ -9,14 +9,7 @@
 	style string.
 -->
 <script lang="ts">
-	import {
-		Button,
-		ChatComposer,
-		ChatComposerDrawer,
-		Icon,
-		Stack,
-		Token
-	} from '@astryx-svelte/core';
+	import { Button, ChatComposer, ChatComposerDrawer, Icon, Stack, Token } from '@astryx-sv/core';
 
 	const drawerBorder =
 		'border: var(--border-width) solid var(--color-border); border-radius: var(--radius-chat)';

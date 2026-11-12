@@ -3,9 +3,9 @@
 // This is the Svelte-side equivalent of Astryx's `astryx theme build`, and will
 // move into the CLI as `astryx-svelte theme build` once that package exists.
 //
-// Requires @astryx-svelte/core to be built first (`pnpm --filter
-// @astryx-svelte/core build`), since it imports the compiled theme compiler.
-// Under pnpm's topological ordering `pnpm -r build` already does that.
+// Requires @astryx-sv/core to be built first (`bun run --filter
+// @astryx-sv/core build`), since it imports the compiled theme compiler.
+// The root `bun run build` orders core before the themes.
 //
 // The per-package `scripts/build-theme.mjs` is a thin caller: it imports its own
 // theme definition and hands it here. It runs under Node's type stripping so the
@@ -71,7 +71,7 @@ function literalType(value, indent = '\t') {
  *
  * @param {object} options
  * @param {string} options.packageDir Absolute path to the theme package root.
- * @param {string} options.packageName e.g. `@astryx-svelte/theme-matcha`.
+ * @param {string} options.packageName e.g. `@astryx-sv/theme-matcha`.
  * @param {string} options.themeExport e.g. `matchaTheme`.
  * @param {import('../../core/dist/theme/define-theme.js').DefinedTheme} options.theme
  * @param {{name: string, value: unknown}} [options.palettes] The raw tonal ramps
@@ -110,7 +110,7 @@ export async function buildThemePackage({
 	// carries its `lang="ts"` and its type import — and its two real transforms,
 	// rewriting `$lib` aliases and `.ts` specifiers, have nothing to act on in a
 	// registry module that imports only `@lucide/svelte` and a type from
-	// `@astryx-svelte/core`. Both are bare specifiers, so they resolve the same
+	// `@astryx-sv/core`. Both are bare specifiers, so they resolve the same
 	// from `dist/` as from `src/`; a relative import into core would not, and is
 	// the thing to avoid in that file. Consumers compile it, exactly as they
 	// already compile core's.
@@ -151,11 +151,11 @@ export async function buildThemePackage({
 // The package's \`.\` export is this object with \`icons\` attached; prefer it in
 // an app. See build-theme-package.mjs for why the split exists.
 
-/** @type {import('@astryx-svelte/core/theme').DefinedTheme} */
+/** @type {import('@astryx-sv/core/theme').DefinedTheme} */
 export const ${themeExport} = ${literal};
 `;
 
-	const tokensTypes = `import type { DefinedTheme } from '@astryx-svelte/core/theme';
+	const tokensTypes = `import type { DefinedTheme } from '@astryx-sv/core/theme';
 
 /**
  * The ${theme.name} theme as plain data — the \`.\` export's object without
@@ -182,7 +182,7 @@ import { ${themeExport} as ${themeExport}Tokens } from './tokens.js';
 
 export { ${icons.name} };
 
-/** @type {import('@astryx-svelte/core/theme').DefinedTheme} */
+/** @type {import('@astryx-sv/core/theme').DefinedTheme} */
 export const ${themeExport} = { ...${themeExport}Tokens, icons: ${icons.name} };
 `
 		: `
@@ -190,8 +190,8 @@ export { ${themeExport} } from './tokens.js';
 `
 }`;
 
-	let types = `import type { DefinedTheme } from '@astryx-svelte/core/theme';
-${icons ? `import type { IconRegistry } from '@astryx-svelte/core';\n` : ''}
+	let types = `import type { DefinedTheme } from '@astryx-sv/core/theme';
+${icons ? `import type { IconRegistry } from '@astryx-sv/core';\n` : ''}
 /**
  * The ${theme.name} theme, pre-built. Its CSS ships as \`./theme.css\`, so it carries
  * \`__built\` and \`<Theme>\` injects nothing at runtime.

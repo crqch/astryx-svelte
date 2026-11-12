@@ -69,6 +69,13 @@
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import { useButtonGroup, useSize } from '../../internal/contexts.svelte.js';
+	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import {
+		pressGroupItemProps,
+		usePressGroupContext
+	} from '../../hooks/press-group-context.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { EDGE_COMP_ATTR } from '../../internal/edge-compensation.stylex.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
@@ -120,13 +127,37 @@
 
 	const t = useTranslator();
 
+	/** `aria-haspopup` values of a trigger that keeps its own press and opening. */
+	const MENU_POPUPS: ReadonlySet<string> = new Set(['true', 'menu', 'listbox']);
+
+	// The element that paints the press is the button or link itself, so the
+	// document-level controller marks it and writes `data-astryx-press` there.
+	const pressable = usePressFeedback();
+
 	// Contexts must be read during init, then called inside $derived so a
 	// container changing its size or disabled state still propagates.
 	const resolveSize = useSize();
 	const group = useButtonGroup();
+	const inputGroup = useInputGroup();
+	// A tracking group's tracker paints this button's pointer press. A menu
+	// trigger is not tracked: it keeps its own press and opening.
+	const groupContext = usePressGroupContext();
 
 	const size = $derived(resolveSize(sizeProp, 'md'));
 	const groupValue = $derived(group?.() ?? null);
+	// A ButtonGroup's chrome wins over the input-group edge adaptation; upstream
+	// gates on both contexts being mutually exclusive.
+	const inInputGroup = $derived(inputGroup != null && groupValue == null);
+	const inputGroupItemAttrs = $derived(inInputGroup ? inputGroupItemProps : {});
+	const groupPointers = $derived(groupContext?.() ?? null);
+	const groupItemProps = $derived(
+		groupPointers != null && !MENU_POPUPS.has(String(rest['aria-haspopup']))
+			? pressGroupItemProps(groupPointers)
+			: {}
+	);
+	const isGroupTracked = $derived(
+		groupPointers != null && !MENU_POPUPS.has(String(rest['aria-haspopup']))
+	);
 
 	let isPending = $state(false);
 	// clickAction is normally fire-once (submit/save/pay), so a same-tick double
@@ -149,11 +180,12 @@
 	// Disabled links are an accessibility anti-pattern — fall back to <button>.
 	const renderAsLink = $derived(href != null && !buttonDisabled);
 
-	// Use aria-disabled when a tooltip is present so the button stays focusable
-	// and keyboard users can still reach the tooltip. Otherwise use native
-	// disabled. Only reachable on the `<button>` branch: a disabled button never
-	// renders as a link.
-	const useAriaDisabled = $derived(tooltip != null && buttonDisabled);
+	// A disabled button reflects `aria-disabled` rather than the native
+	// attribute, as upstream 0.7.13 does: the control stays focusable, hover and
+	// focus affordances still work, and the click/key handlers suppress
+	// activation themselves. Only reachable on the `<button>` branch — a disabled
+	// button never renders as a link.
+	const useAriaDisabled = $derived(buttonDisabled);
 
 	// Attach tooltip behaviour via the hook rather than wrapping the button in a
 	// <Tooltip>. The hook adds hover/focus triggers to the button itself, so no
@@ -188,6 +220,8 @@
 			isLink: renderAsLink,
 			width,
 			group: groupValue,
+			inInputGroup,
+			isGroupTracked,
 			elevation,
 			xstyle
 		})
@@ -225,9 +259,12 @@
 		// `useLinkComponent`'s `to` alias for `to`-based routers; upstream injects
 		// it inside the hook's wrapper component, which has no Svelte counterpart.
 		...(linkResolved.isNative ? {} : { to: href }),
+		...groupItemProps,
+		...inputGroupItemAttrs,
 		...rest,
 		...theme,
 		...edgeCompAttr,
+		...pressable,
 		class: cx(theme.class, root.class, className),
 		style: mergeStyle(root.style, styleProp as string | undefined),
 		'aria-label': needsAriaLabel ? label : undefined,
@@ -321,17 +358,19 @@
 {:else}
 	<button
 		{type}
-		disabled={useAriaDisabled ? undefined : buttonDisabled}
+		{...groupItemProps}
+		{...inputGroupItemAttrs}
 		{...rest}
 		{...theme}
 		{...edgeCompAttr}
+		{...pressable}
 		{@attach attachTooltip}
 		class={cx(theme.class, root.class, className)}
 		style={mergeStyle(root.style, styleProp as string | undefined)}
 		aria-label={needsAriaLabel ? label : undefined}
 		aria-describedby={describedBy}
 		aria-busy={isLoadingState || undefined}
-		aria-disabled={useAriaDisabled || undefined}
+		aria-disabled={buttonDisabled || undefined}
 		onclick={handleClick}
 		onkeydown={handleKeyDown}
 	>

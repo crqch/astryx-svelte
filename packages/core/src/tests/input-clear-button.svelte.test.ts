@@ -11,57 +11,15 @@ import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
 // `aspect-ratio.svelte.test.ts`.
 import clearButtonSource from '$lib/components/field/input-clear-button.stylex.ts?raw';
 
-interface InjectedRule {
-	selector: string;
-	text: string;
-	media: string | null;
-}
-
 /**
- * Every style rule the page carries, flattened out of any at-rule wrapper and
- * tagged with that wrapper's condition — so a `@media (pointer: coarse)` rule
- * stays distinguishable from the unconditional one. Upstream's helper. It reads
- * `document.styleSheets` there off StyleX's runtime injection and here off the
- * sheet the StyleX plugin compiled, which changes where the rules come from and
- * nothing about what they say.
- */
-function injectedRules(): InjectedRule[] {
-	const walk = (rules: CSSRuleList, condition: string | null): InjectedRule[] =>
-		Array.from(rules).flatMap((rule): InjectedRule[] => {
-			const { selectorText } = rule as CSSStyleRule;
-			if (typeof selectorText === 'string') {
-				return [{ selector: selectorText, text: rule.cssText, media: condition }];
-			}
-			// A grouping rule (@media, @keyframes, ...): descend, carrying the
-			// innermost condition down.
-			const nested = (rule as CSSGroupingRule).cssRules;
-			if (nested == null) {
-				return [];
-			}
-			const own = (rule as CSSMediaRule).media?.mediaText;
-			return walk(nested, own != null && own !== '' ? own : condition);
-		});
-
-	return Array.from(document.styleSheets).flatMap((sheet) => {
-		try {
-			return walk(sheet.cssRules, null);
-		} catch {
-			// cross-origin sheet
-			return [];
-		}
-	});
-}
-
-/**
- * Astryx's `Field/InputClearButton.test.tsx`, ported whole — **10 of upstream's
- * 10 at v0.5.0**, nothing dropped.
+ * Astryx's `Field/InputClearButton.test.tsx`, rebaselined against 0.7.13 when
+ * the clear glyph moved onto Button's shared touch band.
  *
- * The header has been false twice now, both times at a pin move. It read
- * "6 cases at v0.4.1" until 0.4.5 added the two `input-clear-button` target
- * cases, and "8 of 8 at v0.4.5" until 0.5.0 added the two coarse-pointer
- * hit-target cases below — and each time the port was missing the thing the
- * new cases cover (the `themeProps` literal then, the `::after` hit overlay
- * now) as well as the cases themselves.
+ * The suite grew the two coarse-pointer hit-target cases at 0.5.0, when the
+ * port owned a local `::after` overlay. Upstream 0.7.13 deleted that overlay
+ * and handed the target to `ButtonHitAreaContext`; that shared band is not
+ * ported yet, so the two cases are replaced here by the source half of the
+ * upstream case and a note naming what waits on the band.
  *
  * The suite is new at 0.4.x, and so is the reason for it: #4876 converged the
  * whole clearable-input family (`TextInput`, `NumberInput`, `TimeInput`, the
@@ -187,61 +145,22 @@ describe('InputClearButton', () => {
 		expect(button).toHaveClass('astryx-input-clear-button');
 	});
 
-	it('grows the hit area to 24px on a coarse pointer only (WCAG 2.5.8 AA)', async () => {
-		// The visual glyph stays 20px; an ::after overlay expands only the
-		// tappable region, and only under a coarse pointer. Asserted against the
-		// CSS the page carries, because neither a media query nor a
-		// pseudo-element box is reachable from the rendered element.
+	it("takes Button's shared touch band rather than a fixed 24px overlay of its own", async () => {
+		// Upstream 0.7.13 moved the clear button's coarse-pointer target onto
+		// Button's shared touch band (AST-094 FR42), so the local `::after`
+		// overlay and its two `--_input-clear-hit-*` vars are gone. The band
+		// itself is not ported yet (`internal/touchHitArea.stylex.ts` has no
+		// counterpart here), so the case asserts the half of upstream's that can
+		// be checked: this module no longer owns a hit overlay.
+		//
+		// Retires when the shared touch band lands, at which point the upstream
+		// case's band-element assertion can be restored verbatim.
 		const screen = await render(InputClearButton, {
 			props: { label: 'Clear', onclick: () => {} }
 		});
-		const button = screen.container.querySelector('button')!;
-		const classes = new Set(button.className.split(' ').filter(Boolean));
-
-		const css = injectedRules();
-		const rulesForButton = css.filter(({ selector }) =>
-			[...classes].some((c) => selector.includes(`.${c}`))
-		);
-		// Guards every assertion below against silently passing if the class
-		// plumbing or the compiled sheet ever changes shape.
-		expect(rulesForButton.length).toBeGreaterThan(0);
-
-		const decl = (pattern: RegExp, inMedia?: string) =>
-			rulesForButton.some(
-				({ text, media }) =>
-					pattern.test(text) && (inMedia == null ? media == null : (media ?? '').includes(inMedia))
-			);
-
-		// Fine pointer: hit area == the 20px visual glyph, no expansion.
-		expect(decl(/--_input-clear-hit-inset\s*:\s*0px/)).toBe(true);
-		// Coarse pointer: 20px + 2px on each side = 24x24, the AA floor.
-		expect(decl(/--_input-clear-hit-inset\s*:\s*-2px/, 'pointer: coarse')).toBe(true);
-		// ...and nothing wider than that, which would reach into the adornment
-		// gap and the input's caret area. Scoped to the coarse block, because
-		// that is the only place a wider value can appear.
-		expect(decl(/--_input-clear-hit-inset\s*:\s*-(?:[3-9]|\d{2,})px/, 'pointer: coarse')).toBe(
-			false
-		);
-		// The overlay exists only on touch. On a fine pointer a generated
-		// ::after would cover the button and take hover away from the glyph
-		// target, so `content` is gated the same way the inset is.
-		expect(decl(/--_input-clear-hit-content\s*:\s*none/)).toBe(true);
-		expect(decl(/--_input-clear-hit-content\s*:\s*""/, 'pointer: coarse')).toBe(true);
-		// The overlay itself is what carries the expansion, and what is gated.
-		expect(decl(/::after\s*\{[^}]*inset\s*:\s*var\(--_input-clear-hit-inset\)/)).toBe(true);
-		expect(decl(/::after\s*\{[^}]*content\s*:\s*var\(--_input-clear-hit-content\)/)).toBe(true);
-	});
-
-	it('declares its own containing block for the hit overlay', () => {
-		// The ::after overlay must resolve against this button. Button happens to
-		// set `position: relative` on itself, so at runtime the overlay is
-		// correctly placed either way — and StyleX compiles both declarations to
-		// the same atomic class, so the rendered CSS cannot tell the two apart.
-		// Assert on the source instead, so a future edit can't quietly leave the
-		// overlay depending on another component's internal.
-		const buttonStyle = clearButtonSource.match(/button:\s*\{[\s\S]*?\n\t\}/)?.[0];
-		expect(buttonStyle).toBeDefined();
-		expect(buttonStyle).toMatch(/position:\s*'relative'/);
+		expect(screen.container.querySelector('button')).not.toBeNull();
+		expect(clearButtonSource).not.toContain('--_input-clear-hit-inset');
+		expect(clearButtonSource).not.toContain("'::after'");
 	});
 
 	it('exposes input-clear-button so a theme controls the button size and hover', () => {

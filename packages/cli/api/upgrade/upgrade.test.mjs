@@ -1,6 +1,6 @@
 /**
  * Direct API tests for `upgrade()` — the programmatic surface
- * (`@astryx-svelte/cli/api`).
+ * (`@astryx-sv/cli/api`).
  *
  * The CLI suites (clients/cli/commands/upgrade*.test.mjs) drive `registerUpgrade`
  * and cover behavior end-to-end; these assert the API contract you get when
@@ -63,11 +63,11 @@ function writePkg(dir, deps = {}) {
 }
 
 function writeInstalledCore(dir, version) {
-	const d = path.join(dir, 'node_modules', '@astryx-svelte', 'core');
+	const d = path.join(dir, 'node_modules', '@astryx-sv', 'core');
 	fs.mkdirSync(d, { recursive: true });
 	fs.writeFileSync(
 		path.join(d, 'package.json'),
-		JSON.stringify({ name: '@astryx-svelte/core', version }, null, 2)
+		JSON.stringify({ name: '@astryx-sv/core', version }, null, 2)
 	);
 }
 
@@ -239,7 +239,7 @@ describe('upgrade() — errors throw AstryxError', () => {
 	});
 
 	it('no installed core → ERR_VERSION_DETECT (uses the cwd option to look)', async () => {
-		// Empty cwd (no node_modules/@astryx-svelte/core) — detection must fail here,
+		// Empty cwd (no node_modules/@astryx-sv/core) — detection must fail here,
 		// proving the cwd option routes version detection.
 		writePkg(tmpDir);
 		const err = await upgrade({ from: '0.0.1' }, { cwd: tmpDir }).catch((e) => e);

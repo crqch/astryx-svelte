@@ -19,7 +19,7 @@ export type ClassProps = Record<string, ClassValue>;
 export type ThemeDataAttributes = Record<`data-${string}`, string | undefined>;
 export type ThemeProps = { class: string } & ThemeDataAttributes;
 
-function toDataAttributeName(prop: string): `data-${string}` {
+export function themeDataAttributeName(prop: string): `data-${string}` {
 	return `data-${prop.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}`;
 }
 
@@ -53,7 +53,7 @@ export function themeDataAttributes(props?: ClassProps): ThemeDataAttributes {
 	if (props) {
 		for (const [prop, value] of Object.entries(props)) {
 			if (value == null) continue;
-			attrs[toDataAttributeName(prop)] = String(value);
+			attrs[themeDataAttributeName(prop)] = String(value);
 		}
 	}
 

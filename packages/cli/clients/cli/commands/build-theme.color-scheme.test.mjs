@@ -18,7 +18,7 @@
  * Themes that never use `light-dark()` have no `color-scheme` ambiguity to
  * resolve, so none of the three rules should be emitted for them.
  *
- * `theme build` requires a compiled @astryx-svelte/core (there is no in-CLI
+ * `theme build` requires a compiled @astryx-sv/core (there is no in-CLI
  * fallback generator), so this suite builds core once in beforeAll via the
  * shared ensureCoreBuilt() helper — which serializes concurrent Vitest workers
  * behind a lock — to stay self-sufficient regardless of CI job ordering.
@@ -47,7 +47,7 @@ function writeTheme(dir, name, tokens) {
 	return file;
 }
 
-// `theme build` imports the compiled @astryx-svelte/core/theme/define entry.
+// `theme build` imports the compiled @astryx-sv/core/theme/define entry.
 // Build core once if it isn't already present so the suite works in any CI job.
 beforeAll(() => {
 	ensureCoreBuilt();

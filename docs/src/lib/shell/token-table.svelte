@@ -10,8 +10,8 @@
 		proportional,
 		useTheme,
 		type TableColumn
-	} from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	} from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import { getColorModeContext } from './color-mode.svelte.js';
 	import {
 		colorRows,

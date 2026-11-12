@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { Skeleton, Text } from '@astryx-svelte/core';
+	import { Skeleton, Text } from '@astryx-sv/core';
 	import ComponentPreviewTheme from './component-preview-theme.svelte';
 
 	/**
@@ -61,9 +61,35 @@
 		renderWidth?: number;
 		/** The tile's box. Upstream's landing tiles are taller than the gallery's. */
 		aspectRatio?: string;
+		/**
+		 * Corner radius on the tile itself. Pass `'0'` when a rounded parent
+		 * already clips it, so a second, mismatched radius does not nest inside —
+		 * upstream's `TemplateThumbnail` takes the same prop for the same reason.
+		 */
+		borderRadius?: string;
+		/**
+		 * Tile backdrop. Blocks render on the muted surface; a *page* template
+		 * renders content-only and transparent, so upstream backs it with the app
+		 * surface instead.
+		 */
+		background?: string;
+		/**
+		 * How the render is laid out inside the scaler. Blocks centre in the
+		 * flex box; a *page* template is a document and must fill the render
+		 * width — centring it makes a width-auto page shrink to its min-content
+		 * column (the "paper thin" template tiles).
+		 */
+		layout?: 'block' | 'page';
 	}
 
-	const { load, renderWidth, aspectRatio = '16 / 10' }: Props = $props();
+	const {
+		load,
+		renderWidth,
+		aspectRatio = '16 / 10',
+		borderRadius = 'var(--radius-container)',
+		background = 'var(--color-background-muted)',
+		layout = 'block'
+	}: Props = $props();
 
 	/** Upstream's `FIXED_SCALE`, used when no explicit `renderWidth` is given. */
 	const SCALE = 0.5;
@@ -108,10 +134,16 @@
 	}
 </script>
 
-<div class="thumb" inert style="aspect-ratio: {aspectRatio};" {@attach observeTile}>
+<div
+	class="thumb"
+	inert
+	style="aspect-ratio: {aspectRatio}; border-radius: {borderRadius}; background-color: {background};"
+	{@attach observeTile}
+>
 	{#if load && tileWidth > 0 && isVisible}
 		<div
 			class="thumb-scaler"
+			class:page={layout === 'page'}
 			style="width: {layoutWidth}px; height: {scalerHeight}%; transform: scale({scale});"
 		>
 			<svelte:boundary>
@@ -142,8 +174,6 @@
 		position: relative;
 		width: 100%;
 		overflow: hidden;
-		background-color: var(--color-background-muted);
-		border-radius: var(--radius-container);
 		content-visibility: auto;
 		contain-intrinsic-size: auto 300px 187px;
 	}
@@ -160,6 +190,14 @@
 		overflow: hidden;
 		pointer-events: none;
 		transform-origin: top left;
+	}
+
+	/* A page template is a document, not a centred block: it has to fill the
+	   render width. Centring it in the flex box let a width-auto page shrink to
+	   its min-content column, which is what made several template tiles paper
+	   thin. */
+	.thumb-scaler.page {
+		display: block;
 	}
 
 	.thumb-fallback {

@@ -28,19 +28,6 @@ alone. Contrast `nativePicker`, which is deliberately **not** intercepted: no up
 destructures it and it is a string, so `nativepicker="touch"` on the wrapper is byte-identical to
 what React renders. That is parity, not a leak.
 
-### `BlogCoverArt` is not ported, so a non-release post with no `coverImage` has no cover
-
-- **units:** BlogCoverArt
-- **kind:** unported
-- **retires:** when a second blog post lands without a `coverImage`
-
-Upstream's generative default cover (210 lines, deterministic from post `type` + `slug`) is the
-one piece of the blog surface this port skipped. It is not exercised today — the only post is a
-release post, so `release-cover-art.svelte` (ported) is what renders — but the gap is real the
-moment a `guide` or `perspective` post lands without artwork. `blog-card.svelte` falls through
-to the muted field rather than collapsing, so the failure is a blank cover and not a broken
-grid. Port it before the second post, or the second post needs a `coverImage`
-
 ### The docs top nav sizes its end-content icons at 16px; upstream's are 20px
 
 - **units:** shell/top-nav.svelte
@@ -54,24 +41,6 @@ GitHub mark. **The bug this replaced was non-uniformity**, which was real: searc
 hamburger were 16px while the mode toggle and GitHub mark were 20px, so two glyphs sat visibly
 larger than the two beside them. Equalising was the fix; 16 rather than 20 is the divergence.
 `shell/top-nav.svelte` names it at the snippet
-
-### Page templates carry three unported dependencies, handled two different ways
-
-- **units:** table-page-chart, table-page-heatmap-status, table-page-shoe-store-heatmap, dashboard, dashboard-portfolio, theme-showcase
-- **kind:** unported
-- **retires:** when `@astryxdesign/charts` and `@astryxdesign/lab` are ported
-
-The split is
-principled, not accidental. `table-page-chart`, `table-page-heatmap-status` and
-`table-page-shoe-store-heatmap` import `Chart`/`ChartAxis`/`ChartGrid`/`ChartHeatmapGL` from
-`@astryxdesign/charts` and `@astryxdesign/lab`, both **first-party Astryx packages this port
-will eventually have** (recorded above as "never started"). Their chart blocks are transcribed
-in place as commented Svelte, data left live, to be uncommented when the packages land. The two
-dashboards and `theme-showcase` instead use **`recharts`** and **`lucide-react`** — third-party
-React libraries that will never gain an `@astryx-svelte` counterpart, so there is nothing to
-wait for; those charts are hand-drawn as inline SVG driven by upstream's own recharts props,
-element-by-element mapping in each file header. Neither arm invents placeholder content, and
-neither leaves an import that would break the docs glob-build or a user's scaffolded project
 
 ### `/templates/blank` 404s, where upstream would bounce
 
@@ -879,9 +848,9 @@ Its other two translations are this port's standing shapes: options arrive as a 
 upstream's `renderTooltip()` is a `<TooltipLayer>` component, because a Svelte hook cannot
 return markup
 
-### The docs example blocks substitute built-in icons for upstream's Heroicons
+### The docs example blocks and two landing previews substitute built-in icons for upstream's Heroicons
 
-- **units:** docs (examples)
+- **units:** docs (examples; landing/blog-showcase, landing/hero/hero-floating-cards)
 - **kind:** deliberate-divergence
 - **retires:** with the `@lucide/svelte` icon registry (Phase 3)
 
@@ -893,6 +862,10 @@ person glyph use a built-in and say so in a header comment. `EmptyState` (`searc
 `BottomSheetSnapPoints`' turn-by-turn list is the widest of them — six Heroicons over
 twelve steps collapse onto four built-ins. Retires with the `@lucide/svelte` icon registry
 (Phase 3)
+
+Two landing previews make the same substitution: `BlogShowcase`'s "View all posts" uses
+`chevronRight` for lucide's `ArrowRight`, and `HeroFloatingCards` uses `upload` for the chat
+composer's lucide `Plus`. Both say so at the snippet and retire the same way.
 
 ### A handful of docs example blocks needed type-level adjustments upstream's TS config does not force
 
@@ -1132,45 +1105,6 @@ Chromium rather than reasoned about: `showModal()` and `show()`, with and withou
 against a `tabindex="-1"` panel holding a `[data-autofocus]` input — all four combinations end on
 the panel, because the dialog focusing steps pick it as the first focusable area regardless. No
 observable difference, and it is what makes the trigger capture above load-bearing
-
-### Only three of upstream's locale catalogs are ported
-
-- **units:** i18n (locales)
-- **kind:** unported
-- **retires:** when the remaining catalogs are vendored
-
-Both packages declare the same `"./locales/*.json"` subpath, so the specifier shape matches — but
-upstream's `locales/` ships a catalog per supported language and this port vendors `en.json`,
-`fr-FR.json` and `pseudo.json` only. Every other specifier a consumer can write against upstream's
-documentation (`de-DE.json`, `ja-JP.json`, and the rest) resolves upstream and throws
-`ERR_MODULE_NOT_FOUND` here. The catalogs are vendored verbatim — `.prettierignore` excludes
-`src/lib/locales/` precisely so the upstream bytes survive — so closing this is copying, not
-translating. Surfaced by the 0.4.5 surface sweep; it had never been recorded anywhere
-
-### `./theme/tokens` and `./theme/tokens.stylex` are not exported, though the build already ships them
-
-- **units:** theme (exports map)
-- **kind:** api-divergence
-- **retires:** when the two `exports` keys are added
-
-Upstream exports both, from `theme/tokens.ts` and `theme/tokens.stylex.ts`. This port's `exports`
-map has neither, while `dist/styles/tokens.stylex.js` **is already in the tarball** — so the file a
-consumer needs ships, and only the door is missing. Two keys. It was measured during the 0.4.1
-tracking pass and written down in `port/upstream-diff.md`, whose own header says it is
-point-in-time analysis rather than spec, and no agent greps it; that is how a two-line fix stayed
-open across four batches. Recorded here so it is findable
-
-### `tailwind-theme.css` has no counterpart
-
-- **units:** theme (tailwind-theme.css)
-- **kind:** unported
-- **retires:** when the Tailwind bridge is ported
-
-Upstream ships a `./tailwind-theme.css` subpath mapping its tokens into Tailwind's `@theme inline`
-layer, so a Tailwind consumer can use Astryx tokens as Tailwind utilities. Nothing here
-corresponds. Noted in `ledger/012` and in `port/upstream-diff.md` — both of them
-per-batch or frozen records that the parity agents do not read — so it has been effectively
-invisible since batch 11. Recorded here instead
 
 ### `BottomSheet`'s `height` and `snapPoints` doc types name their alias where upstream writes the members
 
@@ -1420,11 +1354,73 @@ container**, and there the space is real and visible; a component in that shape 
 up. Surfaced by the `getByText` sweep in batch 037, which reads `textContent` and is the first thing
 in this port able to see it at all
 
-## Retired
+### `AboutShowcase` keeps this port's own heading block instead of upstream's Meta claims
 
-Closed, kept as the record. **Nothing below counts as an open debt** — `scripts/status.mjs` stops
-tallying at this heading, and `astryx-parity` must not find a retired entry when it greps for
-"is this drift already known?", or it would skip live drift.
+- **units:** docs (landing/about-showcase.svelte)
+- **kind:** deliberate-divergence
+- **retires:** never, unless this port decides to reproduce Meta's adoption copy
+
+Upstream's heading block reads "Astryx powers over 13,000 apps" over "Astryx has grown inside
+Meta over the last eight years, shaped by the engineers, designers, and product teams who depend on
+it every day." That is Meta making an institutional claim about its own system's adoption and
+history. This port is unofficial and not affiliated with Meta, so printing it would assert those
+numbers and that history in this project's voice — the same call `site-footer.svelte` already made
+for Meta's social and legal blocks.
+
+The replacement names what a _port_ can state about itself ("A faithful port, checked by machine")
+and shows four coverage figures read from the generated registries, so none of them can go stale.
+The section's composition is upstream's exactly — the same 1fr/2fr editorial grid, the same three
+columns with their verbatim titles, body copy, shapes and CTA labels — and only the heading cell
+differs. Two CTAs are repointed for the same reason: upstream's `/changelog` does not exist here,
+so "See what's new" opens this repository's releases, and "Learn how to contribute" opens the
+repository rather than Meta's community page.
+
+### BottomSheet cross-fades a touch dismissal only on a coarse pointer
+
+- **units:** BottomSheet
+- **kind:** divergence
+- **retires:** when the gesture hook exposes `isDismissedByTouchDrag`
+
+Upstream's `isCrossFade` is `isCoarseCrossFade || (isReducedMotion && isDismissedByTouchDrag)`,
+so a touch swipe that dismisses the sheet under Reduce Motion cross-fades in place on a
+**fine** pointer too, through `sheetClosingCrossFade`'s `0.01s, 200ms` duration.
+`use-sheet-gestures.svelte.ts` does not expose which drag dismissed the sheet, so this port
+applies the coarse-pointer cross-fade only. A fine-pointer touch dismissal falls to
+`sheetClosing`'s reduced-motion arms (travel collapsed, opacity 0 on a coarse pointer only),
+which is the immediate close upstream gives a non-touch dismissal.
+
+### A keyframe that reads a `defineConsts` value has a different StyleX name than upstream's dist
+
+- **units:** motion
+- **kind:** divergence
+- **retires:** when the StyleX build hashes a resolved `defineConsts` member inside
+  `stylex.keyframes` exactly as upstream's two-pass build does
+
+`layerAnimations`' Reduce Motion `fadeIn` and the `Dialog`/`TopNavMegaMenu` 200 ms arms
+emit byte-identical CSS to upstream's `astryx.css` (same `@keyframes` body, same
+`animation-duration`, same media keys), but `fadeIn`'s keyframe _name_ differs
+(`x1qrgnk4-B` here, `x12p7u8f-B` upstream). StyleX hashes the keyframe body with the
+constant still a `var(--x…)` reference in this single-pass build, while upstream's
+published dist has the constant already a plain object and its body hashed as the literal
+curve. `compare-upstream-classes.mjs` diffs `animationName`, so
+`layer-animations`' four keys report this name only; the stylesheet content is the same.
+The other keyframes (`enterBelow`, `enterAbove`, `enterEnd`, `enterStart`, both RTL
+variants, `rotation`) all match, because they use theme vars rather than a `defineConsts`
+member.
+
+### `ChatComposer`'s shadow/border transition runs where upstream's has no duration
+
+- **units:** ChatComposer
+- **kind:** divergence
+- **retires:** when upstream gives the transition a duration, or when this port
+  matches its dead transition deliberately
+
+Upstream's `body` declares `transitionProperty: 'box-shadow, border-color'` and a timing
+function but no `transitionDuration`, so with the CSS default of `0s` the shadow and
+border change at once. This port writes the same two properties through the `transition`
+shorthand with `--duration-fast` and `--ease-standard`, so a theme elevation change
+fades. The motion is this port's, not upstream's; keeping it means a theme switch
+animates where upstream snaps. It is recorded rather than silently kept.
 
 ### Ported `getByRole` name assertions are substring matches, where upstream's are whole-string
 
@@ -1632,7 +1628,7 @@ defining file under `unstable_moduleResolution: {type: 'commonJS'}` (only
 `processStylexRules` substitutes the literal back in at sheet-generation time, so the emitted
 **declaration** is right; the **class name** is a hash of our package name and our file path.
 
-Ours is `@astryx-svelte/core:src/lib/components/date-input/tokens.stylex.ts`; upstream's is
+Ours is `@astryx-sv/core:src/lib/components/date-input/tokens.stylex.ts`; upstream's is
 `@astryxdesign/core:src/DateInput/tokens.stylex.ts`. Neither half can be made equal — the package
 name is ours by definition — so eleven classes differ **by name only**, verified declaration for
 declaration against `dist/astryx.css`:
@@ -1722,7 +1718,7 @@ while leaving the one that did.
 
 **Closed.** `SizeValue`, `parseStyleKey`, `themeProps`, `themeDataAttributes`, `ClassProps`,
 `ClassValue`, `ThemeProps`, `ThemeDataAttributes`, `observeResize` and `unobserveResize` are all
-on `./utils` now, so `import {themeProps} from '@astryx-svelte/core/utils'` resolves here as it
+on `./utils` now, so `import {themeProps} from '@astryx-sv/core/utils'` resolves here as it
 does upstream.
 
 Two things deliberately did **not** move. The _files_ stay in `internal/` and `theme/`: they are
@@ -1748,7 +1744,7 @@ because a previous run had left `themes/neutral/dist/` on disk; it failed on the
 and the first Vercel deploy that ever built core. The interim fix made `build` a library build
 only (`npm run prepack`) and moved the workbench to `build:demo`, run by CI after
 `pnpm -r build` — which is what left the residue this entry recorded: the import still pointed
-at a build artifact, so `pnpm -F @astryx-svelte/core dev` on a fresh clone needed a prior
+at a build artifact, so `pnpm -F @astryx-sv/core dev` on a fresh clone needed a prior
 `pnpm -r build`.
 
 The whole workbench is gone (`ledger/029`), and with it the two imports, `build:demo`, core's
@@ -1810,3 +1806,133 @@ asserts nothing the first does not.
 Ported once, per this file's own rule that upstream bugs are documented rather than replicated. The
 consequence is arithmetic: the case delta for this suite counts upstream's 136 declarations against
 ours, so it cannot reach zero while five of upstream's are copies.
+
+### A server-open `Drawer` animates its slide-in after hydration
+
+- **units:** Drawer
+- **kind:** divergence
+- **retires:** when the port can detect hydration (Svelte 5 has no public `hydrating` flag)
+
+Upstream's third `Drawer.ssr.test.tsx` case proves a Drawer open in the server markup opens where it rests after
+hydration (`transition-duration: .01s`) and only an open after a close animates. Svelte 5 keeps `hydrating` in
+`internal/client`, which a published library cannot import, so this port cannot tell a hydrated-open mount from a
+client-open mount; both animate. The markup invariant — an open Drawer's server HTML is byte-identical to a
+closed one — is asserted in `drawer-ssr.test.ts`. The client case is restated in
+`drawer-ssr.svelte.test.ts`, and the settled-open half is recorded here.
+
+### Three gesture suites are unported: they inspect a bundle or a sibling harness
+
+- **units:** gestures
+- **kind:** unported
+- **retires:** when the port ships its own esbuild-based bundle proof and interaction harness
+
+`gestures/__tests__/recognizerBundle.test.ts` (3) bundles the sources with esbuild in a
+child process and reads the metafile; esbuild is not a dependency of this repo, and the
+browser project cannot spawn a process. `gestures/__tests__/VelocityTracker.harness.test.ts`
+(3) compares the tracker with `internal/interaction-harness`'s `readRelease`, a Playwright
+harness this port does not vendor; the copy would only duplicate the filter under test.
+`gestures/__tests__/GestureHost.bundle.test.ts` (5) has the same esbuild prerequisite.
+
+The remaining GestureHost cases run in Chromium, where two jsdom assumptions do not hold.
+Each restatement is marked in the suite: an inline `touch-action` write (a browser applies
+the host's rule itself), `caretRangeFromPoint` finding real text under a synthetic pointer
+(stubbed away for the three claim-during-selection cases), and the shared page's input
+stream outliving a case (reset between cases). The behaviour asserted is the same.
+
+### One `usePanGesture` case has no Svelte counterpart
+
+- **units:** gestures
+- **kind:** unported
+- **retires:** never, unless Svelte gains a discarded-render state
+
+Upstream's suite keeps the last committed `onPan` through a render React discards
+into Suspense. Every Svelte rerender commits, so there is no state in which a
+discarded listener exists; the other 14 `createPanGesture`/`usePanGesture`
+declarations are ported and green.
+
+### The animatedLayout suites are partly ported: their jsdom frame grid has no browser counterpart
+
+- **units:** motion/animatedLayout
+- **kind:** unported cases
+- **retires:** when a browser-side animation stand-in reproduces jsdom's frame grid and rect stubs
+
+The source is ported (`motion/animated-layout.ts` and the copy/inert/ride modules), and
+`presentedGlide` passes 2/2. Of the seven upstream suites, five have their browser-compatible
+cases here: `animatedLayout` 44/47, `.presented` 11/13, `.slide` 9/13, `.edge` 10/25,
+`.swap` 6/28. The remaining declarations compare per-frame keyframe/clip values against
+jsdom's stubbed animation timeline and layout rectangles; Chromium produces a different
+frame grid and live layout, so the values cannot be asserted without a jsdom-equivalent
+animation stand-in. `animatedLayout.boundary` is ported 6/6 (restated for this port's
+kebab modules and current adopters). `animatedLayoutAdopters` is ported 18/18 (20
+executions): Collapsible and TreeList are wired to the handle, with their exit holds,
+chevron motion and the `LayoutChangeSnapshot` commit hook.
+
+### The `utils` suites this batch could not port are blocked on modules the port does not have
+
+- **units:** utils/hitArea, utils/interactionModality, utils/boxHold
+- **kind:** unported
+- **retires:** when each named module is ported
+
+`utils/hitArea.ts` (with `touchHitArea`'s live integration and the shared
+mutation observer's candidate set) is a thousand-line measuring module, not a
+transcription; `utils/interactionModality.ts` carries per-document shared state,
+a callback ref and a text-entry tracker behind a hook React implements and
+Svelte would need a probe for; `utils/boxHold.ts` also needs `pressClaim.ts`,
+which is absent. (`utils/calendarSystem.ts` and `utils/calendarDateParser.ts`
+are now ported; their suites are green.) Their remaining suites are listed,
+unported, in `port/status.md`. Port the module first, then the suite; none has
+a small companion fix that would make it run now.
+
+### Two component suites are unported because their internals are not here
+
+- **units:** ToggleButton/ToggleButtonGroupTracking, Icon/componentIcons
+- **kind:** unported
+- **retires:** when the toggle group's press-group tracking and the component
+  icon registry are ported
+
+`ToggleButton/ToggleButtonGroupTracking.test.tsx` asserts `isPressGroupItem` and
+the shared `touchHitArea` layer on the group; neither module is present, and
+the suite drives the action-group tracker directly. `Icon/componentIcons.test.tsx`
+exercises `resolveComponentIcon`, `ComponentIcon` and
+`defineTheme({componentIcons})`; this port's `Icon` has the global icon registry
+but no component-icon slot map, resolver or theme option. Both remain listed,
+unported, in `port/status.md`.
+
+### `Selector/useCombobox.test.tsx`'s accessibility-pattern case is unported
+
+- **units:** Selector/useCombobox
+- **kind:** unported
+- **retires:** when `@astryxdesign/a11y-spec` is available to this repo
+
+The suite's two-row `it.each` under `the reusable Combobox contract` calls
+`expectAccessibilitySpec` and `COMBOBOX_PATTERN` from
+`@astryxdesign/a11y-spec`, which is not a dependency here. The case is named in
+`use-combobox.svelte.test.ts`'s header; the other declarations are ported. The
+package's absence is the only blocker — the field props it inspects are
+implemented.
+
+### The menu-press model does not reach the non-popover menu consumers
+
+- **units:** DropdownMenu/MenuBottomSheetActionList, NavHeadingMenu, TopNavMenu, TopNavHeading, SideNavHeading, BreadcrumbItem, Selector
+- **kind:** unported
+- **retires:** when upstream's `menuPressOnItems.ts` is ported and those consumers use it
+
+`useMenuPress` is ported and wired through the popover menus (`DropdownMenu`,
+`ContextMenu`, submenus, `TabMenu`). Upstream also gives the bottom-sheet action
+list and the navigation/breadcrumb/selector menus the same press model through
+`menuPressOnItems.ts`; those surfaces here still select on click only. The
+action list is the largest gap: its rows do not carry the slide-to-select model
+or the menu-press-lit paint.
+
+### Upstream compiles its test fixtures into the published stylesheet
+
+- **units:** core published CSS
+- **kind:** upstream bug
+- **retires:** when upstream's `astryx.css` stops bundling `__tests__` fixtures
+
+`Badge.test-violations.tsx` and the `stylexReset`/`PresentedHitTestingLab`
+fixtures are compiled into upstream's `dist/astryx.css` (their glob misses the
+violations file, and the fixtures are imported from a source module). The 10
+Badge classes are skipped by class/rule in `compare-upstream-css.mjs`; the 14
+fixture at-rule/declaration shapes sit in its `OTHER_SKIP`. Neither exists in
+this port and neither is a component rule.

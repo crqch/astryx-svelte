@@ -28,17 +28,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
 
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-          # Writes an .npmrc that reads NODE_AUTH_TOKEN. pnpm honours npm's
-          # config hierarchy, so `pnpm publish` picks the credential up from it.
+          # Writes an .npmrc that reads NODE_AUTH_TOKEN. Bun honours npm's
+          # config hierarchy, so `bun publish` picks the credential up from it.
           #
           # NPM_TOKEN must be an **Automation** token (classic) or a **Granular
-          # Access Token** with write access to the @astryx-svelte scope. A
+          # Access Token** with write access to the @astryx-sv scope. A
           # classic *Publish* token does not work on an account with 2FA
           # enforced for writes: the publish authenticates, uploads the tarball,
           # signs the provenance statement, and only then fails with `EOTP —
@@ -62,37 +63,37 @@ jobs:
       # fidelity oracles read the upstream Astryx packages, which are
       # devDependencies; pruning them turns the checks into no-ops that still
       # report green.
-      - run: pnpm install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
       # Browser binaries live in ~/.cache/ms-playwright, not node_modules, so
-      # `pnpm install` does not fetch them and the client test project cannot
+      # `bun install` does not fetch them and the client test project cannot
       # launch without this.
       - name: Install the browser the client test project needs
-        run: pnpm -F @astryx-svelte/core exec playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       # The same gates as CI, re-run here rather than trusted from the commit's
       # own run: a tag can be pushed at any commit, including one CI never saw.
       - name: Build
-        run: pnpm -r build
+        run: bun run build
 
       - name: Typecheck
-        run: pnpm -r check
+        run: bun run --filter '*' check
 
       - name: Lint
-        run: pnpm -r lint
+        run: bun run --filter '*' lint
 
       - name: Test, fidelity oracles and packaging assertion
-        run: pnpm -r test
+        run: bun run --filter '*' test
 
       # Manifests, entry points and READMEs, over the built tree. Also asserts
       # every publishable package is at the version this tag names.
       - name: Verify every package is fit to publish
-        run: node scripts/check-publish.mjs --version "${{ steps.version.outputs.value }}"
+        run: bun scripts/check-publish.mjs --version "${{ steps.version.outputs.value }}"
 
-      # `--no-git-checks` because a tag build is a detached HEAD, which pnpm
-      # otherwise refuses as "not on the publish branch". `workspace:^` in the
-      # theme manifests is rewritten to a real range by pnpm at pack time; npm
-      # would publish the protocol literally, which is why this must be pnpm.
+      # `scripts/publish.mjs` walks the workspace and runs `bun publish` in
+      # each public package, because Bun has no recursive publish. Bun rewrites
+      # `workspace:^` to a real range at pack time; publishing the manifests
+      # with a tool that does not would ship the protocol literally.
       #
       # **No `--provenance`, because this repository is private.** npm signs the
       # statement and publishes it to the Sigstore transparency log first, then
@@ -111,12 +112,12 @@ jobs:
       # permission above is already in place for it.
       - name: Publish to npm
         if: steps.version.outputs.dry_run == 'false'
-        run: pnpm publish -r --access public --no-git-checks
+        run: bun scripts/publish.mjs
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish (dry run)
         if: steps.version.outputs.dry_run == 'true'
-        run: pnpm publish -r --access public --no-git-checks --dry-run
+        run: bun scripts/publish.mjs --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

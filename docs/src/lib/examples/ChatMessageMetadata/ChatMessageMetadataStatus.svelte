@@ -9,14 +9,14 @@
 	Svelte allows one.
 -->
 <script lang="ts">
-	import type { ChatMessageStatus } from '@astryx-svelte/core';
+	import type { ChatMessageStatus } from '@astryx-sv/core';
 	import {
 		ChatMessage,
 		ChatMessageBubble,
 		ChatMessageList,
 		ChatMessageMetadata,
 		Timestamp
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const STATUSES: Array<{ status: ChatMessageStatus; text: string }> = [
 		{ status: 'sending', text: 'Deploying the update now…' },

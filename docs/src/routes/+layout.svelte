@@ -14,12 +14,12 @@
 	 */
 	import favicon from '$lib/assets/favicon.svg';
 	// Layer order + `color-scheme`, which every `light-dark()` token depends on.
-	import '@astryx-svelte/core/base.css';
+	import '@astryx-sv/core/base.css';
 	// Every component's styles, pre-built. `core`'s `dist` ships compiled now, so
 	// there is nothing left in it for this site's StyleX plugin to emit — the
 	// plugin still runs, but only over the docs site's *own* `.stylex.ts` modules.
 	// Dropping this line does not error; it renders the whole site unstyled.
-	import '@astryx-svelte/core/astryx.css';
+	import '@astryx-sv/core/astryx.css';
 	// Every installed theme package's `@scope ([data-astryx-theme="…"])` block.
 	// None of these is the site theme, but each is in `THEME_OBJECTS`, and a
 	// `__built` theme injects nothing at runtime — so anything that selects one
@@ -31,26 +31,26 @@
 	// `themes.css`, which `globals.css` imports; the reel's curated slide list is
 	// a separate, shorter thing. This block is that aggregator, hand-maintained —
 	// so it tracks `docs/package.json`, exactly as `THEME_OBJECTS` does.
-	import '@astryx-svelte/theme-neutral/theme.css';
-	import '@astryx-svelte/theme-matcha/theme.css';
-	import '@astryx-svelte/theme-butter/theme.css';
-	import '@astryx-svelte/theme-gothic/theme.css';
-	import '@astryx-svelte/theme-y2k/theme.css';
+	import '@astryx-sv/theme-neutral/theme.css';
+	import '@astryx-sv/theme-matcha/theme.css';
+	import '@astryx-sv/theme-butter/theme.css';
+	import '@astryx-sv/theme-gothic/theme.css';
+	import '@astryx-sv/theme-y2k/theme.css';
 	// Installed but not reel slides — the same standing upstream has for Stone,
 	// which its docsite depends on and gives no slide. They are here because the
 	// rule above is "one import per dependency", and they are last within the
 	// upstream group because the five above are the reel's, in its order.
-	import '@astryx-svelte/theme-chocolate/theme.css';
-	import '@astryx-svelte/theme-stone/theme.css';
+	import '@astryx-sv/theme-chocolate/theme.css';
+	import '@astryx-sv/theme-stone/theme.css';
 	// Local, non-upstream — the reel's one slide that ports nothing. Same rule
 	// applies: it is `__built`, so without this import the slide selects a theme
 	// whose stylesheet is nowhere in the document and renders untouched.
-	import '@astryx-svelte/theme-liquid-glass/theme.css';
+	import '@astryx-sv/theme-liquid-glass/theme.css';
 	// The docsite's own brand theme, compiled by scripts/build-astryx-theme.mjs,
 	// and the site-wide theme applied below. Upstream's globals.css imports its
 	// built counterpart the same way.
 	import '$lib/generated/astryx-theme.css';
-	import { AppShell, Theme } from '@astryx-svelte/core';
+	import { AppShell, Theme } from '@astryx-sv/core';
 	import { page } from '$app/state';
 	import './docs.css';
 	import './landing.css';
@@ -103,7 +103,7 @@
 	 * consequence is upstream's too" — the second sentence was false, and it is
 	 * what licensed three other files to drop the boundary that prevents the
 	 * first. Upstream re-themes every live preview to `neutralTheme` through
-	 * `ComponentPreviewTheme`, so a reader sees what `@astryx-svelte/core` ships
+	 * `ComponentPreviewTheme`, so a reader sees what `@astryx-sv/core` ships
 	 * under the theme they install rather than this site's brand skin. That
 	 * component is ported; `shell/component-preview-theme.svelte` is the boundary
 	 * and names each of the six upstream surfaces that reach for it.

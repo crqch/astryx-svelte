@@ -53,8 +53,13 @@ export default {
 	},
 	usage: {
 		description:
-			'DateTimeInput combines date and time selection in one field. On mouse/trackpad devices it uses a calendar popover plus text time input; on coarse-pointer devices the closed control still has separate Date and Time segments, and either segment opens a bottom sheet with Date and Time sections, a swipable month calendar, and accessible time wheels. The closed date and time segments stay side by side when at least 400px is available and wrap into full-width rows below 400px, independent of viewport width. Use it for scheduling, event creation, deadline setting, or any form field that needs a specific datetime.',
+			'DateTimeInput combines date and time selection in one field. With presentation="adaptive-native" (the default), mouse/trackpad devices use Astryx typed fields and popovers, while coarse-pointer devices use browser/OS date and time controls in the same two-segment field. presentation="native" uses both native controls on every pointer; presentation="adaptive-bottom-sheet" keeps Astryx\'s own surfaces — pointer fields on fine pointers and the coordinated Date/Time bottom sheet on coarse pointers; "popover" and "bottom-sheet" force one Astryx surface on every pointer. The closed segments stay side by side when at least 400px is available and wrap into full-width rows below 400px, independent of viewport width. Use it for scheduling, event creation, deadline setting, or any form field that needs a specific datetime.',
 		bestPractices: [
+			{
+				guidance: true,
+				description:
+					"Base props such as ref, id, data-*, aria-*, and DOM event handlers go to the date input, the element that is focused and announced. A DOM handler runs after DateTimeInput's own handler for the same event and still receives events it handled (including ones it called preventDefault on), so it cannot cancel built-in behavior."
+			},
 			{
 				guidance: true,
 				description:
@@ -66,11 +71,17 @@ export default {
 			},
 			{
 				guidance: true,
+				description:
+					'Set min and max on a Buddhist or Minguo calendar field, so a Gregorian year typed by mistake shows an error instead of a date centuries away.'
+			},
+			{
+				guidance: true,
 				description: 'Use hasClear when the datetime is optional so the user can reset it.'
 			},
 			{
 				guidance: true,
-				description: "Choose the hour format (12h or 24h) that matches your audience's locale."
+				description:
+					"Leave hourFormat unset so the field follows the InternationalizationProvider locale's hour cycle (12-hour in en-US, 24-hour in en-GB or de-DE). Set it only when the field itself needs a fixed format, and carry a person's own 12/24-hour preference on the provider locale (e.g. 'en-US-u-hc-h23') rather than on each field."
 			},
 			{
 				guidance: false,
@@ -88,7 +99,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled DateTimeInput in Tooltip to explain why it is disabled; disabled triggers swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled DateTimeInput in Tooltip to explain why it is disabled. Use the disabledMessage prop instead, which ties the reason to the field.'
 			}
 		],
 		anatomy: [
@@ -98,33 +109,51 @@ export default {
 				description: 'Text above the input describing what datetime is expected.'
 			},
 			{
+				name: 'Segment row',
+				required: true,
+				description:
+					'The unbordered layout row that holds the two bordered segments and wraps them when its container is narrow.'
+			},
+			{
 				name: 'Date input',
 				required: true,
 				description:
-					'A text input where the user can type a date. Clicking opens a calendar popover.'
+					'A typed date field with calendar popover on the fine-pointer Astryx surface, a real input type=date in native modes, or a read-only segment opening the Astryx touch sheet under presentation="adaptive-bottom-sheet" on a coarse pointer.'
 			},
 			{
 				name: 'Calendar icon',
 				required: true,
-				description: 'A button that opens the calendar popover.'
+				description:
+					'A button that opens the active date surface: the platform picker, Astryx calendar popover, or Astryx touch sheet.'
 			},
 			{
-				name: 'Calendar popover',
+				name: 'Date picker',
 				required: false,
 				description:
-					'A month grid that appears in a popover on desktop, or in the mobile bottom sheet on coarse-pointer devices.'
+					'The browser/OS picker in native modes, an Astryx month-grid popover on a fine pointer, or the Date panel of the Astryx bottom sheet on a coarse pointer with presentation="adaptive-bottom-sheet".'
 			},
 			{
 				name: 'Time input',
 				required: true,
 				description:
-					"A text input for entering the time on desktop; a read-only time segment opening accessible hour/minute/second wheels on touch. The touch Date panel's Save date action advances to Time; the Time panel's Save closes the sheet."
+					'A real input type=time for the default minute-precision native mode, a text/combobox time field when seconds, custom increments, or preset options are requested, or a read-only segment opening accessible time wheels under presentation="adaptive-bottom-sheet" on a coarse pointer.'
+			},
+			{
+				name: 'Clock icon',
+				required: true,
+				description:
+					'The time glyph shown as a leading identifier on the Astryx pointer field and as the picker affordance in native and touch-sheet time segments.'
 			},
 			{
 				name: 'Time options popover',
 				required: false,
 				description:
-					'A desktop-only list of preset times at the timeOptionInterval cadence, shown when that prop is set and the time input is clicked or opened with Alt+ArrowDown.'
+					"A list of preset times at the timeOptionInterval cadence. Setting the prop retains Astryx's text/combobox time field even when nativePicker otherwise selects native controls; the Astryx touch sheet uses wheels instead."
+			},
+			{
+				name: 'Time option',
+				required: false,
+				description: 'One selectable preset time in the optional time-options popover.'
 			},
 			{
 				name: 'Clear button',
@@ -171,14 +200,15 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disable the input and picker.',
+			description:
+				'Disable the input and picker. The fields stay focusable and expose `aria-disabled`; typing and opening are blocked.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the field focusable via aria-disabled (activation stays blocked). Use this instead of wrapping a disabled DateTimeInput in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and describes the fields (activation stays blocked). Use this instead of wrapping a disabled DateTimeInput in Tooltip.'
 		},
 		{
 			name: 'value',
@@ -222,27 +252,29 @@ export default {
 		{
 			name: 'hasSeconds',
 			type: 'boolean',
-			description: 'Include seconds in the time portion.',
+			description:
+				"Include seconds in the time portion. Keeps Astryx's time field even when nativePicker selects native surfaces, because iOS has no seconds wheel.",
 			default: 'false'
 		},
 		{
 			name: 'hourFormat',
 			type: "'12h' | '24h'",
-			description: "Hour display format. '12h' shows AM/PM; '24h' uses 24-hour notation.",
-			default: "'12h'"
+			description:
+				"Hour display format. '12h' shows the locale's day period; '24h' uses 24-hour notation. When unset, follows the InternationalizationProvider locale's hour cycle (en-US 12-hour, en-GB 24-hour); a person's own preference rides on the locale tag (e.g. 'en-US-u-hc-h23').",
+			default: "the locale's hour cycle"
 		},
 		{
 			name: 'timeIncrement',
-			type: '1 | 5 | 10 | 15 | 30',
+			type: '30 | 1 | 5 | 10 | 15',
 			description:
-				'Minutes to add or subtract when using arrow keys in the desktop time input. Ignored on the mobile touch sheet, where time is changed with wheels.',
+				"Minute step for arrow keys in Astryx's typed time field. A non-default value keeps the Astryx time field in nativePicker modes because iOS treats native step as validation, not picker cadence. Ignored by the Astryx touch sheet, which uses wheels.",
 			default: '1'
 		},
 		{
 			name: 'timeOptionInterval',
-			type: '5 | 10 | 60 | 15 | 30',
+			type: '30 | 5 | 10 | 60 | 15',
 			description:
-				'Minute cadence for a dropdown of preset times on the desktop time portion. Set it to turn the desktop time field into a combobox listing every valid time at that cadence (60 gives a 12 AM to 11 PM list). Omitted, the desktop time field stays a plain text input and gains no combobox semantics. Typed entry keeps working either way, so a time between two options is still reachable. Ignored on the mobile touch sheet, where the wheels expose every hour/minute/second.'
+				"Minute cadence for the preset-time combobox on Astryx's fine-pointer time field. Setting it keeps that Astryx time field even in nativePicker modes because the OS picker has no equivalent preset list. The Astryx touch sheet uses wheels."
 		},
 		{
 			name: 'hasClear',
@@ -253,8 +285,16 @@ export default {
 		{
 			name: 'placeholder',
 			type: 'string',
-			description: 'Placeholder text shown in the date portion when no date is selected.',
+			description:
+				'Placeholder text shown in the date portion when no date is selected. A caller placeholder replaces the calendar format hint.',
 			default: "'Select a date'"
+		},
+		{
+			name: 'calendar',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
+			description:
+				'The calendar the date segment reads and writes typed dates in, and the calendar its popover and bottom sheet show. value, onChange, min, and max stay Gregorian ISO datetimes. People type a date the way the locale writes it in this calendar, in any decimal digits; the field reports a date only once it is complete, and names a date the calendar does not have. Years are years of this calendar, so set min and max on Buddhist and Minguo calendar fields to catch a Gregorian year typed by mistake. Calendars other than gregory, iso8601, buddhist, roc, and japanese need Temporal, native or a polyfill the application loads; without it the field shows Gregorian dates. With a calendar other than gregory or iso8601, a presentation that would show native controls shows the popovers on a fine pointer and the bottom sheet on a coarse pointer, because the native date control is Gregorian; the Date panel of the bottom sheet shows the months, leap months, and era years of the calendar. A year in which the era changes is labeled with the era of the shown month, such as 平成31 in January 2019 and 令和元 in July.',
+			default: "the InternationalizationProvider's calendar, else 'gregory'"
 		},
 		{
 			name: 'timePlaceholder',
@@ -289,15 +329,29 @@ export default {
 			name: 'numberOfMonths',
 			type: '2 | 1',
 			description:
-				'Number of months displayed simultaneously in the desktop calendar popover. Ignored on the mobile touch sheet, whose Date panel always shows one swipe-paged month at a time.',
+				"Number of months displayed simultaneously in Astryx's pointer calendar popover. Ignored by native date controls and the mobile touch sheet, whose Date panel always shows one swipe-paged month at a time.",
 			default: '1'
 		},
 		{
 			name: 'weekStartsOn',
-			type: "0 | 6 | 2 | 4 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
+			type: "0 | 4 | 6 | 2 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
 			description:
-				'First day of week in the calendar. A number (0 = Sunday to 6 = Saturday) or a three-letter day name.',
+				'First day of week in Astryx calendars. A number (0 = Sunday to 6 = Saturday) or a three-letter day name. Ignored by native date controls.',
 			default: '0'
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native'",
+			description:
+				"Which surfaces draw the date and time pickers. 'adaptive-native' (the default) uses Astryx's typed fields and popovers on a fine pointer and browser/OS controls on a coarse pointer — with per-segment Astryx fallbacks: hasSeconds, non-default timeIncrement, or timeOptionInterval retain Astryx's time field because iOS cannot express them faithfully; 'native' always uses both browser/OS controls with no fallback; 'adaptive-bottom-sheet' uses popovers on a fine pointer and Astryx's coordinated bottom sheet on a coarse pointer; 'popover' and 'bottom-sheet' force that Astryx surface on every pointer. Every value opens pickers; typed-only fields are TimeInput's alone. Use a non-native presentation when numberOfMonths, weekStartsOn, or visible dateConstraints behavior matters. Constraints are enforced on commit; min/max are forwarded as hints. hourFormat formats the closed time, while the OS picker follows the user's locale. With a calendar other than gregory or iso8601, 'native' and 'adaptive-native' use the popovers on a fine pointer and the bottom sheet on a coarse pointer, and an explicit 'native' warns in development.",
+			default: "'adaptive-native'"
+		},
+		{
+			name: 'nativePicker',
+			type: "'touch' | 'always' | 'never'",
+			description:
+				"Deprecated: use presentation ('touch' = 'adaptive-native', 'always' = 'native', 'never' = 'adaptive-bottom-sheet'). Still works exactly as released; presentation wins when both are set. With a calendar other than gregory or iso8601, 'touch' and 'always' use the popovers on a fine pointer and the bottom sheet on a coarse pointer.",
+			default: "'touch'"
 		},
 		{
 			name: 'width',
@@ -306,10 +360,16 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+				'StyleX styles for the Field box around the label, control, and status. containerClassName and containerStyle take a class name and inline styles for the same box. No effect (development warning) where no Field box renders: inside InputGroup (style the group) and in a horizontal-labels FormLayout.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the row that holds the bordered date and time segments with their icons and end controls, never a native input. controlClassName and controlStyle take a class name and inline styles for the same box. Replaces root xstyle, className, and style, which this component does not accept.'
 		}
 	]
 };

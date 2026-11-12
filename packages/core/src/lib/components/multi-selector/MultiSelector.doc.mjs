@@ -26,11 +26,7 @@ export default {
 			{
 				className: 'astryx-multi-selector',
 				visualProps: ['variant', 'size', 'status'],
-				states: ['disabled']
-			},
-			{
-				className: 'astryx-multi-selector-clear-icon',
-				deprecatedFor: 'input-clear-icon'
+				states: ['disabled', 'readonly']
 			},
 			{
 				className: 'astryx-multi-selector-empty-state'
@@ -56,6 +52,109 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Field',
+				required: false,
+				description:
+					'Standalone Field shell that provides the label and optional supporting content; omitted inside InputGroup.'
+			},
+			{
+				name: 'Trigger',
+				required: true,
+				description:
+					'Painted control that displays the current selection or placeholder and opens the selection surface when editable.'
+			},
+			{
+				name: 'Icon-rendered start icon',
+				required: false,
+				description: 'Optional leading semantic icon or icon component rendered through Icon.'
+			},
+			{
+				name: 'Caller-rendered start content',
+				required: false,
+				description:
+					'Optional arbitrary React content rendered directly at the start of the trigger.'
+			},
+			{
+				name: 'Trigger clear button',
+				required: false,
+				description:
+					'Shared clear action that removes every selected value when hasClear is enabled.'
+			},
+			{
+				name: 'Status icon',
+				required: false,
+				description:
+					'Status glyph shown in place of the disclosure indicator for attached or tooltip status.'
+			},
+			{
+				name: 'Indicator icon',
+				required: false,
+				description:
+					'Trailing chevron shown when status presentation does not replace it; reflects collapsed or expanded state.'
+			},
+			{
+				name: 'Search row',
+				required: false,
+				description: 'Panel header with a borderless search input and optional clear action.'
+			},
+			{
+				name: 'Search icon',
+				required: false,
+				description: 'Leading magnifier rendered through Icon inside the search row.'
+			},
+			{
+				name: 'Search clear button',
+				required: false,
+				description: 'Shared clear action shown in the search row while a query is present.'
+			},
+			{
+				name: 'Option row',
+				required: false,
+				description: 'Selectable row for an option or the optional select-all choice.'
+			},
+			{
+				name: 'Option checkbox indicator',
+				required: false,
+				description:
+					'CheckboxInput indicator that presents each row’s selected, unselected, or indeterminate state.'
+			},
+			{
+				name: 'Option divider',
+				required: false,
+				description:
+					'Divider supplied in the public options data to separate adjacent option groups.'
+			},
+			{
+				name: 'Section heading',
+				required: false,
+				description: 'Visible heading for a labeled group of option rows.'
+			},
+			{
+				name: 'Empty state',
+				required: false,
+				description:
+					'Message shown when the shared panel content has no options or no search matches.'
+			},
+			{
+				name: 'Pointer popup',
+				required: false,
+				description:
+					'Anchored painted surface that hosts the shared panel content for popover presentation.'
+			},
+			{
+				name: 'Touch sheet heading',
+				required: false,
+				description: 'Heading above the shared panel content in bottom-sheet presentation.'
+			},
+			{
+				name: 'Touch sheet',
+				required: false,
+				description:
+					'BottomSheet surface that hosts the same panel content for bottom-sheet presentation.'
+			}
+		],
 		description:
 			'A checkbox dropdown for selecting multiple values from a list. Selected items can display as a count, labels, or badges. Use it for filtering or when presenting a finite set of options where multiple choices are needed.',
 		bestPractices: [
@@ -85,7 +184,12 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Use variant="ghost" when a multi-selector sits in a toolbar with ghost buttons. If validation status is needed there, prefer statusVariant="tooltip" so the toolbar height stays compact.'
+					'Use variant="secondary" when a multi-selector sits beside secondary buttons or segmented controls, and variant="ghost" when it sits beside ghost buttons. If validation status is needed there, prefer statusVariant="tooltip" so the toolbar height stays compact.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use presentation="adaptive" when the multi-selector should become a bottom sheet on compact touch screens.'
 			},
 			{
 				guidance: false,
@@ -98,9 +202,29 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled MultiSelector in Tooltip to explain why it is disabled; disabled triggers swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled MultiSelector in Tooltip to explain why it is disabled. Use the disabledMessage prop, which attaches the reason to the trigger itself.'
 			}
 		]
+	},
+	playground: {
+		defaults: {
+			label: 'Fruit',
+			options: [
+				{
+					value: 'apple',
+					label: 'Apple'
+				},
+				{
+					value: 'orange',
+					label: 'Orange'
+				},
+				{
+					value: 'banana',
+					label: 'Banana'
+				}
+			],
+			value: []
+		}
 	},
 	props: [
 		{
@@ -113,7 +237,7 @@ export default {
 			name: 'options',
 			type: 'T[]',
 			description:
-				'Array of items: strings, objects with value/label/icon/disabled, dividers, or sections.',
+				'Array of items: strings, objects with value/label/icon/disabled, dividers, or sections. An option may carry `action`: one node — an IconButton, a Button, a menu trigger — the caller renders and names. Once any option does, the popup is a grid whose rows pair the option with its action: Up/Down move rows, the inline-end arrow reaches the action, Enter fires it, pointer and touch press it directly, and pressing it never changes the selection.',
 			required: true
 		},
 		{
@@ -125,7 +249,8 @@ export default {
 		{
 			name: 'onChange',
 			type: '(value: string[]) => void',
-			description: 'Callback fired when the selection changes.',
+			description:
+				'Called when the selection changes. A creation (hasCreate) arrives with `{type: "create", query}` as the second argument and the query appended to value; the caller adds the matching option in that same update. Every other change passes no descriptor, so a one-argument handler keeps working.',
 			required: true
 		},
 		{
@@ -147,9 +272,9 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'ghost' | 'input'",
+			type: "'secondary' | 'ghost' | 'input'",
 			description:
-				'Visual trigger style. input is the bordered input treatment for forms; ghost is borderless and matches ghost buttons for toolbar usage.',
+				'Visual trigger style. input is the bordered input treatment for forms; secondary matches the secondary buttons of the active theme (borderless and neutral-filled by default) for navs and toolbars; ghost is borderless and transparent, matching ghost buttons for toolbar usage.',
 			default: "'input'"
 		},
 		{
@@ -160,7 +285,7 @@ export default {
 		},
 		{
 			name: 'formatValue',
-			type: '(items: {value: string; label: string}[]) => string',
+			type: '(items: MultiSelectorSelectedItem[]) => string',
 			description:
 				'Formats the trigger text when triggerDisplay="count" or "labels". Receives the selected items (value plus resolved label); the count is items.length. Not used by triggerDisplay="badges".'
 		},
@@ -197,20 +322,34 @@ export default {
 			name: 'emptyText',
 			type: 'string | Snippet',
 			description:
-				'Content shown in the dropdown panel when there are no options to show, and announced in a polite live region when the panel opens (a string override is announced verbatim; a richer node falls back to the default text). Not shown while isLoading.',
+				'Content shown in the dropdown panel when there are no options to show, and announced in a polite live region when the panel opens. The announcement is the text this content renders, read from the DOM, so an element is announced as written and aria-hidden parts are left out of both. Not shown while isLoading.',
 			default: "'No options'"
 		},
 		{
 			name: 'emptySearchText',
 			type: 'string | Snippet',
 			description:
-				'Content shown in the dropdown panel when a search query matches no options, and announced in a polite live region at the same time (a string override is announced verbatim; a richer node falls back to the default text).',
+				'Content shown in the dropdown panel when a search query matches no options, and announced in a polite live region at the same time. The announcement is the text this content renders, read from the DOM, so an element is announced as written and aria-hidden parts are left out of both.',
 			default: "'No results found'"
+		},
+		{
+			name: 'hasCreate',
+			type: 'boolean',
+			description:
+				'With hasSearch, offers a `Create "<query>"` row first in the list when the typed text equals no option label under the search’s case-insensitive matching. Picking it, or Enter with nothing highlighted, calls onChange with the query appended to value and a `{type: "create", query}` descriptor, then clears the search; the caller must add an option for the new value in that update. Nothing is offered while isLoading. Without hasSearch it warns in development and offers nothing.',
+			default: 'false'
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
 			description: 'Disables the selector.'
+		},
+		{
+			name: 'isReadOnly',
+			type: 'boolean',
+			description:
+				'Makes the selector read-only: the selected values stay visible, focusable, and included in form submission, and retain their combobox identity with aria-readonly. The selection surface, clear action, and disclosure indicator are removed. Unlike isDisabled, the control is not dimmed. isDisabled takes precedence when both are set.',
+			default: 'false'
 		},
 		{
 			name: 'htmlName',
@@ -222,7 +361,7 @@ export default {
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the selector is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the trigger focusable via aria-disabled (activation stays blocked). Use this instead of wrapping a disabled MultiSelector in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the selector is disabled. With isDisabled, shows the reason as a tooltip on hover and keyboard focus of the trigger, which stays focusable (aria-disabled) like every disabled selector; activation stays blocked. Use this instead of wrapping a disabled MultiSelector in Tooltip.'
 		},
 		{
 			name: 'isLabelHidden',
@@ -258,8 +397,8 @@ export default {
 			name: 'statusVariant',
 			type: "'tooltip' | 'attached' | 'detached'",
 			description:
-				'How the status message is placed relative to the input. attached overlaps directly below the bordered input and is only valid for the input variant; ghost selectors detach attached status messages by default. Use tooltip for compact toolbar controls.',
-			default: "'attached' for input selectors; 'detached' for ghost selectors"
+				'How the status message is placed relative to the input. attached overlaps directly below the bordered input and is only valid for the input variant; secondary and ghost selectors detach attached status messages by default. Use tooltip for compact toolbar controls.',
+			default: "'attached' for input selectors; 'detached' for secondary and ghost selectors"
 		},
 		{
 			name: 'renderOption',
@@ -273,6 +412,13 @@ export default {
 			description:
 				'Which edge of the option row carries the checkbox. end pushes it to the far edge of the row, including on the select-all row.',
 			default: "'start'"
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'adaptive'",
+			description:
+				'How the option list is presented. adaptive uses a bottom sheet on compact touch screens and an anchored popover otherwise.',
+			default: "'popover'"
 		},
 		{
 			name: 'width',
@@ -298,9 +444,71 @@ export default {
 			default: 'false'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
-			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+			name: 'renderTrigger',
+			type: '(props: MultiSelectorRenderTriggerProps) => string | Snippet',
+			description:
+				"Render the control the panel hangs off — a glyph in a list row, a chip, an icon button — instead of the selector's own field and button. Spread the given props ({ref, id, onClick, onKeyDown, onFocus, aria-haspopup, aria-expanded, aria-controls, aria-busy}) onto it; the listbox is anchored to that control and named by `label`. The field chrome (Field, status, clear, spinner) is not rendered. Pair with handleRef to open from a keystroke elsewhere."
+		},
+		{
+			name: 'handleRef',
+			type: 'MultiSelectorHandle | null',
+			description:
+				'Imperative handle with open(), close(), toggle() and isOpen(). Prefer it over mirroring open state in the parent; the selector owns its visibility.'
+		},
+		{
+			name: 'onOpenChange',
+			type: '(isOpen: boolean) => void',
+			description:
+				'Called whenever the panel opens or closes, however it happened: the trigger, the keyboard, a light dismiss, Escape, or the handle.'
+		},
+		{
+			name: 'onclick',
+			type: 'MouseEventHandler<T> | null',
+			description:
+				'Click handler on the trigger (or the renderTrigger control). Runs after the built-in toggle and cannot cancel it.'
+		},
+		{
+			name: 'onfocus',
+			type: 'FocusEventHandler<T> | null',
+			description: "Focus handler on the trigger. Runs before the selector's own focus handling."
+		},
+		{
+			name: 'onkeydown',
+			type: 'KeyboardEventHandler<T> | null',
+			description:
+				'Key handler on the trigger button. Runs after the built-in keyboard model and is skipped for keys it handles and cancels.'
+		},
+		{
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds the value, icons, and end controls. Never the trigger button itself.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

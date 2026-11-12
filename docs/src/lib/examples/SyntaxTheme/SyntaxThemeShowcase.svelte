@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CodeBlock, Stack, SyntaxTheme, Text } from '@astryx-svelte/core';
-	import { oneDarkPro } from '@astryx-svelte/core/theme/syntax';
+	import { CodeBlock, Stack, SyntaxTheme, Text } from '@astryx-sv/core';
+	import { oneDarkPro } from '@astryx-sv/core/theme/syntax';
 
 	const sampleCode = `async function save() {
   await api.update(values);

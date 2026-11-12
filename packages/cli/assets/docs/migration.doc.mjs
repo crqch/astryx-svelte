@@ -12,7 +12,7 @@
  * snippet is kept: a Svelte app on Tailwind v3 has exactly the same problem.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'migration',
 	title: 'Migration Guide',
@@ -104,8 +104,8 @@ astryx-svelte component Button --json`
 					label: 'Root layout with explicit mode',
 					code: `<!-- src/routes/+layout.svelte -->
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	import { Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import { setSettings } from '$lib/settings.svelte.js';
 	import '../app.css';
 
@@ -136,8 +136,8 @@ astryx-svelte component Button --json`
 
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(base);
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 @import 'tailwindcss/utilities.css' layer(utilities);`
 				},
 				{
@@ -150,8 +150,8 @@ astryx-svelte component Button --json`
 					label: 'Tailwind v3 coexistence',
 					code: `@layer reset, tw-preflight, astryx-base, astryx-theme;
 
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 
 @layer tw-preflight {
   @tailwind base; /* layered: astryx-theme now wins over preflight */
@@ -189,9 +189,9 @@ astryx-svelte component Button --json`
 					items: [
 						"Declare the canonical @layer order once, before any @import. Vite inlines a CSS entry's imports in place, so putting the order declaration at the top of the file you import first (app.css) is enough; with a webpack-based bundler it must live in its own file imported first, because webpack hoists @import content above the inline CSS that follows it.",
 						'Audit every pre-existing global or reset stylesheet and assign each one to a layer deliberately. Top-level imports without layer() stay unlayered and beat every layer; imports nested inside a layered file inherit that layer.',
-						'Remove or demote the app legacy reset. `@astryx-svelte/core/base.css` contains its own :where() reset in the lowest layer, so any app reset belongs in that same reset layer and never in a layer above astryx-base.',
+						'Remove or demote the app legacy reset. `@astryx-sv/core/base.css` contains its own :where() reset in the lowest layer, so any app reset belongs in that same reset layer and never in a layer above astryx-base.',
 						'Layer Tailwind preflight. On Tailwind v4, import preflight.css with layer(base). On Tailwind v3, wrap the @tailwind base directive in a named layer (see the snippet in Theme and CSS Setup). Unlayered preflight overrides theme CSS silently.',
-						'Set moduleResolution to bundler so subpath imports like @astryx-svelte/core/base.css resolve.',
+						'Set moduleResolution to bundler so subpath imports like @astryx-sv/core/base.css resolve.',
 						'Theme with defineTheme and the accent family API instead of hand-writing individual color tokens. Derived tokens like --color-on-accent are generated from the accent scale automatically; hand-writing only --color-accent leaves --color-on-accent at its stale white default with no contrast guarantee against the new accent.',
 						'Run the foundation smoke test below and view a few components in both light and dark mode before migrating any route.'
 					]
@@ -215,7 +215,7 @@ astryx-svelte component Button --json`
 					label: 'Foundation check page',
 					code: `<!-- src/routes/foundation-check/+page.svelte -->
 <script lang="ts">
-	import { Button, Card, Table, TextInput, VStack } from '@astryx-svelte/core';
+	import { Button, Card, Table, TextInput, VStack } from '@astryx-sv/core';
 
 	let email = $state('');
 </script>
@@ -395,7 +395,7 @@ if (getComputedStyle(button).paddingInline === '0px') {
 					lang: 'svelte',
 					label: 'Settings popover theme control',
 					code: `<script lang="ts">
-	import { Switch } from '@astryx-svelte/core';
+	import { Switch } from '@astryx-sv/core';
 	import { getSettings } from '$lib/settings.svelte.js';
 
 	const settings = getSettings();

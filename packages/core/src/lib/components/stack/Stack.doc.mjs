@@ -36,6 +36,23 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Stack container',
+				required: true,
+				description: 'Layout container that arranges content along one flex axis.'
+			},
+			{
+				name: 'Item',
+				required: false,
+				description: 'Optional StackItem wrapper that controls one item in the stack.'
+			},
+			{
+				name: 'Content',
+				required: false,
+				description: 'Caller-supplied content rendered by a Stack or StackItem.'
+			}
+		],
 		description:
 			'Stack arranges items in a row or column with consistent spacing. Use the gap prop to control the space between items.',
 		bestPractices: [
@@ -55,59 +72,65 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			direction: 'horizontal',
+			gap: 2
+		}
+	},
 	props: [
 		{
 			name: 'direction',
 			type: "'horizontal' | 'vertical'",
 			description:
-				"Direction of the stack layout. 'horizontal' flows items left-to-right (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'.",
+				"Direction of the stack layout. 'horizontal' flows items along the inline axis, left to right in LTR and right to left in RTL (like HStack), 'vertical' flows top-to-bottom (like VStack). Note: the value is 'horizontal', NOT 'row'.",
 			default: "'vertical'"
 		},
 		{
 			name: 'gap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Spacing step (number literal): 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10. Pass as a JSX number expression e.g. gap={4}, NOT a string like gap="4".'
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Inner padding on all sides, using the spacing scale. Pass as a JSX number expression e.g. padding={3}.'
 		},
 		{
 			name: 'paddingInline',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Inline (horizontal) padding. Overrides padding on the inline axis when both are set.'
 		},
 		{
 			name: 'paddingInlineStart',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Inline-start padding, using the spacing scale (left in LTR, right in RTL). Overrides paddingInline and padding on that edge only.'
 		},
 		{
 			name: 'paddingInlineEnd',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Inline-end padding, using the spacing scale (right in LTR, left in RTL). Overrides paddingInline and padding on that edge only.'
 		},
 		{
 			name: 'paddingBlock',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Block (vertical) padding. Overrides padding on the block axis when both are set.'
 		},
 		{
 			name: 'paddingBlockStart',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Block-start (top) padding, using the spacing scale. Overrides paddingBlock and padding on that edge only.'
 		},
 		{
 			name: 'paddingBlockEnd',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Block-end (bottom) padding, using the spacing scale. Overrides paddingBlock and padding on that edge only.'
 		},
@@ -170,7 +193,7 @@ export default {
 		},
 		{
 			name: 'as',
-			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'button' | 'article' | 'dialog' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'base' | 'body' | 'code' | 'time' | 'section' | 'input' | 'strong' | 'div' | 'li' | 'span' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'embed' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'map' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'pre' | 'progress' | 'q' | 'rp' | 'rt' | 'ruby' | 's' | 'samp' | 'script' | 'select' | 'source' | 'sub' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
+			type: "'object' | 'title' | 'slot' | 'style' | 'small' | 'header' | 'menu' | 'search' | 'dialog' | 'button' | 'article' | 'figure' | 'form' | 'img' | 'link' | 'main' | 'option' | 'table' | 'label' | 'section' | 'base' | 'body' | 'code' | 'sub' | 'progress' | 'ruby' | 'strong' | 'embed' | 'pre' | 'time' | 'input' | 'div' | 'li' | 'span' | 'map' | 'blockquote' | 'hr' | 'a' | 'abbr' | 'address' | 'area' | 'aside' | 'audio' | 'b' | 'bdi' | 'bdo' | 'br' | 'canvas' | 'caption' | 'cite' | 'col' | 'colgroup' | 'data' | 'datalist' | 'dd' | 'del' | 'details' | 'dfn' | 'dl' | 'dt' | 'em' | 'fieldset' | 'figcaption' | 'footer' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'head' | 'hgroup' | 'html' | 'i' | 'iframe' | 'ins' | 'kbd' | 'legend' | 'mark' | 'meta' | 'meter' | 'nav' | 'noscript' | 'ol' | 'optgroup' | 'output' | 'p' | 'picture' | 'q' | 'rp' | 'rt' | 's' | 'samp' | 'script' | 'select' | 'source' | 'summary' | 'sup' | 'tbody' | 'td' | 'template' | 'textarea' | 'tfoot' | 'th' | 'thead' | 'tr' | 'track' | 'u' | 'ul' | 'var' | 'video' | 'wbr'",
 			description: 'HTML element to render as the stack container.',
 			default: "'div'"
 		},
@@ -184,6 +207,22 @@ export default {
 			type: 'StyleArg',
 			description:
 				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'Class name added to the stack element, after the component styles.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description:
+				'Inline styles for the stack element. width, height, maxWidth, and minHeight win over the same properties here.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLElement | null',
+			description: 'Ref to the rendered stack element.'
 		}
 	]
 };

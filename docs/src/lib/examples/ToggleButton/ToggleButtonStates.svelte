@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Icon, Stack, Text, ToggleButton } from '@astryx-svelte/core';
+	import { Icon, Stack, Text, ToggleButton } from '@astryx-sv/core';
 
 	/**
 	 * Upstream pairs Heroicons' outline `Star` with its solid twin. The registry

@@ -70,25 +70,25 @@ async function loadTemplateNames() {
  *
  * **Upstream's step 1 — "Ensure the @stylexjs/stylex peer dependency is met" —
  * is dropped, not adapted.** `@stylexjs/stylex` is a plain `dependency` of
- * `@astryx-svelte/core`, never a peer, so there is nothing for a consumer to
+ * `@astryx-sv/core`, never a peer, so there is nothing for a consumer to
  * ensure and `doctor` has nothing to verify. The fact that *does* matter here —
  * a consumer's bundler must run the StyleX compiler over core — is a build-setup
  * instruction, and it lives in the agent-docs SETUP block that this same command
  * installs, where it is regenerated on every run.
  *
- * @param {string} invocation install-aware CLI invocation stem (e.g. `npx astryx-svelte`, `pnpm exec astryx-svelte`, or `npx @astryx-svelte/cli` for one-off runs)
+ * @param {string} invocation install-aware CLI invocation stem (e.g. `npx astryx-svelte`, `pnpm exec astryx-svelte`, or `npx @astryx-sv/cli` for one-off runs)
  * @returns {string[]} ordered list of human-facing lines
  */
 export function getNextSteps(invocation) {
 	return [
 		'',
 		'  Next steps:',
-		"    1. Import base styles: @import '@astryx-svelte/core/base.css'",
+		"    1. Import base styles: @import '@astryx-sv/core/base.css'",
 		'       in your global stylesheet — it contains the reset and the layer order',
-		"    2. Add a theme: @import '@astryx-svelte/theme-neutral/theme.css'",
-		"    3. Import components: import { Button } from '@astryx-svelte/core'",
+		"    2. Add a theme: @import '@astryx-sv/theme-neutral/theme.css'",
+		"    3. Import components: import { Button } from '@astryx-sv/core'",
 		'    4. Optionally drive the theme from markup:',
-		"       import { neutralTheme } from '@astryx-svelte/theme-neutral'",
+		"       import { neutralTheme } from '@astryx-sv/theme-neutral'",
 		'       <Theme theme={neutralTheme}>...</Theme>',
 		`       For custom themes, run \`${invocation} theme build <file>\` to generate the built artifacts.`,
 		`    5. ${invocation} --help for all commands`,

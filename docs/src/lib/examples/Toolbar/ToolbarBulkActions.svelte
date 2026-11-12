@@ -28,7 +28,7 @@
 		Toolbar,
 		useTableSelection,
 		useTableSelectionState
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface Member extends Record<string, unknown> {
 		id: string;

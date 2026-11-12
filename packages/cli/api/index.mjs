@@ -26,7 +26,7 @@
  * `clients/cli/lib/manifest.mjs`.
  *
  * @example
- * import { AstryxError, component, logger } from '@astryx-svelte/cli/api';
+ * import { AstryxError, component, logger } from '@astryx-sv/cli/api';
  *
  * Each command slice adds its `export {verb} from './<verb>/<verb>.mjs'` line
  * plus the matching `export * from './<verb>/<verb>.type.mjs'` below.

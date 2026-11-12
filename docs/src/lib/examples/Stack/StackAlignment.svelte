@@ -13,7 +13,7 @@
 	would hide the prop the example is about.
 -->
 <script lang="ts">
-	import { Button, Card, Stack, Text } from '@astryx-svelte/core';
+	import { Button, Card, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={3} width="100%" style="max-width: 500px">

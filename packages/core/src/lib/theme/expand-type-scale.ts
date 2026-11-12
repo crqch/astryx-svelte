@@ -92,6 +92,27 @@ const SIZE_STEPS: ReadonlyArray<[name: string, step: number]> = [
 ];
 
 /**
+ * The UIKit text style each raw size follows for the reader's Dynamic Type
+ * setting, ported from upstream's `FONT_SIZE_STEP_STYLES`. Every scale is 1 at
+ * the default category, so the generated formula changes nothing until a
+ * mobile reader picks a larger or smaller size.
+ */
+const FONT_SIZE_STEP_STYLES: Record<string, string> = {
+	'--font-size-4xs': 'caption2',
+	'--font-size-3xs': 'caption2',
+	'--font-size-2xs': 'caption2',
+	'--font-size-xs': 'caption1',
+	'--font-size-sm': 'footnote',
+	'--font-size-base': 'body',
+	'--font-size-lg': 'title3',
+	'--font-size-xl': 'title2',
+	'--font-size-2xl': 'title1',
+	'--font-size-3xl': 'title1',
+	'--font-size-4xl': 'large-title',
+	'--font-size-5xl': 'large-title'
+};
+
+/**
  * Trims trailing zeros so 0.875 stays `0.875rem` while 1.5 does not become
  * `1.5000rem` — upstream's output has no padding.
  */
@@ -187,9 +208,19 @@ export function expandTypeScale(config: TypeScaleConfig): TypeScaleTokens {
 
 	const sizeAt = (step: number) => Math.round(base * ratio ** step);
 
-	// Layer 1 — the raw geometric size scale.
-	for (const [name, step] of SIZE_STEPS) {
-		tokens[name] = rem(sizeAt(step));
+	// Layer 1 — the raw geometric size scale. Each step is written twice, as
+	// upstream emits it: the reader-scaled value first, then the public token as
+	// a reference to it, so a Dynamic Type scale moves every size in step.
+	for (let index = 0; index < SIZE_STEPS.length; index++) {
+		const [name, step] = SIZE_STEPS[index];
+		const scaledName = name.replace('--font-size-', '--_scaled-font-size-');
+		const style = FONT_SIZE_STEP_STYLES[name];
+		const size = rem(sizeAt(step));
+		const next = SIZE_STEPS[index + 1];
+		tokens[scaledName] = next
+			? `min(calc(${size} * var(--_dynamic-type-${style}, 1)), var(${next[0].replace('--font-size-', '--_scaled-font-size-')}))`
+			: `calc(${size} * var(--_dynamic-type-${style}, 1))`;
+		tokens[name] = `var(${scaledName})`;
 	}
 
 	// Layer 2 — the semantic tokens `Text` and `Heading` actually render from.
@@ -263,6 +294,17 @@ export function generateTypeScaleComponents(
 		};
 	}
 
+	// The public `weight` prop must beat a type or level default; re-emitting its
+	// choices above the StyleX base layer is what makes it dependable.
+	for (const [weightName, weightValue] of Object.entries({
+		normal: 'var(--font-weight-normal)',
+		medium: 'var(--font-weight-medium)',
+		semibold: 'var(--font-weight-semibold)',
+		bold: 'var(--font-weight-bold)'
+	})) {
+		heading[`weight:${weightName}`] = { fontWeight: weightValue };
+	}
+
 	const text: Record<string, Record<string, string>> = {};
 	for (const [type] of TEXT_STEPS) {
 		text[`type:${type}`] = {
@@ -296,13 +338,16 @@ export function generateTextColorComponents(): Record<
 		['secondary', 'var(--color-text-secondary)'],
 		['disabled', 'var(--color-text-disabled)'],
 		['placeholder', 'var(--color-text-secondary)'],
-		['accent', 'var(--color-text-accent)']
+		['accent', 'var(--color-text-accent)'],
+		// A label that follows its owner's color, such as a Link's, keeps doing so
+		// when a theme styles the target's base color.
+		['inherit', 'inherit']
 	];
 
 	const rules: Record<string, Record<string, string>> = {};
-	for (const [variant, token] of COLORS) rules[variant] = { color: token };
+	for (const [variant, token] of COLORS) rules[`color:${variant}`] = { color: token };
 
-	// Same rule set for both components — upstream emits `.astryx-text.secondary`
-	// and `.astryx-heading.secondary` alike.
-	return { heading: { ...rules }, text: { ...rules } };
+	// Same rule set for Text, Heading and Link — upstream emits the selector for
+	// each, keyed off their shared `data-color` prop.
+	return { heading: { ...rules }, text: { ...rules }, link: { ...rules } };
 }

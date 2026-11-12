@@ -1,5 +1,5 @@
 /**
- * Type surface for the `@astryx-svelte/cli/json` export — the out-of-process
+ * Type surface for the `@astryx-sv/cli/json` export — the out-of-process
  * consumer's view of `astryx-svelte --json` output.
  *
  * Upstream re-exports every command's colocated `api/<cmd>/<cmd>.type.mjs` here

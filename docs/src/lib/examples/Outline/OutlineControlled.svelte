@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, HStack, Outline, Text, VStack } from '@astryx-svelte/core';
-	import type { OutlineItem } from '@astryx-svelte/core';
+	import { Button, HStack, Outline, Text, VStack } from '@astryx-sv/core';
+	import type { OutlineItem } from '@astryx-sv/core';
 
 	const items: OutlineItem[] = [
 		{ id: 'ctrl-summary', label: 'Summary', level: 2 },

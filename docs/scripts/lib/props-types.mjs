@@ -1,4 +1,4 @@
-// Resolves each documented prop's *real* type from @astryx-svelte/core's
+// Resolves each documented prop's *real* type from @astryx-sv/core's
 // generated declarations.
 //
 // Upstream's `.doc.mjs` supplies the prose — description, default, required —

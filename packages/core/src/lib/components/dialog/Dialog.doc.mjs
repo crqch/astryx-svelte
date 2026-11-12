@@ -29,6 +29,21 @@ export default {
 			{
 				className: 'astryx-dialog',
 				visualProps: ['variant']
+			},
+			{
+				className: 'astryx-dialog-header'
+			},
+			{
+				className: 'astryx-dialog-header-start-content'
+			},
+			{
+				className: 'astryx-dialog-header-title-block'
+			},
+			{
+				className: 'astryx-dialog-header-end-content'
+			},
+			{
+				className: 'astryx-dialog-header-close-icon'
 			}
 		],
 		vars: [
@@ -175,7 +190,7 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Internal padding of the dialog using the spacing scale step.'
 		},
 		{

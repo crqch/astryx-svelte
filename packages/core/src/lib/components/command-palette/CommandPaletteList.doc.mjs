@@ -10,7 +10,7 @@ export default {
 	displayName: 'Command Palette List',
 	subComponentOf: 'CommandPalette',
 	description:
-		'Scrollable results container. Renders as a listbox for ARIA. Contains CommandPaletteItem and CommandPaletteGroup children.',
+		'Scrollable results container. Renders as a listbox standalone, and inside CommandPalette while selectable results exist. Contains CommandPaletteItem and CommandPaletteGroup children.',
 	keywords: [
 		'command',
 		'spotlight',
@@ -22,7 +22,9 @@ export default {
 		'search',
 		'modal',
 		'dialog',
-		'navigation'
+		'navigation',
+		'commandmenu',
+		'cmdk'
 	],
 	group: 'CommandPalette',
 	category: 'Overlay',

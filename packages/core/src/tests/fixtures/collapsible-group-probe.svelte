@@ -11,6 +11,10 @@
 		isDisabled?: boolean;
 		/** Rest prop forwarded onto the item root (the data-testid / data-density cases). */
 		'data-testid'?: string;
+		/** Chevron position for this item, overriding the group's. */
+		chevronPosition?: 'start' | 'end';
+		/** Render a nested Collapsible as the item's body (nested-position case). */
+		nestedTrigger?: string;
 		/** Render an `<hr data-testid="separator">` after this item (interleaved-children case). */
 		separatorAfter?: boolean;
 	}
@@ -45,9 +49,16 @@
 			trigger={item.trigger}
 			value={item.value}
 			isDisabled={item.isDisabled}
+			chevronPosition={item.chevronPosition}
 			data-testid={item['data-testid']}
 		>
-			<p>{item.body}</p>
+			{#if item.nestedTrigger}
+				<Collapsible trigger={item.nestedTrigger} data-testid="inner">
+					<p>{item.body}</p>
+				</Collapsible>
+			{:else}
+				<p>{item.body}</p>
+			{/if}
 		</Collapsible>
 		{#if item.separatorAfter}<hr data-testid="separator" />{/if}
 	{/each}

@@ -63,12 +63,71 @@ export default {
 					'Distance one row is indented, computed per row from --tree-list-indent and the row depth. Set --tree-list-indent to retune indentation; this is the resolved value.',
 				default: '0px',
 				private: true
+			},
+			{
+				name: '--_tree-focus-z',
+				description:
+					'Stacking order of a row while its treeitem has keyboard focus, published by each treeitem so its focused row paints above the guide lines. Not a theming lever.',
+				default: 'auto',
+				private: true
 			}
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Tree list',
+				required: true,
+				description: 'Container that presents the hierarchical tree.'
+			},
+			{
+				name: 'Header',
+				required: false,
+				description: 'Caller-provided content that visibly names the tree.'
+			},
+			{
+				name: 'Item',
+				required: true,
+				description: 'Painted row for one node in the hierarchy.'
+			},
+			{
+				name: 'Chevron',
+				required: false,
+				description: 'Expand and collapse control rendered for an Item with children.'
+			},
+			{
+				name: 'Chevron glyph',
+				required: false,
+				description: 'Directional symbol rendered by Icon inside a Chevron.'
+			},
+			{
+				name: 'Item label',
+				required: true,
+				description: 'Primary content that identifies an Item.'
+			},
+			{
+				name: 'Item description',
+				required: false,
+				description: 'Secondary text rendered below an Item label.'
+			},
+			{
+				name: 'Start content',
+				required: false,
+				description: 'Caller-provided content rendered before an Item label.'
+			},
+			{
+				name: 'End content',
+				required: false,
+				description: 'Caller-provided content rendered after an Item label.'
+			},
+			{
+				name: 'Guide',
+				required: false,
+				description: 'Connector line that shows parent-child relationships.'
+			}
+		],
 		description:
-			'An expandable tree structure for displaying hierarchical data with branch connector lines. Use it for file explorers, nested category browsers, or any interface that visualizes parent-child relationships.',
+			'An expandable tree structure for displaying hierarchical data with branch connector lines. Use it for file explorers, nested category browsers, or any interface that visualizes parent-child relationships. Under a finger, expanding a row glides the rows below it while its children fade in on the same timing, and a collapse plays it back; pass an `animatedLayout` handle for content after the tree to glide too.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -134,7 +193,7 @@ export default {
 			name: 'items',
 			type: 'TreeListItemData[]',
 			description:
-				'Recursive tree item data. Each item has id, label, optional children array, and optional isExpanded boolean for initial state.',
+				'Recursive tree item data with id, label, optional children and isExpanded, plus optional xstyle, className, and style applied to that item row.',
 			required: true
 		},
 		{
@@ -149,6 +208,12 @@ export default {
 			description:
 				'Visual treatment of the hierarchy guide lines. lineGuides shows connector lines; noGuides hides them, keeping indentation. Orthogonal to density.',
 			default: "'lineGuides'"
+		},
+		{
+			name: 'animatedLayout',
+			type: 'AnimatedLayout',
+			description:
+				'The handle from useAnimatedLayout({containerRef}). With it, expanding or collapsing a row glides the rows and content after it, up to that container, on one shared motion role instead of jumping, and the shown rows and the chevron move on the same motion. Without it, the content after the row takes its place at once.'
 		},
 		{
 			name: 'header',

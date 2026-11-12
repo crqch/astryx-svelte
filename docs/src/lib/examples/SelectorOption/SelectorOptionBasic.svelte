@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Selector, SelectorOption } from '@astryx-svelte/core';
+	import { Selector, SelectorOption } from '@astryx-sv/core';
 
 	const descriptions: Record<string, string> = {
 		admin: 'Full access to all resources',

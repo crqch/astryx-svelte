@@ -1,6 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 import type { StyleArg } from '../../internal/sx.js';
 import { colorVars } from '../../styles/tokens.stylex.js';
+import { rowPressPaintStyles } from '../../private-attributes/press.stylex.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 
 /**
  * Ported from Astryx's `CheckboxList/CheckboxListItem.tsx` styles.
@@ -22,6 +24,19 @@ const styles = stylex.create({
 });
 
 /** The `xstyle` array `CheckboxListItem` hands to `ListItem`. */
-export function checkboxListItemXstyle(isSelected: boolean, xstyle: StyleArg): StyleArg {
-	return [isSelected && styles.selected, xstyle];
+export function checkboxListItemXstyle(
+	isSelected: boolean,
+	rowOwnsPress: boolean,
+	xstyle: StyleArg
+): StyleArg {
+	return [
+		// The row's own press paint, which the layer over its box reads.
+		rowOwnsPress && rowPressPaintStyles.checkboxRow,
+		// Item's row layer drops the strength's release, and the box paints at
+		// that strength. So the row brings the release back, and the box fades
+		// with the row.
+		rowOwnsPress && interactionOverlayStyles.pressedAlpha,
+		isSelected && styles.selected,
+		xstyle
+	];
 }

@@ -30,8 +30,45 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Viewer overlay',
+				required: true,
+				description: 'Full-viewport dialog overlay that contains the active media and controls.'
+			},
+			{
+				name: 'Media',
+				required: true,
+				description: 'Active image or video presented inside the viewer.'
+			},
+			{
+				name: 'Close button',
+				required: true,
+				description: 'Button that closes the viewer.'
+			},
+			{
+				name: 'Previous button',
+				required: false,
+				description: 'Gallery button that moves to the previous media item.'
+			},
+			{
+				name: 'Next button',
+				required: false,
+				description: 'Gallery button that moves to the next media item.'
+			},
+			{
+				name: 'Caption',
+				required: false,
+				description: 'Caller-provided caption displayed below the active media.'
+			},
+			{
+				name: 'Counter',
+				required: false,
+				description: 'Current position and total shown in gallery mode.'
+			}
+		],
 		description:
-			'A fullscreen overlay for viewing images and videos at full resolution. Supports single-item and gallery modes with prev/next navigation, optional zoom and pan for images, and native video controls.',
+			'A fullscreen overlay for viewing images and videos at full resolution. Supports single-item and gallery modes with prev/next navigation and swiping, optional zoom and pan for images, and native video controls.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -48,7 +85,8 @@ export default {
 			},
 			{
 				guidance: false,
-				description: 'Use the lightbox for non-image content; it is specialized for images.'
+				description:
+					'Use the lightbox for content other than images and videos; it shows one media item at a time.'
 			},
 			{
 				guidance: false,
@@ -77,14 +115,15 @@ export default {
 		{
 			name: 'onOpenChange',
 			type: '(isOpen: boolean) => void',
-			description: 'Callback when the lightbox open state changes.',
+			description:
+				'Callback when the lightbox open state changes: the Close button, Escape, a tap beside the media, or, on a phone or tablet, dragging a photo down from its fitted size.',
 			required: true
 		},
 		{
 			name: 'media',
 			type: 'LightboxMedia | LightboxMedia[]',
 			description:
-				"Media to display. Pass a single object for one item, or an array for gallery mode with prev/next navigation. Each item is {src: string, alt: string, caption?: ReactNode, type?: 'image' | 'video'}; type defaults to 'image', and zoom/pan is disabled for 'video'.",
+				"Media to display. Pass a single object for one item, or an array for gallery mode with prev/next navigation (on a phone or tablet, a swipe moves between items too). Each item is {src: string, alt: string, caption?: ReactNode, type?: 'image' | 'video'}; type defaults to 'image', and zoom/pan is disabled for 'video'.",
 			required: true
 		},
 		{
@@ -95,13 +134,13 @@ export default {
 		{
 			name: 'onIndexChange',
 			type: '(index: number) => void',
-			description: 'Callback when the gallery index changes via prev/next navigation.'
+			description: 'Callback when the gallery index changes: prev/next, the arrow keys, or a swipe.'
 		},
 		{
 			name: 'hasZoom',
 			type: 'boolean',
 			description:
-				'Enable zoom on double-click, or Enter/Space/+/- via keyboard (images only). When zoomed, drag or use arrow keys to pan.',
+				'Enable zoom (images only): pinch (or ctrl-wheel), or double-tap or double-click to zoom in at that point and back; Enter/Space/+/- zoom 2× about the centre and back, and 0 returns to the fitted size. When zoomed, drag or scroll a trackpad to pan, or use arrow keys; on a phone or a tablet, the pan has momentum.',
 			default: 'false'
 		},
 		{

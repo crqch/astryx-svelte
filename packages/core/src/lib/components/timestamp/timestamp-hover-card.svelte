@@ -64,7 +64,7 @@
 	const list = $derived(timestampHoverCardListAttrs(hasLabelColumn, hasActionColumn));
 	const row = timestampHoverCardRowAttrs();
 	const labelCell = timestampHoverCardLabelAttrs();
-	const valueCell = timestampHoverCardValueAttrs();
+	const valueCell = $derived(timestampHoverCardValueAttrs(hasActionColumn));
 	const action = timestampHoverCardActionAttrs();
 </script>
 
@@ -80,14 +80,15 @@
 				{#if hasLabelColumn}
 					<dt class={labelCell.class} style={labelCell.style}>{line.label ?? ''}</dt>
 				{/if}
-				<dd class={valueCell.class} style={valueCell.style}>{line.value}</dd>
-				{#if hasActionColumn}
-					<div class={action.class} style={action.style}>
-						{#if line.isCopyable}
-							<TimestampCopyButton value={line.value} />
-						{/if}
-					</div>
-				{/if}
+				<!-- The value is its own span when the action column is present, so the
+				     row value reads apart from the copy button's own text. -->
+				<dd class={valueCell.class} style={valueCell.style}>
+					{#if hasActionColumn}<span>{line.value}</span><span
+							class={action.class}
+							style={action.style}
+							>{#if line.isCopyable}<TimestampCopyButton value={line.value} />{/if}</span
+						>{:else}{line.value}{/if}
+				</dd>
 			</div>
 		{/each}
 	</dl>

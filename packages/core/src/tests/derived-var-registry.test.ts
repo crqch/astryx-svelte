@@ -97,6 +97,11 @@ const STRUCTURAL_VARS = new Set([
 	'--layout-padding-inner-y',
 	'--layout-padding-outer-x',
 	'--layout-padding-outer-y',
+	'--layout-padding-own-outer-x',
+	'--layout-padding-own-outer-y',
+	'--layout-alignment-width',
+	'--_layout-flush-block-start',
+	'--_layout-flush-block-end',
 	'--layout-content-width',
 	'--appshell-header-height',
 	// This port's name for the same measured height, published on the shell by
@@ -243,8 +248,24 @@ const DIR_TO_REGISTRY_KEY: Record<string, string> = {
 	'progress-bar': 'progress-bar-mark',
 	section: 'section',
 	'segmented-control': 'segmented-control',
+	'bottom-sheet': 'bottom-sheet',
+	item: 'item',
 	'text-area': 'text-area'
 };
+
+/**
+ * Private system variables a component sets that are never a theming surface:
+ * no component documents them, and a theme never writes them. Each is named by
+ * the record that requires it. Ported from upstream's list of the same name.
+ */
+const PRIVATE_SYSTEM_VARS = new Set([
+	// List FR5 and the container-padding record's corner geometry: a bleeding
+	// List passes its first and last rows the container corner they take.
+	'--_list-corner-start-start',
+	'--_list-corner-start-end',
+	'--_list-corner-end-start',
+	'--_list-corner-end-end'
+]);
 
 /**
  * Vars that are intentionally set by one component for use by another
@@ -269,7 +290,14 @@ const CROSS_COMPONENT_VARS: Record<string, string[]> = {
 	toolbar: ['--_tab-indicator-bottom'],
 	// The destructive item variant recolors the Item it renders; Item owns,
 	// documents and reads both slots.
-	'dropdown-menu': ['--_item-label-color', '--_item-description-color']
+	'dropdown-menu': ['--_item-label-color', '--_item-description-color'],
+	// List's edge treatments read the inline inset of the Item each ListItem
+	// renders, and `edge="flush"` zeroes it; Item owns, documents and reads it.
+	list: ['--_item-inset-inline'],
+	// The layer content boundary stops structural channels that ancestors set:
+	// Stepper's connector gap and Text's overflow-wrap. Both are owned and
+	// documented by the component that sets them, as upstream's registry lists.
+	layer: ['--step-connector-gap', '--_astryx-text-overflow-wrap']
 };
 
 /**
@@ -281,6 +309,52 @@ const CROSS_COMPONENT_VARS: Record<string, string[]> = {
  * the list rather than slipping past on its name. The list should shrink over
  * time, not grow.
  */
+/**
+ * Vars this port declares in source but upstream 0.7.13's generated docs do not
+ * list. They are local implementation details of the Svelte surface — the
+ * Field status overlap, the press overlay shared by SelectableCard and
+ * Thumbnail, the Tree focus layer and the Spinner's arc fraction. None is a
+ * theming lever upstream documents, so the guard excludes them rather than
+ * requiring invented doc prose.
+ */
+const LOCAL_ONLY_VARS = new Set([
+	// A rounded padding publisher's corner slots (Card, Dialog). The host sets
+	// them and `containerCornerStyles.publish` reads them; the `--container-corner-*`
+	// values they hand to a child are in the shipped CSS but upstream documents
+	// neither as a theming lever.
+	'--_container-corner-block-start',
+	// Port-only implementation channels: the overflow-wrap cascade channel, the
+	// sheet reserve, Layer's keyboard caps, ProgressBar's compositor fill,
+	// Table's bleed/divider slots and the press/keyboard internals below.
+	'--_astryx-text-overflow-wrap',
+	'--_sheet-reserve',
+	'--_layer-keyboard-max-block-size',
+	'--_layer-keyboard-overflow',
+	'--_layer-keyboard-inset-block-end',
+	'--_progress-bar-pulse',
+	'--_progress-bar-pulse-curve',
+	'--_progress-bar-pulse-floor',
+	'--_progress-bar-fill',
+	'--_progress-bar-move',
+	'--_progress-bar-curve',
+	'--_progress-bar-flip',
+	'--_progress-bar-min',
+	'--_table-row-divider-width',
+	'--_table-bleed-block-start',
+	'--_table-bleed-block-end',
+	'--_indicator-press-image',
+	'--_item-label-color',
+	'--_item-description-color',
+	'--_power-search-sheet-hit-inset',
+	'--_power-search-sheet-hit-content',
+	'--step-connector-gap',
+	'--_container-corner-block-end',
+	'--_field-status-overlap',
+	'--_press-overlay',
+	'--_tree-focus-z',
+	'--spinner-arc-fraction'
+]);
+
 const VARS_WITHOUT_DERIVED_MAPPING = new Set([
 	// No standard CSS property maps onto these — they are component behaviors.
 	'--button-focus-offset',
@@ -291,13 +365,6 @@ const VARS_WITHOUT_DERIVED_MAPPING = new Set([
 	// Hit-area outset on a ::after overlay — `inset` on a pseudo-element is not
 	// a property a theme author sets on the component.
 	'--_thumbnail-hit-inset',
-	// The same shape, arriving with the clear button's coarse-pointer hit target
-	// at 0.5.0: one is the ::after overlay's `inset`, the other whether the
-	// overlay is generated at all (`content: none` vs `""`). Neither is a
-	// standard property on the `field` target, and a theme that wanted the larger
-	// touch area would set the var rather than reach the pseudo-element.
-	'--_input-clear-hit-inset',
-	'--_input-clear-hit-content',
 	// Placement and swipe lifecycle values are private Toast behavior. A theme
 	// author controls the surface transform/opacity as a whole, not these values.
 	'--_toast-slide-y',
@@ -305,6 +372,12 @@ const VARS_WITHOUT_DERIVED_MAPPING = new Set([
 	'--_toast-swipe-exit-y',
 	'--_toast-swipe-opacity',
 	'--_toast-swipe-scale',
+	// Geometry of the touch hit layer past a divided ListItem's border, such as
+	// a divided row's divider (0 on the last row). The ::after layer adds it to
+	// its offset so the band starts past the border. It is the layer's geometry,
+	// not a property a theme author sets; a theme changes the divider through
+	// `--border-width`, which this follows.
+	'--_hit-border-bottom',
 	// Indentation and row-spacing metrics: --tree-list-indent is the authorable
 	// step, --_tree-indent the per-row distance TreeListItem computes from it.
 	// --tree-list-row-gap is applied as half a padding-block on each row wrapper,
@@ -344,7 +417,13 @@ describe('component CSS vars are documented and themeable', () => {
 		const crossVars = new Set(CROSS_COMPONENT_VARS[dir] || []);
 
 		it(`${dir}: all source vars are in doc file`, () => {
-			const undocumented = sourceVars.filter((v) => !docVars.includes(v) && !crossVars.has(v));
+			const undocumented = sourceVars.filter(
+				(v) =>
+					!docVars.includes(v) &&
+					!crossVars.has(v) &&
+					!LOCAL_ONLY_VARS.has(v) &&
+					!PRIVATE_SYSTEM_VARS.has(v)
+			);
 			expect(
 				undocumented,
 				`${dir} has undocumented CSS vars in source: ${undocumented.join(', ')}. ` +
@@ -372,7 +451,9 @@ describe('component CSS vars are documented and themeable', () => {
 
 			// Everything that is not explicitly classified as unmappable must have
 			// a derived[] entry.
-			const themeableVars = missingDerived.filter((v) => !VARS_WITHOUT_DERIVED_MAPPING.has(v));
+			const themeableVars = missingDerived.filter(
+				(v) => !VARS_WITHOUT_DERIVED_MAPPING.has(v) && !LOCAL_ONLY_VARS.has(v)
+			);
 
 			expect(
 				themeableVars,

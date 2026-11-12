@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Typeahead, TypeaheadItem } from '@astryx-svelte/core';
-	import type { SearchableItem, SearchSource } from '@astryx-svelte/core';
+	import { Center, Typeahead, TypeaheadItem } from '@astryx-sv/core';
+	import type { SearchableItem, SearchSource } from '@astryx-sv/core';
 
 	interface PersonItem extends SearchableItem {
 		auxiliaryData: { role: string };

@@ -1,6 +1,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import type { Elevation } from '../../internal/types.js';
+import { touchHitAreaStyles } from '../../internal/touch-hit-area.stylex.js';
 import { radiusVars, shadowVars } from '../../styles/tokens.stylex.js';
 
 /**
@@ -23,6 +24,11 @@ const styles = stylex.create({
 	},
 	vertical: {
 		flexDirection: 'column'
+	},
+	// While the group tracks presses, its hit layer is the root's `::before`,
+	// below its buttons, so the root is the layer's containing block.
+	tracking: {
+		position: 'relative'
 	}
 });
 
@@ -59,7 +65,15 @@ const elevationStyles = stylex.create({
 export function buttonGroupAttrs(
 	isVertical: boolean,
 	elevation: Elevation,
+	tracksPress: boolean,
 	xstyle?: StyleArg
 ): SvelteStyleAttrs {
-	return sx(styles.group, isVertical && styles.vertical, elevationStyles[elevation], xstyle);
+	return sx(
+		styles.group,
+		tracksPress && styles.tracking,
+		tracksPress && touchHitAreaStyles.layerBelowChildren,
+		isVertical && styles.vertical,
+		elevationStyles[elevation],
+		xstyle
+	);
 }

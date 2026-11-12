@@ -13,7 +13,7 @@
 		LayoutHeader,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Layout height="fill" contentWidth={360}>

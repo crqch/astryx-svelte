@@ -61,12 +61,12 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Keep the group a single Tab stop. Arrow keys move between members along the orientation, Home/End jump to the ends, and disabled members are skipped. This is the WAI-ARIA APG roving tabindex technique: https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex'
+					'Keep the group a single Tab stop. Arrow keys move between members along the orientation, and Home/End jump to the ends. This is the WAI-ARIA APG roving tabindex technique: https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/#kbd_roving_tabindex'
 			},
 			{
 				guidance: false,
 				description:
-					"Don't disable the group to show that an action is in flight. A disabled member drops focus, so a keyboard user loses their place; leave the group enabled and show progress on the button that started the work."
+					"Don't disable the group to show that an action is in flight. Leave the group enabled and show progress on the button that started the work."
 			}
 		],
 		anatomy: [

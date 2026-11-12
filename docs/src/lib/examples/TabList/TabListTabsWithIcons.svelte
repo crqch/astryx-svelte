@@ -7,7 +7,7 @@
 	`Tab.icon` takes.
 -->
 <script lang="ts">
-	import { Tab, TabList } from '@astryx-svelte/core';
+	import { Tab, TabList } from '@astryx-sv/core';
 
 	let value = $state('home');
 </script>

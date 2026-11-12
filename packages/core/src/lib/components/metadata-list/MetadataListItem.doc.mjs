@@ -18,7 +18,9 @@ export default {
 		'properties',
 		'details',
 		'attributes',
-		'summary'
+		'summary',
+		'descriptionlist',
+		'descriptions'
 	],
 	group: 'MetadataList',
 	category: 'Table & List',

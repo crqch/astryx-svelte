@@ -3,7 +3,7 @@
  *
  * Authors write a plain object against {@link AstryxConfig} — in TS via
  * `satisfies AstryxConfig`, in JS via
- * `/** @type {import('@astryx-svelte/cli/authoring').AstryxConfig} *\/`.
+ * `/** @type {import('@astryx-sv/cli/authoring').AstryxConfig} *\/`.
  * The CLI turns the loaded value into this type via `parseConfig` at the load
  * boundary; there is no factory to call.
  */

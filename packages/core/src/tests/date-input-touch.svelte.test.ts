@@ -34,7 +34,8 @@ import DateInputGroupProbe from './fixtures/date-input-group-probe.svelte';
  * ## Project
  *
  * Client (real Chromium). The surface is a `<dialog>` holding a virtualized
- * month scroller and two scroll-snapped wheels, and every case here depends on
+ * month scroller and two wheels — the scroll-snapped column on a fine pointer,
+ * the absolute strip under a finger — and every case here depends on
  * real layout: the scroller mounts panes from a `ResizeObserver` reading a
  * width that only exists once CSS has been applied.
  *
@@ -286,9 +287,11 @@ async function settleSwap(): Promise<void> {
 }
 
 /**
- * Throw unless a wheel's scroll position agrees with the row it says is
- * selected. `Wheel`'s own park effect compares exactly this, so it is the
- * predicate for "the wheel has finished travelling" rather than a proxy for it.
+ * Throw unless a wheel is parked on the row it says is selected. The scrolling
+ * column compares scroll position; the touch column compares the strip's
+ * `translate`, which is the same offset expressed the other way. `Wheel`'s own
+ * park effect compares exactly this, so it is the predicate for "the wheel has
+ * finished travelling" rather than a proxy for it.
  */
 function expectParked(listbox: HTMLElement): void {
 	const options = [...listbox.querySelectorAll('[role="option"]')];
@@ -296,6 +299,15 @@ function expectParked(listbox: HTMLElement): void {
 	const rowHeight = (options[0] as HTMLElement | undefined)?.offsetHeight ?? 0;
 	if (selected < 0 || rowHeight === 0) {
 		throw new Error('wheel not laid out yet');
+	}
+	const strip = listbox.querySelector('[data-wheel-strip]');
+	if (strip instanceof HTMLElement) {
+		const [, y = '0'] = strip.style.getPropertyValue('translate').trim().split(/\s+/);
+		const at = Math.round(-(Number.parseFloat(y) || 0) / rowHeight);
+		if (at !== selected) {
+			throw new Error(`wheel parked on row ${at}, selects row ${selected}`);
+		}
+		return;
 	}
 	const at = Math.round(listbox.scrollTop / rowHeight);
 	if (at !== selected) {
@@ -486,15 +498,17 @@ describe('DateInput — surface selection', () => {
 			max: iso('2026-04-30')
 		});
 		expect(field()).toHaveValue('21 de marzo de 2026');
-		expect(monthTitle()).toHaveTextContent('marzo de 2026');
-		expect(pane('marzo de 2026')).toBeInTheDocument();
+		// The sheet's month heading and each month pane's name stand alone, so
+		// they start with a capital (Calendar FR1). Upstream asserts the same.
+		expect(monthTitle()).toHaveTextContent('Marzo de 2026');
+		expect(pane('Marzo de 2026')).toBeInTheDocument();
 
 		const nextButton = document.querySelector<HTMLButtonElement>(
 			'[data-arrows="months"] button:last-child'
 		);
 		expect(nextButton).not.toBeNull();
 		await click(nextButton!);
-		await vi.waitFor(() => expect(monthTitle()).toHaveTextContent('abril de 2026'));
+		await vi.waitFor(() => expect(monthTitle()).toHaveTextContent('Abril de 2026'));
 	});
 
 	it('forwards ref to the input on both surfaces', async () => {
@@ -1351,10 +1365,10 @@ describe('DateInput — month/year wheels', () => {
 		await settleSwap();
 		// Upstream needs no wait — jsdom lays out nothing and scrolls nothing, so
 		// its wheels sit on the row the props named from the first render. These
-		// are real scroll-snapped lists that travel to that row, and each has a
-		// settle that commits whatever is under the band when the scrolling
-		// stops. Tapping one mid-travel commits against a row it is only passing,
-		// and the five-year cases then read January 2025.
+		// are real lists: the scrolling column travels to that row, and the touch
+		// strip is parked on it, and each has a settle/park that commits whatever
+		// is under the band. Tapping one mid-travel commits against a row it is
+		// only passing, and the five-year cases then read January 2025.
 		//
 		// The wait is for the wheels to be **parked**: scroll position agreeing
 		// with the selected row, which is the same predicate the component's own
@@ -1983,7 +1997,13 @@ describe('DateInput — nested scrollers keep their own touch gesture', () => {
  */
 describe('DateInput — a mouse can drag a wheel', () => {
 	async function renderAndOpenWheels(): Promise<HTMLElement> {
-		await render(ControlledDateInput, { props: { initial: iso('2026-03-21') } });
+		// Upstream's `beforeEach` here switches to a desktop (fine pointer): the
+		// wheel a mouse drags is the scrolling column, not the touch column. The
+		// explicit bottom-sheet presentation keeps that surface on a fine pointer.
+		setViewport('desktop');
+		await render(ControlledDateInput, {
+			props: { initial: iso('2026-03-21'), presentation: 'bottom-sheet' }
+		});
 		await openPicker();
 		await click(monthTitle());
 		await settleSwap();

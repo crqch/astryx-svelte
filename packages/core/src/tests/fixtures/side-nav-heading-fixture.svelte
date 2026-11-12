@@ -33,6 +33,14 @@
 		menuItemsFocusable?: boolean;
 		/** Fills `headerEndContent` with `<span data-testid={testid}>{text}</span>`. */
 		headerEndContent?: { text: string; testid?: string };
+		/**
+		 * Fills `headerEndContent` with a `<button>` instead — upstream's
+		 * control-in-a-link case, where the end content must sit beside the link
+		 * rather than inside it.
+		 */
+		headerEndContentButton?: { label: string };
+		/** The button's click handler in that case — upstream's `onPress` spy. */
+		onPress?: () => void;
 		/** Publishes a collapsed `SideNavCollapseContext` around the heading. */
 		collapsed?: boolean;
 		/** Publishes a `LinkProvider` around the heading. */
@@ -47,6 +55,8 @@
 		menuItems,
 		menuItemsFocusable = false,
 		headerEndContent,
+		headerEndContentButton,
+		onPress,
 		collapsed = false,
 		provider
 	}: Props = $props();
@@ -70,13 +80,20 @@
 {/snippet}
 {#snippet endSlot()}<span data-testid={headerEndContent?.testid}>{headerEndContent?.text}</span
 	>{/snippet}
+{#snippet endButtonSlot()}<button type="button" onclick={() => onPress?.()}
+		>{headerEndContentButton?.label}</button
+	>{/snippet}
 
 {#snippet heading()}
 	<SideNavHeading
 		{...props as SideNavHeadingProps}
 		icon={icon ? iconSlot : undefined}
 		menu={menuItems != null ? menuItemsSlot : menu != null ? menuSlot : undefined}
-		headerEndContent={headerEndContent ? endSlot : undefined}
+		headerEndContent={headerEndContent
+			? endSlot
+			: headerEndContentButton
+				? endButtonSlot
+				: undefined}
 	/>
 {/snippet}
 

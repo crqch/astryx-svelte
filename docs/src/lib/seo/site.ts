@@ -23,7 +23,7 @@
  */
 
 /** No trailing slash — every URL in this module is built by appending a path. */
-export const SITE_URL = 'https://astryx-svelte.rohitk06.in';
+export const SITE_URL = 'https://astryx.crqch.dev';
 
 export const SITE_NAME = 'astryx-svelte';
 
@@ -45,14 +45,14 @@ export const SITE_DESCRIPTION =
 /** Absolute URL of the social card image. */
 export const SITE_OG_IMAGE = `${SITE_URL}/og.png`;
 
-export const GITHUB_URL = 'https://github.com/devrohit06/astryx-svelte';
+export const GITHUB_URL = 'https://github.com/crqch/astryx-svelte';
 
 export const UPSTREAM_URL = 'https://astryx.atmeta.com/';
 
 /**
  * Counts quoted in marketing copy. Kept here rather than inline so a stale
  * number is a single edit, and so it is obvious that these are claims the repo
- * has to keep true. Each is printed by something: `pnpm -r test` for the oracle
+ * has to keep true. Each is printed by something: `bun run --filter '*' test` for the oracle
  * figures, the content generator for the rest.
  */
 export const FACTS = {

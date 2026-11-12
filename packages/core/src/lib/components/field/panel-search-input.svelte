@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import type { FocusEventHandler, KeyboardEventHandler } from 'svelte/elements';
 	import type { BaseProps } from '../../base-props.js';
+	import type { StyleArg } from '../../internal/sx.js';
 
 	/**
 	 * `oninput` is the omission, and it is upstream's `Omit<…, 'onChange'>`
@@ -58,6 +59,21 @@
 		 * handler of its own.
 		 */
 		onContainerKeyDown?: KeyboardEventHandler<HTMLDivElement>;
+
+		/**
+		 * Draw the field as the shared input box — the input border, accent while
+		 * focused, surface and radius — instead of the borderless panel row. A
+		 * touch sheet is a full-width surface, not a bordered panel, so its field
+		 * reads as a form input.
+		 * @default false
+		 */
+		hasInputBox?: boolean;
+
+		/**
+		 * Styles for the field box itself (the rounded row that draws the focus
+		 * ring), as opposed to `xstyle`, which lands on the outer gutter.
+		 */
+		fieldXstyle?: StyleArg;
 	}
 </script>
 
@@ -110,6 +126,8 @@
 		onfocus,
 		onblur,
 		onContainerKeyDown,
+		hasInputBox = false,
+		fieldXstyle,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -144,7 +162,7 @@
 	}
 
 	const wrapper = $derived(panelSearchWrapperAttrs(xstyle));
-	const field = $derived(panelSearchFieldAttrs(isKeyboardFocus));
+	const field = $derived(panelSearchFieldAttrs(isKeyboardFocus, hasInputBox, fieldXstyle));
 	const input = panelSearchInputAttrs();
 </script>
 

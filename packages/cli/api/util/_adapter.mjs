@@ -2,7 +2,7 @@
  * @file Shared resolution + IO for the util command's leaves.
  *
  * Both the list leaf (util.list) and the single-util leaves (util.detail /
- * util.detail.params) need to (a) locate @astryx-svelte/core and (b) resolve a
+ * util.detail.params) need to (a) locate @astryx-sv/core and (b) resolve a
  * named util's authored doc. Those two steps live here so each leaf stays a thin
  * projection over a single shared resolver: the leaves shape the `{type, data}`
  * envelope, this adapter does the "find it on disk" work.
@@ -32,7 +32,7 @@ import { ERROR_CODES } from '../../foundation/response/error-codes.mjs';
 export const DEFAULT_UTIL_IMPORT = `${CORE_PACKAGE}/hooks`;
 
 /**
- * Locate the @astryx-svelte/core package directory, or throw the same
+ * Locate the @astryx-sv/core package directory, or throw the same
  * ERR_CORE_NOT_FOUND envelope the flat command threw. Shared by every util leaf.
  * @param {string} cwd
  * @returns {string} Absolute path to the core package directory.

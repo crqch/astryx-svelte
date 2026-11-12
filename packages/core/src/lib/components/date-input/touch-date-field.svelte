@@ -10,21 +10,24 @@
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
 	import { getInputARIA } from '../../utils/input-aria.js';
+	import { calendarDayOfMonth, formatCalendarMonthLabel } from '../../utils/calendar-system.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
 		DATE_FORMAT_WEEKDAY_ONLY,
-		formatSharedDate,
 		plainDateFormat,
 		plainDateFromISO,
 		plainDateToday
 	} from '../../utils/plain-date.js';
+	import { useTypedDate } from './use-typed-date.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import BottomSheet from '../bottom-sheet/bottom-sheet.svelte';
 	import Button from '../button/button.svelte';
 	import Field from '../field/field.svelte';
@@ -37,12 +40,7 @@
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import MonthScroller from './month-scroller.svelte';
 	import MonthYearWheels from './month-year-wheels.svelte';
-	import {
-		DEFAULT_MONTH_REACH,
-		clampIndex,
-		fromMonthIndex,
-		monthIndexOf
-	} from './month-geometry.js';
+	import { DEFAULT_MONTH_REACH, clampIndex, createMonthModel } from './month-geometry.js';
 	import {
 		touchBodyAttrs,
 		touchDateFieldIconButtonAttrs,
@@ -127,6 +125,11 @@
 		numberOfMonths: _numberOfMonths,
 		weekStartsOn: weekStartsOnProp = 0,
 		format = 'date_long',
+		calendar: calendarProp,
+		// Surface policy belongs to `DateInput`; destructured only to keep it out
+		// of `...rest`, which reaches the wrapper `<div>`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		width,
 		xstyle,
 		class: className,
@@ -135,6 +138,8 @@
 	}: DateInputProps = $props();
 
 	const t = useTranslator();
+	// The month-year header button is the surface's pressable.
+	const pressable = usePressFeedback();
 	const locale = useLocale();
 	const isEffectivelyRequired = useResolvedRequired({
 		isRequired: () => isRequired,
@@ -174,6 +179,17 @@
 	}));
 
 	const constraints = useCalendarConstraints(() => ({ min, max, dateConstraints }));
+
+	const calendar = useCalendarSystem(() => calendarProp, 'DateInput');
+	const monthModel = $derived(createMonthModel(calendar()));
+	const typedDate = useTypedDate(() => ({
+		source: 'DateInput',
+		calendar: calendarProp,
+		format,
+		min,
+		max,
+		isDateDisabled: constraints.isDateDisabled
+	}));
 
 	const statusIcon = useInputStatusIcon(() => ({
 		id: statusTooltipID,
@@ -225,15 +241,17 @@
 	// century in each direction from wherever it opened. Anchored once — this is
 	// upstream's state initializer, and recomputing it as the selection moves
 	// would shift every pane's scroll offset under the user mid-gesture.
+	// Indexes belong to the calendar; DateInput remounts this surface when the
+	// calendar changes.
 	// svelte-ignore state_referenced_locally
-	const anchorMonthIndex = monthIndexOf(
+	const anchorMonthIndex = monthModel.indexOf(
 		value != null && /^\d{4}-\d{2}-\d{2}$/.test(value) ? plainDateFromISO(value) : plainDateToday()
 	);
 	const minMonthIndex = $derived(
-		min != null ? monthIndexOf(plainDateFromISO(min)) : anchorMonthIndex - DEFAULT_MONTH_REACH
+		min != null ? monthModel.indexOf(plainDateFromISO(min)) : anchorMonthIndex - DEFAULT_MONTH_REACH
 	);
 	const maxMonthIndex = $derived(
-		max != null ? monthIndexOf(plainDateFromISO(max)) : anchorMonthIndex + DEFAULT_MONTH_REACH
+		max != null ? monthModel.indexOf(plainDateFromISO(max)) : anchorMonthIndex + DEFAULT_MONTH_REACH
 	);
 
 	// The bounds are spelled out again rather than read off the `$derived`s
@@ -243,12 +261,16 @@
 	let monthIndex = $state(
 		clampIndex(
 			anchorMonthIndex,
-			min != null ? monthIndexOf(plainDateFromISO(min)) : anchorMonthIndex - DEFAULT_MONTH_REACH,
-			max != null ? monthIndexOf(plainDateFromISO(max)) : anchorMonthIndex + DEFAULT_MONTH_REACH
+			min != null
+				? monthModel.indexOf(plainDateFromISO(min))
+				: anchorMonthIndex - DEFAULT_MONTH_REACH,
+			max != null
+				? monthModel.indexOf(plainDateFromISO(max))
+				: anchorMonthIndex + DEFAULT_MONTH_REACH
 		)
 	);
 
-	const parts = $derived(fromMonthIndex(monthIndex));
+	const parts = $derived(monthModel.yearMonthAt(monthIndex));
 
 	/**
 	 * Three-letter weekday names — "Sun", not Calendar's "Su".
@@ -274,25 +296,22 @@
 			)
 		)
 	);
+	// The day the picker keeps: the selected date's day of its month. A month
+	// with an era change takes its heading era from this day.
+	const keptDay = $derived(selectedDate == null ? 1 : calendarDayOfMonth(calendar(), selectedDate));
 	const monthYearLabel = $derived(
-		plainDateFormat(
-			{ year: parts.year, month: parts.month, day: 1 },
-			DATE_FORMAT_MONTH_YEAR,
-			locale()
-		)
+		formatCalendarMonthLabel(calendar(), monthModel.monthAt(monthIndex), locale(), keptDay)
 	);
 
 	// Formats the committed value only. A function format is called with the ISO
-	// value; a named one reuses Timestamp's shared date mapping, so the same
-	// literal renders the same shape here and on the pointer control.
+	// value; a named one writes the date in the calendar exactly as the desktop
+	// control commits it.
 	const displayValue = $derived.by(() => {
 		const current = optimistic.current;
 		if (current == null || !/^\d{4}-\d{2}-\d{2}$/.test(current)) {
 			return '';
 		}
-		return typeof format === 'function'
-			? format(current)
-			: formatSharedDate(plainDateFromISO(current), format, locale());
+		return typedDate.formatCommitted(current);
 	});
 
 	function fireChange(newValue: ISODateString | undefined): void {
@@ -356,7 +375,7 @@
 	 */
 	function handleResetInSheet(): void {
 		fireChange(undefined);
-		const currentMonth = monthIndexOf(today);
+		const currentMonth = monthModel.indexOf(today);
 		if (currentMonth < minMonthIndex || currentMonth > maxMonthIndex) {
 			return;
 		}
@@ -526,6 +545,7 @@
 				aria-expanded={isWheelOpen}
 				aria-label={t('@astryx.dateInput.chooseMonthYear', { monthYear: monthYearLabel })}
 				data-title="month-year"
+				{...pressable}
 				class={titleAttrs.class}
 				style={titleAttrs.style}
 			>
@@ -628,6 +648,7 @@
 				{#key `${minMonthIndex}:${maxMonthIndex}`}
 					<MonthScroller
 						bind:this={scroller}
+						{monthModel}
 						{minMonthIndex}
 						{maxMonthIndex}
 						initialMonthIndex={monthIndex}
@@ -647,9 +668,11 @@
 				style={wheelsPanelAttrs.style}
 			>
 				<MonthYearWheels
+					{monthModel}
 					{monthIndex}
 					{minMonthIndex}
 					{maxMonthIndex}
+					{keptDay}
 					onChange={handleWheelChange}
 					monthLabel={t('@astryx.dateInput.monthWheel')}
 					yearLabel={t('@astryx.dateInput.yearWheel')}
@@ -718,6 +741,7 @@
 {#snippet inputWrapper()}
 	<div
 		{...rest}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, className)}
 		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}

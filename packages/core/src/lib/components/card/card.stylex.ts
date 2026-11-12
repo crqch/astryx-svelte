@@ -1,5 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
 import { container, type SpacingToken } from '../../internal/container.stylex.js';
+import { containerCornerStyles } from '../../internal/container-corners.stylex.js';
 import {
 	containerPaddingBlockEndVarStyles,
 	containerPaddingBlockStartVarStyles,
@@ -12,32 +13,49 @@ import type { Elevation, SizeValue, SpacingStep } from '../../internal/types.js'
 import { borderVars, colorVars, radiusVars, shadowVars } from '../../styles/tokens.stylex.js';
 
 /**
- * Background variant.
+ * Extensible variant map for Card.
+ *
+ * A theme adds a variant by augmenting this interface, exactly as upstream:
+ *
+ * @example
+ * declare module '@astryx-sv/core' {
+ *   interface CardVariantMap {
+ *     brand: true;
+ *   }
+ * }
  *
  * Only `default` draws a visible border. Its width is subtracted from the
  * padding, so the total inset — border plus padding — equals the padding token
  * rather than exceeding it. That keeps content geometry on the spacing scale
  * and identical to the borderless variants.
  */
-export type CardVariant =
-	| 'default'
-	| 'transparent'
-	| 'muted'
-	| 'blue'
-	| 'cyan'
-	| 'gray'
-	| 'green'
-	| 'orange'
-	| 'pink'
-	| 'purple'
-	| 'red'
-	| 'teal'
-	| 'yellow';
+export interface CardVariantMap {
+	default: true;
+	transparent: true;
+	muted: true;
+	blue: true;
+	cyan: true;
+	gray: true;
+	green: true;
+	orange: true;
+	pink: true;
+	purple: true;
+	red: true;
+	teal: true;
+	yellow: true;
+}
+
+/** Background variant, derived from {@link CardVariantMap}. */
+export type CardVariant = keyof CardVariantMap;
 
 const styles = stylex.create({
 	card: {
 		'--_card-radius': radiusVars['--radius-container'],
 		borderRadius: 'var(--_card-radius)',
+		// A card in a flex row or grid cell yields to its track instead of
+		// holding it at the card's min-content width (a long ID or a nowrap row
+		// inside used to widen `1fr` tracks and overflow phone rows).
+		minWidth: 0,
 		overflow: 'clip',
 		// Resting elevation is set via `--_card-elevation` (see `elevationStyles`).
 		// The shadow list also reads `--_card-ring` so composing surfaces — e.g.
@@ -59,6 +77,11 @@ const styles = stylex.create({
 		paddingInlineEnd: `calc(var(--container-padding-inline-end) - ${borderVars['--border-width']})`,
 		paddingBlockStart: `calc(var(--container-padding-block-start) - ${borderVars['--border-width']})`,
 		paddingBlockEnd: `calc(var(--container-padding-block-end) - ${borderVars['--border-width']})`
+	},
+	// A full-bleed child reaches under the border, so it takes the outer radius.
+	corners: {
+		'--_container-corner-block-start': 'var(--_card-radius)',
+		'--_container-corner-block-end': 'var(--_card-radius)'
 	},
 	// A fixed-height card scrolls its content; `overflow: auto` also clips to the
 	// border radius.
@@ -186,6 +209,10 @@ export function cardAttrs(
 		!useThemeDefault &&
 			effectivePadding !== 4 &&
 			containerPaddingBlockEndVarStyles[effectivePadding],
+		// A full-bleed child reaches under the border, so it takes the outer
+		// radius; the publication hands that radius to the child that reads it.
+		styles.corners,
+		containerCornerStyles.publish,
 		// After the container padding, so the border-inset calc wins — it reads
 		// the --container-padding-* vars set above.
 		variant === 'default' && styles.withBorder,

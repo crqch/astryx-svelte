@@ -8,7 +8,7 @@
 	template-literal type on their own.
 -->
 <script lang="ts">
-	import { DateRangeInput, Stack, type DateRange, type ISODateString } from '@astryx-svelte/core';
+	import { DateRangeInput, Stack, type DateRange, type ISODateString } from '@astryx-sv/core';
 
 	function daysAgo(n: number): ISODateString {
 		// `prefer-svelte-reactivity` wants a `SvelteDate`, which is for a `Date`

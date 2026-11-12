@@ -1,6 +1,6 @@
 <script module lang="ts">
-	import { registerIcons, Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	import { registerIcons, Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 
 	/**
 	 * Register the neutral registry's icons at **module load**, which is where
@@ -28,7 +28,7 @@
 	 * site's own brand theme**, and that is the entire point of the component. The
 	 * root layout themes the site with `astryxTheme` — pill buttons, a near-black
 	 * accent, +4px radii, Figtree — but a reader looking at a `Button` example
-	 * needs to see what `@astryx-svelte/core` ships under the theme they will
+	 * needs to see what `@astryx-sv/core` ships under the theme they will
 	 * actually install, not the docsite's brand skin. Upstream draws that line and
 	 * reaches for it at every preview surface: `ComponentDetailClient`,
 	 * `ExampleBlock`, `InteractivePreview` (three returns), `ShowcaseThumbnail`,

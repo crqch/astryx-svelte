@@ -53,7 +53,7 @@
 		Thumbnail,
 		VStack,
 		useMediaQuery
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		CheckCircleIcon,
 		LockClosedIcon,
@@ -168,7 +168,7 @@
 
 	// ── Styles ────────────────────────────────────────────────────────────────────
 	// Plain inline styles using Astryx design-token CSS variables (declared at
-	// :root by `@astryx-svelte/core/astryx.css`). No StyleX compiler required.
+	// :root by `@astryx-sv/core/astryx.css`). No StyleX compiler required.
 
 	const fullWidth = 'width: 100%;';
 	// Form column flex-basis so the two checkout columns share width evenly.
@@ -622,7 +622,7 @@
 												placeholder="Enter promo code"
 												value={promo}
 												onChange={(value) => (promo = value)}
-												style={fullWidth}
+												containerStyle={fullWidth}
 											/>
 										</StackItem>
 										<Button label="Apply" variant="secondary" size="lg" onclick={() => {}} />

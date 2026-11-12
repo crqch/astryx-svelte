@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, HStack, Selector } from '@astryx-svelte/core';
+	import { Button, HStack, Selector } from '@astryx-sv/core';
 
 	let view = $state<string | undefined>('week');
 	let density = $state<string | undefined>('comfortable');

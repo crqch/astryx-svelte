@@ -59,11 +59,16 @@ export default {
 			{
 				guidance: false,
 				description:
+					'Pass local isOpen, defaultIsOpen, or onOpenChange expecting them to run for a value-bound group item; the group owns that state and notification path.'
+			},
+			{
+				guidance: false,
+				description:
 					'Implement your own open/close state when useCollapsible already provides it; the hook handles group coordination automatically.'
 			}
 		]
 	},
 	relatedComponents: ['Collapsible', 'Card', 'Section'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

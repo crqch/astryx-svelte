@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heading } from '@astryx-svelte/core';
+	import { Heading } from '@astryx-sv/core';
 	import { buildOutline } from '$lib/shell/build-outline.js';
 	import BestPracticesBlock from '$lib/shell/best-practices-block.svelte';
 	import ContentBlockView from '$lib/shell/content-block.svelte';

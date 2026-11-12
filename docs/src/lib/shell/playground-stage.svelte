@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Card, Center, CodeBlock, Text, VStack } from '@astryx-svelte/core';
+	import { Button, Card, Center, CodeBlock, Text, VStack } from '@astryx-sv/core';
 	import type { PlaygroundConfig } from '$lib/generated/types.js';
 	import type { Knob } from './prop-control.js';
 	import ComponentPreviewTheme from './component-preview-theme.svelte';

@@ -179,6 +179,15 @@ function inputIn(container: HTMLElement): HTMLInputElement {
 	return el;
 }
 
+/** Collects the text of every element an `aria-describedby` points at. */
+function describedText(el: HTMLElement): string {
+	return (el.getAttribute('aria-describedby') ?? '')
+		.split(' ')
+		.filter(Boolean)
+		.map((id) => document.getElementById(id)?.textContent ?? '')
+		.join(' ');
+}
+
 /** Upstream's `input.parentElement!` — the bordered input wrapper. */
 function wrapperOf(input: HTMLInputElement): HTMLElement {
 	const el = input.parentElement;
@@ -510,7 +519,7 @@ describe('DateInput', () => {
 		expect(onChange).toHaveBeenCalledWith('2026-06-15');
 	});
 
-	it('reverts on blur when typed date violates constraints', async () => {
+	it('keeps a typed date that violates constraints and shows the bounds on blur', async () => {
 		const onChange = vi.fn();
 		const screen = await render(DateInput, {
 			props: {
@@ -527,8 +536,12 @@ describe('DateInput', () => {
 		await flush();
 		blur(input);
 
-		// Should revert to previous value
-		await expect.element(screen.getByRole('combobox')).toHaveValue('March 10, 2026');
+		// The text stays so the person can correct it; the value does not change.
+		await expect.element(screen.getByRole('combobox')).toHaveValue('04/15/2026');
+		await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
+		expect(describedText(inputIn(screen.container))).toContain(
+			'Enter a date from March 1, 2026 to March 31, 2026'
+		);
 		expect(onChange).not.toHaveBeenCalled();
 	});
 
@@ -753,9 +766,10 @@ describe('DateInput', () => {
 		});
 
 		const input = inputIn(screen.container);
-		changeValue(input, '03/15/2026');
+		// A two-digit year commits only on Enter or blur.
+		changeValue(input, '03/15/26');
 		await flush();
-		onChange.mockClear();
+		expect(onChange).not.toHaveBeenCalled();
 		keyDown(input, { key: 'Enter' });
 
 		expect(onChange).toHaveBeenCalledWith('2026-03-15');
@@ -882,9 +896,8 @@ describe('DateInput', () => {
 			await flush();
 			expect(() => blur(input)).not.toThrow();
 			expect(onChange).not.toHaveBeenCalled();
-			// As above: the awaited assertion is what proves the post-blur render
-			// landed. The pending buffer is dropped, so the empty value comes back.
-			await expect.element(screen.getByRole('combobox')).toHaveValue('');
+			// The awaited assertion is what proves the post-blur render landed.
+			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-invalid', 'true');
 		});
 	});
 
@@ -1197,14 +1210,15 @@ describe('DateInput', () => {
 			const screen = await render(DateInput, {
 				props: { label: 'Date', onChange: noop }
 			});
+			// 0.7.13 resolves CLDR abbreviated names when they fit the header.
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Su',
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa'
+				'Sun',
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat'
 			]);
 		});
 
@@ -1213,13 +1227,13 @@ describe('DateInput', () => {
 				props: { label: 'Date', onChange: noop, weekStartsOn: 1 }
 			});
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 
@@ -1228,13 +1242,13 @@ describe('DateInput', () => {
 				props: { label: 'Date', onChange: noop, weekStartsOn: 'mon' }
 			});
 			expect(openAndReadWeekdays(screen.container)).toEqual([
-				'Mo',
-				'Tu',
-				'We',
-				'Th',
-				'Fr',
-				'Sa',
-				'Su'
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
 			]);
 		});
 	});

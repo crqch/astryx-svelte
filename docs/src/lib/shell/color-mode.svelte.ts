@@ -1,5 +1,5 @@
 import { getContext, setContext } from 'svelte';
-import type { ThemeMode } from '@astryx-svelte/core';
+import type { ThemeMode } from '@astryx-sv/core';
 
 /**
  * The docs site's colour-mode preference, ported from the `ThemeModeContext`

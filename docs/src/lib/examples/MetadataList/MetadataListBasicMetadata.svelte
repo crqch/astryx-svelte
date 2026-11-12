@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { MetadataList, MetadataListItem } from '@astryx-svelte/core';
+	import { MetadataList, MetadataListItem } from '@astryx-sv/core';
 </script>
 
 <MetadataList>

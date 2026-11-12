@@ -27,9 +27,6 @@ export default {
 		targets: [
 			{
 				className: 'astryx-popover'
-			},
-			{
-				className: 'astryx-popover-surface'
 			}
 		],
 		vars: [
@@ -49,7 +46,7 @@ export default {
 	},
 	usage: {
 		description:
-			'A click-triggered overlay anchored to a button or trigger element. Use it for secondary actions, inline confirmations, or supplementary information that does not warrant a full dialog. For hover previews use HoverCard, for brief helper text use Tooltip.',
+			'A click-triggered overlay anchored to a button or trigger element. Use it for secondary actions, inline confirmations, or supplementary information that does not warrant a full dialog. For hover previews use HoverCard, for brief helper text use Tooltip. Under a finger (a coarse primary pointer), it is presented like a native popover: it grows out of its trigger and shrinks back into it on the theme’s motion tokens; with reduced motion it cross-fades, opacity only, in 200 ms or less.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -61,6 +58,10 @@ export default {
 					'Provide a clear way to close: either by clicking outside or with an explicit close button.'
 			},
 			{
+				guidance: true,
+				description: 'Theme the painted surface through the canonical popover target.'
+			},
+			{
 				guidance: false,
 				description:
 					'Nest popovers inside other popovers; it creates confusing focus and navigation.'
@@ -68,29 +69,42 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Use a popover for content that requires heavy user input; use a Dialog instead.'
+					"Assume input complexity alone determines the presentation; evaluate the task's focus, space, and interaction requirements."
 			},
 			{
 				guidance: false,
 				description:
-					'Put too much content in a popover; if it needs scrolling, use a Dialog instead.'
+					'Assume scrolling alone means Popover is the wrong component; a bounded Popover may scroll while a focused anchored interaction remains appropriate.'
 			}
 		],
 		anatomy: [
 			{
-				name: 'Header',
+				name: 'Trigger element',
 				required: true,
-				description: 'Contains the title, optional subheader, and close button.'
+				description:
+					'Caller-supplied or externally referenced control that anchors and toggles the popover.'
 			},
 			{
-				name: 'Body',
+				name: 'Popover surface',
 				required: true,
-				description: 'Main content area of the popover.'
+				description:
+					'Painted surface owned and themed by Popover through the canonical popover target.'
 			},
 			{
-				name: 'Trigger Element',
+				name: 'Touch sheet',
+				required: false,
+				description:
+					'BottomSheet surface that holds the same content in place of the popover surface for presentation="bottom-sheet", or "adaptive" on a compact touch screen; themed through the bottom-sheet target.'
+			},
+			{
+				name: 'Popover content',
 				required: true,
-				description: 'The button or link that toggles the popover open.'
+				description: 'Caller-supplied content rendered inside the surface.'
+			},
+			{
+				name: 'Fallback close control',
+				required: false,
+				description: 'Keyboard-reachable close affordance appended by usePopover when enabled.'
 			}
 		]
 	},
@@ -113,7 +127,7 @@ export default {
 		},
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description:
 				"Position placement relative to the trigger. Logical: start/end resolve against the popover's own inherited direction, so RTL contexts mirror automatically in pure CSS.",
 			default: "'below'"
@@ -144,17 +158,26 @@ export default {
 		{
 			name: 'width',
 			type: 'number | string',
-			description: 'Width of the popover container.',
+			description:
+				'Width of the popover container. The layer still caps to the viewport with alignment-aware safe-area gutters before scrolling long content.',
 			default: "'auto'"
+		},
+		{
+			name: 'padding',
+			type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
+			description:
+				'Inner padding of the popover surface on the spacing scale (0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10), matching the padding prop on Card and Stack. Pass 0 for a flush surface when the content owns its own edges, such as a list of rows or a header with a rule, and pad the content itself. The padding sits on the painted popover target, so a theme padding on that target replaces it.',
+			default: '3'
 		},
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Accessible label for the popover dialog.'
+			description:
+				'Accessible label for the popover dialog. A sheet without one is named by the trigger’s text.'
 		},
 		{
 			name: 'role',
-			type: "'none' | 'dialog'",
+			type: "'dialog' | 'none'",
 			description:
 				'ARIA role for the popover wrapper. Use dialog for dialog-style popovers; use none when content provides its own role, like menu or listbox.',
 			default: "'dialog'"
@@ -182,7 +205,7 @@ export default {
 			name: 'hasAutoFocus',
 			type: 'boolean',
 			description:
-				'Whether to auto-focus the first focusable element when the popover opens. Set to false for inline showcases or documentation previews.',
+				'Whether to move focus into the popover when it opens. Focus enters the first genuine content control; dialogs with none fall back to the labeled surface. The generated fallback close control stays hidden until reached through keyboard navigation. Set to false for input-owned focus, inline showcases, or documentation previews.',
 			default: 'true'
 		},
 		{
@@ -198,6 +221,13 @@ export default {
 			description:
 				'Whether pressing Escape dismisses the popover. Only takes full effect together with hasLightDismiss={false}, since native light dismiss also closes on Escape.',
 			default: 'true'
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'adaptive'",
+			description:
+				"The surface that holds the content. 'popover' anchors it to the trigger, 'bottom-sheet' presents it in a modal BottomSheet labeled by label, and 'adaptive' uses the BottomSheet on a compact touch screen (a coarse pointer on a screen the theme counts as compact: narrower than its md width point or shorter than 500 px, so a phone in either orientation) and the anchored popover elsewhere. In a sheet, placement, alignment, width, role, isModal and hasAutoFocus do not apply, and xstyle, className and style style the sheet's panel; the sheet always light-dismisses (a tap outside it or a swipe down closes it, whatever hasLightDismiss says), Escape follows hasEscapeDismiss, and the fallback close stays hidden. The surface is chosen as it opens and kept until it closes.",
+			default: "'popover'"
 		},
 		{
 			name: 'xstyle',

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, CheckboxList, CheckboxListItem } from '@astryx-svelte/core';
+	import { Badge, CheckboxList, CheckboxListItem } from '@astryx-sv/core';
 
 	let value = $state<string[]>(['free']);
 </script>

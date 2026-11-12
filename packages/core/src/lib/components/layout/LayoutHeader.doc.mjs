@@ -10,20 +10,19 @@ export default {
 	displayName: 'Layout Header',
 	subComponentOf: 'Layout',
 	description: 'Top bar for page titles, app bars, and toolbars.',
-	keywords: [
-		'layout',
-		'container',
-		'content',
-		'flex',
-		'box',
-		'wrapper',
-		'scaffold',
-		'page',
-		'shell'
-	],
+	keywords: ['pageheader', 'appheader', 'header'],
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			children: 'Page Title',
+			hasDivider: true
+		},
+		wrapper: {
+			component: 'Layout'
+		}
+	},
 	props: [
 		{
 			name: 'children',
@@ -33,7 +32,8 @@ export default {
 		{
 			name: 'hasDivider',
 			type: 'boolean',
-			description: 'Border at bottom edge.',
+			description:
+				"Border at bottom edge. When unset, the parent Layout's defaultHasDividers decides.",
 			default: 'false'
 		},
 		{
@@ -47,9 +47,26 @@ export default {
 			description: 'Accessible label for the landmark element.'
 		},
 		{
+			name: 'padding',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			description:
+				'Internal padding on every edge, using the spacing scale. Replaces the inset from the layout; 0 is full bleed.'
+		},
+		{
+			name: 'paddingBlockEnd',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			description:
+				'Block-end (bottom) padding, using the spacing scale. Overrides padding on that edge only; paddingBlockEnd={0} docks the last child on the header bottom edge.'
+		},
+		{
 			name: 'role',
 			type: 'AriaRole',
 			description: 'ARIA landmark role.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the header element.'
 		}
 	]
 };

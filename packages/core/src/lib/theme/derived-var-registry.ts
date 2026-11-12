@@ -104,7 +104,9 @@ export const derivedVarRegistry: Record<string, DerivedVarEntry[]> = {
 			vars: ['--_textarea-inline-padding'],
 			replaces: true
 		}
-	]
+	],
+	'bottom-sheet': [{ property: 'padding', expand: 'container' }],
+	item: [{ property: 'paddingInline', vars: ['--_item-inset-inline'] }]
 };
 
 /**

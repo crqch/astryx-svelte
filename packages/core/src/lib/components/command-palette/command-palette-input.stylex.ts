@@ -1,5 +1,6 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 import {
 	colorVars,
 	typeScaleVars,
@@ -46,14 +47,19 @@ const styles = stylex.create({
 	input: {
 		flex: 1,
 		minWidth: 0,
-		border: 'none',
-		outline: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		backgroundColor: 'transparent',
 		color: colorVars['--color-text-primary'],
 		fontFamily: typographyVars['--font-family-body'],
+		// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+		// control sits under 16px, and only iOS WebKit implements
+		// -webkit-touch-callout to key the coarse-pointer floor to it.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		padding: 0,
@@ -83,7 +89,14 @@ export function commandPaletteInputSpinnerAttrs(): SvelteStyleAttrs {
 	return sx(styles.icon, styles.spinner);
 }
 
-/** The text input itself. */
-export function commandPaletteInputAttrs(): SvelteStyleAttrs {
-	return sx(styles.input);
+/**
+ * The text input itself. A text-entry control matches `:focus-visible` after
+ * pointer focus in Chromium too, so the shared ring is narrowed to focus
+ * acquired through keyboard navigation; a click or pointer-opened palette
+ * stays unringed.
+ */
+export function commandPaletteInputAttrs(isKeyboardFocus: boolean): SvelteStyleAttrs {
+	return isKeyboardFocus
+		? focusOutlineProps.focusVisible(styles.input)
+		: focusOutlineProps.suppressed(styles.input);
 }

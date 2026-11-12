@@ -1,127 +1,204 @@
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
+	import {
+		AppShellMobileContext,
+		Card,
+		Theme,
+		type AppShellMobileContextValue
+	} from '@astryx-sv/core';
+	import { butterTheme } from '@astryx-sv/theme-butter';
+	import ThemeShowcaseStore from '../../../../packages/cli/assets/templates/pages/theme-showcase/+page.svelte';
+	import { getThemeShowcaseContent } from '$lib/shell/theme-showcase-content.js';
 	import { getColorModeContext } from '$lib/shell/color-mode.svelte.js';
-	import { THEME_LISTINGS, themeLabel } from '$lib/shell/theme-packages.js';
 
 	/**
-	 * The Themes bento tile's preview — a rail of every published theme, each
-	 * showing its own declared colours and its own display face.
+	 * The Themes bento tile — a scaled-down live `ThemeShowcaseStore` beside a
+	 * three-swatch rail and a script "Aa". Ported from upstream's
+	 * `_landing/ThemesPreview.tsx`.
 	 *
-	 * **Not upstream's composition, and the reason is a missing template rather
-	 * than a preference.** Upstream's `ThemesPreview` is a live `ThemeShowcaseStore`
-	 * — the `theme-showcase` page template — scaled into a cropped window, beside a
-	 * three-swatch rail and a cursive "Aa" in Butter's display face. The store is
-	 * `page.tsx` and no page template is ported (port/todo.md → Phase 5), so two thirds
-	 * of that tile has no source here. Faking a storefront would be the invented
-	 * demo content the parity rule forbids.
+	 * The store is the real page template out of
+	 * `packages/cli/assets/templates/pages/theme-showcase/`, rendered at its
+	 * natural 1000px desktop width and scaled down into a cropped window, exactly
+	 * as upstream does. It renders inside the Butter `<Theme>` scope so it follows
+	 * the docsite's light/dark choice while keeping Butter's palette.
 	 *
-	 * What is left is the half upstream also shows — swatches and an "Aa" — turned
-	 * from one theme into all eight, which is the fact this tile is for: the port
-	 * ships eight theme packages and this is what each one looks like. Every value
-	 * is read off the package's own `DefinedTheme`, so a theme's colours cannot
-	 * drift from what it declares, and adding a ninth needs no edit here.
+	 * **The template's responsive grids read `useAppShellMobile()`**, which would
+	 * otherwise reflect the docsite's viewport. The store is laid out at a fixed
+	 * desktop width and shrunk to a miniature, so the context is forced to
+	 * `isMobile: false` — the same override upstream installs around the store —
+	 * and its product grid keeps its desktop layout on phones instead of
+	 * collapsing to one full-width product inside the miniature.
 	 *
-	 * Each row is wrapped in its own `<Theme>` so both the "Aa" and the swatches
-	 * resolve from the theme layer — the swatch colours are `var(--color-…)` and
-	 * not values read in JavaScript, which is what makes a row follow the reader's
-	 * light/dark choice with no mode plumbing of its own. All eight packages are
-	 * `__built`, so none of them injects a stylesheet.
+	 * **Content is Butter's, not the template's neutral defaults.** Upstream feeds
+	 * `getThemeShowcaseContent('butter')` (croissants, pancakes, waffles and a
+	 * bakery inventory) so the tile reads as the theme it is advertising. That
+	 * registry is the same one `/themes` consumes, ported record for record in
+	 * `shell/theme-showcase-content.ts`, and its images are the vendored Butter
+	 * preview photos under `static/images/butter/`.
 	 *
-	 * `themeMode` (not `mode`) is what `<Theme>` wants: it stays `'system'` until
-	 * the preference resolves, so a first paint keeps `color-scheme: light dark`
-	 * and every `light-dark()` token follows the OS. Reading the shared context
-	 * rather than calling `useColorMode()` again is the standing rule here — the
-	 * factory returns a new `$state` per caller.
+	 * The swatches and the "Aa" resolve their colours from the Butter theme scope
+	 * around the rail rather than hardcoded hex values, so they stay in sync with
+	 * the theme package. All theme packages are `__built`, so none injects a
+	 * stylesheet at runtime.
 	 */
 	const colorMode = getColorModeContext();
 
-	/** The swatch colours, in the order the rail shows them. */
-	const SWATCH_TOKENS = ['--color-accent', '--color-background-body', '--color-background-card'];
+	const butterContent = getThemeShowcaseContent('butter');
+
+	/**
+	 * The store template's internal responsive grids read `useAppShellMobile()`,
+	 * which reflects the DOCSITE's viewport. Since the store is rendered at a fixed
+	 * 1000px desktop width and scaled down to a miniature, force `isMobile: false`
+	 * so its product grid keeps the 3-column desktop layout on small screens.
+	 */
+	const FORCE_DESKTOP_MOBILE_CONTEXT: AppShellMobileContextValue = {
+		isMobile: false,
+		isMobileNavOpen: false,
+		toggleMobileNav: () => {},
+		openMobileNav: () => {},
+		closeMobileNav: () => {},
+		isMobileNavEnabled: false,
+		hasAutoToggle: false
+	};
+
+	AppShellMobileContext.set(() => FORCE_DESKTOP_MOBILE_CONTEXT);
+
+	// Swatch + "Aa" colours as Butter theme tokens (resolved through the Butter
+	// `<Theme>` scope around the rail) rather than hardcoded hex, so they stay in
+	// sync. Butter's signature display cursive is only applied by the theme to
+	// display-role text, so the "Aa" sets the family explicitly.
+	const BUTTER_BLUE = 'var(--color-accent)';
+	const BUTTER_YELLOW = 'var(--color-background-yellow)';
+	const BUTTER_CREAM = 'var(--color-background-body)';
+	const BUTTER_SCRIPT = 'Sarina, "Brush Script MT", "Snell Roundhand", cursive';
 </script>
 
-<div class="root" inert>
-	<ul class="rail">
-		{#each THEME_LISTINGS as listing (listing.slug)}
-			<li>
-				<Theme theme={listing.theme} mode={colorMode.themeMode}>
-					<span class="row">
-						<span class="aa">Aa</span>
-						<span class="name">{themeLabel(listing.slug)}</span>
-						<span class="swatches">
-							{#each SWATCH_TOKENS as token (token)}
-								<span class="swatch" style="background: var({token})"></span>
-							{/each}
-						</span>
-					</span>
-				</Theme>
-			</li>
-		{/each}
-	</ul>
+<div class="container">
+	<div class="root">
+		<Card variant="transparent" padding={0} class="showcase-card">
+			<Theme theme={butterTheme} mode={colorMode.themeMode}>
+				<div class="scale-viewport" data-themes-card-preview>
+					<div class="scale-inner" inert>
+						<ThemeShowcaseStore {...butterContent ?? {}} />
+					</div>
+				</div>
+			</Theme>
+		</Card>
+
+		<!--
+			Butter `<Theme>` scope (display: contents, no layout box) so the
+			swatches and "Aa" resolve the Butter --color-* tokens directly.
+		-->
+		<Theme theme={butterTheme} mode={colorMode.themeMode}>
+			<div class="rail">
+				<div class="swatch" style="background-color: {BUTTER_BLUE}"></div>
+				<div class="swatch" style="background-color: {BUTTER_YELLOW}"></div>
+				<div class="swatch" style="background-color: {BUTTER_CREAM}"></div>
+				<span class="rail-wordmark" aria-hidden="true">Aa</span>
+			</div>
+		</Theme>
+	</div>
 </div>
 
 <style>
-	.root {
-		width: 100%;
-		max-width: 360px;
-		margin-inline: auto;
-		/* Decorative preview — never interactive, as every bento preview is. */
-		pointer-events: none;
-	}
-
-	.rail {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-1);
-		margin: 0;
-		padding: 0;
-		list-style: none;
+	/*
+	 * Container so the store + rail size fluidly off the card's width, not the
+	 * viewport. The bento column is narrow even on wide screens, so a viewport
+	 * media query cannot tell when the card is tight. Symmetric bleed reclaims
+	 * both of the card's 40px insets so the store can be bigger.
+	 */
+	.container {
+		container-type: inline-size;
+		container-name: themesPreview;
+		flex-shrink: 0;
+		width: calc(100% + 2 * var(--spacing-10));
+		margin-inline: calc(-1 * var(--spacing-10));
 	}
 
 	/*
-	 * `Theme` renders a `display: contents` wrapper, so the row inside it is the
-	 * box that has to carry the layout and the paint — a rule on the `li` would
-	 * be outside the theme scope and would resolve against the page's brand.
+	 * Horizontal composition: themed store preview + static swatches/"Aa" rail.
+	 * Narrow card (3-column grid): left-anchored and shifted further left so the
+	 * store bleeds past the card's left edge (off-canvas look). Wide single-column
+	 * card (small screens): centred as a group.
 	 */
-	.row {
+	.root {
 		display: flex;
-		gap: var(--spacing-2);
-		align-items: center;
-		padding: var(--spacing-2) var(--spacing-3);
-		background-color: var(--color-background-card);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-container);
-		color: var(--color-text-primary);
+		flex-direction: row;
+		align-items: flex-start;
+		justify-content: flex-start;
+		/* Push past the card's left edge only on narrow cards. */
+		margin-inline-start: -40px;
+		gap: var(--spacing-4);
+		width: 100%;
 	}
 
-	/* Upstream's "Aa" sets the family explicitly for the same reason: a theme
-	   applies its display face to display-role text only. */
-	.aa {
+	@container themesPreview (min-width: 400px) {
+		.root {
+			justify-content: center;
+			margin-inline-start: 0;
+		}
+	}
+
+	/*
+	 * Window around the scaled store (no border — transparent Card), rounded on
+	 * all corners with an elevation shadow so it lifts off the card. Width is
+	 * fluid: it fills the available width minus the space reserved for the rail,
+	 * capped at 360px.
+	 */
+	.root :global(.showcase-card) {
 		flex-shrink: 0;
-		width: 2ch;
-		font-family: var(--font-family-display, var(--font-family-heading, inherit));
-		font-size: var(--font-size-lg);
-		line-height: 1;
-	}
-
-	.name {
-		flex: 1;
 		min-width: 0;
+		width: min(360px, calc(100cqw - 72px));
 		overflow: hidden;
-		font-size: var(--font-size-sm);
-		white-space: nowrap;
-		text-overflow: ellipsis;
+		border-radius: var(--radius-inner);
+		box-shadow: var(--shadow-med);
 	}
 
-	.swatches {
+	/*
+	 * Clipping viewport — its aspect ratio crops the scaled store right under the
+	 * three product cards (full nav + hero + products), cropping out the cream gap
+	 * and the checkout / Studio AI sections below. The ratio is the store's
+	 * natural render width : crop height, so the crop point stays constant as the
+	 * store scales fluidly with the card width.
+	 */
+	.scale-viewport {
+		width: 100%;
+		aspect-ratio: 1000 / 768;
+		overflow: hidden;
+		/* Decorative preview — never interactive. */
+		pointer-events: none;
+	}
+
+	/*
+	 * Render the store at its natural desktop width, then scale it down to fit the
+	 * fluid window. calc() dividing a length by a length yields the unitless
+	 * number scale() requires.
+	 */
+	.scale-inner {
+		width: 1000px;
+		transform: scale(calc(min(360px, calc(100cqw - 72px)) / 1004px));
+		transform-origin: top left;
+	}
+
+	/* Butter swatches + script wordmark, stacked vertically and left-aligned. */
+	.rail {
 		display: flex;
 		flex-shrink: 0;
-		gap: 3px;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--spacing-2);
 	}
 
 	.swatch {
-		width: 14px;
-		height: 14px;
-		border: 1px solid var(--color-border-emphasized);
-		border-radius: 3px;
+		width: 22px;
+		height: 22px;
+		border-radius: var(--radius-full);
+		border: 1px solid rgba(29, 28, 17, 0.12);
+	}
+
+	.rail-wordmark {
+		font-family: v-bind(BUTTER_SCRIPT);
+		font-size: 24px;
+		line-height: 1;
+		color: var(--color-accent);
 	}
 </style>

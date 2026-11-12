@@ -10,14 +10,14 @@ import SlotProbe from './fixtures/slot-probe.svelte';
 import { atomicClasses, probe } from './fixtures/status-dot-probe.stylex.js';
 
 /**
- * Astryx's `StatusDot/StatusDot.test.tsx`, ported case for case — **17 upstream
- * declarations at the 0.5.0 pin** (11 in `describe('StatusDot')`, 4 in `describe('custom
- * icon (parity with AvatarStatusDot)')` — one of them an `it.each` — 1 in
- * `describe('variant ink …')` and 1 in `describe('accessible name …')`),
- * **17 here, none dropped**. `StatusDot.test.tsx` is the only test file in
- * upstream's `StatusDot/` directory. There is no `displayName` case, no snapshot
- * and no no-JSX construction form, so `ref` is the only React-only surface and it
- * gets a counterpart.
+ * Astryx's `StatusDot/StatusDot.test.tsx`, ported case for case; the current
+ * shortfall against the pin lives in `port/status.md`, not here. The suite has
+ * four describe blocks — `StatusDot`, `custom icon (parity with
+ * AvatarStatusDot)` (one of them an `it.each`), `variant ink …` and
+ * `accessible name …` — and nothing dropped. `StatusDot.test.tsx` is the only
+ * test file in upstream's `StatusDot/` directory. There is no `displayName`
+ * case, no snapshot and no no-JSX construction form, so `ref` is the only
+ * React-only surface and it gets a counterpart.
  *
  * What translated, each commented where it appears:
  *
@@ -234,21 +234,24 @@ describe('StatusDot', () => {
 	});
 
 	describe('variant ink (a passed icon paints from currentColor)', () => {
-		it('pairs the warning plate with the dedicated dark on-warning ink', async () => {
-			// The regression this guards: a light surface ink on the yellow warning
-			// plate lands near 2:1, while `--color-on-warning` is the fixed dark
-			// ink (~9.6:1). An icon inherits the ink via `currentColor`, so the
-			// pairing is what keeps custom icons legible.
+		it('paints each status plate in its icon role with the surface as ink', async () => {
+			// A status dot is a mark on the page: the icon role holds 3:1 or more
+			// against the page and card surfaces, where the strong warning fill
+			// lands near 1.8:1 on a muted card. An icon inherits the ink via
+			// `currentColor`; the surface ink keeps the same pair the other way
+			// round.
 			//
 			// Upstream declares the `stylex.create` probe inline; StyleX may only be
 			// imported from a `.ts`/`.stylex.ts` module here, so it lives in
 			// `fixtures/status-dot-probe.stylex.ts` along with upstream's
 			// `__`-debug-class filter. Nothing about the comparison changed.
-			const dot = await renderDot({ variant: 'warning', label: 'Degraded' });
-			const classes = atomicClasses(probe.warning);
-			expect(classes.length).toBeGreaterThan(0);
-			for (const cls of classes) {
-				expect(dot.className).toContain(cls);
+			for (const variant of ['success', 'warning', 'error'] as const) {
+				const dot = await renderDot({ variant, label: variant });
+				const classes = atomicClasses(probe[variant]);
+				expect(classes.length).toBeGreaterThan(0);
+				for (const cls of classes) {
+					expect(dot.className).toContain(cls);
+				}
 			}
 		});
 	});

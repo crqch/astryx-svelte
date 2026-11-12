@@ -23,7 +23,8 @@ export default {
 		{
 			name: 'component',
 			type: 'LinkComponentType',
-			description: 'Component to use for all link elements',
+			description:
+				'Component to use for all link elements. It receives accepted `href` and `to` values under the shared navigation rule described on the Link `href` prop. Supported structured destinations, including their `protocol`, are checked without changing object identity. If either supplied destination is rejected, Astryx renders inert content without invoking this component; it does not pass undefined or fall back to the other destination.',
 			required: true
 		},
 		{

@@ -28,7 +28,7 @@
 		LayoutFooter,
 		Text,
 		useImperativeDialog
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const dialog = useImperativeDialog(() => ({ width: 400, purpose: 'form' }));
 </script>

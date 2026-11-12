@@ -36,9 +36,9 @@ import type { EntryGenerator, PageLoad } from './$types.js';
  * the `location.href` assignment instead. That pair is not an invention — it is
  * character-for-character the body SvelteKit itself writes for a prerendered
  * redirect (`prerender.js:431-437`). The reader experiences the same instant
- * bounce; what is lost is the *HTTP* status, so `adapter-vercel` no longer emits
- * a redirect rule for these paths and a crawler sees 200-then-refresh rather
- * than 308. For a legacy-link shim that nothing on the site links to, that is
+ * bounce; what is lost is the *HTTP* status, so the adapter no longer emits a
+ * redirect rule for these paths and a crawler sees 200-then-refresh rather than
+ * 308. For a legacy-link shim that nothing on the site links to, that is
  * the cheaper side of the trade — the alternative is dropping the route.
  */
 export const prerender = true;

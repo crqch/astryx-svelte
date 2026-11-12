@@ -100,6 +100,6 @@ export default {
 		'InputGroup'
 	],
 	relatedHooks: ['useInputContainer'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

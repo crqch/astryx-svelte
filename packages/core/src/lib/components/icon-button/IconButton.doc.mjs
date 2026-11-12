@@ -50,7 +50,8 @@ export default {
 		{
 			name: 'icon',
 			type: 'Snippet',
-			description: 'Icon element rendered inside the button.',
+			description:
+				'Icon element rendered inside the button. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons.',
 			required: true
 		},
 		{
@@ -75,19 +76,22 @@ export default {
 		{
 			name: 'isLoading',
 			type: 'boolean',
-			description: 'Shows a loading spinner and disables interaction.',
+			description:
+				'Shows a loading spinner and blocks re-activation while staying focusable (aria-busy + aria-disabled, not native disabled).',
 			default: 'false'
 		},
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disables the button.',
+			description:
+				'Disables the button. Uses aria-disabled instead of native disabled so the button stays focusable.',
 			default: 'false'
 		},
 		{
 			name: 'tooltip',
 			type: 'string',
-			description: 'Tooltip text shown on hover.'
+			description:
+				"Tooltip text shown on hover and keyboard focus. It also describes the button, unless it repeats the button's accessible name."
 		},
 		{
 			name: 'onclick',
@@ -98,6 +102,61 @@ export default {
 			name: 'clickAction',
 			type: '(event: MouseEvent) => unknown',
 			description: 'Async click handler with automatic loading state.'
+		},
+		{
+			name: 'isInterruptible',
+			type: 'boolean',
+			description:
+				'Keep the button clickable while a clickAction is pending: the spinner and aria-busy still show, but the button is not disabled and the action is not deduped, so a re-click lands and interrupts the in-flight action with a fresh one. Use it for interruptible actions, not fire-once actions (submit, save, pay).',
+			default: 'false'
+		},
+		{
+			name: 'width',
+			type: 'string | number',
+			description:
+				'Width of the button. Numbers are treated as pixels, strings are used as-is. Without it the button keeps its icon-only aspect, square by default; with it the button takes that width.'
+		},
+		{
+			name: 'type',
+			type: "'submit' | 'reset' | 'button'",
+			description: 'HTML button type attribute.',
+			default: "'button'"
+		},
+		{
+			name: 'name',
+			type: 'string | null',
+			description: 'HTML name attribute for form submission.'
+		},
+		{
+			name: 'value',
+			type: 'string | string[] | number | null',
+			description: 'HTML value attribute for form submission.'
+		},
+		{
+			name: 'form',
+			type: 'string | null',
+			description: 'Associates the button with a form element by ID.'
+		},
+		{
+			name: 'href',
+			type: 'string',
+			description:
+				'When provided, renders the button as a link element (<a> or custom link component). A disabled IconButton still renders a <button>.'
+		},
+		{
+			name: 'as',
+			type: 'LinkComponentType',
+			description: 'Custom link component to use when href is provided (e.g. Next.js Link).'
+		},
+		{
+			name: 'target',
+			type: 'HTMLAttributeAnchorTarget | null',
+			description: 'HTML target attribute when rendered as a link (e.g. "_blank").'
+		},
+		{
+			name: 'rel',
+			type: 'string | null',
+			description: 'HTML rel attribute when rendered as a link (e.g. "noopener noreferrer").'
 		}
 	]
 };

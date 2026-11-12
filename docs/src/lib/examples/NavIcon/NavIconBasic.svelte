@@ -5,7 +5,7 @@
 	Upstream passes registry icons here, not Heroicons, so both transcribe as-is.
 -->
 <script lang="ts">
-	import { HStack, Icon, NavIcon } from '@astryx-svelte/core';
+	import { HStack, Icon, NavIcon } from '@astryx-sv/core';
 </script>
 
 {#snippet searchIcon()}<Icon icon="search" />{/snippet}

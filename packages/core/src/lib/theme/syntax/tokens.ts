@@ -36,10 +36,28 @@ export const syntaxTokenDefaults = {
 	'--color-syntax-attribute': 'var(--color-text-teal)',
 	// property -> cyan text (object properties)
 	'--color-syntax-property': 'var(--color-text-cyan)',
-	// punctuation -> disabled text (brackets, semicolons)
-	'--color-syntax-punctuation': 'var(--color-text-disabled)',
+	// punctuation -> secondary text (brackets, semicolons). Not disabled text:
+	// disabled grey is calibrated to fail AA on purpose, and punctuation in a
+	// code sample is normal, always-active text.
+	'--color-syntax-punctuation': 'var(--color-text-secondary)',
 	// background -> muted surface
-	'--color-syntax-background': 'var(--color-background-muted)'
+	'--color-syntax-background': 'var(--color-background-muted)',
+	// Diff rows: whole-row tints behind unchanged syntax colours, derived from
+	// the semantic success/error muted tokens at 25% strength.
+	'--color-syntax-added': 'color-mix(in srgb, var(--color-success-muted) 25%, transparent)',
+	'--color-syntax-removed': 'color-mix(in srgb, var(--color-error-muted) 25%, transparent)',
+	'--color-syntax-diff-header': 'var(--color-background-muted)',
+	'--color-syntax-added-marker': 'var(--color-text-green)',
+	'--color-syntax-removed-marker': 'var(--color-text-red)'
 } as const;
 
 export type SyntaxTokenName = keyof typeof syntaxTokenDefaults;
+
+/** The five diff row slots: optional in a syntax theme, defaulted when unset. */
+export const DIFF_SYNTAX_TOKEN_NAMES = [
+	'--color-syntax-added',
+	'--color-syntax-removed',
+	'--color-syntax-diff-header',
+	'--color-syntax-added-marker',
+	'--color-syntax-removed-marker'
+] as const satisfies ReadonlyArray<SyntaxTokenName>;

@@ -3,7 +3,7 @@
  *
  * `themeBuild(file, options, ctx)` is the programmatic surface behind
  * `astryx-svelte theme build`. It reads a theme file that uses defineTheme()
- * and, via @astryx-svelte/core's shared generator (the SINGLE source of truth
+ * and, via @astryx-sv/core's shared generator (the SINGLE source of truth
  * so the build emits the exact CSS the `<Theme>` runtime does), writes:
  * - A CSS file with token overrides and component styles
  * - A JS module that re-exports the built theme (+ icon registry)
@@ -25,7 +25,7 @@
  *
  * ## The five places this diverges from upstream, and why
  *
- * 1. **It imports `@astryx-svelte/core/theme/define`, not `./theme`.** `./theme`
+ * 1. **It imports `@astryx-sv/core/theme/define`, not `./theme`.** `./theme`
  *    re-exports `Theme`/`MediaTheme`/`SyntaxTheme`, so its first statement
  *    reaches a `.svelte` module and plain Node fails the whole graph with
  *    `ERR_UNKNOWN_FILE_EXTENSION` before any generator is reachable. The
@@ -39,11 +39,11 @@
  *    through one cached index keyed by the rendered class token, which is what
  *    the theme key actually is. Upstream already scans for two of the three.
  * 3. **A custom-variant augmentation targets the root barrel**, because this
- *    port publishes no per-component subpaths (`@astryx-svelte/core/Button`
+ *    port publishes no per-component subpaths (`@astryx-sv/core/Button`
  *    does not exist — a standing debt in port/todo.md, owed to `swizzle`). Verified,
  *    and mutation-checked, that TypeScript merges an augmentation of a
  *    re-exported interface into the original declaration: augmenting
- *    `ButtonVariantMap` on `@astryx-svelte/core` really does widen
+ *    `ButtonVariantMap` on `@astryx-sv/core` really does widen
  *    `ButtonProps['variant']`, and removing the augmentation makes the same
  *    probe fail. The "is this an extension point?" check still requires a real
  *    `interface` declaration in the module the barrel re-exports it *from* —
@@ -56,8 +56,8 @@
  *    re-run `defineTheme` on it — dropping `color`, `syntax` and the on-media
  *    overrides on the way through. `resolvedTokens` is the unambiguous marker
  *    and is also the field the generator needs.
- * 5. **The generated `.d.ts` names `@astryx-svelte/core/theme` and
- *    `@astryx-svelte/core`** for `DefinedTheme` and `IconRegistry` — the same
+ * 5. **The generated `.d.ts` names `@astryx-sv/core/theme` and
+ *    `@astryx-sv/core`** for `DefinedTheme` and `IconRegistry` — the same
  *    two specifiers `packages/themes/*` already emit, since these are types and
  *    never execute.
  */
@@ -84,7 +84,7 @@ import { loadComponentDoc } from '../../../foundation/discovery/component-loader
 // produce the exact same CSS as the `<Theme>` runtime, so it has exactly one
 // generation path: core's generator. There is no in-CLI fallback implementation
 // — if this import fails, the build fails (see the ERR_CORE_NOT_FOUND guard in
-// the theme action). A built, resolvable `@astryx-svelte/core` is a hard
+// the theme action). A built, resolvable `@astryx-sv/core` is a hard
 // requirement. These are populated from a dynamic import (a runtime boundary),
 // so `any` is intentional.
 /** @type {any} */ let _defineTheme = null;
@@ -92,7 +92,7 @@ import { loadComponentDoc } from '../../../foundation/discovery/component-loader
 /** @type {any} */ let _generateOnMediaCSS = null;
 /** @type {any} */ let _coreImportError = null;
 try {
-	const coreTheme = await import('@astryx-svelte/core/theme/define');
+	const coreTheme = await import('@astryx-sv/core/theme/define');
 	_defineTheme = coreTheme.defineTheme;
 	_generateThemeRulesSplit = coreTheme.generateThemeRulesSplit;
 	_generateOnMediaCSS = coreTheme.generateOnMediaCSS;
@@ -152,7 +152,7 @@ function generatedHeader(sourceFile, lang = 'js', command, versions) {
 		body.push(`Command: ${command}`);
 	}
 	if (versions) {
-		body.push(`CLI: @astryx-svelte/cli@${versions.cli}`);
+		body.push(`CLI: @astryx-sv/cli@${versions.cli}`);
 		body.push(`Core: ${CORE_PACKAGE}@${versions.core}`);
 	}
 	if (lang === 'css') {
@@ -235,9 +235,9 @@ function toPascalCase(name) {
 }
 
 /**
- * Resolve `@astryx-svelte/core`'s package root relative to the CLI package.
- * Core and the CLI ship as siblings (`@astryx-svelte/core`,
- * `@astryx-svelte/cli`), so `../../../../core` from `api/theme/build/` reaches
+ * Resolve `@astryx-sv/core`'s package root relative to the CLI package.
+ * Core and the CLI ship as siblings (`@astryx-sv/core`,
+ * `@astryx-sv/cli`), so `../../../../core` from `api/theme/build/` reaches
  * core whether installed from npm or run inside the monorepo. Falls back to
  * `findCoreDir()` (the CLI's own walker, which also knows `node_modules`) and
  * returns null if neither finds it.
@@ -417,6 +417,8 @@ async function getKnownValues(componentName) {
  * @type {Map<string, string> | undefined}
  */
 let _barrelExports;
+/** @type {Map<string, string> | undefined} */
+let _legacyTargetAliases;
 
 /**
  * @returns {Map<string, string>} exported name → absolute path of the module it
@@ -500,7 +502,7 @@ function resolveDeclarationFile(fromDir, specifier) {
 }
 
 /**
- * Determine whether `@astryx-svelte/core` exports an interface named
+ * Determine whether `@astryx-sv/core` exports an interface named
  * `interfaceName` that can be augmented via module augmentation.
  *
  * Only interfaces are extension points — closed literal-union types (e.g.
@@ -525,6 +527,48 @@ function coreHasAugmentableInterface(interfaceName) {
 }
 
 /**
+ * Rendered legacy class names (`legacyNames`) mapped to the canonical target
+ * class that emits them. Source-derived, so a renamed target keeps accepting
+ * its documented old spelling without a hand-maintained table.
+ *
+ * @returns {Map<string, string>}
+ */
+function legacyTargetAliases() {
+	if (_legacyTargetAliases) return _legacyTargetAliases;
+	/** @type {Map<string, string>} */
+	const aliases = new Map();
+	_legacyTargetAliases = aliases;
+	const coreRoot = resolveCoreRoot();
+	if (!coreRoot) return aliases;
+	const coreSrc = path.join(coreRoot, 'src', 'lib');
+	if (!fs.existsSync(coreSrc)) return aliases;
+	/** @param {string} dir */
+	const walk = (dir) => {
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			const full = path.join(dir, entry.name);
+			if (entry.isDirectory()) {
+				if (entry.name === 'node_modules' || entry.name === '__tests__') continue;
+				walk(full);
+				continue;
+			}
+			if (!entry.name.endsWith('.svelte') && !entry.name.endsWith('.ts')) continue;
+			if (entry.name.endsWith('.test.ts')) continue;
+			const text = fs.readFileSync(full, 'utf-8');
+			const re = /themeProps\(\s*'([^']+)'[\s\S]{0,400}?legacyNames:\s*\[([^\]]*)\]/g;
+			let match;
+			while ((match = re.exec(text)) !== null) {
+				const canonical = match[1];
+				for (const legacy of match[2].matchAll(/'([^']+)'/g)) {
+					aliases.set(legacy[1], canonical);
+				}
+			}
+		}
+	};
+	walk(coreSrc);
+	return aliases;
+}
+
+/**
  * Resolve a rendered theme class token (the key without `astryx-`) to candidate
  * interface prefixes that may own its augmentable prop maps. Some tokens are
  * subtargets documented by a parent component (`avatar-status-dot` is
@@ -539,11 +583,21 @@ function coreHasAugmentableInterface(interfaceName) {
  * @param {string} componentName
  * @returns {Promise<string[]>}
  */
+
 async function resolveAugmentationPrefixes(componentName) {
 	const fallback = [toPascalCase(componentName)];
 	const index = await getThemeTargetIndex();
-	const entry = index?.[componentName];
-	if (!entry) return fallback;
+	// A theme may key an override by a target's emitted legacy class
+	// (`progressbar`, `statusdot`) — the name upstream's docs use. The target
+	// index is keyed by the canonical class (`progress-bar`), so resolve the
+	// legacy spelling to its canonical entry before falling back to a bare
+	// PascalCase guess that cannot find `ProgressBarVariantMap`.
+	const canonical = legacyTargetAliases().get(componentName);
+	const entry = index?.[componentName] ?? (canonical ? index?.[canonical] : undefined);
+	if (!entry) {
+		if (canonical) return [...new Set([toPascalCase(canonical), ...fallback])];
+		return fallback;
+	}
 
 	// Try the exact rendered token first for documented subtargets such as
 	// avatar-status-dot → AvatarStatusDotVariantMap, then the owning public
@@ -561,7 +615,7 @@ async function resolveAugmentationPrefixes(componentName) {
  *   banner + status → BannerStatusMap
  *   button + variant → ButtonVariantMap
  *
- * An augmentation is only emitted when `@astryx-svelte/core` actually exports a
+ * An augmentation is only emitted when `@astryx-sv/core` actually exports a
  * matching interface. Props backed by closed literal-union types (e.g. Button
  * `size`, Heading `type`/`level`) have no augmentation point, so generating a
  * `declare module` block for them would be dead code — those are skipped.
@@ -761,6 +815,7 @@ function extractThemeDefinitionLegacy(filePath) {
 			);
 		}
 
+		// oxlint-disable-next-line no-eval -- parsing a legacy theme literal, not executing user input.
 		return eval(`(${defaultMatch[1]})`);
 	}
 
@@ -769,6 +824,7 @@ function extractThemeDefinitionLegacy(filePath) {
 	objStr = objStr.replace(/icons:\s*[a-zA-Z_][a-zA-Z0-9_]*/g, 'icons: undefined');
 
 	try {
+		// oxlint-disable-next-line no-eval -- parsing a legacy theme literal, not executing user input.
 		return eval(`(${objStr})`);
 	} catch (e) {
 		const err = /** @type {Error} */ (e);
@@ -1089,7 +1145,7 @@ export async function themeBuild(file, options = {}, { cwd = process.cwd() } = {
 	// Generate CSS via core's shared generator — the SINGLE source of truth.
 	// `astryx-svelte theme build` and the `<Theme>` runtime MUST emit identical
 	// CSS, so there is exactly one generation path:
-	// @astryx-svelte/core/theme/define. If core could not be imported, fail hard
+	// @astryx-sv/core/theme/define. If core could not be imported, fail hard
 	// rather than silently producing divergent output.
 	if (!_defineTheme || !_generateThemeRulesSplit) {
 		throw new AstryxError(

@@ -67,7 +67,7 @@ describe('resolveTheme — this port’s theme packages really load', () => {
 describe('resolveTheme — the two loaders that do not work here', () => {
 	it("require() cannot reach a theme package: no 'require' condition is exported", () => {
 		const req = createRequire(import.meta.url);
-		expect(() => req('@astryx-svelte/theme-neutral')).toThrowError(
+		expect(() => req('@astryx-sv/theme-neutral')).toThrowError(
 			expect.objectContaining({ code: 'ERR_PACKAGE_PATH_NOT_EXPORTED' })
 		);
 	});
@@ -77,7 +77,7 @@ describe('resolveTheme — the two loaders that do not work here', () => {
 		// Vitest the specifier goes through Vite's module runner, which parses
 		// `.svelte` itself and fails with a plugin error. The claim being pinned is
 		// about plain Node, so plain Node has to be the thing that answers.
-		const probe = `import('@astryx-svelte/theme-neutral').then(() => console.log('LOADED'), e => console.log(e.code));`;
+		const probe = `import('@astryx-sv/theme-neutral').then(() => console.log('LOADED'), e => console.log(e.code));`;
 		const out = execFileSync(process.execPath, ['--input-type=module', '-e', probe], {
 			cwd: path.dirname(fileURLToPath(import.meta.url)),
 			encoding: 'utf-8'

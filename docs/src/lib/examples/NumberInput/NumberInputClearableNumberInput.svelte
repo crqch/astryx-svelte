@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { NumberInput } from '@astryx-svelte/core';
+	import { NumberInput } from '@astryx-sv/core';
 
 	/**
 	 * `hasClear` widens `onChange` to accept `null`, so the parameter is annotated

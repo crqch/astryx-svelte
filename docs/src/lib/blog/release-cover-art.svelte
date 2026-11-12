@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Text } from '@astryx-svelte/core';
+	import { Text } from '@astryx-sv/core';
 
 	/**
 	 * The generated cover for release posts — upstream's `ReleaseCoverArt`.
@@ -30,7 +30,7 @@
 		packageName?: string;
 	}
 
-	const { version, packageName = '@astryx-svelte/core' }: Props = $props();
+	const { version, packageName = '@astryx-sv/core' }: Props = $props();
 
 	const segments = $derived(version.split('.'));
 

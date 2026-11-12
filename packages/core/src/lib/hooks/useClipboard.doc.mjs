@@ -80,6 +80,6 @@ export default {
 	},
 	relatedComponents: ['CodeBlock', 'Timestamp', 'IconButton'],
 	relatedHooks: ['useAnnounce'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

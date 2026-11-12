@@ -1,6 +1,12 @@
 <script lang="ts" module>
 	export type SubMenuScenario =
-		'move' | 'disabled' | 'threeItems' | 'fruit' | 'nested' | 'loading' | 'async';
+		| 'move'
+		| 'disabled'
+		| 'threeItems'
+		| 'fruit'
+		| 'nested'
+		| 'loading'
+		| 'async';
 </script>
 
 <script lang="ts">

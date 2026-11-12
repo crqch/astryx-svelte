@@ -59,11 +59,11 @@ afterEach(() => {
 });
 
 function writeInstalledCore(version) {
-	const dir = path.join(tmpDir, 'node_modules', '@astryx-svelte', 'core');
+	const dir = path.join(tmpDir, 'node_modules', '@astryx-sv', 'core');
 	fs.mkdirSync(dir, { recursive: true });
 	fs.writeFileSync(
 		path.join(dir, 'package.json'),
-		JSON.stringify({ name: '@astryx-svelte/core', version })
+		JSON.stringify({ name: '@astryx-sv/core', version })
 	);
 }
 

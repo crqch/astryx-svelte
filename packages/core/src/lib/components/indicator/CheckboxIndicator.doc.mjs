@@ -49,7 +49,7 @@ export default {
 			name: 'children',
 			type: 'Snippet',
 			description:
-				'Rendered inside the chrome INSTEAD of the state mark. CheckboxInput passes its loading Spinner through this while a change action is pending, so a replacement indicator must render children when they will actually draw something: use `isRenderable(children)`, never `children ?? mark`, because a host writes `children={isBusy && <Spinner/>}` and `false` slips straight past a nullish check and deletes the mark.'
+				'Rendered inside the chrome INSTEAD of the state mark when the shallow `isRenderable(children)` check accepts the value. The helper excludes `null`, `undefined`, booleans, and the empty string; React elements and containers take the replacement path even when their descendants render nothing. CheckboxInput passes its loading Spinner through as `children={isBusy && <Spinner/>}`, so replacements should use the same helper rather than a nullish check.'
 		}
 	]
 };

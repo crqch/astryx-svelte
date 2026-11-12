@@ -91,7 +91,7 @@ const BUILTIN_DEFAULT_MARKER = 'stylex.defaultMarker()';
  * so the **declarations are byte-identical** — but the atomic class was already
  * hashed from the text that still held the var, so the class *names* cannot
  * agree across two packages with different names and layouts. Ours hashes
- * `@astryx-svelte/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
+ * `@astryx-sv/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
  * `@astryxdesign/core:src/DateInput/tokens.stylex.ts`.
  *
  * `normaliseRule` already blinds a rule's own atomic class as `.SELF`, which is
@@ -166,7 +166,10 @@ const CASES = [
 		// The group keeps upstream's `interactionOverlayStyles` name, so the diff
 		// needs no rename — only the filename differs, kebab-case per this port.
 		file: 'src/lib/utils/interaction-overlay.stylex.js',
-		upstreamFile: 'utils/interactionOverlay.stylex.js'
+		upstreamFile: 'utils/interactionOverlay.stylex.js',
+		// The reduced-motion animation duration reads `defineConsts`, so its class
+		// hashes a `var(--<constKey>)`; the declarations agree once substituted.
+		constHashed: 'src/lib/motion/reduced-motion.stylex.js'
 	},
 	{
 		// The indicator layer, new at upstream 0.4.0. Three components draw the
@@ -317,6 +320,12 @@ const CASES = [
 		inline: [['styles.ring'], ['styles.circle', 'styles.arc']]
 	},
 	{
+		// The rotor's keyframes and timing live in their own upstream module at
+		// 0.7.13.
+		file: 'src/lib/components/spinner/spinner-rotor.stylex.js',
+		upstreamFile: 'Spinner/spinnerRotor.js'
+	},
+	{
 		file: 'src/lib/components/visually-hidden/visually-hidden.stylex.js',
 		upstreamFile: 'VisuallyHidden/VisuallyHidden.js',
 		// One style, one call site, so upstream's `dist/` carries the finished
@@ -351,7 +360,20 @@ const CASES = [
 		// for object mode to compare them against.
 		file: 'src/lib/components/aspect-ratio/aspect-ratio.stylex.js',
 		upstreamFile: 'AspectRatio/AspectRatio.js',
-		inline: [['styles.child'], ['styles.child', 'styles.childCenter']]
+		inline: [
+			['styles.child'],
+			['styles.child', 'styles.childCenter'],
+			['styles.child', 'styles.childFill'],
+			['styles.child', 'styles.childCenter', 'styles.childFill'],
+			['styles.child', 'styles.childCover'],
+			['styles.child', 'styles.childCenter', 'styles.childCover'],
+			['styles.child', 'styles.childFill', 'styles.childCover'],
+			['styles.child', 'styles.childCenter', 'styles.childFill', 'styles.childCover'],
+			['styles.child', 'styles.childContain'],
+			['styles.child', 'styles.childCenter', 'styles.childContain'],
+			['styles.child', 'styles.childFill', 'styles.childContain'],
+			['styles.child', 'styles.childCenter', 'styles.childFill', 'styles.childContain']
+		]
 	},
 	{
 		file: 'src/lib/components/center/center.stylex.js',
@@ -431,8 +453,8 @@ const CASES = [
 			['styles.label', 'styles.visuallyHidden', 'styles.labelDisabled'],
 			['styles.valueLabel'],
 			['styles.valueLabel', 'styles.valueLabelDisabled'],
-			['styles.track'],
-			['styles.track', 'styles.trackClipped']
+			['styles.trackContainer'],
+			['styles.track']
 		]
 	},
 	{
@@ -459,7 +481,12 @@ const CASES = [
 		// the size off it onto the wrapper (#5030) — `content` are each applied at
 		// one call site with no dynamic style beside them, so the compiler resolved
 		// them and left no object entry behind.
-		inline: [['styles.image'], ['styles.fallback'], ['styles.content']]
+		inline: [
+			['styles.image'],
+			['styles.fallback'],
+			['styles.fallback', 'styles.loneFallback'],
+			['styles.content']
+		]
 	},
 	{
 		file: 'src/lib/components/avatar/avatar-status-dot.stylex.js',
@@ -504,11 +531,18 @@ const CASES = [
 		// four row parts each reach exactly one call site and fold to literals.
 		file: 'src/lib/components/timestamp/timestamp-hover-card.stylex.js',
 		upstreamFile: 'Timestamp/TimestampHoverCard.js',
-		inline: [['styles.row'], ['styles.label'], ['styles.value'], ['styles.action']]
+		inline: [
+			['styles.row'],
+			['styles.label'],
+			['styles.value'],
+			['styles.value', 'styles.valueCells'],
+			['styles.action']
+		]
 	},
 	{
 		file: 'src/lib/components/layer/layer.stylex.js',
-		upstreamFile: 'Layer/useLayer.js'
+		upstreamFile: 'Layer/useLayer.js',
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js'
 	},
 	{
 		file: 'src/lib/components/tooltip/use-tooltip.stylex.js',
@@ -524,11 +558,7 @@ const CASES = [
 		// Every one of Tooltip's own styles is applied at a single call site, so
 		// upstream's `dist/` carries no style object at all — only the three
 		// finished class strings.
-		inline: [
-			['styles.wrapperContents'],
-			['styles.wrapperInline'],
-			['styles.wrapperInline', 'styles.hoverIndication']
-		]
+		inline: [['styles.wrapperContents']]
 	},
 	{
 		file: 'src/lib/components/hover-card/use-hover-card.stylex.js',
@@ -550,15 +580,12 @@ const CASES = [
 		// from `spacingVars['--spacing-0-5']` where Tooltip writes a literal `2px`,
 		// and StyleX hashes the reference rather than the resolved value, so the
 		// two must land on different classes.
-		inline: [
-			['styles.wrapperContents'],
-			['styles.wrapperInline'],
-			['styles.wrapperInline', 'styles.hoverIndication']
-		]
+		inline: [['styles.wrapperContents']]
 	},
 	{
 		file: 'src/lib/components/popover/popover.stylex.js',
 		upstreamFile: 'Popover/Popover.js',
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
 		// Both modes at once, and for the reason `xstyle` always creates: the row
 		// hands `[popoverXstyle, styles.gap, layerAnimations[placement]]` to
 		// `layer.render` and `stylex.props(styles.contentPadding, xstyle)` beside a
@@ -599,7 +626,25 @@ const CASES = [
 		// and `above` translate on the block axis and are direction-neutral, so
 		// upstream leaves them alone and so do we.
 		file: 'src/lib/components/layer/layer-animations.stylex.js',
-		upstreamFile: 'Layer/layerAnimations.stylex.js'
+		upstreamFile: 'Layer/layerAnimations.stylex.js',
+		// The Reduce Motion fade's duration and curve come from
+		// `motion/reduced-motion.stylex.ts` (`defineConsts`), so this module's
+		// `animation-duration` and `fadeIn` keyframe are hashed from a
+		// `var(--<constKey>)` and cannot equal upstream's classes by name. The
+		// declarations are byte-identical once the const is substituted, which is
+		// what `constHashed` compares — the same mechanism the touch date surface
+		// uses.
+		constHashed: 'src/lib/motion/reduced-motion.stylex.js',
+		// The fade's keyframe name and two class names are derived from a
+		// `defineConsts` body and cannot equal upstream's single-pass hash. The CSS
+		// oracle compares the keyframe bodies; this case records the known name
+		// divergence rather than pretending the classes match.
+		skip: {
+			'layerAnimations.below': 'defineConsts keyframe-name hash differs (port/debts.md)',
+			'layerAnimations.above': 'defineConsts keyframe-name hash differs (port/debts.md)',
+			'layerAnimations.end': 'defineConsts keyframe-name hash differs (port/debts.md)',
+			'layerAnimations.start': 'defineConsts keyframe-name hash differs (port/debts.md)'
+		}
 	},
 	{
 		file: 'src/lib/components/nav-icon/nav-icon.stylex.js',
@@ -675,6 +720,10 @@ const CASES = [
 		file: 'src/lib/components/field/field-label.stylex.js',
 		upstreamFile: 'Field/FieldLabel.js',
 		inline: [
+			['styles.labelGroup'],
+			['styles.labelGroup', 'styles.labelGroupHidden'],
+			['styles.labelRow'],
+			['styles.labelRow', 'styles.labelRowHidden'],
 			['styles.optionalRequired'],
 			['styles.description'],
 			['styles.description', 'styles.descriptionClickable'],
@@ -747,7 +796,7 @@ const CASES = [
 		// `:has(input:focus-visible)` inset) rather than a replacement.
 		file: 'src/lib/components/field/panel-search-input.stylex.js',
 		upstreamFile: 'Field/PanelSearchInput.js',
-		inline: [['styles.field'], ['styles.field', 'styles.fieldKeyboardFocus'], ['styles.input']]
+		inline: [['styles.input']]
 	},
 	{
 		// Shared group-member style, imported directly by every InputGroup-aware
@@ -895,7 +944,9 @@ const CASES = [
 		// rather than trimmed: with no `inline` key the leftover check does not run,
 		// and nothing goes unverified.
 		file: 'src/lib/components/complex-selector/complex-selector.stylex.js',
-		upstreamFile: 'ComplexSelector/ComplexSelector.js'
+		upstreamFile: 'ComplexSelector/ComplexSelector.js',
+		// The popover's max height reads the Layer `defineConsts` member.
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js'
 	},
 	{
 		// Object mode. `<Theme>` picks one of three `colorScheme` styles by `mode`,
@@ -952,7 +1003,9 @@ const CASES = [
 			['styles.container'],
 			['styles.titleWrapper'],
 			['styles.actions'],
-			['styles.actions', 'styles.actionsCompensation']
+			['styles.actions', 'styles.endBlockEdgeCompensation'],
+			['styles.actions', 'styles.endInlineEdgeCompensation'],
+			['styles.actions', 'styles.endBlockEdgeCompensation', 'styles.endInlineEdgeCompensation']
 		]
 	},
 	{
@@ -974,8 +1027,10 @@ const CASES = [
 		// to compare for it. The module's `KEYBOARD_HINT_OFFSET_STYLE` is a template
 		// literal rather than a style object, so neither extractor sees it.
 		file: 'src/lib/hooks/keyboard-hint.stylex.js',
-		upstreamFile: 'hooks/useKeyboardHint.js',
-		inline: [['styles.keys'], ['styles.label']]
+		// At 0.7.13 the hint's two keys moved to `hooks/anchoredHint.tsx`, where
+		// `useKeyboardHint` applies them through a plain object, so there are no
+		// folded literals to claim.
+		upstreamFile: 'hooks/anchoredHint.js'
 	},
 	{
 		// `sectionPaddingPropagationStyles` is now compared — Section is ported and
@@ -992,7 +1047,19 @@ const CASES = [
 		// Upstream declares these in the component file; ours are split into a
 		// `.stylex.ts` beside it, so the group keeps upstream's `styles` name.
 		file: 'src/lib/components/layout/layout.stylex.js',
-		upstreamFile: 'Layout/Layout.js'
+		upstreamFile: 'Layout/Layout.js',
+		markers: [
+			{
+				file: 'src/lib/components/layout/layout-edges.stylex.js',
+				upstreamFile: 'Layout/layoutEdges.stylex.js',
+				name: 'layoutHeaderMarker'
+			},
+			{
+				file: 'src/lib/components/layout/layout-edges.stylex.js',
+				upstreamFile: 'Layout/layoutEdges.stylex.js',
+				name: 'layoutFooterMarker'
+			}
+		]
 	},
 	{
 		file: 'src/lib/components/layout/layout-header.stylex.js',
@@ -1056,11 +1123,19 @@ const CASES = [
 		// it has no counterpart to diff, so it needs no entry.
 		file: 'src/lib/components/switch/switch.stylex.js',
 		upstreamFile: 'Switch/Switch.js',
-		marker: {
-			file: 'src/lib/components/switch/switch.markers.stylex.js',
-			upstreamFile: 'Switch/switch.markers.stylex.js',
-			name: 'switchScope'
-		}
+		markers: [
+			{
+				file: 'src/lib/components/switch/switch.markers.stylex.js',
+				upstreamFile: 'Switch/switch.markers.stylex.js',
+				name: 'switchScope'
+			},
+			{
+				file: 'src/lib/components/switch/switch.markers.stylex.js',
+				upstreamFile: 'Switch/switch.markers.stylex.js',
+				name: 'switchFocusInput'
+			}
+		],
+		constHashed: 'src/lib/motion/reduced-motion.stylex.js'
 		// **Object mode only since 0.2.0.** The `size` prop turned every one of
 		// these call sites into a dynamic `[size]` index, so the compiler can no
 		// longer fold any of them and `dist/` keeps them all as objects. The
@@ -1110,6 +1185,9 @@ const CASES = [
 		upstreamFile: 'Item/Item.js',
 		inline: [
 			['styles.startContent'],
+			['styles.startContent', 'styles.firstLineSlot'],
+			['styles.markerContent'],
+			['styles.markerContent', 'styles.markerContentFirstLine'],
 			['styles.content'],
 			['styles.content', 'styles.disabledContent'],
 			['styles.content', 'styles.inlineContent'],
@@ -1123,6 +1201,8 @@ const CASES = [
 			['styles.invisibleAnchor', 'styles.inlineContent'],
 			['styles.invisibleAnchor', 'styles.inlineContent', 'styles.disabledContent'],
 			['styles.endContent'],
+			['styles.endContent', 'styles.firstLineSlot'],
+			['styles.endContent', 'styles.firstLineSlot', 'styles.disabledContent'],
 			['styles.endContent', 'styles.disabledContent']
 		]
 	},
@@ -1134,10 +1214,9 @@ const CASES = [
 		// orientation variant, the pair `radiogroupAttrs` composes.
 		file: 'src/lib/components/radio-list/radio-list.stylex.js',
 		upstreamFile: 'RadioList/RadioList.js',
-		inline: [
-			['styles.radiogroup', 'styles.horizontal'],
-			['styles.radiogroup', 'styles.vertical']
-		]
+		// Upstream's merge now includes `controlXstyle`, so neither orientation is
+		// folded; object mode compares both.
+		inline: []
 	},
 	{
 		// **Down to the row chrome at upstream 0.4.0, and no marker.** The circle,
@@ -1161,6 +1240,11 @@ const CASES = [
 		// whose lone `display: contents` folds to one class.
 		file: 'src/lib/components/radio-list/radio-list-item.stylex.js',
 		upstreamFile: 'RadioList/RadioListItem.js',
+		marker: {
+			file: 'src/lib/components/indicator/indicator.markers.stylex.js',
+			upstreamFile: 'Indicator/indicator.markers.stylex.js',
+			name: 'indicatorScope'
+		},
 		inline: [['styles.indicatorSlot']]
 	},
 	{
@@ -1205,7 +1289,23 @@ const CASES = [
 		// compiles to a function on both sides, so neither extractor sees it and there
 		// is nothing to diff for it.
 		file: 'src/lib/components/dropdown-menu/dropdown-menu.stylex.js',
-		upstreamFile: 'DropdownMenu/DropdownMenu.js'
+		upstreamFile: 'DropdownMenu/DropdownMenu.js',
+		// The menu/layer caps read the Layer `defineConsts` member.
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js'
+	},
+	{
+		// Object mode. The shared sheet content box keeps the same group name on
+		// both sides; its two keys survive because the heading takes one as an
+		// `xstyle` and the content box merges a caller `xstyle`.
+		file: 'src/lib/components/dropdown-menu/menu-bottom-sheet.stylex.js',
+		upstreamFile: 'DropdownMenu/menuBottomSheet.stylex.js'
+	},
+	{
+		// Object mode. Upstream declares the action rows' styles as `styles`;
+		// ours are `menuBottomSheetActionListStyles`.
+		file: 'src/lib/components/dropdown-menu/menu-bottom-sheet-action-list.stylex.js',
+		upstreamFile: 'DropdownMenu/MenuBottomSheetActionList.js',
+		rename: { styles: 'menuBottomSheetActionListStyles' }
 	},
 	{
 		// Object mode. Both `menuItemStyles` (root/disabled) and `itemSizeStyles`
@@ -1262,7 +1362,13 @@ const CASES = [
 		// the same standing `DropdownMenu`'s own `popoverCustomWidth` has.
 		file: 'src/lib/components/dropdown-menu/dropdown-menu-sub-menu.stylex.js',
 		upstreamFile: 'DropdownMenu/DropdownMenuSubMenu.js',
-		inline: [['triggerStyles.caret'], ['flyoutStyles.menu']]
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
+		inline: [
+			['triggerStyles.caret'],
+			['regionStyles.region'],
+			['drillInStyles.list'],
+			['drillInStyles.list', 'drillInStyles.hidden']
+		]
 	},
 	{
 		// **Object only as of upstream 0.4.1 — this case inverted, and its one
@@ -1412,7 +1518,8 @@ const CASES = [
 		// **New at 0.5.0** — promoted out of `lab`. Object mode only: all five keys
 		// are reached through `stepperRootAttrs`, so nothing folded.
 		file: 'src/lib/components/stepper/stepper.stylex.js',
-		upstreamFile: 'Stepper/Stepper.js'
+		upstreamFile: 'Stepper/Stepper.js',
+		inline: [['styles.summary'], ['styles.summaryBody']]
 	},
 	{
 		// Both modes. `otSegHiddenIfFirst`/`otSegHiddenIfLast` embed
@@ -1448,7 +1555,8 @@ const CASES = [
 			['styles.otLabelRowCenter'],
 			['styles.otContentWrapV'],
 			['styles.otContent'],
-			['styles.otTrackRowH']
+			['styles.otTrackRowH'],
+			['styles.summaryRoot']
 		]
 	},
 	{
@@ -1535,6 +1643,10 @@ const CASES = [
 		file: 'src/lib/components/toast/toast.stylex.js',
 		upstreamFile: 'Toast/Toast.js',
 		inline: [
+			['styles.root', 'styles.entering', 'styles.variantDefault'],
+			['styles.root', 'styles.entering', 'styles.variantDefault', 'styles.exiting'],
+			['styles.root', 'styles.entering', 'styles.variantError'],
+			['styles.root', 'styles.entering', 'styles.variantError', 'styles.exiting'],
 			['styles.root', 'styles.variantDefault'],
 			['styles.root', 'styles.variantDefault', 'styles.exiting'],
 			['styles.root', 'styles.variantError'],
@@ -1565,7 +1677,71 @@ const CASES = [
 		// it is the module's single inline call site.
 		file: 'src/lib/components/toast/toast-viewport.stylex.js',
 		upstreamFile: 'Toast/ToastViewport.js',
-		inline: [['styles.toastWrapperInner']]
+		// At 0.7.13 the wrapper folds into a table keyed by `hasEntryStarted` /
+		// `isReversed` / `isExiting`: eight non-exiting strings (including the
+		// compiler's unreachable FromTop+Gap and FromBottom+GapReversed fillers)
+		// and four exiting ones, where `exiting` overrides the gap so the
+		// `Gap`/`GapReversed` duplicates collapse. `inner` and `innerSettled` are
+		// the two clip states.
+		inline: [
+			['styles.toastWrapper', 'styles.toastWrapperFromBottom', 'styles.toastWrapperGap'],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromBottom',
+				'styles.toastWrapperGap'
+			],
+			['styles.toastWrapper', 'styles.toastWrapperFromTop', 'styles.toastWrapperGap'],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromTop',
+				'styles.toastWrapperGap'
+			],
+			['styles.toastWrapper', 'styles.toastWrapperFromBottom', 'styles.toastWrapperGapReversed'],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromBottom',
+				'styles.toastWrapperGapReversed'
+			],
+			['styles.toastWrapper', 'styles.toastWrapperFromTop', 'styles.toastWrapperGapReversed'],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromTop',
+				'styles.toastWrapperGapReversed'
+			],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperFromBottom',
+				'styles.toastWrapperGap',
+				'styles.toastWrapperExiting'
+			],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromBottom',
+				'styles.toastWrapperGap',
+				'styles.toastWrapperExiting'
+			],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperFromTop',
+				'styles.toastWrapperGap',
+				'styles.toastWrapperExiting'
+			],
+			[
+				'styles.toastWrapper',
+				'styles.toastWrapperEntering',
+				'styles.toastWrapperFromTop',
+				'styles.toastWrapperGap',
+				'styles.toastWrapperExiting'
+			],
+			['styles.toastWrapperInner'],
+			['styles.toastWrapperInner', 'styles.toastWrapperInnerSettled'],
+			['styles.rootOutlet']
+		]
 	},
 	{
 		// Both modes at once. Upstream declares Lightbox's styles inline in the
@@ -1625,9 +1801,17 @@ const CASES = [
 		inline: [
 			['styles.container'],
 			['styles.mediaGroup'],
+			['styles.mediaGroup', 'styles.mediaGroupZoom'],
 			['styles.video'],
 			['styles.caption'],
-			['styles.counter']
+			['styles.counter'],
+			['styles.counter', 'styles.counterBacking'],
+			['styles.chromeLayer'],
+			['styles.image'],
+			['styles.track'],
+			['styles.track', 'styles.trackZoomTarget'],
+			['styles.pageMedia'],
+			['styles.pageMedia', 'styles.pageMediaZoomTarget']
 		]
 	},
 	{
@@ -1643,7 +1827,7 @@ const CASES = [
 		// literal strings.
 		file: 'src/lib/components/list/list.stylex.js',
 		upstreamFile: 'List/List.js',
-		inline: [['styles.root'], ['styles.header']]
+		inline: [['styles.root'], ['styles.root', 'styles.bleedCornersBelowHeader'], ['styles.header']]
 	},
 	{
 		// Both modes at once. The three `xstyle` keys upstream hands to `Item`
@@ -1654,12 +1838,7 @@ const CASES = [
 		// marker's counter span.
 		file: 'src/lib/components/list/list-item.stylex.js',
 		upstreamFile: 'List/ListItem.js',
-		inline: [
-			['markerStyles.container'],
-			['markerStyles.dot'],
-			['markerStyles.circle'],
-			['markerStyles.number']
-		]
+		inline: [['markerStyles.container'], ['taskMarkerStyles.container']]
 	},
 	{
 		// Both modes at once. `root` (an `xstyle` spread), `header` (three
@@ -1693,7 +1872,9 @@ const CASES = [
 			// upstream's second string unclaimed and the run fails on it.
 			['styles.headerContent', 'styles.headerContentWithEndContent'],
 			['styles.title'],
+			['styles.title', 'styles.statusForeground'],
 			['styles.description'],
+			['styles.description', 'styles.statusForeground'],
 			['styles.contentArea'],
 			['styles.contentArea', 'styles.contentAreaCard']
 		]
@@ -1732,15 +1913,15 @@ const CASES = [
 		// `xstyle={breadcrumbChevronStyle}`.
 		file: 'src/lib/components/breadcrumbs/breadcrumb-item.stylex.js',
 		upstreamFile: 'Breadcrumbs/BreadcrumbItem.js',
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
 		inline: [
 			['itemStyles.icon'],
 			['itemStyles.separator'],
 			['itemStyles.contentWrapper', 'itemStyles.current', 'itemStyles.defaultCurrent'],
-			['itemStyles.contentWrapper', 'itemStyles.current', 'itemStyles.supportingCurrent'],
+			['itemStyles.contentWrapper', 'itemStyles.current', 'itemStyles.supportingCurrent']
 			// The menu surface. `menuStyles.popover` is *not* here: it is handed to
 			// the layer as an `xstyle` value, never resolved at a static call site,
 			// so it stays an object on both sides and object mode covers it.
-			['menuStyles.menu']
 		]
 	},
 	{
@@ -1808,7 +1989,7 @@ const CASES = [
 		// indicator — so both combinations are listed.
 		file: 'src/lib/components/command-palette/command-palette-input.stylex.js',
 		upstreamFile: 'CommandPalette/CommandPaletteInput.js',
-		inline: [['styles.icon'], ['styles.input'], ['styles.end'], ['styles.icon', 'styles.spinner']]
+		inline: [['styles.icon'], ['styles.end'], ['styles.icon', 'styles.spinner']]
 	},
 	{
 		// Both modes at once. `trigger` (a `triggerXstyle` spread), `menu` (an
@@ -1817,7 +1998,8 @@ const CASES = [
 		// inline call site.
 		file: 'src/lib/components/context-menu/context-menu.stylex.js',
 		upstreamFile: 'ContextMenu/ContextMenu.js',
-		inline: [['styles.cursorAnchor']]
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
+		inline: [['styles.cursorAnchor'], ['styles.sheetHeader']]
 	},
 	{
 		// Pure object mode: the menu's one call site merges the dynamic
@@ -1894,7 +2076,8 @@ const CASES = [
 			['styles.startContent'],
 			['styles.endContent'],
 			['styles.chevronContainer'],
-			['styles.chevronButton']
+			['styles.chevronButton'],
+			['styles.indentedContent']
 			// The two `chevronSvg` combinations left the inline list at 0.4.1 (#4838)
 			// for the same reason `wrapper` did, one step further out: the chevron now
 			// rides an `<Icon xstyle>` rather than being drawn here, so the styles
@@ -1976,7 +2159,6 @@ const CASES = [
 			['styles.triggerLabelSizer'],
 			['styles.chevron'],
 			['styles.indicator', 'styles.indicatorSelected'],
-			['styles.dropdown'],
 			['styles.menuHeading'],
 			['styles.menuItemContent']
 		]
@@ -1984,32 +2166,22 @@ const CASES = [
 		// ships `var(--_tab-indicator-bottom, -1px)`.
 	},
 	{
-		// Both modes. Upstream declares CheckboxInput's styles inline in the
-		// component file rather than a style module, and keeps the group names
-		// `styles` / `wrapperSizeStyles`, so ours need no rename.
-		//
-		// **Down to two groups at upstream 0.4.0, and no marker.** The box, the
-		// tick, the mixed-state bar and their three size ramps moved into
-		// `CheckboxIndicator`; `checkbox.markers.stylex.ts` was deleted outright,
-		// because the element the hover tint lands on is no longer one this
-		// component renders — the row now applies the shared `indicatorScope`, and
-		// the marker-normalised keys moved to the indicator's case with it. What
-		// is left here draws no checkbox at all: the row, the positioned wrapper,
-		// the visually-hidden `<input>`, the `display: contents` indicator slot and
-		// the label column.
-		//
-		// Two inline call sites, both plain `stylex.props` with no dynamic style
-		// beside them, so the compiler resolved each into a literal: the label
-		// column (`x78zum5 xdt5ytf x1lsbc85`) and the new indicator slot, whose
-		// lone `display: contents` folds to one class.
-		//
-		// `dynamicWidthStyles.width` compiles to a function on both sides, so
-		// neither extractor sees it. `styles.description` is declared upstream and
-		// never applied — `FieldLabel` renders the description — and `dist/`
-		// tree-shakes it out entirely, so it has no counterpart in either mode and
-		// needs no skip, exactly as `Switch`'s `description` key is.
+		// Both modes. The row applies two marker scopes (the shared indicator and
+		// the press overlay), so both marker classes are blinded.
 		file: 'src/lib/components/checkbox-input/checkbox-input.stylex.js',
 		upstreamFile: 'CheckboxInput/CheckboxInput.js',
+		markers: [
+			{
+				file: 'src/lib/components/indicator/indicator.markers.stylex.js',
+				upstreamFile: 'Indicator/indicator.markers.stylex.js',
+				name: 'indicatorScope'
+			},
+			{
+				file: 'src/lib/internal/indicator-press.stylex.js',
+				upstreamFile: 'internal/indicatorPress.stylex.js',
+				name: 'indicatorPressScope'
+			}
+		],
 		inline: [['styles.labelWrapper'], ['styles.indicatorSlot']]
 	},
 	{
@@ -2064,14 +2236,15 @@ const CASES = [
 		upstreamFile: 'Slider/Slider.js',
 		inline: [
 			['styles.sliderRow'],
-			['styles.trackContainer', 'styles.trackContainerHorizontal'],
-			['styles.trackContainer', 'styles.trackContainerVertical'],
-			['styles.trackContainer', 'styles.trackContainerHorizontal', 'styles.trackContainerDisabled'],
-			['styles.trackContainer', 'styles.trackContainerVertical', 'styles.trackContainerDisabled'],
+			['styles.travelBox'],
+			['styles.valueAnchor', 'styles.valueAnchorHorizontal'],
+			['styles.valueAnchor', 'styles.valueAnchorVertical'],
 			['styles.marksContainer', 'styles.marksContainerHorizontal'],
 			['styles.marksContainer', 'styles.marksContainerVertical'],
 			['styles.mark', 'styles.markHorizontal'],
 			['styles.mark', 'styles.markVertical'],
+			['styles.mark', 'styles.markHorizontal', 'styles.markFilled'],
+			['styles.mark', 'styles.markVertical', 'styles.markFilled'],
 			['styles.markLabel', 'styles.markLabelHorizontal'],
 			['styles.markLabel', 'styles.markLabelVertical'],
 			['styles.textValue']
@@ -2321,10 +2494,15 @@ const CASES = [
 			['styles.column'],
 			['styles.band'],
 			['styles.item'],
+			['styles.item', 'styles.itemFade'],
 			['styles.item', 'styles.itemActive'],
+			['styles.item', 'styles.itemFade', 'styles.itemActive'],
 			['styles.item', 'styles.itemDisabled'],
+			['styles.item', 'styles.itemFade', 'styles.itemDisabled'],
 			['styles.item', 'styles.itemActive', 'styles.itemDisabled'],
-			['styles.itemInner']
+			['styles.item', 'styles.itemFade', 'styles.itemActive', 'styles.itemDisabled'],
+			['styles.itemInner'],
+			['styles.itemInner', 'styles.itemInnerDisabled']
 		]
 	},
 	{
@@ -2415,13 +2593,19 @@ const CASES = [
 		// input in the family: upstream never reads the `InputGroup` context here.
 		file: 'src/lib/components/date-range-input/date-range-input.stylex.js',
 		upstreamFile: 'DateRangeInput/DateRangeInput.js',
+		// The popover's max height reads a `defineConsts` member from the Layer
+		// viewport-inset module, so its class hashes a `var(--<constKey>)` rather
+		// than upstream's literal; `constHashed` compares the declarations with the
+		// const substituted.
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
 		inline: [
 			['styles.trigger'],
 			['styles.trigger', 'styles.triggerPlaceholder'],
 			['styles.trigger', 'styles.triggerDisabled'],
 			['styles.trigger', 'styles.triggerPlaceholder', 'styles.triggerDisabled'],
 			['styles.popoverLayout'],
-			['styles.presetSidebar']
+			['styles.presetSidebar'],
+			['styles.popoverScroll']
 		]
 	},
 	{
@@ -2460,7 +2644,16 @@ const CASES = [
 			['styles.input', 'styles.inputInvalid'],
 			['styles.input', 'styles.inputDisabled', 'styles.inputInvalid'],
 			['styles.timeListbox']
-		]
+		],
+		// `nativeRow` is emitted by `native-picker-segment.stylex.ts`, which this
+		// entry cannot pair because a module maps to one upstream file and the
+		// native segment module has its own upstream counterpart. The rule itself
+		// is checked by `compare-upstream-css.mjs`; only the class-name pairing is
+		// excused here.
+		skip: {
+			'styles.nativeRow':
+				'declared in native-picker-segment.stylex.ts; the CSS oracle checks the rule'
+		}
 	},
 	{
 		// 0.5.2's coarse-pointer date+time surface. It consumes
@@ -2625,23 +2818,44 @@ const CASES = [
 		file: 'src/lib/components/code-block/code-block.stylex.js',
 		upstreamFile: 'CodeBlock/CodeBlock.js',
 		inline: [
-			['styles.line'],
-			['styles.line', 'styles.lineHighlighted'],
-			['styles.line', 'styles.lineNumbered'],
-			['styles.line', 'styles.lineNumbered', 'styles.lineHighlighted'],
 			['styles.lineChunk'],
 			['styles.lineContent'],
 			['styles.headerRow', 'styles.headerWithDivider'],
 			['styles.headerRow', 'styles.headerCompact'],
 			['styles.headerTitle'],
-			['styles.collapseChevron'],
-			['styles.scrollContainer'],
+			['styles.headerControls'],
 			['styles.codeWrapper'],
 			['styles.codeWrapper', 'styles.codeWrapperCompact'],
 			['styles.collapseGrid'],
 			['styles.collapseGrid', 'styles.collapseGridCollapsed'],
-			['styles.collapseInner']
+			['styles.collapseInner'],
+			['styles.cornerCluster', 'styles.cornerClusterMd'],
+			['styles.cornerCluster', 'styles.cornerClusterSm'],
+			['styles.diffMarker'],
+			['styles.diffMarker', 'styles.diffMarkerNumbered'],
+			['styles.diffMarker', 'styles.diffMarkerAdded'],
+			['styles.diffMarker', 'styles.diffMarkerNumbered', 'styles.diffMarkerAdded'],
+			['styles.diffMarker', 'styles.diffMarkerRemoved'],
+			['styles.diffMarker', 'styles.diffMarkerNumbered', 'styles.diffMarkerRemoved']
 		]
+	},
+	{
+		// Object mode. The presentation controller's only style is the
+		// pointer-restored focus pair; upstream keeps the group name `styles`, so
+		// ours needs a rename.
+		file: 'src/lib/components/selector/selector-presentation.stylex.js',
+		upstreamFile: 'Selector/selectorPresentation.stylex.js',
+		rename: { styles: 'selectorPresentationStyles' }
+	},
+	{
+		// Both modes. The sheet's `content` key folds to an inline string at its
+		// one call site; `heading` survives as an object because `Heading` takes it
+		// as an `xstyle`. Upstream's group is `styles`, ours
+		// `selectorBottomSheetStyles`.
+		file: 'src/lib/components/selector/selector-bottom-sheet.stylex.js',
+		upstreamFile: 'Selector/SelectorBottomSheet.js',
+		rename: { styles: 'selectorBottomSheetStyles' },
+		inline: [['selectorBottomSheetStyles.content']]
 	},
 	{
 		// Both modes at once. Upstream declares Selector's styles inline in the
@@ -2689,20 +2903,41 @@ const CASES = [
 		// which is the merge working.
 		file: 'src/lib/components/selector/selector.stylex.js',
 		upstreamFile: 'Selector/Selector.js',
+		// The dropdown's Reduce Motion arms take their duration and curve from
+		// `motion/reduced-motion.stylex.ts` (`defineConsts`), so those two classes
+		// hash a `var(--<constKey>)` rather than upstream's literals. The emitted
+		// declarations agree once the const is substituted; `constHashed` compares
+		// them that way.
+		constHashed: [
+			'src/lib/motion/reduced-motion.stylex.js',
+			'src/lib/components/layer/layer-viewport-inset.stylex.js'
+		],
 		inline: [
 			['styles.trigger'],
 			['styles.triggerLabel'],
-			['styles.dropdown'],
-			['styles.dropdown', 'styles.dropdownInput'],
-			['styles.dropdown', 'styles.dropdownHidden'],
-			['styles.dropdown', 'styles.dropdownInput', 'styles.dropdownHidden'],
 			['styles.emptyState'],
 			['styles.sectionHeading'],
 			['styles.itemContent'],
 			['styles.itemMarkColumn'],
 			['styles.triggerValue'],
 			['styles.triggerValue', 'styles.triggerValueInGroup'],
-			['styles.trigger', 'styles.triggerButtonInGroup']
+			['styles.trigger', 'styles.triggerButtonInGroup'],
+			['styles.trigger', 'styles.triggerReadOnly'],
+			['styles.trigger', 'styles.triggerReadOnly', 'styles.triggerButtonInGroup'],
+			['styles.searchPanel'],
+			['styles.dropdown', 'styles.touchPinchZoom'],
+			['styles.dropdown', 'styles.touchPanYPinchZoom'],
+			['styles.dropdown', 'styles.dropdownInput', 'styles.touchPinchZoom'],
+			['styles.dropdown', 'styles.dropdownInput', 'styles.touchPanYPinchZoom'],
+			['styles.dropdown', 'styles.dropdownHidden', 'styles.touchPinchZoom'],
+			['styles.dropdown', 'styles.dropdownHidden', 'styles.touchPanYPinchZoom'],
+			['styles.dropdown', 'styles.dropdownInput', 'styles.dropdownHidden', 'styles.touchPinchZoom'],
+			[
+				'styles.dropdown',
+				'styles.dropdownInput',
+				'styles.dropdownHidden',
+				'styles.touchPanYPinchZoom'
+			]
 		]
 	},
 	{
@@ -2762,6 +2997,7 @@ const CASES = [
 			['styles.ellipsis'],
 			['styles.ellipsis', 'styles.ellipsisSm'],
 			['styles.infoText'],
+			['styles.controls'],
 			['styles.dotsContainer'],
 			['styles.pageSizeSelector'],
 			// 0.3.0's `input` variant. `inputTotal` / `inputTotalSm` are DELIBERATELY
@@ -2797,9 +3033,9 @@ const CASES = [
 		// carries no conditional, so it folded to a literal string too.
 		file: 'src/lib/components/typeahead/base-typeahead.stylex.js',
 		upstreamFile: 'Typeahead/BaseTypeahead.js',
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
 		inline: [
 			['styles.loadingSpinner'],
-			['styles.dropdown'],
 			['styles.emptyState'],
 			['styles.itemContent'],
 			['styles.groupHeading']
@@ -2861,17 +3097,25 @@ const CASES = [
 		// replacement.
 		file: 'src/lib/components/multi-selector/multi-selector.stylex.js',
 		upstreamFile: 'MultiSelector/MultiSelector.js',
+		// The dropdown's max height reads the same Layer `defineConsts` member.
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
 		inline: [
 			['styles.trigger'],
+			['styles.trigger', 'styles.triggerReadOnly'],
 			['styles.triggerContent'],
 			['styles.triggerText'],
 			['styles.triggerBadges'],
 			['styles.triggerOverflow'],
 			['styles.dropdown'],
+			['styles.searchPanel'],
+			['styles.listbox'],
 			['styles.sectionHeading'],
 			['styles.checkboxDecorative'],
 			['styles.checkboxDecorative', 'styles.checkboxDecorativeEnd'],
 			['styles.itemLabel'],
+			['styles.optionCell'],
+			['styles.actionCell'],
+			['styles.actionCell', 'styles.actionCellActive'],
 			['styles.emptyState']
 		]
 	},
@@ -2893,7 +3137,33 @@ const CASES = [
 		// so only its true branch emits a string) and the `+N more` text.
 		file: 'src/lib/components/tokenizer/tokenizer.stylex.js',
 		upstreamFile: 'Tokenizer/Tokenizer.js',
-		inline: [['styles.token'], ['styles.startIconWithTokens'], ['styles.overflowText']]
+		inline: [
+			['styles.token'],
+			['styles.startIconWithTokens'],
+			['styles.overflowText'],
+			['styles.sheetTriggerPlaceholder'],
+			['styles.sheetTriggerPlaceholder', 'styles.sheetTriggerPlaceholderDisabled']
+		]
+	},
+	{
+		// The bottom sheet's own style module, ported with the 0.7.13
+		// `presentation` work. Its single call sites fold except the body, which
+		// merges an `xstyle` spread.
+		file: 'src/lib/components/tokenizer/tokenizer-bottom-sheet.stylex.js',
+		upstreamFile: 'Tokenizer/TokenizerBottomSheet.js',
+		inline: [
+			['styles.body'],
+			['styles.searchRow'],
+			['styles.list'],
+			['styles.createRow'],
+			['styles.pending'],
+			['styles.rows'],
+			['styles.rowItem'],
+			['styles.row'],
+			['styles.row', 'styles.rowDisabled'],
+			['styles.footer'],
+			['styles.empty']
+		]
 	},
 	{
 		// Pure object mode, and the only case whose upstream file is a *shared*
@@ -2937,6 +3207,7 @@ const CASES = [
 		file: 'src/lib/components/top-nav/top-nav.stylex.js',
 		upstreamFile: 'TopNav/TopNav.js',
 		inline: [
+			['styles.mobileBarHeading'],
 			['styles.leftSection'],
 			['styles.heading'],
 			['styles.startContent'],
@@ -3005,7 +3276,6 @@ const CASES = [
 		file: 'src/lib/components/top-nav/top-nav-menu.stylex.js',
 		upstreamFile: 'TopNav/TopNavMenu.js',
 		inline: [
-			['styles.menuContainer'],
 			['styles.menuItemIcon'],
 			['styles.menuItemContent'],
 			['styles.menuItemTitle'],
@@ -3305,6 +3575,7 @@ const CASES = [
 		file: 'src/lib/components/app-shell/app-shell.stylex.js',
 		upstreamFile: 'AppShell/AppShell.js',
 		inline: [
+			['styles.contentWrapper'],
 			['styles.elevatedContentWrapper'],
 			['styles.elevatedBackdrop'],
 			['styles.autoMobileTopBar'],
@@ -3404,8 +3675,8 @@ const CASES = [
 		file: 'src/lib/components/table/plugins/sortable/sortable.stylex.js',
 		upstreamFile: 'Table/plugins/sortable/useTableSortable.js',
 		inline: [
-			['sortStyles.iconWrapperUnsorted'],
-			['sortStyles.iconWrapperActive'],
+			['sortStyles.iconWrapper'],
+			['sortStyles.iconWrapper', 'sortStyles.iconWrapperUnsorted'],
 			['sortStyles.rank']
 		]
 	},
@@ -3490,8 +3761,9 @@ const CASES = [
 			// The built-in heading shrink-wraps; a custom `renderGroupHeader` may need
 			// the full column width, so `headerInnerFitContent` rides beside
 			// `headerInner` on one branch only and the compiler folds both strings.
-			['styles.headerInner', 'styles.headerInnerFitContent'],
+			['styles.headerInner', 'styles.headerInnerPinned'],
 			['styles.chevron'],
+			['styles.chevron', 'styles.customHeaderChevronPinned'],
 			['styles.label'],
 			['styles.count']
 		]
@@ -3521,19 +3793,15 @@ const CASES = [
 		// the panel's `<tr>` and its full-width `<td>`, both new.
 		file: 'src/lib/components/table/plugins/row-expansion/row-expansion.stylex.js',
 		upstreamFile: 'Table/plugins/rowExpansion/useTableRowExpansion.js',
-		inline: [
-			// **The bare button stopped folding alone at upstream 0.4.5.** It used to
-			// be `isExpanded && chevronExpanded`, so the collapsed state applied no
-			// transform and the button emitted on its own. The RTL mirror is now
-			// folded into each state's `transform` (one element, and the later
-			// `transform` value would win over a separate mirror style), which makes
-			// it a ternary — so every call site carries exactly one of the pair and
-			// there is no lone-button string left to claim.
-			['expansionStyles.chevronButton', 'expansionStyles.chevronCollapsed'],
-			['expansionStyles.chevronButton', 'expansionStyles.chevronExpanded'],
-			['expansionStyles.expandedRow'],
-			['expansionStyles.expandedCell']
-		]
+		marker: {
+			file: 'src/lib/components/table/table.markers.stylex.js',
+			upstreamFile: 'Table/table.stylex.js',
+			name: 'tableRowMarker'
+		},
+		// At 0.7.13 the chevron button is an object (it merges the density
+		// offset), `expandedCell` is dynamic, and `expandedRow` no longer exists;
+		// only the centred glyph is still a literal.
+		inline: [['expansionStyles.glyphCenter']]
 	},
 	{
 		// **New at 0.2.0**, and the reason `ABSENT_UPSTREAM` is now empty: the
@@ -3565,7 +3833,7 @@ const CASES = [
 		// `tree-expand-all-toggle.svelte` build the same array.
 		file: 'src/lib/components/table/plugins/tree/tree.stylex.js',
 		upstreamFile: 'Table/plugins/tree/useTableTreeData.js',
-		inline: [['treeStyles.expanderButton'], ['treeStyles.leafSpacer'], ['treeStyles.headerCell']]
+		inline: [['treeStyles.leafSpacer'], ['treeStyles.headerCell']]
 	},
 	{
 		// Both modes at once, and the split is the smallest illustration of the rule
@@ -3579,7 +3847,7 @@ const CASES = [
 		// keeps the group's name `styles`, so ours needs no rename.
 		file: 'src/lib/components/table/plugins/row-status/row-status.stylex.js',
 		upstreamFile: 'Table/plugins/rowStatus/useTableRowStatus.js',
-		inline: [['styles.wrap']]
+		inline: []
 	},
 	{
 		// Both modes at once. `headerCellRelative.base` is pushed onto a resizable
@@ -3676,7 +3944,17 @@ const CASES = [
 		// `resultCountStyles.text` has the one call site in the tokenizer's end slot.
 		file: 'src/lib/components/power-search/power-search.stylex.js',
 		upstreamFile: 'PowerSearch/PowerSearch.js',
-		inline: [['tokenValueStyles.value'], ['resultCountStyles.text']]
+		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js',
+		inline: [
+			['tokenValueStyles.value'],
+			['resultCountStyles.text'],
+			['sheetTriggerStyles.contentSection'],
+			['sheetTriggerStyles.startIconWithTokens'],
+			['sheetTriggerStyles.trigger'],
+			['sheetTriggerStyles.trigger', 'sheetTriggerStyles.triggerWithTokens'],
+			['sheetTriggerStyles.placeholder'],
+			['sheetTriggerStyles.endSection']
+		]
 	},
 	{
 		// Pure inline mode. `dist/PowerSearchToken.js` carries no style object at
@@ -3737,7 +4015,8 @@ const CASES = [
 			['styles.nestedRootLabel'],
 			['styles.nestedFieldSelector'],
 			['styles.nestedOperatorSelector'],
-			['styles.nestedRowValueEditor']
+			['styles.nestedRowValueEditor'],
+			['styles.valueEditor', 'styles.valueEditorFullWidth']
 		]
 	},
 	// `PowerSearch/PowerSearchValueEditor.tsx` and `PowerSearchFilterEditor.tsx`
@@ -3772,7 +4051,8 @@ const CASES = [
 			['styles.statusBar', 'styles.statusTop', 'styles.statusError'],
 			['styles.statusBar', 'styles.statusBottom', 'styles.statusError'],
 			['styles.statusBar', 'styles.statusTop', 'styles.statusWarning'],
-			['styles.statusBar', 'styles.statusBottom', 'styles.statusWarning']
+			['styles.statusBar', 'styles.statusBottom', 'styles.statusWarning'],
+			['styles.footerRight', 'styles.interruptibleFooter']
 		]
 	},
 	{
@@ -3793,7 +4073,6 @@ const CASES = [
 		file: 'src/lib/components/chat/chat-composer-drawer.stylex.js',
 		upstreamFile: 'Chat/ChatComposerDrawer.js',
 		inline: [
-			['styles.toggleRow', BUILTIN_DEFAULT_MARKER],
 			['styles.toggleContent'],
 			['styles.toggleContent', 'styles.toggleContentHidden'],
 			['styles.collapseLabel'],
@@ -3815,7 +4094,7 @@ const CASES = [
 		// cannot carry a compiled class.
 		file: 'src/lib/components/chat/chat-composer-input.stylex.js',
 		upstreamFile: 'Chat/ChatComposerInput.js',
-		inline: [['styles.placeholder'], ['styles.editable'], ['styles.tokenSpan']]
+		inline: [['styles.placeholder'], ['styles.editable']]
 	},
 	{
 		// Both modes. `wrapper` takes the `xstyle`; the bar container and each bar
@@ -3831,11 +4110,9 @@ const CASES = [
 		// dock container's two position variants folded.
 		file: 'src/lib/components/chat/chat-layout.stylex.js',
 		upstreamFile: 'Chat/ChatLayout.js',
-		inline: [
-			['styles.emptyState'],
-			['styles.dockContainer', 'styles.dockContainerSticky'],
-			['styles.dockContainer', 'styles.dockContainerFixed']
-		]
+		// `dockContainer` now merges a dynamic `keyboard.lift > 0` style, so it
+		// stays an object; only the empty state folds.
+		inline: [['styles.emptyState']]
 	},
 	{
 		// Both modes. `wrapper` and the two button styles reach `stylex.props`
@@ -3855,7 +4132,7 @@ const CASES = [
 		// wrapper and the name label are the two single call sites.
 		file: 'src/lib/components/chat/chat-message.stylex.js',
 		upstreamFile: 'Chat/ChatMessage.js',
-		inline: [['styles.avatarWrap'], ['styles.name']]
+		inline: [['styles.avatarWrap'], ['styles.name'], ['styles.metadata']]
 	},
 	{
 		// Pure object mode — every one of the twenty-two keys is chosen by a
@@ -3922,12 +4199,11 @@ const CASES = [
 		// `STATUS_STYLES` indexes; `nodePill` rides `Badge`'s `xstyle`. Everything
 		// else is a single call site.
 		//
-		// Three claims each stand for two folded sites, because the pairs compile to
-		// the same class: `statsAdditions` is `color: --color-success` and so is
-		// `colorComplete`, `statsDeletions` is `--color-error` and so is
-		// `colorError`. The extractor keys upstream's strings by content, so one
-		// entry claims both — the `CommandPaletteFooter` precedent. The `color*`
-		// half of each pair is verified anyway, by object mode.
+		// `callRow`, `callRowClickable` and `callRowToggle` go through
+		// `focusOutlineProps.focusVisible(...)`, a cross-module runtime call, so
+		// `dist/` has no inline literal for them; object mode compares those three.
+		// `statusIconCircle`/`statusIconInner` no longer exist upstream — the
+		// status Icon is rendered directly.
 		//
 		// `groupHeader`, `listIndented`, `errorText` and the three `pile*` styles are
 		// declared upstream and applied nowhere, so StyleX prunes them from both
@@ -3945,11 +4221,6 @@ const CASES = [
 		file: 'src/lib/components/chat/chat-tool-calls.stylex.js',
 		upstreamFile: 'Chat/ChatToolCalls.js',
 		inline: [
-			['styles.callRow'],
-			['styles.callRow', 'styles.callRowClickable'],
-			['styles.callRow', 'styles.callRowToggle'],
-			['styles.statusIconCircle'],
-			['styles.statusIconInner'],
 			['styles.callName'],
 			['styles.callLabel'],
 			['styles.stats'],
@@ -3987,37 +4258,20 @@ const CASES = [
 		]
 	},
 	{
-		// **One module of ours, two upstream files — and the same five keys declared
-		// twice upstream.** `BottomSheet.tsx` and `BottomSheetSwitcher.tsx` each
-		// carry their own `stylex.create` for the dialog shell, with identical
-		// properties and identical token references, so both compile to the same
-		// atoms. This port shares one module between the two hosts rather than
-		// duplicating it byte for byte, which is why the file appears in two cases
-		// here — the `Stack` / `StackItem` precedent, arrived at from the opposite
-		// direction (there, one of ours split across two of theirs; here, one of
-		// ours standing in for two copies of theirs).
+		// **One module of ours; upstream declares the dialog shell twice.**
+		// `BottomSheet.tsx` and `BottomSheetSwitcher.tsx` each carry their own
+		// `stylex.create`, with identical properties and identical token
+		// references, so both compile to the same atoms. This port shares one
+		// module between the two hosts rather than duplicating it byte for byte.
 		//
-		// Object mode, and the switcher is the copy that leaves objects behind: it
-		// assigns `stylex.props(styles.dialog, isFlowVisible && styles.dialogOpen,
-		// hasScrim && styles.scrim, !hasScrim && styles.dialogNonModal, xstyle)` to a
-		// `dialogStyleProps` const, and the `xstyle` beside the merge defeats the
-		// fold, so `dist/` keeps `dialog`, `dialogOpen`, `dialogNonModal` and `scrim`
-		// live. Upstream's group is named `styles` and so is ours, so no rename.
-		//
-		// The switcher declares no positioner — the block-end positioner belongs to
-		// `BottomSheet.js` and is claimed inline in the case below. Our module holds
-		// both because both hosts here draw from it; object mode only walks the
-		// groups *upstream* declares, so the extra keys are not a leftover.
-		file: 'src/lib/components/bottom-sheet/bottom-sheet.stylex.js',
-		upstreamFile: 'BottomSheet/BottomSheetSwitcher.js'
-	},
-	{
-		// The same module against the OTHER host, where nothing survives as an
-		// object at all: `BottomSheet.js` merges the identical keys at a literal call
-		// site with no `xstyle` and no dynamic index beside them, so the compiler
-		// folded every one into a class string and `dist/` declares no `styles`.
-		// Inline mode only — twenty claims, no object diff, and the two modes
-		// together are what cover the module's ten keys.
+		// At 0.7.13 both copies fold every key into literal class strings: the
+		// switcher's `xstyle` merge no longer keeps a `styles` object alive in
+		// `dist/`, so an object-mode case against it would compare nothing. The
+		// case below is inline mode only: `BottomSheet.js` merges the
+		// identical keys at a literal call site with no `xstyle` and no dynamic
+		// index beside them, so the compiler folds every one into a class string
+		// and `dist/` declares no `styles`. Twenty claims cover the module's ten
+		// keys.
 		//
 		// The dialog is a SIXTEEN-entry lookup table keyed
 		// `!!shouldPresent << 3 | !!hasScrim << 2 | !!(hasScrim && !isOpen &&
@@ -4057,35 +4311,10 @@ const CASES = [
 		// `<div>` folded to, and `extractInlineClassNames` collects into a Set, so
 		// one claim covers both call sites.
 		file: 'src/lib/components/bottom-sheet/bottom-sheet.stylex.js',
-		upstreamFile: 'BottomSheet/BottomSheet.js',
-		inline: [
-			['styles.dialog'],
-			['styles.dialog', 'styles.dialogOpen'],
-			['styles.dialog', 'styles.scrim'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.scrim'],
-			['styles.dialog', 'styles.scrimClosing'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.scrimClosing'],
-			['styles.dialog', 'styles.scrim', 'styles.scrimClosing'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.scrim', 'styles.scrimClosing'],
-			['styles.dialog', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.scrim', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.scrim', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.scrimClosing', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.dialogOpen', 'styles.scrimClosing', 'styles.dialogNonModal'],
-			['styles.dialog', 'styles.scrim', 'styles.scrimClosing', 'styles.dialogNonModal'],
-			[
-				'styles.dialog',
-				'styles.dialogOpen',
-				'styles.scrim',
-				'styles.scrimClosing',
-				'styles.dialogNonModal'
-			],
-			['styles.positioner'],
-			['styles.positioner', 'styles.positionerTop'],
-			['styles.positioner', 'styles.positionerHidden'],
-			['styles.positioner', 'styles.positionerHidden', 'styles.positionerTop']
-		]
+		upstreamFile: 'BottomSheet/BottomSheet.js'
+		// Object mode only at 0.7.13: the published BottomSheet.js carries a live
+		// `styles` object and no className literals; the switcher's literals are
+		// its own flow keys.
 	},
 	{
 		// Both modes. Object mode covers the six keys the panel's own `stylex.props`
@@ -4097,22 +4326,12 @@ const CASES = [
 		// pair) and its `transitionDuration` likewise (the reduced-motion pair), so
 		// `parsePairs` is what keeps them from being under-counted.
 		//
-		// The handle bar, its pill and the scrolling body each reach exactly one call
-		// site with nothing beside them and were resolved into literal strings, so
-		// they have no object to diff and are claimed inline. The body is a two-entry
-		// table keyed `!!(height === 'tall') << 0`; `tallKeyboardBody` touches no
-		// property the base body sets (`scroll-padding-block-end` plus the four
-		// `::after` atoms), so it JOINS rather than replaces — the opposite of the
-		// dialog pair above, and worth stating because both shapes appear in the one
-		// component.
+		// At 0.7.13 the handle bar is the only folded call site: the pill is the
+		// bar's `::before`, and the body merges `focusOutlineStyles` with the
+		// `height === 'tall'` table at a runtime call, so object mode covers it.
 		file: 'src/lib/components/bottom-sheet/bottom-sheet-panel.stylex.js',
 		upstreamFile: 'BottomSheet/BottomSheetPanel.js',
-		inline: [
-			['styles.handleBar'],
-			['styles.handlePill'],
-			['styles.body'],
-			['styles.body', 'styles.tallKeyboardBody']
-		]
+		inline: [['styles.handleBar']]
 	},
 	{
 		// Inline mode only, and the smallest case in the file: the edge tint is one
@@ -4200,6 +4419,17 @@ async function compileOursWithCss(relative) {
  * declaration a mismatch.
  */
 async function collectConsts(relative) {
+	const files = Array.isArray(relative) ? relative : [relative];
+	const consts = new Map();
+	for (const file of files) {
+		for (const [key, value] of await collectConstsFromFile(file)) {
+			consts.set(key, value);
+		}
+	}
+	return consts;
+}
+
+async function collectConstsFromFile(relative) {
 	const filename = path.join(root, relative.replace(/\.js$/, '.ts'));
 	const { metadata } = await transformAsync(readFileSync(filename, 'utf8'), {
 		filename,
@@ -4482,13 +4712,17 @@ function markerClassOf(code, name) {
  * where ours emits `@layer` — the open `useCSSLayers` item in port/todo.md, and a
  * difference in how the rule is *ordered*, not in what it does.
  */
-function normaliseRule(rule, ownClass, markerClass) {
-	return rule
-		.replaceAll(':not(#\\#)', '')
-		.replaceAll(`.${ownClass}`, '.SELF')
-		.replaceAll(`.${markerClass}`, '.MARKER')
-		.replace(/\s+/g, ' ')
-		.trim();
+function normaliseRule(rule, ownClass, markerClasses) {
+	let out = rule.replaceAll(':not(#\\#)', '').replaceAll(`.${ownClass}`, '.SELF');
+	for (const markerClass of Array.isArray(markerClasses) ? markerClasses : [markerClasses]) {
+		if (markerClass != null) out = out.replaceAll(`.${markerClass}`, '.MARKER');
+	}
+	// `.2s` and `200ms` are the same duration; lightningcss minifies one side.
+	out = out.replace(
+		/(?<![\w.])(\d*\.?\d+)s\b/g,
+		(_m, value) => `${Math.round(Number(value) * 1000)}ms`
+	);
+	return out.replace(/\s+/g, ' ').trim();
 }
 
 /** Look a class up in our compiled metadata (one rule) or upstream's sheet. */
@@ -4508,7 +4742,7 @@ const upstreamRuleLookup = (ctx) => (className) => ctx.upstreamCss.get(className
  * `defineMarker()` is involved the class *names* cannot agree across the two
  * builds, so the emitted CSS is compared instead.
  */
-function markerRulesForClasses(classNames, lookup, markerClass, consts) {
+function markerRulesForClasses(classNames, lookup, markerClasses, consts) {
 	const rules = new Set();
 	for (const className of classNames) {
 		const found = lookup(className);
@@ -4516,7 +4750,7 @@ function markerRulesForClasses(classNames, lookup, markerClass, consts) {
 		// Upstream's stylesheet repeats a rule once per priority bucket, so the
 		// distinct texts are what carry meaning, not how many there are.
 		for (const rule of found) {
-			rules.add(normaliseRule(substituteConsts(rule, consts), className, markerClass));
+			rules.add(normaliseRule(substituteConsts(rule, consts), className, markerClasses));
 		}
 	}
 	return rules;
@@ -4544,17 +4778,17 @@ function classNamesOfEntry(entry) {
  * these keys stay checked at all.
  */
 function markerRulesMatch(ourEntry, upstreamEntry, ctx) {
-	if (ourEntry == null || ctx.ourMarker == null || ctx.upstreamMarker == null) return false;
+	if (ourEntry == null || ctx.ourMarkers == null || ctx.upstreamMarkers == null) return false;
 	const ourRules = markerRulesForClasses(
 		classNamesOfEntry(ourEntry),
 		ourRuleLookup(ctx),
-		ctx.ourMarker,
+		ctx.ourMarkers,
 		ctx.consts
 	);
 	const upstreamRules = markerRulesForClasses(
 		classNamesOfEntry(upstreamEntry),
 		upstreamRuleLookup(ctx),
-		ctx.upstreamMarker
+		ctx.upstreamMarkers
 	);
 	return ruleSetsEqual(ourRules, upstreamRules);
 }
@@ -4622,34 +4856,43 @@ for (const testCase of CASES) {
 	// A `defineMarker()` class is derived from its module's path, so ours can
 	// never equal upstream's. Where a case declares one, a mismatching key falls
 	// back to comparing the emitted CSS with both marker classes normalised.
-	const upstreamMarkerCode = testCase.marker
-		? readUpstreamFile(testCase.marker.upstreamFile)
-		: null;
-	if (testCase.marker && upstreamMarkerCode === null) {
-		mismatches++;
-		console.log(
-			`  ${label}: upstream no longer ships marker module ` +
-				`"${testCase.marker.upstreamFile}" — it has moved or been removed; repoint the case`
-		);
-		continue;
+	const markerDefs = testCase.markers ?? (testCase.marker ? [testCase.marker] : []);
+	const markerCodes = [];
+	for (const def of markerDefs) {
+		const code = readUpstreamFile(def.upstreamFile);
+		if (code === null) {
+			mismatches++;
+			console.log(
+				`  ${label}: upstream no longer ships marker module ` +
+					`"${def.upstreamFile}" — it has moved or been removed; repoint the case`
+			);
+			continue;
+		}
+		markerCodes.push({ def, code });
 	}
-	const marker = testCase.marker
-		? {
-				ourCss: compiled.css,
-				upstreamCss,
-				ourMarker: markerClassOf(await compileOurs(testCase.marker.file), testCase.marker.name),
-				upstreamMarker: markerClassOf(upstreamMarkerCode, testCase.marker.name)
-			}
-		: testCase.constHashed
+	if (markerCodes.length !== markerDefs.length) continue;
+	const marker =
+		markerDefs.length > 0
 			? {
 					ourCss: compiled.css,
 					upstreamCss,
-					ourMarker: NO_MARKER_CLASS,
-					upstreamMarker: NO_MARKER_CLASS,
-					isConstHashed: true,
-					consts: await collectConsts(testCase.constHashed)
+					ourMarkers: await Promise.all(
+						markerCodes.map(async ({ def }) => markerClassOf(await compileOurs(def.file), def.name))
+					),
+					upstreamMarkers: markerCodes.map(({ def, code }) => markerClassOf(code, def.name)),
+					isConstHashed: testCase.constHashed != null,
+					consts: testCase.constHashed ? await collectConsts(testCase.constHashed) : undefined
 				}
-			: null;
+			: testCase.constHashed
+				? {
+						ourCss: compiled.css,
+						upstreamCss,
+						ourMarkers: [NO_MARKER_CLASS],
+						upstreamMarkers: [NO_MARKER_CLASS],
+						isConstHashed: true,
+						consts: await collectConsts(testCase.constHashed)
+					}
+				: null;
 
 	for (const [group, entries] of Object.entries(theirs)) {
 		if (skips[group]) {
@@ -4720,7 +4963,7 @@ for (const testCase of CASES) {
 		? new Map(
 				[...upstreamInline].map((s) => [
 					s,
-					markerRulesForClasses(s.split(' '), upstreamRuleLookup(marker), marker.upstreamMarker)
+					markerRulesForClasses(s.split(' '), upstreamRuleLookup(marker), marker.upstreamMarkers)
 				])
 			)
 		: null;
@@ -4783,7 +5026,7 @@ for (const testCase of CASES) {
 			const ourRules = markerRulesForClasses(
 				classes.split(' '),
 				ourRuleLookup(marker),
-				marker.ourMarker,
+				marker.ourMarkers,
 				marker.consts
 			);
 			let matched = null;

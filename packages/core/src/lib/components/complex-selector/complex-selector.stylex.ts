@@ -14,6 +14,7 @@ import {
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 
 /**
  * Ported from Astryx's `ComplexSelector/ComplexSelector.tsx`, where the styles
@@ -38,7 +39,19 @@ import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex
  * ring, where the old one drew on a mouse click too.
  */
 
+/** Written by the press controller while it paints a press. */
+const PRESSED_ON = '[data-astryx-press="on"]';
+
+/** The content's own block-size cap, under the layer runtime's viewport cap. */
+const CONTENT_BLOCK_CAP = '480px';
+
 const styles = stylex.create({
+	// The status glyph or info-tip keeps its size when the trigger text is long.
+	statusTip: {
+		display: 'inline-flex',
+		alignItems: 'center',
+		flexShrink: 0
+	},
 	triggerContainer: {
 		position: 'relative',
 		display: 'flex',
@@ -51,7 +64,12 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-label-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+			// control sits under 16px, and only iOS WebKit implements
+			// -webkit-touch-callout to key the coarse-pointer floor to it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-label-leading'],
 		color: colorVars['--color-text-primary'],
@@ -109,7 +127,12 @@ const styles = stylex.create({
 	// rotation through a single selector. The wrapper keeps only layout.
 	triggerIconRotation: {
 		transitionProperty: 'transform',
-		transitionDuration: durationVars['--duration-fast'],
+		// Under reduced motion the chevron turns at once: an in-place state
+		// change moves nothing (design:reduced-motion DR1–DR3).
+		transitionDuration: {
+			default: durationVars['--duration-fast'],
+			'@media (prefers-reduced-motion: reduce)': '0s'
+		},
 		transitionTimingFunction: easeVars['--ease-standard'],
 		transformOrigin: 'center'
 	},
@@ -121,7 +144,14 @@ const styles = stylex.create({
 	},
 	content: {
 		boxSizing: 'border-box',
-		maxHeight: 'min(480px, calc(100vh - 32px))',
+		// The content's own cap, under the layer runtime's viewport cap: the
+		// viewport minus its gutters and any bar the app declares through
+		// LayerProvider's `inset` (spec:AST-059 FR2, FR6), so the last rows never
+		// paint under that bar.
+		maxHeight: stylex.firstThatWorks(
+			`min(${CONTENT_BLOCK_CAP}, ${layerViewportInset.maxBlockSize})`,
+			`min(${CONTENT_BLOCK_CAP}, ${layerViewportInset.maxBlockSizeFallback})`
+		),
 		overflow: 'auto',
 		padding: spacingVars['--spacing-3']
 	},
@@ -152,14 +182,44 @@ const styles = stylex.create({
 		transitionProperty: 'background-image, background-color, color, opacity, transform',
 		transform: {
 			default: 'scale(1)',
-			':active': 'scale(0.98)'
+			// A mouse press; under a coarse pointer the touch press model writes
+			// `data-astryx-press` instead (see interaction-overlay.stylex.ts).
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			[PRESSED_ON]: 'scale(0.98)'
 		}
 	},
 	triggerGhostDisabled: {
 		backgroundImage: 'none',
 		transform: {
 			default: 'none',
-			':active': 'none'
+			':active': 'none',
+			[PRESSED_ON]: 'none'
+		}
+	},
+	// Keep the input-family width contract while reusing ghost's borderless paint
+	// and the neutral resting fill used by secondary buttons.
+	triggerSecondary: {
+		borderWidth: 0,
+		backgroundColor: colorVars['--color-neutral'],
+		boxShadow: {
+			default: 'none',
+			':hover:not(:focus-within):where(:not(:disabled,[aria-disabled="true"]))': {
+				'@media (hover: hover)': 'none'
+			},
+			':focus-within': 'none'
+		},
+		fontWeight: fontWeightVars['--font-weight-medium'],
+		transitionProperty: 'background-image, background-color, color, opacity, transform',
+		transform: {
+			default: 'scale(1)',
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			[PRESSED_ON]: 'scale(0.98)'
 		}
 	},
 	disabled: {
@@ -179,8 +239,8 @@ const styles = stylex.create({
  */
 export type ComplexSelectorSize = 'sm' | 'md' | 'lg';
 
-/** Visual trigger style. Ghost matches toolbar buttons. */
-export type ComplexSelectorVariant = 'input' | 'ghost';
+/** Visual trigger style. `secondary` matches secondary buttons; `ghost` toolbar buttons. */
+export type ComplexSelectorVariant = 'input' | 'secondary' | 'ghost';
 
 /**
  * The bordered surface wrapping the trigger button, spinner and chevron.
@@ -200,17 +260,20 @@ export function complexSelectorTriggerContainerAttrs(
 		inputWrapperStyles.base,
 		styles.triggerContainer,
 		styles[size],
-		variant === 'ghost' && styles.triggerGhost,
-		// Upstream 0.5.1 moved the ghost trigger's hover/pressed overlay into the
-		// shared module, under the same `ghost` gate and in upstream's position.
-		variant === 'ghost' && interactionOverlayStyles.backgroundImage,
-		variant === 'ghost' && isDisabled && styles.triggerGhostDisabled,
 		// The ring belongs to the wrapper (the focusable `<button>` sits inside
 		// it), but it must still be a KEYBOARD ring: `:focus-within` matched a
 		// mouse click on the trigger and drew the outline for pointer users too.
-		// `focusWithin` here is `:has(:focus-visible)`.
-		focusOutlineStyles.focusWithin,
+		// It keys off the trigger alone, so the status info-tip beside it rings
+		// itself and the box does not ring too (architecture:interaction-modality
+		// INV3).
+		focusOutlineStyles.focusWithinCombobox,
+		variant === 'secondary' && styles.triggerSecondary,
+		variant === 'ghost' && styles.triggerGhost,
+		// Upstream 0.5.1 moved the trigger's hover/pressed overlay into the
+		// shared module, under the non-input gate and in upstream's position.
+		variant !== 'input' && interactionOverlayStyles.backgroundImage,
 		isDisabled && inputWrapperStyles.disabled,
+		variant !== 'input' && isDisabled && styles.triggerGhostDisabled,
 		isDisabled && styles.disabled,
 		!hasTriggerLabel && styles.placeholder,
 		xstyle
@@ -239,6 +302,11 @@ export function complexSelectorChevronXstyle(isOpen: boolean): StyleArg {
 /** The scrolling popup content box the render snippet fills. */
 export function complexSelectorContentAttrs(contentXstyle: StyleArg): SvelteStyleAttrs {
 	return sx(styles.content, contentXstyle);
+}
+
+/** The status glyph or info-tip inside the trigger, sized for the field. */
+export function complexSelectorStatusTipAttrs(): SvelteStyleAttrs {
+	return sx(styles.statusTip);
 }
 
 /**

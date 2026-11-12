@@ -1,0 +1,25 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "astryx-svelte-docs",
+	"compatibility_date": "2026-11-12",
+	"compatibility_flags": ["nodejs_compat"],
+	// `adapter-cloudflare` writes the worker and every prerendered page to this
+	// directory. Cloudflare serves pages directly from the assets; a navigation
+	// request that matches no file gets `404.html`, prerendered from the `/404`
+	// route. Non-navigation requests that match no asset reach the worker.
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare",
+		"not_found_handling": "404-page"
+	},
+	// `crqch.dev` must be an active zone in this Cloudflare account. `custom_domain`
+	// makes Wrangler create the DNS record and certificate on deploy; remove this
+	// block to deploy to the generated `*.workers.dev` URL instead.
+	"routes": [
+		{
+			"pattern": "astryx.crqch.dev",
+			"custom_domain": true
+		}
+	]
+}

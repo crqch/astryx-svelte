@@ -9,7 +9,7 @@
 	snippet renders raw.
 -->
 <script lang="ts">
-	import { SideNav, SideNavItem, SideNavSection } from '@astryx-svelte/core';
+	import { SideNav, SideNavItem, SideNavSection } from '@astryx-sv/core';
 </script>
 
 {#snippet homeIcon()}

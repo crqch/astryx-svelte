@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { HStack, Icon, Text, VStack } from '@astryx-svelte/core';
+	import { HStack, Icon, Text, VStack } from '@astryx-sv/core';
 
 	const statuses = [
 		{ icon: 'success', color: 'success', label: 'Deployed successfully' },

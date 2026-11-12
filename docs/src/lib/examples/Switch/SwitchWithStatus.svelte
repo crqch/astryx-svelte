@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Center, Switch, VStack } from '@astryx-svelte/core';
+	import { Center, Switch, VStack } from '@astryx-sv/core';
 
 	let terms = $state(false);
 	let sharing = $state(true);

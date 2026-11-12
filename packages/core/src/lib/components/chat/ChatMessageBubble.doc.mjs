@@ -49,17 +49,17 @@ export default {
 			name: 'name',
 			type: 'string | Snippet',
 			description:
-				"Sender name rendered above the bubble, aligned with bubble text padding. Use on the first bubble in a message. If the first content is raw (no bubble), use ChatMessage's `name` prop instead."
+				"Sender name rendered above the bubble, aligned with bubble text padding. Use on the first bubble in a message. Non-rendering scalar values (null, undefined, booleans, and the empty string) omit the aligned wrapper; numeric 0 remains aligned. If the first content is raw (no bubble), use ChatMessage's `name` prop instead."
 		},
 		{
 			name: 'metadata',
 			type: 'string | Snippet',
 			description:
-				"Metadata content rendered below the bubble, aligned with bubble text padding. Use on the last bubble in a message. If the last content is raw (no bubble), use ChatMessage's `metadata` prop instead."
+				"Metadata content rendered below the bubble, aligned with bubble text padding. Use on the last bubble in a message. Non-rendering scalar values (null, undefined, booleans, and the empty string) omit the aligned wrapper; numeric 0 remains aligned. If the last content is raw (no bubble), use ChatMessage's `metadata` prop instead."
 		},
 		{
 			name: 'group',
-			type: "'first' | 'middle' | 'last'",
+			type: "'middle' | 'first' | 'last'",
 			description:
 				'Position within a multi-bubble group. Controls corner radius reduction on the sender side. Leave unset for standalone bubbles (full radius).'
 		},

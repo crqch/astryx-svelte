@@ -109,6 +109,13 @@ export { rtlStyles } from './rtl.stylex.js';
 // `useIndicatorFocusRing`, not published API.
 export { focusOutlineStyles, focusOutlineProps } from './focus-outline.stylex.js';
 
+// The touch press model's one composable: the shared hover and pressed overlay
+// styles, which carry the press's strength, its release and its paint. A local
+// pressable spreads the result of `usePressFeedback` on the element that paints
+// and composes one of these on it; the controller, its attributes and its
+// clocks are internals.
+export { interactionOverlayStyles } from './interaction-overlay.stylex.js';
+
 // The "should this overlay reclaim focus?" test, new at upstream 0.4.0.
 export { isFocusDetached } from './focus-return.js';
 
@@ -124,7 +131,7 @@ export { isFocusDetached } from './focus-return.js';
 //
 // These ten all live in upstream's `utils/index.ts` and were reachable here only
 // from the package root (or, for `parseStyleKey`, from `./theme`), so
-// `import {themeProps} from '@astryx-svelte/core/utils'` failed where upstream's
+// `import {themeProps} from '@astryx-sv/core/utils'` failed where upstream's
 // succeeds. Placement, not absence — recorded in `port/debts.md` as the
 // consumer-visible half of the "two homes for one upstream dir" item.
 //

@@ -43,8 +43,13 @@
 	import KeyboardHintLayer from '../../hooks/keyboard-hint-layer.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
+	import { observeResize } from '../../internal/shared-resize-observer.js';
 	import { setSegmentedControlContext } from './segmented-control-context.svelte.js';
+	import { isSegmentDisabledOnItsOwn } from '../../private-attributes/segment-disabled.js';
+	import { isCoarsePointer, watchCoarsePointer } from '../../utils/coarse-pointer.js';
 	import { segmentedControlContainerAttrs } from './segmented-control.stylex.js';
+	import { SegmentedSelectionMotion } from './segmented-selection-motion.js';
+	import { useSegmentedTouchTracking } from './use-segmented-touch-tracking.svelte.js';
 
 	/**
 	 * Segmented button group for single selection (radiogroup semantics). Items
@@ -69,6 +74,7 @@
 		isDisabled = false,
 		disabledMessage,
 		children,
+		'aria-describedby': ariaDescribedByProp,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -84,6 +90,7 @@
 
 	const resolveSize = useSize();
 	const size = $derived(resolveSize(sizeProp, 'md') as SegmentedControlSize);
+	let isTouchPresentation = $state(false);
 
 	// Disabled-reason tooltip for the whole-group disabled state. Disabled controls
 	// swallow pointer events, so listeners attach to the radiogroup container (which
@@ -100,6 +107,10 @@
 	const listFocus = useListFocus(() => ({
 		itemSelector: '[role="radio"]:not([aria-disabled="true"])',
 		hasRovingTabIndex: true,
+		// One Tab stop, placed by the control: the selected segment, enabled or
+		// not and in a disabled control too, else the first segment not disabled
+		// by its own `isDisabled`, else the first.
+		tabStopOrder: orderTabStop,
 		wrap: true,
 		orientation: 'horizontal' as const
 	}));
@@ -116,15 +127,83 @@
 		size,
 		layout,
 		isDisabled,
+		isTouchPresentation,
+		disabledReasonID: showsDisabledMessage ? disabledMessageTooltip.describedBy : undefined,
 		hasDisabledMessage: showsDisabledMessage
 	}));
 
+	/**
+	 * The control's segments, its Tab stop first: the selected segment, enabled
+	 * or not, else the first segment not disabled by its own `isDisabled`, else
+	 * the first.
+	 */
+	function orderTabStop(list: HTMLElement): ReadonlyArray<HTMLElement> {
+		const segments = Array.from(list.querySelectorAll<HTMLElement>('[role="radio"]'));
+		const stop =
+			segments.find((segment) => segment.getAttribute('aria-checked') === 'true') ??
+			segments.find((segment) => !isSegmentDisabledOnItsOwn(segment)) ??
+			segments[0];
+		return stop == null ? segments : [stop, ...segments.filter((segment) => segment !== stop)];
+	}
+
+	let containerEl = $state<HTMLDivElement | null>(null);
+	const motion = new SegmentedSelectionMotion();
+	let previousValue = value;
+	const clickWait = useSegmentedTouchTracking(
+		() => containerEl,
+		motion,
+		() => !isDisabled
+	);
+
+	$effect(() => {
+		isTouchPresentation = isCoarsePointer(window);
+		return watchCoarsePointer(window, (isCoarse) => {
+			isTouchPresentation = isCoarse;
+		});
+	});
+
+	$effect(() => {
+		motion.present(isTouchPresentation);
+	});
+
+	// The DOM already shows the new value; the controller moves the lens from
+	// the segment that held it.
+	$effect(() => {
+		const next = value;
+		if (next !== previousValue && containerEl != null) {
+			motion.select(containerEl, previousValue, next);
+		}
+		previousValue = next;
+	});
+
+	// The controller's animators attach while the control is mounted. A resize
+	// hands any motion in flight back, because its boxes were measured before it.
+	$effect(() => {
+		const track = containerEl;
+		if (track == null) return;
+		motion.attachTrack(track);
+		const stop = observeResize(track, () => motion.resized(track));
+		return () => {
+			stop();
+			motion.settle();
+			motion.attachTrack(null);
+			motion.stop();
+		};
+	});
+
+	const describedBy = $derived(
+		[ariaDescribedByProp, showsDisabledMessage ? disabledMessageTooltip.describedBy : undefined]
+			.filter((id): id is string => typeof id === 'string' && id.length > 0)
+			.join(' ') || undefined
+	);
 	const theme = $derived(themeProps('segmented-control', { size }));
 	const containerAttrs = $derived(
-		segmentedControlContainerAttrs({ size, layout, isDisabled, showsDisabledMessage }, xstyle)
+		segmentedControlContainerAttrs({ size, layout, isDisabled }, xstyle)
 	);
 
 	function handleContainerKeyDown(e: KeyboardEvent): void {
+		// A key going down makes a focus move the keyboard's, which selects.
+		clickWait.end();
 		onKeyDownProp?.(e as KeyboardEvent & { currentTarget: HTMLDivElement });
 		if (e.defaultPrevented) {
 			return;
@@ -144,7 +223,9 @@
 		}
 		keyboardHint.onFocus(e);
 		listFocus.handleFocus(e);
-		if (isDisabled) {
+		// A pointer press moves focus before its click commits; that click owns
+		// the selection, so the focus move itself selects nothing.
+		if (isDisabled || motion.isPressed || clickWait.isAwaiting()) {
 			return;
 		}
 		const currentTarget = e.currentTarget as HTMLElement;
@@ -173,13 +254,14 @@
 </script>
 
 <div
+	bind:this={containerEl}
 	{...rest}
 	{@attach listFocus.attachList}
 	{@attach disabledMessageTooltip.attachTrigger}
 	role="radiogroup"
 	aria-label={label}
 	aria-disabled={isDisabled || undefined}
-	aria-describedby={showsDisabledMessage ? disabledMessageTooltip.describedBy : undefined}
+	aria-describedby={describedBy}
 	onkeydown={handleContainerKeyDown}
 	onfocusin={handleContainerFocus}
 	onfocusout={handleContainerBlur}

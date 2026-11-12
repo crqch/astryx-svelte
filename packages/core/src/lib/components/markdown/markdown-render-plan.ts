@@ -173,15 +173,27 @@ export function countBlockTextLength(nodes: BlockNode[]): number {
 }
 
 /**
- * Compute per-column min-widths from table AST content.
- * Buckets: ≤6 chars → 60px, 7–15 → 80px, >15 → 120px.
+ * Compute per-column min-width floors from table AST content, in `ch`.
+ *
+ * Once the cells stop clamping themselves, automatic table layout gives every
+ * column its min-content; that floor is honest but not readable, so the floor
+ * lets a column's longest cell wrap to about two lines instead, scaled by that
+ * cell's own length and bounded. A header label adds its own floor, so a
+ * short-bodied column stays as wide as its label reads on one line, up to a
+ * cap past which the label wraps rather than widening the column further.
  */
+const TABLE_COLUMN_MIN_CH = 4;
+const TABLE_COLUMN_MAX_CH = 24;
+const TABLE_COLUMN_TARGET_LINES = 2;
+const TABLE_HEADER_ONE_LINE_MAX_CH = 20;
+
 export function computeTableColumnMinWidths(node: {
 	headers: { children: InlineNode[] }[];
 	rows: { children: InlineNode[] }[][];
 }): number[] {
-	return node.headers.map((h, colIdx) => {
-		let maxLen = countInlineTextLength(h.children);
+	return node.headers.map((header, colIdx) => {
+		const headerLen = countInlineTextLength(header.children);
+		let maxLen = headerLen;
 		for (const row of node.rows) {
 			if (row[colIdx]) {
 				const len = countInlineTextLength(row[colIdx].children);
@@ -190,7 +202,11 @@ export function computeTableColumnMinWidths(node: {
 				}
 			}
 		}
-		return maxLen <= 6 ? 60 : maxLen <= 15 ? 80 : 120;
+		// Body floor: the longest cell wraps to about TARGET_LINES lines.
+		const bodyFloor = Math.ceil(maxLen / TABLE_COLUMN_TARGET_LINES);
+		// Header floor: the label reads on one line up to the one-line cap.
+		const headerFloor = Math.min(headerLen, TABLE_HEADER_ONE_LINE_MAX_CH);
+		return Math.min(TABLE_COLUMN_MAX_CH, Math.max(TABLE_COLUMN_MIN_CH, bodyFloor, headerFloor));
 	});
 }
 

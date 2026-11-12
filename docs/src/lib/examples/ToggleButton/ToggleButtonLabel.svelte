@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Icon, Stack, Text, ToggleButton, ToggleButtonGroup } from '@astryx-svelte/core';
+	import { Icon, Stack, Text, ToggleButton, ToggleButtonGroup } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Eye`/`EyeSlash`, `Funnel` and `MapPin`. The

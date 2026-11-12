@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Heading } from '@astryx-svelte/core';
+	import { Heading } from '@astryx-sv/core';
 	import { takeHeadingId } from './markdown-heading-ids.js';
 
 	/**

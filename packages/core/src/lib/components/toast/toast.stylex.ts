@@ -38,7 +38,11 @@ const styles = stylex.create({
 			default: durationVars['--duration-fast'],
 			'@media (prefers-reduced-motion: reduce)': '0.01ms'
 		},
-		transitionTimingFunction: easeVars['--ease-standard'],
+		transitionTimingFunction: easeVars['--ease-standard']
+	},
+	// A card enters from its edge only when it first renders. A move between
+	// modal outlets renders it again, and it must not enter again.
+	entering: {
 		'@starting-style': {
 			opacity: 0,
 			transform: `translateY(var(--_toast-slide-y, ${TOAST_EDGE_DRIFT}))`
@@ -61,7 +65,9 @@ const styles = stylex.create({
 	content: {
 		flex: 1,
 		minWidth: 0,
-		overflowWrap: 'anywhere'
+		overflowWrap: 'anywhere',
+		// Text inside keeps `anywhere` too (Text FR3).
+		'--_astryx-text-overflow-wrap': 'anywhere'
 	},
 	exiting: {
 		opacity: 0,
@@ -86,9 +92,14 @@ const styles = stylex.create({
  * no `class`/`style`/`xstyle` — so there is deliberately no override argument
  * here. A toast is only ever constructed by `ToastViewport` from `ToastOptions`.
  */
-export function toastRootAttrs(isError: boolean, isExiting: boolean): SvelteStyleAttrs {
+export function toastRootAttrs(
+	isError: boolean,
+	hasEntryStarted: boolean,
+	isExiting: boolean
+): SvelteStyleAttrs {
 	return sx(
 		styles.root,
+		!hasEntryStarted && styles.entering,
 		isError ? styles.variantError : styles.variantDefault,
 		isExiting && styles.exiting
 	);

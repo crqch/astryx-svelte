@@ -10,7 +10,7 @@ export default {
 	displayName: 'Tab Menu',
 	subComponentOf: 'TabList',
 	description:
-		"Overflow menu trigger that opens a dropdown of additional tab options, showing the selected option's label as the trigger text.",
+		"Overflow menu trigger that opens a dropdown of additional tab options, showing the selected option's label as the trigger text. Host attributes and DOM event handlers (id, aria-*, data-*, drag and drop) reach the trigger button, not the popup or its options. The button keeps its role, tab stop, and menu disclosure attributes.",
 	keywords: [
 		'tabs',
 		'tabbar',
@@ -25,6 +25,31 @@ export default {
 	group: 'Tabs',
 	category: 'Navigation',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			label: 'More',
+			options: [
+				{
+					value: 'settings',
+					label: 'Settings'
+				},
+				{
+					value: 'integrations',
+					label: 'Integrations'
+				},
+				{
+					value: 'billing',
+					label: 'Billing'
+				}
+			]
+		},
+		wrapper: {
+			component: 'TabList',
+			props: {
+				value: 'overview'
+			}
+		}
+	},
 	props: [
 		{
 			name: 'label',

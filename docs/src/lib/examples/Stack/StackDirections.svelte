@@ -7,7 +7,7 @@
 	subpaths, so all three come off the root barrel.
 -->
 <script lang="ts">
-	import { HStack, Token, VStack } from '@astryx-svelte/core';
+	import { HStack, Token, VStack } from '@astryx-sv/core';
 </script>
 
 <HStack gap={10} hAlign="center">

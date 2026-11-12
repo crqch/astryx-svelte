@@ -3,7 +3,7 @@
  * markup (`style="…"` is a string attribute here, not an object).
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'illustrations',
 	title: 'Illustrations',
@@ -69,7 +69,7 @@ export const docs = {
 					lang: 'svelte',
 					label: 'Empty state with illustration',
 					code: `<script lang="ts">
-	import { Center, Heading, Stack, Text } from '@astryx-svelte/core';
+	import { Center, Heading, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Center>

@@ -46,7 +46,7 @@
 		ToggleButtonGroup,
 		VStack,
 		type OverflowItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { MagnifyingGlassIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	interface LibraryItem {

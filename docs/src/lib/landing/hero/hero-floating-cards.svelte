@@ -5,6 +5,8 @@
 		Badge,
 		Button,
 		Card,
+		ChatComposer,
+		ChatSendButton,
 		Heading,
 		HStack,
 		Icon,
@@ -13,7 +15,7 @@
 		RadioListItem,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type { HeroThemeContent } from './hero-theme-content.js';
 
 	/**
@@ -23,19 +25,15 @@
 	 *
 	 * Ported from upstream's `hero/HeroFloatingCards.tsx`.
 	 *
-	 * Cards are real `@astryx-svelte/core` components, so wrapping the set in
+	 * Cards are real `@astryx-sv/core` components, so wrapping the set in
 	 * `<Theme>` re-skins them per theme. The whole layer is decorative:
 	 * `aria-hidden` + `inert` + no pointer events. `layout="overlap"` is the
 	 * desktop art composition; `layout="stack"` is the narrow-screen grid collage.
 	 *
-	 * **Not ported: the chat composer.** Upstream renders a `ChatComposer` +
-	 * `ChatSendButton` here — breaking out over the product photo in the overlap
-	 * layout, and as its own side-column item in the collage. `Chat` is unported
-	 * (port/todo.md → batch 13, 7,336 LOC), so both placements are omitted. The
-	 * `chatPrompt` field stays in `HeroThemeContent` because it is upstream's data
-	 * shape and the composer returns with the component. The `Plus` icon upstream
-	 * puts on the composer's attachment button goes with it, which is why no
-	 * substitution is needed for that one.
+	 * The chat composer is upstream's real `ChatComposer` + `ChatSendButton`: it
+	 * breaks out over the product photo in the overlap layout and sits in the side
+	 * column of the collage. Its attach glyph is the registry's `upload` glyph, a
+	 * stand-in for lucide's `Plus` that retires with the icon registry.
 	 */
 	interface Props {
 		content: HeroThemeContent;
@@ -67,6 +65,34 @@
 
 {#snippet badgeEl()}
 	<Badge variant="green" label={content.pills.leading} icon={sparklesIcon} />
+{/snippet}
+
+<!--
+	Upstream's attach glyph is lucide's `Plus`. Registry substitution: `upload` is
+	the nearest "attach something" reading in the built-in set. Retires with the
+	icon registry (port/todo.md → Phase 3).
+-->
+{#snippet plusIcon()}<Icon icon="upload" size="sm" />{/snippet}
+
+{#snippet composerEl()}
+	<div class="composer-surface">
+		<ChatComposer
+			value=""
+			onChange={() => {}}
+			onSubmit={() => {}}
+			placeholder={content.chatPrompt}
+			footerActions={composerFooterActions}
+			sendButton={composerSendButton}
+		/>
+	</div>
+{/snippet}
+
+{#snippet composerFooterActions()}
+	<Button variant="secondary" size="md" isIconOnly icon={plusIcon} label="Add attachment" />
+{/snippet}
+
+{#snippet composerSendButton()}
+	<ChatSendButton isDisabled={false} />
 {/snippet}
 
 {#snippet radioEl()}
@@ -110,6 +136,11 @@
 									<img src={content.product.image} alt="" class="image" />
 								</AspectRatio>
 							</div>
+							<!--
+								Overlap-only: the composer breaks out past the card edge over
+								the photo. In collage mode it is its own side-column item.
+							-->
+							<div class="chat-bubble">{@render composerEl()}</div>
 						</div>
 					{/if}
 				</VStack>
@@ -194,6 +225,7 @@
 			<div class="ga-reward">{@render rewardCardEl()}</div>
 			<div class="ga-side">
 				{@render buyCardEl()}
+				{@render composerEl()}
 				<div class="collage-pill-row">
 					{@render radioEl()}
 					{@render badgeEl()}
@@ -455,9 +487,31 @@
 		overflow: visible;
 	}
 
-	/* Relative so a breakout child can anchor to the image. */
+	/* Relative so the composer can anchor to the image. */
 	.product-image-wrap {
 		position: relative;
+	}
+
+	/* Positions the composer breaking out past the product card's right edge. */
+	.chat-bubble {
+		position: absolute;
+		left: 5%;
+		right: calc(-1 * var(--spacing-12));
+		bottom: var(--spacing-5);
+		transform: translateX(var(--spacing-12));
+		pointer-events: none;
+		cursor: default;
+	}
+
+	/*
+	 * Neutral card surface so the composer does not pick up the theme's tinted
+	 * `--color-background-popover` (e.g. pink on Y2K). Upstream sets the body's
+	 * background directly through `xstyle`; a `.svelte` file may not import
+	 * StyleX, so the same token is redirected for the composer's whole scope.
+	 * Only the composer's own body reads it.
+	 */
+	.composer-surface {
+		--color-background-popover: var(--color-background-card);
 	}
 
 	.stage :global(.feature-card) {

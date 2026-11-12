@@ -1,134 +1,178 @@
 <script lang="ts">
-	import type { Component } from 'svelte';
 	import ShowcaseThumbnail from '$lib/shell/showcase-thumbnail.svelte';
+	import { templateImporterFor } from '$lib/shell/page-template-modules.js';
 
 	/**
-	 * The Templates bento tile's preview — six real block templates, live and
-	 * scaled, in the staggered two-per-row stack upstream uses.
+	 * The Templates bento tile — upstream's `_landing/TemplatesPreview.tsx`.
 	 *
-	 * **The composition is upstream's `TemplatesPreview`; the contents are the
-	 * templates this port has.** Upstream picks seven *page* templates
-	 * (`product-gallery`, `ide`, `payment-form`, `login-split`,
-	 * `settings-sidebar`, `ai-chat-landing`, `product-detail`) and renders each
-	 * one's `page.tsx` at 1100px through `TemplateThumbnail`. Not one page
-	 * template is ported (port/todo.md → Phase 5), so those seven slugs resolve to
-	 * nothing here. The **block** templates all do exist — 619 of them reach
-	 * `/templates` — so the tile shows six of those instead, through the same
-	 * `ShowcaseThumbnail` the components gallery uses.
+	 * Seven live page templates, rendered at a desktop width and scaled into
+	 * uniform tiles: storefront, IDE, payment, login, settings, AI chat and
+	 * product detail. The middle row holds three so the centred (`login-split`)
+	 * template sits in the middle; the outer two bleed off the card edges in the
+	 * narrow three-column desktop grid.
 	 *
-	 * The six are upstream's own showcase blocks, chosen to be legible at tile
-	 * size and to cover different page furniture rather than six of one thing.
-	 * They are named here rather than taken off the top of the registry because
-	 * the registry's first six alphabetically are five `AlertDialog`s and an
-	 * `AppShell`, which would read as a bug.
+	 * On a wide card — the single-column stack on small screens — the rows
+	 * dissolve into one three-column grid, so seven tiles would leave a lone
+	 * seventh; `product-detail` is hidden there to keep a clean three + three.
 	 *
-	 * This tile returns to upstream's seven pages when the page templates land;
-	 * the row shape and the ratio are already upstream's.
+	 * Every template is transcribed in `packages/cli/assets/templates/pages/` and
+	 * resolved through the same lazy importer the galleries use. A slug whose
+	 * transcription has not landed resolves to `null`, and `ShowcaseThumbnail`
+	 * renders its empty frame rather than the tile disappearing — so the
+	 * composition is upstream's from the first batch and fills in as templates
+	 * arrive.
 	 */
+	interface Props {
+		/**
+		 * Cap the number of thumbnail rows rendered. Defaults to all rows; pass
+		 * e.g. 2 to show only the first two rows in a more compact card.
+		 */
+		maxRows?: number;
+	}
 
-	/**
-	 * Six blocks, two per row.
-	 *
-	 * Upstream's middle row holds three so its centred `login-split` page sits in
-	 * the middle. That works because a page template *is* a page: shrunk to a
-	 * third of a narrow card it still reads as a layout. A block is a component
-	 * demo, and at ~95px it reads as a smudge, so the rows are uniform here and
-	 * every tile is half a card wide.
-	 *
-	 * **Literal `import()` calls rather than `importerFor()`, and that is a size
-	 * decision.** The registry lookup would pull `example-modules.ts` — a
-	 * 629-entry `import.meta.glob` that bundles to a 242 KB eager chunk — onto the
-	 * landing page, which is the one route in the site with no reason to know the
-	 * whole example set. Six named imports are six lazy chunks and nothing eager.
-	 * See `ShowcaseThumbnail`'s `load` prop.
-	 */
-	const ROWS: Array<Array<{ id: string; load: () => Promise<{ default: Component }> }>> = [
-		[
-			{
-				id: 'AppShellShowcase',
-				load: () => import('$lib/examples/AppShell/AppShellShowcase.svelte')
-			},
-			{ id: 'TableShowcase', load: () => import('$lib/examples/Table/TableShowcase.svelte') }
-		],
-		[
-			{
-				id: 'CalendarShowcase',
-				load: () => import('$lib/examples/Calendar/CalendarShowcase.svelte')
-			},
-			{
-				id: 'ChatMessageListShowcase',
-				load: () => import('$lib/examples/ChatMessageList/ChatMessageListShowcase.svelte')
-			}
-		],
-		[
-			{
-				id: 'CommandPaletteShowcase',
-				load: () => import('$lib/examples/CommandPalette/CommandPaletteShowcase.svelte')
-			},
-			{
-				id: 'CollapsibleShowcase',
-				load: () => import('$lib/examples/Collapsible/CollapsibleShowcase.svelte')
-			}
-		]
+	const { maxRows }: Props = $props();
+
+	// A representative set of the real page templates (storefront, IDE, payment,
+	// login, settings, AI chat, product detail). Grouped into rows; the middle row
+	// holds three so the centred (login) template sits in the middle.
+	const TEMPLATE_ROWS: string[][] = [
+		['product-gallery', 'ide'],
+		['payment-form', 'login-split', 'settings-sidebar'],
+		['ai-chat-landing', 'product-detail']
 	];
 
-	/**
-	 * The width a block lays out at before being shrunk into its tile — upstream's
-	 * `RENDER_WIDTH`, at 600 rather than 1100 because these are component blocks
-	 * and not whole pages. Under the thumbnail's default (twice the tile) a 150px
-	 * tile lays the block out at 300px, which is narrow enough that a multi-column
-	 * block reflows into a column and the tile shows a fragment rather than the
-	 * composition.
-	 */
-	const RENDER_WIDTH = 600;
+	// On small screens the rows flow into a single 3-column grid; 7 templates would
+	// leave a lone 7th tile, so this one is dropped there to keep a clean 3 + 3.
+	const HIDE_ON_SMALL = 'product-detail';
 
-	/** Upstream's `TILE_RATIO` — slightly taller than 16/10. */
+	// Desktop width each template renders at before being shrunk to fit — a
+	// desktop width shows the WHOLE page composition (nav + hero + content), not
+	// a zoomed-in top-left corner.
+	const RENDER_WIDTH = 1100;
+	// Uniform tile aspect ratio so every block is the same height (and, in a 2-col
+	// grid, the same width). Slightly taller than 16/10 to show a bit more.
 	const TILE_RATIO = '16 / 11.5';
+
+	const rows = $derived(
+		(maxRows != null ? TEMPLATE_ROWS.slice(0, maxRows) : TEMPLATE_ROWS).map((row) =>
+			row.map((slug) => ({ slug, load: templateImporterFor(slug) }))
+		)
+	);
 </script>
 
-<div class="root" inert>
-	{#each ROWS as row, index (index)}
-		<div class="row">
-			{#each row as block (block.id)}
-				<div class="tile">
-					<ShowcaseThumbnail
-						load={block.load}
-						renderWidth={RENDER_WIDTH}
-						aspectRatio={TILE_RATIO}
-					/>
-				</div>
-			{/each}
-		</div>
-	{/each}
+<div class="container" inert>
+	<div class="root">
+		{#each rows as row, rowIndex (rowIndex)}
+			<div class="row {row.length === 3 ? 'cols3' : 'cols2'}">
+				{#each row as tile (tile.slug)}
+					<div class="tile {tile.slug === HIDE_ON_SMALL ? 'hide-on-wide' : ''}">
+						<!--
+							borderRadius="0" so the thumbnail fills the tile's rounded corners
+							flush — the tile already rounds + clips, so the thumbnail's own
+							--radius-container would otherwise nest a second, mismatched
+							radius. A page template renders transparent, so the thumbnail is
+							backed by the app surface, as upstream's TemplateThumbnail is.
+						-->
+						<ShowcaseThumbnail
+							load={tile.load}
+							aspectRatio={TILE_RATIO}
+							renderWidth={RENDER_WIDTH}
+							borderRadius="0"
+							background="var(--color-background-surface)"
+							layout="page"
+						/>
+					</div>
+				{/each}
+			</div>
+		{/each}
+	</div>
 </div>
 
 <style>
-	.root {
-		display: flex;
-		flex-direction: column;
-		gap: var(--spacing-2);
+	/*
+	 * Query container — a plain wrapper whose width the layout responds to. (A
+	 * container cannot respond to its OWN @container query, so the responsive
+	 * layout lives on a descendant.)
+	 */
+	.container {
+		container-type: inline-size;
+		container-name: templatesPreview;
 		width: 100%;
-		max-width: 420px;
-		margin-inline: auto;
-		/* Decorative — never interactive, and `ShowcaseThumbnail` is already
-		   `inert` on its own. */
+		/* Decorative — never interactive. */
 		pointer-events: none;
 	}
 
-	.row {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--spacing-2);
+	/*
+	 * Narrow card: a flex-column stack of 2-per-row groups (each row offset and
+	 * bled). Wide card: a single 3-column grid — the row wrappers dissolve via
+	 * display:contents below, so all six tiles flow into these three columns.
+	 */
+	.root {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-5);
+		width: 100%;
 	}
 
 	/*
-	 * The thumbnail rounds and clips itself, so the tile only owns the shadow —
-	 * nesting a second radius here would show a mismatched corner, which is the
-	 * reason upstream passes `borderRadius="0"` to its own thumbnail.
+	 * Narrow card: each row is a uniform grid, centred so the extra width bleeds
+	 * evenly off both edges (clipped by the card's overflow). Wide card: the row
+	 * wrapper dissolves so its tiles flow into the root's 3-column grid.
 	 */
+	.row {
+		display: grid;
+		gap: var(--spacing-5);
+	}
+
+	/* 2-up row: 150% wide → each tile ≈ 75% of the card. Centred. */
+	.cols2 {
+		grid-template-columns: 1fr 1fr;
+		width: 150%;
+		margin-inline: -25%;
+	}
+
+	/*
+	 * 3-up row: 225% wide so each tile is the SAME ~75%-of-card size as the 2-up
+	 * rows (3 × 75% = 225%). Centred, so the middle tile is fully visible and the
+	 * outer two bleed off the edges (clipped).
+	 */
+	.cols3 {
+		grid-template-columns: repeat(3, 1fr);
+		width: 225%;
+		margin-inline: -62.5%;
+	}
+
+	@container templatesPreview (min-width: 400px) {
+		.root {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+		}
+
+		.row {
+			display: contents;
+		}
+	}
+
+	/* Frame each thumbnail with a subtle border + clip and an elevation shadow so
+	   each scaled page reads as a tidy, lifted card tile rather than a flat render. */
 	.tile {
+		border-radius: var(--radius-inner);
 		overflow: hidden;
-		border-radius: var(--radius-container);
-		box-shadow: var(--shadow-sm);
+		border: 1px solid var(--color-border);
+		background-color: var(--color-background-surface);
+		box-shadow: var(--shadow-med);
+	}
+
+	/* Hidden on a wide card (small screens): with 7 templates the dissolved
+	   3-column grid would leave a lone 7th tile (3 + 3 + 1), so one tile drops out
+	   to keep a clean 3 + 3. It still shows in the narrow-card desktop layout. */
+	.hide-on-wide {
+		display: block;
+	}
+
+	@container templatesPreview (min-width: 400px) {
+		.hide-on-wide {
+			display: none;
+		}
 	}
 </style>

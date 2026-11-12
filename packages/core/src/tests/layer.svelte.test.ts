@@ -13,27 +13,16 @@ import HostingHarness from './fixtures/layer-hosting-harness.svelte';
 import RelocatingHarness from './fixtures/layer-relocating-harness.svelte';
 
 /**
- * Ported from Astryx's `Layer/useLayer.test.tsx` at the **0.5.0** pin — **all 32
- * of its `it` blocks / 43 cases** (31 plain `it` plus one `it.each` table of 12
- * rows), plus one beyond-upstream case documented at its own site. **33 `it` in
- * the file, 44 cases.** (The parenthetical read "two `it.each` tables expand to
- * 11 rows between them"; there is one table of 12, on both sides. The totals it
- * fed were right regardless.)
+ * Ported from Astryx's `Layer/useLayer.test.tsx` at the **0.7.13** pin, plus one
+ * beyond-upstream case documented at its own site. `status.md` derives the case
+ * delta from this file's `PORTS:` marker rather than from a count here.
  *
- * The header has now stated a wrong count three times: "all twenty-nine cases"
- * (0.4.1 minus `describe('offset')`, naming none of the five it was short), a
- * corrected twenty-seven while those five were still missing, then "all
- * thirty-two" — which counted our own file's blocks, one of which is the
- * beyond-upstream case, so it silently covered for a MISSING upstream case:
- * `declares body type instead of inheriting the host context`. That case is
- * ported now, restated for a real browser (see the comment at it), and upstream
- * has not moved this file since v0.4.2.
+ * `offset` gained a case and lost its both-edges assumption at 0.7.13: the
+ * clearance now rides only the anchor-facing edge of the placement axis, and the
+ * far edge carries the static viewport gutter (spec:AST-059 FR1, FR6).
  *
- * `offset` had been implemented since before 0.4.0 with nothing asserting it, as
- * had the nine-case `describe('context hosting')` block 0.4.2 added.
- *
- * `getPositionTryFallbacks` is pure and its five cases transcribe. The rendered
- * ones needed two mechanical changes:
+ * `getPositionTryFallbacks` is pure and its cases transcribe. The rendered ones
+ * needed two mechanical changes:
  *
  * **Assertions read the `style` attribute, not the CSSOM.** Upstream reads
  * `layerEl.style.positionTryFallbacks`; that is a jsdom convenience — jsdom has
@@ -427,73 +416,71 @@ describe('useLayer context positioning', () => {
 	});
 
 	/**
-	 * Upstream's `describe('offset')`, all five cases. They had never been ported,
-	 * while `offset` itself has been implemented since before 0.4.0 — the header
-	 * said "all twenty-nine cases" and these were the five it was short.
+	 * Upstream's `describe('offset')`, all seven cases at 0.7.13.
 	 *
-	 * **Counterpart, and stronger.** Upstream reads StyleX's *debug-mode* variable
-	 * names (`--x-marginBlockStart`) off the inline style, because jsdom resolves
-	 * neither the `var()` indirection nor logical margin properties — so the
-	 * declaration is all it can check. Chromium resolves both, so these read the
-	 * computed logical margins instead: that is the fact the declaration stands in
-	 * for, and it also catches a value the engine rejected, which upstream's form
-	 * cannot.
+	 * **Restated to the declaration, as upstream states it.** The clearance rides
+	 * the anchor-facing edge of the placement axis; the far edge carries the static
+	 * viewport gutter (spec:AST-059 FR1), which is a class, not a dynamic variable.
+	 * A shown popover in Chromium resolves its computed margins through anchor
+	 * layout, so reading `getComputedStyle` measures the placed box rather than the
+	 * declaration — the assertion upstream makes off the inline `--x-` variables is
+	 * the one that survives that, and the gutter case checks the applied class.
 	 */
 	describe('offset', () => {
 		async function openAndGetOffsets(props: Record<string, unknown>) {
 			const layer = await openContext(props);
-			const computed = getComputedStyle(layer);
+			const read = (prop: string) => layer.style.getPropertyValue(`--x-${prop}`);
 			return {
-				blockStart: computed.marginBlockStart,
-				blockEnd: computed.marginBlockEnd,
-				inlineStart: computed.marginInlineStart,
-				inlineEnd: computed.marginInlineEnd
+				blockStart: read('marginBlockStart'),
+				blockEnd: read('marginBlockEnd'),
+				inlineStart: read('marginInlineStart'),
+				inlineEnd: read('marginInlineEnd')
 			};
 		}
 
-		const NONE = { blockStart: '0px', blockEnd: '0px', inlineStart: '0px', inlineEnd: '0px' };
+		const NONE = { blockStart: '', blockEnd: '', inlineStart: '', inlineEnd: '' };
 
-		it('is flush by default', async () => {
+		// The clearance rides the anchor-facing edge of the placement axis; the
+		// far edge carries the static viewport gutter, which is a class, not a
+		// dynamic variable, so it does not appear here.
+		it('is flush against the anchor by default', async () => {
 			expect(await openAndGetOffsets({ placement: 'below' })).toEqual(NONE);
 		});
 
-		// Both edges of the axis, so the gap survives a position-try-fallbacks flip
-		// to the opposite side (#4803).
-		it('clears both block edges for a block placement', async () => {
+		// The flip tactic swaps the two block margins with the area, so the gap
+		// survives a position-try-fallbacks flip to the opposite side (#4803).
+		it('clears the anchor-facing block edge for a block placement', async () => {
 			expect(await openAndGetOffsets({ placement: 'above', offset: 8 })).toEqual({
 				...NONE,
-				blockStart: '8px',
 				blockEnd: '8px'
 			});
 		});
 
-		it('clears both inline edges for an inline placement', async () => {
+		it('clears the opposite block edge when placed below', async () => {
+			expect(await openAndGetOffsets({ placement: 'below', offset: 8 })).toEqual({
+				...NONE,
+				blockStart: '8px'
+			});
+		});
+
+		it('clears the anchor-facing inline edge for an inline placement', async () => {
 			expect(await openAndGetOffsets({ placement: 'end', offset: 8 })).toEqual({
 				...NONE,
-				inlineStart: '8px',
-				inlineEnd: '8px'
+				inlineStart: '8px'
 			});
 		});
 
 		it('takes a CSS length string', async () => {
-			// Resolved rather than literal: upstream asserts the declaration text
-			// `var(--spacing-1)` survives, which is all jsdom can see. Here the
-			// engine resolves it, so the assertion is that it resolves to the same
-			// length `--spacing-1` holds on the page — and that it is not zero, or
-			// the case would pass against an offset that never applied.
-			const spacing1 = getComputedStyle(document.documentElement)
-				.getPropertyValue('--spacing-1')
-				.trim();
-			expect(spacing1).not.toBe('');
-
-			const offsets = await openAndGetOffsets({
-				placement: 'below',
-				offset: 'var(--spacing-1)'
+			expect(await openAndGetOffsets({ placement: 'below', offset: 'var(--spacing-1)' })).toEqual({
+				...NONE,
+				blockStart: 'var(--spacing-1)'
 			});
-			expect(offsets.blockStart).toBe(offsets.blockEnd);
-			expect(offsets.blockStart).not.toBe('0px');
-			expect(offsets.inlineStart).toBe('0px');
-			expect(offsets.inlineEnd).toBe('0px');
+		});
+
+		it('puts the viewport gutter on the far edge of the placement axis (FR1, FR6)', async () => {
+			const layer = await openContext({ placement: 'below', offset: 8 });
+			expect(layer.className).toContain('layer__styles.placementBelow');
+			expect(layer.className).not.toContain('layer__styles.placementAbove');
 		});
 
 		it('is ignored under custom positioning, which owns its own insets', async () => {

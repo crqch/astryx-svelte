@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Selector, SelectorOption } from '@astryx-svelte/core';
+	import { Selector, SelectorOption } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `UserIcon`; the registry has no person glyph, so

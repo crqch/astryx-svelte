@@ -25,7 +25,7 @@
 		useTableSortable,
 		useTableSortableState,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	interface Employee extends Record<string, unknown> {
 		id: string;

@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
-	import type { BaseProps } from '../../base-props.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { StyleArg } from '../../internal/sx.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
@@ -71,7 +71,7 @@
 	 * the first `ReactNode` one.
 	 */
 	export interface ComplexSelectorProps<Value> extends Omit<
-		BaseProps<HTMLDivElement>,
+		FieldInputBaseProps<HTMLDivElement>,
 		'children' | 'onchange' | 'placeholder'
 	> {
 		/** Label text for accessibility and the field label. */
@@ -118,7 +118,7 @@
 		size?: ComplexSelectorSize;
 		/** Width of the field. */
 		width?: SizeValue;
-		/** Visual trigger style. Ghost matches toolbar buttons. */
+		/** Visual trigger style. `secondary` matches secondary buttons; `ghost` matches toolbar buttons. */
 		variant?: ComplexSelectorVariant;
 		/** Icon displayed at the start of the trigger — a registry name or a snippet. */
 		startIcon?: Snippet | IconName;
@@ -139,17 +139,22 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import Icon from '../icon/icon.svelte';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import PopoverLayer from '../popover/popover-layer.svelte';
 	import { usePopover } from '../popover/use-popover.svelte.js';
 	import Spinner from '../spinner/spinner.svelte';
+	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
+	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import {
 		complexSelectorChevronXstyle,
 		complexSelectorContentAttrs,
 		complexSelectorPopoverOffset,
 		complexSelectorPopoverStyle,
+		complexSelectorStatusTipAttrs,
 		complexSelectorTriggerAttrs,
 		complexSelectorTriggerContainerAttrs,
 		complexSelectorTriggerTextAttrs
@@ -215,14 +220,29 @@
 		placement = 'below',
 		alignment = 'start',
 		contentXstyle,
-		xstyle,
-		class: className,
-		style: styleProp,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		'data-testid': testId,
 		// Destructured out of the rest spread on purpose — see `handleTriggerClick`.
 		onclick: onclickProp,
 		...rest
 	}: ComplexSelectorProps<Value> = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout/InputGroup decision
+	// reactive.
+	const field = useFieldInputStyling('ComplexSelector', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -232,6 +252,9 @@
 		isOptional: () => isOptional
 	});
 
+	// The trigger container is the pressable: the ghost/secondary press scale
+	// reads the controller's attribute under a finger.
+	const pressable = usePressFeedback();
 	const t = useTranslator();
 	const placeholder = $derived(placeholderFromProps ?? t('@astryx.selector.placeholder'));
 
@@ -244,10 +267,29 @@
 	const contentId = `${uid}-content`;
 	const descriptionId = `${uid}-description`;
 	const statusMessageId = `${uid}-status`;
+	const statusTooltipId = `${uid}-status-tip`;
 	const popoverId = `${uid}-popover`;
 
+	// A non-input trigger has no field border for an attached status bubble to
+	// hang off, so it falls back to the detached treatment.
+	const effectiveStatusVariant = $derived(
+		variant !== 'input' && statusVariant === 'attached' ? 'detached' : statusVariant
+	);
+	const isTooltipStatus = $derived(effectiveStatusVariant === 'tooltip');
+	const statusIcon = useInputStatusIcon(() => ({
+		id: statusTooltipId,
+		status,
+		statusVariant: effectiveStatusVariant,
+		size: 'sm'
+	}));
+
+	// With `tooltip` placement, Field renders no message box. The info-tip
+	// holds the message and describes the trigger.
 	const ariaDescribedBy = $derived(
-		[description ? descriptionId : null, status?.message ? statusMessageId : null]
+		[
+			description ? descriptionId : null,
+			isTooltipStatus ? statusIcon.describedBy : status?.message ? statusMessageId : null
+		]
 			.filter((id): id is string => id != null)
 			.join(' ') || undefined
 	);
@@ -367,20 +409,21 @@
 		}
 	}
 
-	// A ghost trigger has no field border for an attached status bubble to hang
-	// off, so it falls back to the detached treatment.
-	const effectiveStatusVariant = $derived(
-		variant === 'ghost' && statusVariant === 'attached' ? 'detached' : statusVariant
-	);
-
 	const theme = $derived(
 		themeProps('complex-selector', { variant, size, status: status?.type ?? null })
 	);
 	const containerAttrs = $derived(
-		complexSelectorTriggerContainerAttrs(size, isDisabled, triggerLabel != null, variant, xstyle)
+		complexSelectorTriggerContainerAttrs(
+			size,
+			isDisabled,
+			triggerLabel != null,
+			variant,
+			controlXstyle
+		)
 	);
 	const triggerAttrs = complexSelectorTriggerAttrs();
 	const triggerTextAttrs = complexSelectorTriggerTextAttrs();
+	const statusTipAttrs = complexSelectorStatusTipAttrs();
 	const chevronXstyle = $derived(complexSelectorChevronXstyle(popover.isOpen));
 	const contentAttrs = $derived(complexSelectorContentAttrs(contentXstyle));
 	const layerXstyle = $derived([complexSelectorPopoverStyle, layerAnimations[placement]]);
@@ -398,11 +441,12 @@
 	<div
 		{@attach popover.attachTrigger}
 		data-testid={testId}
-		{...rest}
+		{...pressable}
+		{...fieldRest}
 		onclick={handleTriggerClick}
 		{...theme}
-		class={cx(theme.class, containerAttrs.class, className)}
-		style={mergeStyle(containerAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, containerAttrs.class, controlClassName)}
+		style={mergeStyle(containerAttrs.style, controlStyle)}
 	>
 		<!--
 			Upstream's `renderIconSlot(startIcon, {size: 'sm', color: 'secondary'})`
@@ -427,6 +471,7 @@
 		<button
 			id={triggerId}
 			type="button"
+			role="combobox"
 			aria-haspopup="dialog"
 			aria-expanded={popover.isOpen}
 			aria-controls={contentId}
@@ -448,21 +493,47 @@
 		{#if isBusy}
 			<Spinner size="sm" />
 		{/if}
-		<!--
-			No wrapper: Icon's own span already provides the 16px box (`sm`) and the
-			secondary icon colour the wrapper used to set, so the glyph IS the
-			trigger's icon element — one node carrying the box, the colour, the
-			rotation, and the stable theme target with its open/closed `data-state`.
-		-->
-		<Icon
-			icon="chevronDown"
-			size="sm"
-			color="secondary"
-			xstyle={chevronXstyle}
-			{...themeProps('complex-selector-indicator-icon', {
-				state: popover.isOpen ? 'expanded' : 'collapsed'
-			})}
-		/>
+		{#if statusIcon.hasIcon}
+			{#if isTooltipStatus}
+				<!--
+					The info-tip is its own control: a press on it, or on its
+					message bubble (rendered in a layer, so outside this span in the
+					DOM but inside the component tree), shows the message without
+					opening the popup.
+				-->
+				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+				<span
+					onclick={(event) => event.stopPropagation()}
+					class={statusTipAttrs.class}
+					style={statusTipAttrs.style}
+				>
+					<InputStatusIcon {statusIcon} />
+				</span>
+			{:else}
+				<!-- The plain icon is part of the field: a press on it opens the
+				     popup, as a press on the trigger does. -->
+				<span class={statusTipAttrs.class} style={statusTipAttrs.style}>
+					<InputStatusIcon {statusIcon} />
+				</span>
+			{/if}
+		{:else}
+			<!--
+				A status icon or info-tip takes the chevron's place, as in Selector.
+				No wrapper: Icon's own span already provides the 16px box (`sm`) and the
+				secondary icon colour the wrapper used to set, so the glyph IS the
+				trigger's icon element — one node carrying the box, the colour, the
+				rotation, and the stable theme target with its open/closed `data-state`.
+			-->
+			<Icon
+				icon="chevronDown"
+				size="sm"
+				color="secondary"
+				xstyle={chevronXstyle}
+				{...themeProps('complex-selector-indicator-icon', {
+					state: popover.isOpen ? 'expanded' : 'collapsed'
+				})}
+			/>
+		{/if}
 	</div>
 
 	<!--
@@ -503,6 +574,9 @@
 	statusVariant={effectiveStatusVariant}
 	{labelTooltip}
 	{width}
+	xstyle={fieldContainer.xstyle}
+	class={fieldContainer.className}
+	style={fieldContainer.style}
 >
 	{@render selectorContent()}
 </Field>

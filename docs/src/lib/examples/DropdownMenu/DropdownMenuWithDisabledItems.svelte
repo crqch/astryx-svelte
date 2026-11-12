@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { DropdownMenu, Text, VStack } from '@astryx-svelte/core';
+	import { DropdownMenu, Text, VStack } from '@astryx-sv/core';
 
 	let lastAction = $state<string | null>(null);
 </script>

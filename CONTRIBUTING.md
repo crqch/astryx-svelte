@@ -45,7 +45,7 @@ and the already-compiled `dist/` in `node_modules/@astryxdesign/core`.
 `port/` tracks the work, and `port/README.md` maps what goes where:
 
 - **`port/todo.md`** — the backlog: the current goal and what's next. No metrics, no batch history.
-- **`port/status.md`** — **generated** by `scripts/status.mjs`; `pnpm verify` regenerates it and
+- **`port/status.md`** — **generated** by `scripts/status.mjs`; `bun run verify` regenerates it and
   fails when the committed file has drifted. Never hand-edit it.
 - **`port/debts.md`** — every deliberate divergence from upstream, each with a machine-readable head
   (`units`, `kind`, `retires`).
@@ -59,25 +59,24 @@ write a number by hand — that is what `port/status.md` is for.
 ## Getting set up
 
 ```sh
-pnpm install
-pnpm -r build     # must run before check — theme-neutral typechecks against core's built dist/,
+bun install
+bun run build     # must run before check — theme-neutral typechecks against core's built dist/,
                   #   and the docs generator reads props types out of that same dist/
-pnpm -r check     # svelte-check + tsc
-pnpm -r lint      # prettier --check && eslint
-pnpm -r test      # vitest + all three fidelity oracles
+bun run --filter '*' check     # svelte-check + tsc
+bun run --filter '*' lint      # oxfmt --check && oxlint
+bun run --filter '*' test      # vitest + all three fidelity oracles
 ```
 
 Day-to-day:
 
 ```sh
-pnpm dev                                            # the docs site
-pnpm -F @astryx-svelte/core test:unit --run         # unit tests only
-pnpm -F @astryx-svelte/core test:unit --run src/tests/foo.svelte.test.ts   # one file
+bun run dev                                            # the docs site
+bun run --filter @astryx-sv/core test:unit --run         # unit tests only
+bun run --filter @astryx-sv/core test:unit --run src/tests/foo.svelte.test.ts   # one file
 ```
 
-> **Do not write `--` before vitest flags.** Under pnpm 10 the `--` is passed through, so vitest
-> sees `"--" "--run" "<path>"`, ignores both the flag and the filter, and starts a full run in
-> _watch mode_ that never exits. It looks exactly like a hang.
+> **Flags go after the script name.** Bun forwards them to vitest directly; the old pnpm `--`
+> workaround is unnecessary and only obscures that this is a Bun workspace.
 
 **Never install with `--prod` or prune devDependencies.** Both fidelity oracles and the docs
 content pipeline read the upstream `@astryxdesign/*` packages, which are devDependencies.
@@ -171,9 +170,9 @@ and neither the oracle nor a ported test caught it. Those are the most valuable 
    (whether the React→Svelte translation is _correct_ — contexts storing values instead of
    getters, `$derived` caching through a server render, un-`untrack`ed attachments),
    `astryx-oracle`, `astryx-test-parity`, and `astryx-surface`.
-5. **Verify** — `pnpm verify`, all clean.
+5. **Verify** — `bun run verify`, all clean.
 6. **Write it down** — the batch's `port/ledger/` entry for how, `port/todo.md` for what's next,
-   `port/debts.md` for any deliberate divergence. Never write a number: `pnpm verify` regenerates
+   `port/debts.md` for any deliberate divergence. Never write a number: `bun run verify` regenerates
    `port/status.md`.
 
 ## Pull requests
@@ -182,7 +181,7 @@ and neither the oracle nor a ported test caught it. Those are the most valuable 
 - Keep the diff to one thing. A component port, a batch of templates, a docs fix.
 - Say in the description **what you read upstream** and **what you had to decide**. A PR that
   names its judgement calls is far quicker to review than one that hides them.
-- Make sure `pnpm verify` is green before asking for review.
+- Make sure `bun run verify` is green before asking for review.
 
 ## Code of conduct
 

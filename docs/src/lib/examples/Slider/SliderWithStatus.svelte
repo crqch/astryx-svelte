@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Slider, VStack } from '@astryx-svelte/core';
+	import { Slider, VStack } from '@astryx-sv/core';
 
 	let value1 = $state(95);
 	let value2 = $state(50);

@@ -19,7 +19,13 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		color: colorVars['--color-text-secondary'],
-		textAlign: 'center' as const
+		textAlign: 'center' as const,
+		// Lets an unbroken token (a path or URL echoed into the message) wrap
+		// instead of setting the centered line's minimum width, which pushes text
+		// past both inline edges where neither side can scroll to it.
+		overflowWrap: 'anywhere',
+		// Text inside keeps `anywhere` too (Text FR3).
+		'--_astryx-text-overflow-wrap': 'anywhere'
 	}
 });
 

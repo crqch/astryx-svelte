@@ -61,6 +61,58 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Document',
+				required: true,
+				description: 'Root container for block or inline Markdown content.'
+			},
+			{
+				name: 'Heading',
+				required: false,
+				description:
+					'Rendered semantic heading block; a custom heading renderer replaces the built-in part.'
+			},
+			{
+				name: 'Paragraph',
+				required: false,
+				description:
+					'Rendered paragraph block; a custom paragraph renderer replaces the default part.'
+			},
+			{
+				name: 'List',
+				required: false,
+				description: 'Ordered, unordered, or task-list block rendered from Markdown items.'
+			},
+			{
+				name: 'Code block',
+				required: false,
+				description:
+					'Fenced code block; long lines wrap rather than scroll sideways. A custom code renderer replaces the default part.'
+			},
+			{
+				name: 'Blockquote',
+				required: false,
+				description: 'Quoted block; a custom blockquote renderer replaces the default part.'
+			},
+			{
+				name: 'Table',
+				required: false,
+				description:
+					'Table block rendered from Markdown rows and columns; its Table child owns horizontal scrolling.'
+			},
+			{
+				name: 'Divider',
+				required: false,
+				description: 'Horizontal rule block; a custom hr renderer replaces the default part.'
+			},
+			{
+				name: 'Image',
+				required: false,
+				description:
+					'Block image or unsafe-URL fallback; a custom image renderer replaces a safe default image.'
+			}
+		],
 		description:
 			'Renders a markdown string as Astryx-styled components. Use Markdown for user-generated content, AI responses, and documentation; it handles headings, lists, tables, code blocks, and citations with consistent styling.',
 		bestPractices: [
@@ -76,12 +128,87 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Use inlinePlugins for custom shorthand patterns like issue refs, diff refs, and mentions instead of preprocessing the markdown string.'
+					'Emphasis and strong pair as CommonMark specifies, so *see **bold** more* puts the bold inside the emphasis. ***text*** renders as strong around emphasis, the order RichText draws, and is announced as both. Emphasis nested more than 100 levels deep stays as written text.'
 			},
 			{
 				guidance: true,
 				description:
-					'Pair with Outline and useOutlineFromMarkdown for section navigation: headings render generated id attributes that match the outline item ids, so hash links scroll to their target.'
+					'Use plugins created by createMarkdownPlugin for reusable syntax, immutable AST transforms, and typed extension rendering. Keep the ordered list stable while its syntax configuration is unchanged.'
+			},
+			{
+				guidance: true,
+				description:
+					'To render a plugin node outside Markdown, as another surface showing the same document does, read what the plugin declares with getMarkdownPluginCapabilities (syntax and transform, nothing else), and render each parsed extension node with MarkdownPluginNodeRenderer from the client-only @astryx-sv/core subpath. It presents the node exactly as Markdown does, fallbacks and failure reports included, with no element of its own.'
+			},
+			{
+				guidance: true,
+				description:
+					'Add markdownSoftBreaksPlugin when single line endings are meaningful. It matches remark-breaks for supported Markdown, including multiline link labels, while code and other opaque content stay unchanged.'
+			},
+			{
+				guidance: true,
+				description:
+					'Add markdownSourceLinesPlugin when a feature maps the rendered document back to Markdown source lines (find, highlights, review comments). Every block Markdown renders, nested blocks included, then carries data-source-line and data-source-line-end (1-based, inclusive); components block renderers receive sourceLines to place on their own element, and plugin renderers read node.position lines. Inline elements, table rows, and cells carry none. Without the plugin no line work runs.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use createMarkdownTextTransform for prose matching; it preserves code, links, images, citations, math, and accepted extension syntax as protected contexts. Provide requiredSubstrings only when they conservatively cover every possible match.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use createMarkdownFenceTransform for declared code-fence languages with semantic data. createNode returns an owned block extension node; its standard plugin renderer and toText own presentation. A claimed fence renders through that plugin even when components.code is supplied; components.code renders every unclaimed fence and is the fallback when the plugin renderer declines, throws, or suspends, and without it the accessible, copyable CodeBlock is that fallback.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use createMarkdownSourceDecoration to attach non-visual metadata — search hits, review annotations — to the blocks a source range touches, and getMarkdownSourceDecorations to read it back in a later plugin. Decorations appear on the settled document rather than on partial streaming chunks, and never change rendering, copyable text, accessible names, ids, focus order, or navigation.'
+			},
+			{
+				guidance: true,
+				description:
+					'Import parseMarkdownAst or parseInlineAst from @astryx-sv/core when server or React Server Component code needs to run plugins against the canonical readonly tree. The parser and plugin subpaths have no use-client boundary. The Markdown component remains client-owned, so function-bearing plugin entries must not be passed across an RSC serialization boundary.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use decodeMarkdownCharacterReferences (from @astryx-sv/core or @astryx-sv/core) to show text the way Markdown renders its character references: &copy;, &#169;, and &#xA9; become ©, while unknown names and references without their semicolon stay as written. It decodes plain text and knows nothing of Markdown, so skip code and backslash-escaped references yourself. It uses the same table Markdown renders with.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use createMarkdownFrontmatter for typed document metadata. Its parse() method gives the host metadata directly; its plugin removes a complete leading block before rendering and withholds an unfinished block during streaming.'
+			},
+			{
+				guidance: true,
+				description:
+					"Import createMarkdownRemarkTransform from '@astryx-sv/core' only to reuse an existing synchronous transform-only Remark plugin; it stays out of every other bundle. Prove each plugin with fixtures: anything outside the supported MDAST subset — async work, parser or compiler plugins, processor state, raw HTML, unsupported nodes, forged positions, or metadata Astryx cannot represent — keeps the last valid document and reports one diagnostic."
+			},
+			{
+				guidance: true,
+				description:
+					'Use inlinePlugins for prefixed identifiers, mentions, and other prose-only shorthand instead of preprocessing the markdown string.'
+			},
+			{
+				guidance: true,
+				description:
+					'Provide components.math only for documents that use dollar-delimited math. The renderer owns typesetting and accessible output; Astryx passes the expression as text and never executes raw HTML.'
+			},
+			{
+				guidance: true,
+				description:
+					'For direct parsing, use MathParseOptions and handle InlineNodeWithMath or BlockNodeWithMath. Incremental math parsing also uses createIncrementalState<true>() and IncrementalParseState<true>; default calls and ParseOptions annotations keep the legacy unions.'
+			},
+			{
+				guidance: true,
+				description:
+					'Install createMarkdownHeadingLinks() through plugins when a document needs copyable h1–h6 permalinks. The returned entry carries its validated namespace and URL base across compatible Core package copies. Each built-in heading keeps its incoming fragment ID and gains an inline trailing # copy button: it is hidden at fine-pointer rest through useContainerReveal, reveals on heading-row hover or keyboard focus, and stays visible under the hook’s coarse/touch semantics. Unmodified tap, click, Enter, or Space copies the canonical URL without navigation, hash mutation, or scrolling; a check confirms success for 1.5 seconds. The no-plugin path stays unchanged, and nested headings use the same depth-first identity projection as Markdown-derived Outline.'
+			},
+			{
+				guidance: true,
+				description:
+					'For multiple documents, create one heading-links plugin per document with headingIdPrefix and pass that same plugin to Markdown and useOutlineFromMarkdown. Use the same stable value for Markdown id when the root also needs a DOM id; permalinkBaseUrl may supply a safe caller-owned URL before the fragment.'
 			},
 			{
 				guidance: false,
@@ -93,7 +220,7 @@ export default {
 	playground: {
 		defaults: {
 			children:
-				"## Getting Started\n\nInstall the package:\n\n```bash\nnpm install @astryx-svelte/core\n```\n\nThen import and use any component:\n\n```tsx\nimport {Button} from '@astryx-svelte/core';\n```\n\n**Bold**, *italic*, and `inline code` all work."
+				"## Getting Started\n\nInstall the package:\n\n```bash\nnpm install @astryx-sv/core\n```\n\nThen import and use any component:\n\n```tsx\nimport {Button} from '@astryx-sv/core';\n```\n\n**Bold**, *italic*, and `inline code` all work."
 		}
 	},
 	props: [
@@ -118,7 +245,7 @@ export default {
 		},
 		{
 			name: 'headingLevelStart',
-			type: '6 | 2 | 4 | 1 | 3 | 5',
+			type: '4 | 6 | 2 | 1 | 3 | 5',
 			description:
 				'The HTML heading level that markdown # maps to. Shifts all heading levels down to fit the surrounding page hierarchy. Levels exceeding h6 are clamped to h6.',
 			default: '1'
@@ -134,7 +261,7 @@ export default {
 			name: 'onLinkClick',
 			type: '(href: string, event: MouseEvent) => void | false',
 			description:
-				'Handler for link clicks. Return false to prevent the default navigation behavior.'
+				'Handler for link clicks. Return false to prevent the default navigation behavior. Link destinations in the markdown follow the shared navigation rule described on the Link `href` prop, and Markdown also rejects every data: URL in a link or an image: a rejected destination renders as plain text and never reaches this handler or a custom link renderer.'
 		},
 		{
 			name: 'sources',
@@ -164,10 +291,16 @@ export default {
 			default: "'start'"
 		},
 		{
+			name: 'plugins',
+			type: 'ReadonlyArray<MarkdownPluginEntry>',
+			description:
+				'Ordered extensions created by createMarkdownPlugin(). Plugins may add bounded syntax, immutable typed AST transforms, and typed extension renderers. Use isMarkdownExtensionNode() to narrow extension data observed from other plugins. Renderer callbacks are pure; return a child component when hooks are needed. Omitted and empty lists preserve the released Markdown behavior.'
+		},
+		{
 			name: 'inlinePlugins',
 			type: 'MarkdownInlinePlugin[]',
 			description:
-				'Transforms regex matches in parsed text nodes into custom inline React elements. Use for issue refs, diff refs, mentions, and other shorthand patterns. Inline code and fenced code blocks are unaffected.'
+				'Transforms regex matches in parsed text nodes into custom inline React elements. Use for prefixed identifiers, mentions, and other shorthand patterns. Inline code, fenced code blocks, and math are unaffected.'
 		},
 		{
 			name: 'autolink',
@@ -176,10 +309,16 @@ export default {
 				"Opt-in autolinking of bare URLs and emails. 'gfm' applies GitHub-Flavored Markdown autolink-literal rules: bare https?://..., www...., <scheme:url>, <email>, and user@host all become links. Trailing sentence punctuation and unbalanced trailing close-parens are excluded; matches inside code spans, code blocks, existing links, and image alt text are skipped. Default behavior (option unset) is unchanged."
 		},
 		{
+			name: 'codeLanguages',
+			type: 'ReadonlyArray<CodeLanguage>',
+			description:
+				"CodeBlock language values a fence may name, each imported on its own (e.g. graphql from @astryx-sv/core) or made with createCodeLanguage. A fence whose language word is one of a listed value's identifiers renders with it, ahead of a built-in; a diff-<identifier> fence takes the diff layer over it; a later entry wins. Pass the same list to RichTextEditor or RichTextView so read and edit match."
+		},
+		{
 			name: 'components',
 			type: 'Partial<MarkdownComponents>',
 			description:
-				'Custom React component overrides for rendered Markdown elements (code, inlineCode, link, heading, paragraph, image, blockquote, hr, citation).'
+				'Custom React component overrides for rendered Markdown elements (code, inlineCode, math, link, heading, paragraph, image, blockquote, hr, citation). Providing math enables `$…$` inline and `$$…$$` display parsing and receives `{value, display}`; omit it when dollar text should stay literal.'
 		},
 		{
 			name: 'xstyle',

@@ -7,12 +7,12 @@
  * page for it, and nothing else in this repo would ever notice).
  *
  * Why a script rather than a per-package `publint` devDependency: the binary is
- * only linked into the package that declares it, so `pnpm -r exec publint`
+ * only linked into the package that declares it, so `bun run check:publish`
  * fails everywhere but `packages/core`. The API takes a directory, so one root
  * script covers all ten.
  *
- * Reads the built `dist/` where a package has one, so `pnpm -r build` must have
- * run first — publint checks that `exports` resolve to files that exist, and an
+ * Reads the built `dist/` where a package has one, so `bun run build` must have run
+ * first — publint checks that `exports` resolve to files that exist, and an
  * unbuilt package fails on every entry point at once.
  *
  * Given `--version <x.y.z>` it also asserts every publishable package sits at
@@ -23,7 +23,7 @@
  *
  * @input  packages/{core,cli}, packages/themes/*
  * @output exit 0, or exit 1 with the offending package and message
- * @position `pnpm check:publish`; a gate in .github/workflows/release.yml
+ * @position `bun run check:publish`; a gate in .github/workflows/release.yml
  */
 
 import fs from 'node:fs';
@@ -80,9 +80,7 @@ for (const pkgDir of publishablePackages()) {
 
 	// npm always packs a README if one exists and never warns when none does, so
 	// the failure mode is a published package whose npm page is empty.
-	const hasReadme = fs
-		.readdirSync(pkgDir)
-		.some((name) => /^readme(\.md|\.markdown)?$/i.test(name));
+	const hasReadme = fs.readdirSync(pkgDir).some((name) => /^readme(\.md|\.markdown)?$/i.test(name));
 	if (!hasReadme) problems.push('error: no README.md — npm would render an empty package page');
 
 	if (problems.length === 0) {

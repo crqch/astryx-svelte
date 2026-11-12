@@ -117,6 +117,7 @@
 	import Text from '../text/text.svelte';
 	import FieldLabel from './field-label.svelte';
 	import {
+		fieldAttachedStatusStyle,
 		fieldContainerAttrs,
 		fieldHorizontalLabelAlignAttrs,
 		fieldHorizontalLabelsAttrs,
@@ -221,6 +222,7 @@
 			message={status.message}
 			id={resolvedMessageID}
 			variant={statusVariant}
+			xstyle={statusVariant === 'attached' ? fieldAttachedStatusStyle() : undefined}
 		/>
 	{/if}
 {/snippet}

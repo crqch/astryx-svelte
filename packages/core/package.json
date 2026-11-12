@@ -1,38 +1,20 @@
 {
-	"name": "@astryx-svelte/core",
+	"name": "@astryx-sv/core",
 	"displayName": "Astryx Core",
-	"version": "0.5.2",
+	"version": "0.7.13",
+	"description": "Svelte 5 components for Astryx, Meta's open source design system.",
+	"keywords": [
+		"svelte"
+	],
+	"homepage": "https://github.com/crqch/astryx-svelte#readme",
+	"bugs": {
+		"url": "https://github.com/crqch/astryx-svelte/issues"
+	},
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devrohit06/astryx-svelte.git",
+		"url": "git+https://github.com/crqch/astryx-svelte.git",
 		"directory": "packages/core"
-	},
-	"bugs": {
-		"url": "https://github.com/devrohit06/astryx-svelte/issues"
-	},
-	"homepage": "https://github.com/devrohit06/astryx-svelte#readme",
-	"publishConfig": {
-		"access": "public"
-	},
-	"description": "Svelte 5 components for Astryx, Meta's open source design system.",
-	"scripts": {
-		"build": "npm run prepack",
-		"prepare": "svelte-kit sync || echo ''",
-		"prepack": "svelte-kit sync && svelte-package && node scripts/build-css.mjs && node scripts/compile-dist-stylex.mjs && publint",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write .",
-		"test:unit": "vitest",
-		"test:client": "node scripts/run-client-tests.mjs",
-		"test:parity": "node scripts/compare-upstream-classes.mjs",
-		"test:css": "node scripts/compare-upstream-css.mjs",
-		"build:css": "node scripts/build-css.mjs",
-		"build:pseudo": "node scripts/build-pseudo-locale.mjs",
-		"test:pseudo": "node scripts/build-pseudo-locale.mjs --check",
-		"test:node": "npm run test:unit -- --run --project=server && npm run test:parity && npm run test:css && npm run test:pseudo",
-		"test": "npm run test:node && npm run test:client"
 	},
 	"files": [
 		"dist",
@@ -44,15 +26,15 @@
 		"!src/tests",
 		"!src/app.html"
 	],
+	"type": "module",
 	"sideEffects": [
 		"**/*.stylex.ts",
 		"**/*.stylex.js",
 		"**/*.css"
 	],
 	"main": "./dist/index.js",
-	"svelte": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"type": "module",
+	"svelte": "./dist/index.js",
 	"exports": {
 		".": {
 			"source": "./src/lib/index.ts",
@@ -83,6 +65,16 @@
 			"svelte": "./dist/theme/syntax/index.js",
 			"default": "./dist/theme/syntax/index.js"
 		},
+		"./theme/tokens": {
+			"source": "./src/lib/theme/tokens.ts",
+			"types": "./dist/theme/tokens.d.ts",
+			"default": "./dist/theme/tokens.js"
+		},
+		"./theme/tokens.stylex": {
+			"source": "./src/lib/styles/tokens.stylex.ts",
+			"types": "./dist/styles/tokens.stylex.d.ts",
+			"default": "./dist/styles/tokens.stylex.js"
+		},
 		"./hooks": {
 			"source": "./src/lib/hooks/index.ts",
 			"types": "./dist/hooks/index.d.ts",
@@ -94,6 +86,12 @@
 			"types": "./dist/internal/naming.d.ts",
 			"svelte": "./dist/internal/naming.js",
 			"default": "./dist/internal/naming.js"
+		},
+		"./internal/calendar-system": {
+			"source": "./src/lib/internal/calendar-system.ts",
+			"types": "./dist/internal/calendar-system.d.ts",
+			"svelte": "./dist/internal/calendar-system.js",
+			"default": "./dist/internal/calendar-system.js"
 		},
 		"./utils": {
 			"source": "./src/lib/utils/index.ts",
@@ -112,17 +110,34 @@
 		"./base.css": "./dist/styles/base.css",
 		"./tailwind-theme.css": "./dist/styles/tailwind-theme.css"
 	},
-	"peerDependencies": {
-		"@stylexjs/stylex": "^0.19.0",
-		"svelte": "^5.0.0",
-		"@stylexjs/unplugin": "^0.19.0",
-		"vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "bun run prepack",
+		"prepare": "svelte-kit sync || echo ''",
+		"prepack": "svelte-kit sync && svelte-package && node scripts/build-css.mjs && node scripts/compile-dist-stylex.mjs && publint",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "oxfmt --check . && oxlint .",
+		"format": "oxfmt --write .",
+		"test:unit": "vitest",
+		"test:client": "node scripts/run-client-tests.mjs",
+		"test:parity": "node scripts/compare-upstream-classes.mjs",
+		"test:css": "node scripts/compare-upstream-css.mjs",
+		"build:css": "node scripts/build-css.mjs",
+		"build:pseudo": "bun scripts/build-pseudo-locale.mjs",
+		"test:pseudo": "bun scripts/build-pseudo-locale.mjs --check",
+		"test:node": "vitest --run --project=server && bun run test:parity && bun run test:css && bun run test:pseudo",
+		"test": "bun run test:node && bun run test:client"
+	},
+	"dependencies": {
+		"intl-messageformat": "^11.2.9"
 	},
 	"devDependencies": {
-		"@astryxdesign/core": "0.5.2",
+		"@astryxdesign/core": "0.7.13",
 		"@babel/core": "^7.29.7",
 		"@babel/plugin-syntax-typescript": "^7.29.7",
-		"@eslint/js": "^10.0.1",
 		"@stylexjs/babel-plugin": "^0.19.0",
 		"@stylexjs/stylex": "^0.19.0",
 		"@stylexjs/unplugin": "^0.19.0",
@@ -132,27 +147,20 @@
 		"@types/node": "^22",
 		"@vitest/browser": "^4.1.8",
 		"@vitest/browser-playwright": "^4.1.8",
-		"eslint": "^10.4.1",
-		"eslint-config-prettier": "^10.1.8",
-		"eslint-plugin-svelte": "^3.19.0",
-		"globals": "^17.6.0",
 		"playwright": "^1.60.0",
-		"prettier": "^3.8.3",
-		"prettier-plugin-svelte": "^4.1.0",
 		"publint": "^0.3.21",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
-		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16",
 		"vitest": "^4.1.8",
 		"vitest-browser-svelte": "^3.0.0"
 	},
-	"keywords": [
-		"svelte"
-	],
-	"dependencies": {
-		"intl-messageformat": "^11.2.9"
+	"peerDependencies": {
+		"@stylexjs/stylex": "^0.19.0",
+		"@stylexjs/unplugin": "^0.19.0",
+		"svelte": "^5.0.0",
+		"vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
 	},
 	"peerDependenciesMeta": {
 		"@stylexjs/unplugin": {

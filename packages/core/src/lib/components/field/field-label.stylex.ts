@@ -21,6 +21,22 @@ import {
  * `left:0` (`xu96u03`). Sharing would emit CSS upstream does not.
  */
 const styles = stylex.create({
+	// The label and its description read as a single block, with no space
+	// between them. They need a wrapper of their own to get that: as bare
+	// siblings they pick up the column gap of whichever caller holds them
+	// (Field, CheckboxInput, Switch), which is the spacing meant to separate
+	// the label group from the control below it.
+	labelGroup: {
+		display: 'flex',
+		flexDirection: 'column'
+	},
+	// A hidden label group must not take a slot in the caller's layout, or an
+	// empty box would draw the caller's gap around nothing. Dropping the
+	// wrapper box leaves the sr-only children out of flow directly under the
+	// caller, so the group occupies no space at all.
+	labelGroupHidden: {
+		display: 'contents'
+	},
 	label: {
 		display: 'flex',
 		alignItems: 'center',
@@ -38,6 +54,31 @@ const styles = stylex.create({
 	labelDisabled: {
 		color: colorVars['--color-text-disabled'],
 		cursor: 'default'
+	},
+	// A button inside a label also activates the label's control, so the info
+	// button sits outside it, in one row with the label.
+	labelRow: {
+		display: 'inline-flex',
+		alignItems: 'center',
+		// In a block label cell, keep the row's top on the cell's top, not on a
+		// text baseline.
+		verticalAlign: 'top',
+		gap: spacingVars['--spacing-1']
+	},
+	// With a hidden label the row takes no slot in the caller's layout.
+	labelRowHidden: {
+		display: 'contents'
+	},
+	// A hidden label's info button takes no layout slot. While it has keyboard
+	// focus, it moves into flow above the control. There nothing covers or clips
+	// it. It stays positioned, because InfoTip's touch band needs a positioned
+	// host.
+	infoTipHidden: {
+		position: { default: 'absolute', ':focus-visible': 'relative' },
+		alignSelf: 'flex-start',
+		clip: { default: 'rect(0, 0, 0, 0)', ':focus-visible': 'auto' },
+		overflow: { default: 'hidden', ':focus-visible': 'visible' },
+		whiteSpace: 'nowrap'
 	},
 	srOnly: {
 		borderStyle: 'none',
@@ -76,6 +117,19 @@ const styles = stylex.create({
 		}
 	}
 });
+
+/** The wrapper around the label and its description, when there is one. */
+export function fieldLabelLabelGroupAttrs(isLabelHidden: boolean): SvelteStyleAttrs {
+	return sx(styles.labelGroup, isLabelHidden && styles.labelGroupHidden);
+}
+
+/** The row holding the label and its trailing info button, when there is one. */
+export function fieldLabelLabelRowAttrs(isLabelHidden: boolean): SvelteStyleAttrs {
+	return sx(styles.labelRow, isLabelHidden && styles.labelRowHidden);
+}
+
+/** Handed to the trailing `InfoTip` as `xstyle` when the label is hidden. */
+export const infoTipHiddenStyle: StyleArg = styles.infoTipHidden;
 
 /** The label element itself — `<label>`, or `<span>` for a group label. */
 export function fieldLabelAttrs(

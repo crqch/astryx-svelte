@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Grid, Heading, Link, Text, Theme, VStack } from '@astryx-svelte/core';
+	import { Button, Grid, Heading, Link, Text, Theme, VStack } from '@astryx-sv/core';
 	import { astryxTheme } from '../../themes/astryx-theme.js';
 	import { componentsHref, topicHref } from '../../shell/links.js';
 	import { UPSTREAM_URL } from '../../shell/nav-items.js';
@@ -147,9 +147,10 @@
 		align-items: stretch;
 		/* Narrow anchors content to the top so the collage below has room. */
 		justify-content: flex-start;
-		/* Narrow: in flow under the transparent nav, so pad by nav height to clear
-		   it. Desktop is fixed + centred, so none. */
-		padding-block-start: calc(var(--_app-shell-header-height, 0px) + var(--spacing-8));
+		/* Narrow: in flow under the transparent nav. Upstream pads by `--spacing-12`
+		   (the nav's own height) rather than `--appshell-header-height`, which also
+		   counts the canary banner. Desktop is fixed + centred, so none. */
+		padding-block-start: calc(var(--spacing-12) + var(--spacing-8));
 		padding-block-end: var(--spacing-12);
 		max-width: var(--docs-prose-max-width);
 		margin-inline: auto;
@@ -163,7 +164,7 @@
 
 	@media (min-width: 768px) {
 		.hero-content {
-			padding-block-start: calc(var(--_app-shell-header-height, 0px) + var(--hero-gap));
+			padding-block-start: calc(var(--spacing-12) + var(--hero-gap));
 		}
 	}
 

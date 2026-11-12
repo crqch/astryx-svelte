@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { DateRange, DayOfWeek, ISODateString, PlainDate } from '../../utils/date-types.js';
+	import type { CalendarMonth, CalendarSystem } from '../../utils/calendar-system.js';
 
 	/**
 	 * Props for the private `MonthGrid`.
@@ -10,8 +11,9 @@
 	 * declaration.
 	 */
 	export interface MonthGridProps {
-		month: PlainDate;
-		value: ISODateString | DateRange | undefined;
+		month: CalendarMonth;
+		calendar: CalendarSystem;
+		value: ISODateString | DateRange | null | undefined;
 		mode: 'single' | 'range';
 		rangeSelectionStart: ISODateString | null;
 		hoveredDate: ISODateString | null;
@@ -27,8 +29,16 @@
 		onDayClick: (date: PlainDate) => void;
 		onDayHover: (date: PlainDate | null) => void;
 		today: PlainDate;
-		onNavigatePrevious?: (focusedDate: ISODateString, offset: number) => void;
-		onNavigateNext?: (focusedDate: ISODateString, offset: number) => void;
+		onNavigatePrevious?: (
+			focusedDate: ISODateString,
+			offset: number,
+			unit?: 'days' | 'months' | 'years'
+		) => void;
+		onNavigateNext?: (
+			focusedDate: ISODateString,
+			offset: number,
+			unit?: 'days' | 'months' | 'years'
+		) => void;
 	}
 </script>
 
@@ -36,18 +46,24 @@
 	import { useGridFocus } from '../../hooks/use-grid-focus.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
-		plainDateFormat,
+		calendarYearMonthOf,
+		formatCalendarMonthLabel,
+		isInCalendarMonth
+	} from '../../utils/calendar-system.js';
+	import {
+		plainDateFormatDayNumber,
 		plainDateFromISO,
 		plainDateGetWeekNumber,
 		plainDateIsBefore,
 		plainDateIsEqual,
-		plainDateToISO
+		plainDateToISO,
+		plainDateWeekFieldName
 	} from '../../utils/plain-date.js';
 	import { computeDayNeighborContinuity } from './day-cell-utils.js';
 	import { useCalendarConstraints } from './use-calendar-constraints.svelte.js';
 	import { useCalendarDays } from './use-calendar-days.svelte.js';
 	import DayCell from './day-cell.svelte';
+	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import {
 		dayNameAttrs,
 		daysGridAttrs,
@@ -59,6 +75,7 @@
 
 	let {
 		month,
+		calendar,
 		value,
 		mode,
 		rangeSelectionStart,
@@ -80,11 +97,12 @@
 	}: MonthGridProps = $props();
 
 	const locale = useLocale();
-	const year = $derived(month.year);
+	const yearMonth = $derived(calendarYearMonthOf(calendar, month));
 
 	const grid = useCalendarDays(() => ({
-		year,
-		month: month.month,
+		year: yearMonth.year,
+		month: yearMonth.month,
+		calendar,
 		weekStartsOn,
 		hasVariableRowCount
 	}));
@@ -120,14 +138,13 @@
 	// enabled) > today (if visible and enabled) > first enabled in-month day.
 	const seedTabbableIso = $derived.by((): ISODateString | null => {
 		if (selectedDateForTabindex) {
-			const isSelectedInMonth =
-				selectedDateForTabindex.year === year && selectedDateForTabindex.month === month.month;
+			const isSelectedInMonth = isInCalendarMonth(selectedDateForTabindex, month);
 			if (isSelectedInMonth && !constraints.isDateDisabled(selectedDateForTabindex)) {
 				return plainDateToISO(selectedDateForTabindex);
 			}
 		}
 
-		const isTodayInMonth = today.year === year && today.month === month.month;
+		const isTodayInMonth = isInCalendarMonth(today, month);
 		if (isTodayInMonth && !constraints.isDateDisabled(today)) {
 			return plainDateToISO(today);
 		}
@@ -176,17 +193,17 @@
 		}
 	}
 
-	function handlePageUp(): void {
+	function handlePageUp(event: KeyboardEvent): void {
 		const focusedDate = getFocusedDate();
 		if (focusedDate) {
-			onNavigatePrevious?.(focusedDate, 7);
+			onNavigatePrevious?.(focusedDate, 1, event.shiftKey ? 'years' : 'months');
 		}
 	}
 
-	function handlePageDown(): void {
+	function handlePageDown(event: KeyboardEvent): void {
 		const focusedDate = getFocusedDate();
 		if (focusedDate) {
-			onNavigateNext?.(focusedDate, 7);
+			onNavigateNext?.(focusedDate, 1, event.shiftKey ? 'years' : 'months');
 		}
 	}
 
@@ -206,7 +223,8 @@
 	const gridFocus = useGridFocus(() => ({
 		columns: 7,
 		cellSelector: '[role="gridcell"]',
-		isCellFocusable: (cell: HTMLElement) => cell.querySelector('button:not([disabled])') !== null,
+		isCellFocusable: (cell: HTMLElement) =>
+			cell.querySelector('button:not([disabled]):not([aria-disabled="true"])') !== null,
 		getFocusTarget: (cell: HTMLElement) => cell.querySelector<HTMLElement>('button'),
 		hasRovingTabIndex: true,
 		onNavigateBefore: handleNavigatePrevious,
@@ -262,7 +280,7 @@
 
 	// Month label for announcements — this pane's own month, not the combined
 	// header label.
-	const monthLabel = $derived(plainDateFormat(month, DATE_FORMAT_MONTH_YEAR, locale()));
+	const monthLabel = $derived(formatCalendarMonthLabel(calendar, month, locale()));
 
 	const rootAttrs = monthGridAttrs();
 	const gridAttrs = $derived(daysGridAttrs(hasWeekNumbers));
@@ -296,9 +314,18 @@
 		-->
 		<div role="row" class={rowAttrs.class} style={rowAttrs.style}>
 			{#if hasWeekNumbers}
-				<div class={numberHeaderAttrs.class} style={numberHeaderAttrs.style}></div>
+				<!--
+					The corner above the week-number column is a header cell like the
+					weekday names beside it (APG grid: every cell in a row is a
+					gridcell, columnheader or rowheader). Its name is the locale's own
+					word for the week field, as visually hidden text so the column stays
+					blank and the header is not empty to axe.
+				-->
+				<div role="columnheader" class={numberHeaderAttrs.class} style={numberHeaderAttrs.style}>
+					<VisuallyHidden>{plainDateWeekFieldName(locale())}</VisuallyHidden>
+				</div>
 			{/if}
-			{#each grid.dayNames as name (name)}
+			{#each grid.dayNames as name, index ((weekStartsOn + index) % 7)}
 				<div role="columnheader" class={nameAttrs.class} style={nameAttrs.style}>{name}</div>
 			{/each}
 		</div>
@@ -308,7 +335,7 @@
 			<div role="row" class={rowAttrs.class} style={rowAttrs.style}>
 				{#if hasWeekNumbers}
 					<div role="rowheader" class={numberAttrs.class} style={numberAttrs.style}>
-						{plainDateGetWeekNumber(weekDate)}
+						{plainDateFormatDayNumber(plainDateGetWeekNumber(weekDate), locale())}
 					</div>
 				{/if}
 				{#each week as day, dayIndex (day.iso)}
@@ -336,6 +363,7 @@
 						})}
 						isTabbable={day.iso === seedTabbableIso}
 						isRangeSelectionInProgress={rangeSelectionStart !== null}
+						{calendar}
 						{onDayClick}
 						{onDayHover}
 					/>

@@ -77,7 +77,12 @@ const styles = stylex.create({
 	dropzoneDisabled: {
 		cursor: 'default',
 		opacity: 0.5,
-		borderColor: colorVars['--color-border-emphasized']
+		// Keeps the :focus-within border: a focused disabled trigger still shows
+		// focus (spec:AST-085 FR6).
+		borderColor: {
+			default: colorVars['--color-border-emphasized'],
+			':focus-within': colorVars['--color-accent']
+		}
 	},
 	compact: {
 		boxSizing: 'border-box',
@@ -118,7 +123,16 @@ const styles = stylex.create({
 	compactDisabled: {
 		cursor: 'default',
 		opacity: 0.5,
-		borderColor: colorVars['--color-border-emphasized']
+		// Keeps the :focus-within border: a focused disabled trigger still shows
+		// focus (spec:AST-085 FR6).
+		borderColor: {
+			default: colorVars['--color-border-emphasized'],
+			':focus-within': colorVars['--color-accent']
+		}
+	},
+	busy: {
+		cursor: 'default',
+		boxShadow: 'none'
 	},
 	hiddenInput: {
 		position: 'absolute',
@@ -133,9 +147,14 @@ const styles = stylex.create({
 	},
 	placeholderText: {
 		fontFamily: typographyVars['--font-family-body'],
+		// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+		// control sits under 16px, and only iOS WebKit implements
+		// `-webkit-touch-callout` to key the coarse-pointer floor to it.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-secondary'],
@@ -144,9 +163,13 @@ const styles = stylex.create({
 	},
 	fileNameText: {
 		fontFamily: typographyVars['--font-family-body'],
+		// ...and the filename beside it keeps the same floor, so both lines the
+		// control shows stay the same size.
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -172,13 +195,13 @@ const styles = stylex.create({
 
 const statusBorderStyles = stylex.create({
 	warning: {
-		borderColor: colorVars['--color-warning']
+		borderColor: colorVars['--color-border-warning']
 	},
 	error: {
-		borderColor: colorVars['--color-error']
+		borderColor: colorVars['--color-border-error']
 	},
 	success: {
-		borderColor: colorVars['--color-success']
+		borderColor: colorVars['--color-border-success']
 	}
 });
 
@@ -187,6 +210,7 @@ export function fileInputTriggerAttrs(
 	isDropzone: boolean,
 	isDisabled: boolean,
 	isDragOver: boolean,
+	isBusy: boolean,
 	statusType: InputStatusType | undefined,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
@@ -196,6 +220,7 @@ export function fileInputTriggerAttrs(
 		isDropzone && isDragOver && styles.dropzoneActive,
 		isDropzone && isDisabled && styles.dropzoneDisabled,
 		!isDropzone && isDisabled && styles.compactDisabled,
+		isBusy && styles.busy,
 		statusType && statusBorderStyles[statusType],
 		xstyle
 	);

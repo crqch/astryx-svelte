@@ -62,7 +62,7 @@ export default {
 	],
 	usage: {
 		description:
-			'Detects a single-finger press-and-hold and reports where it happened, so touch users can reach affordances that a pointer gets from right-click. iOS Safari never synthesizes a contextmenu event on long-press, which makes this the only touch route into a cursor-positioned surface such as ContextMenu. The press cancels on movement, lift, multi-touch or unmount.',
+			'Detects a single-finger press-and-hold and reports where it happened, so touch users can reach affordances that a pointer gets from right-click. iOS Safari never synthesizes a contextmenu event on long-press, which makes this the only touch route into a cursor-positioned surface such as ContextMenu. The press cancels on movement, lift, multi-touch or unmount. The hold is timed on the touch events’ own timestamps: when a busy page handles the lift late, a finger held for the full delay still reports its long press, before the lift acts.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -83,6 +83,6 @@ export default {
 	},
 	relatedComponents: ['ContextMenu'],
 	relatedHooks: ['useClickableContainer', 'useHotkeys'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Lightbox } from '@astryx-svelte/core';
+	import { Lightbox } from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 </script>

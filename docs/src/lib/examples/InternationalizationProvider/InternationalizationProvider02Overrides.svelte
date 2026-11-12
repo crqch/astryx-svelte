@@ -4,7 +4,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { InternationalizationProvider, Selector } from '@astryx-svelte/core';
+	import { InternationalizationProvider, Selector } from '@astryx-sv/core';
 
 	let value = $state<string | null>(null);
 </script>

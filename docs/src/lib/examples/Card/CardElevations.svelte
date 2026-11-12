@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Grid, Stack, Text, Heading } from '@astryx-svelte/core';
+	import { Card, Grid, Stack, Text, Heading } from '@astryx-sv/core';
 
 	const LEVELS = [
 		{ elevation: 'none', caption: 'Flat — sits on the page (default)' },

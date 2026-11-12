@@ -28,13 +28,16 @@ jobs:
         with:
           # Both SHAs have to be reachable to diff them.
           fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
       - id: scopes
-        run: node .github/scripts/changed-scopes.mjs
+        run: bun .github/scripts/changed-scopes.mjs
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
-  # `pnpm verify --no-client` — build, typecheck, lint, core's server project
+  # `bun run verify --no-client` — build, typecheck, lint, core's server project
   # plus both fidelity oracles, every other package's tests, and the
   # full-tier status generation, gated against the committed `port/status.md`.
   # It runs every stage rather than stopping at the first red one, which a
@@ -42,8 +45,8 @@ jobs:
   # otherwise skip the rest and hide whatever they'd have reported.
   #
   # `--no-client` is the load-bearing choice here. An earlier version of this
-  # workflow ran plain `pnpm verify`, which folded this job and the
-  # browser-only `client` job into one — `pnpm verify`'s test stage was `pnpm
+  # workflow ran plain `bun run verify`, which folded this job and the
+  # browser-only `client` job into one — `bun run verify`'s test stage was `pnpm
   # -r test`, and running the browser suite again in a second job would just
   # be the same ~4,500 cases twice. That merge serialised roughly 13 minutes
   # of work (409 s of tests, 190 s of lint, 76 s build, 51 s typecheck, 33 s
@@ -68,20 +71,21 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
       - uses: actions/setup-node@v5
         with:
           # Root `engines` asks for >=22. Kept unpinned within the major so a
           # patch bump doesn't need a commit here.
           node-version: 22
-          cache: pnpm
 
       # Deliberately a full install — no --prod, no NODE_ENV=production.
       # Both fidelity oracles read the upstream Astryx packages, which are
       # devDependencies; pruning them turns the checks into no-ops that still
       # report green. Each oracle now fails loudly if its upstream is missing,
       # so a regression here is caught rather than silently tolerated.
-      - run: pnpm install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
       # `status.mjs`'s Surface section diffs `packages/core/src/lib/components`
       # against upstream's own source tree at `reference/astryx-upstream/` (see
@@ -96,7 +100,7 @@ jobs:
       # once did.
       - name: Clone upstream Astryx (status.mjs diffs against its source tree)
         run: |
-          pin=$(node -p "require('./packages/core/package.json').devDependencies['@astryxdesign/core']")
+          pin=$(bun -p "require('./packages/core/package.json').devDependencies['@astryxdesign/core']")
           git clone --depth 1 --branch "v$pin" https://github.com/facebook/astryx.git reference/astryx-upstream
           # The same rename CLAUDE.md requires of a developer, for the same
           # reason and now for a second one: upstream tracks its own CLAUDE.md,
@@ -108,10 +112,10 @@ jobs:
       # See the job comment: needed for status.mjs's test-collection stage,
       # not for running the browser suite itself.
       - name: Install the browser the client test project needs
-        run: pnpm -F @astryx-svelte/core exec playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       - name: Verify
-        run: pnpm verify --no-client --no-docs
+        run: bun run verify --no-client --no-docs
 
       # The same manifest gate the release runs, minus the version pin: publint
       # over every publishable package, plus the README check that caught all
@@ -119,7 +123,7 @@ jobs:
       # at release time, because a manifest that stops resolving is cheap to
       # catch on the PR that breaks it and expensive to discover mid-publish.
       - name: Every package is still fit to publish
-        run: node scripts/check-publish.mjs
+        run: bun scripts/check-publish.mjs
 
   # The browser suite, alone: 163 files and ~4,500 cases in real headless
   # Chromium, and by far the longest thing here. Runs in parallel with `lib`
@@ -132,32 +136,53 @@ jobs:
     if: needs.changes.outputs.global == 'true' || needs.changes.outputs.core == 'true' || needs.changes.outputs.themes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    # The client suite is 305 files in 26 isolated chunks, and each chunk pays a
+    # fresh Vite server, dependency optimization and browser launch. Two chunks
+    # per runner is the measured safe ceiling; four runners cut the test stage to
+    # roughly a quarter of its wall clock without raising per-runner contention.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+
+      # Playwright's browsers live outside node_modules and are ~325 MB. The
+      # install still checks system dependencies; the cache only skips the
+      # download.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
 
       # The client vitest project runs in a real headless Chromium through
-      # Playwright, and `pnpm install` does not fetch browser binaries — they
+      # Playwright, and `bun install` does not fetch browser binaries — they
       # live in ~/.cache/ms-playwright, outside node_modules. Without this the
       # whole project fails to launch with "Executable doesn't exist", which is
       # how it went unrun in CI for its entire life: Typecheck was failing
       # first, so the Test step never got the chance to say so.
       - name: Install the browser the client test project needs
-        run: pnpm -F @astryx-svelte/core exec playwright install --with-deps chromium
+        run: bunx playwright install --with-deps chromium
 
       # Built for the same reason `lib` builds: the suite imports through `$lib`,
       # but `svelte-kit sync` and the theme packages it touches expect the
-      # topological build to have run.
+      # topological build to have run. The docs app is not needed here.
       - name: Build
-        run: pnpm -r build
+        run: bun run build:packages
 
       - name: Client test project
-        run: pnpm -F @astryx-svelte/core test:client
+        run: bun run --filter @astryx-sv/core test:client
+        env:
+          CLIENT_CHUNK_SHARD: ${{ matrix.shard }}
+          CLIENT_CHUNK_SHARDS: '4'
 
   # The docs site. Runs on its own changes *and* on core's, because the
   # dependency is one-directional: `docs/vite.config.ts` compiles core's StyleX
@@ -170,27 +195,28 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: bun install --frozen-lockfile
 
       # The docs content pipeline reads `.doc.mjs` out of the upstream
       # `@astryxdesign/*` packages and prop *types* out of core's `dist/`, so the
       # build is a prerequisite here exactly as it is in `lib`.
       - name: Build
-        run: pnpm -r build
+        run: bun run build
 
       - name: Typecheck
-        run: pnpm -F docs check
+        run: bun run --filter docs check
 
       - name: Lint
-        run: pnpm -F docs lint
+        run: bun run --filter docs lint
 
       - name: Docs content is current
-        run: pnpm -F docs test
+        run: bun run --filter docs test
 
   # One always-running check to hang branch protection off, so a skipped job
   # cannot leave a required status pending forever. `needs` results are
@@ -202,10 +228,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
       - name: Every required job passed or was skipped
         run: |
           echo '${{ toJSON(needs) }}'
-          echo '${{ toJSON(needs) }}' | node -e "
+          echo '${{ toJSON(needs) }}' | bun -e "
             const needs = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
             const bad = Object.entries(needs).filter(
               ([, v]) => v.result !== 'success' && v.result !== 'skipped'

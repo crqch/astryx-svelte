@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
 import {
@@ -77,7 +78,10 @@ const styles = stylex.create({
 		paddingInlineEnd: padInlineEnd
 	},
 	wrapperWithNumberSteppers: {
-		paddingInlineEnd: 0
+		paddingInlineEnd: {
+			default: 0,
+			'@media (pointer: coarse)': padInlineEnd
+		}
 	},
 	input: {
 		display: 'block',
@@ -89,9 +93,12 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			// A coarse pointer means a touch device, where a sub-16px font makes
-			// mobile Safari zoom the viewport on focus.
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+			// control sits under 16px, and only iOS WebKit implements
+			// `-webkit-touch-callout` to key the coarse-pointer floor to it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -116,7 +123,12 @@ const styles = stylex.create({
 	},
 	numberSteppers: {
 		alignSelf: 'stretch',
-		display: 'flex',
+		// These compact buttons are a fine-pointer affordance. Touch users can
+		// enter a value directly; keyboard stepping remains available.
+		display: {
+			default: 'flex',
+			'@media (pointer: coarse)': 'none'
+		},
 		flexDirection: 'column',
 		flexShrink: 0,
 		width: spacingVars['--spacing-4'],
@@ -198,6 +210,7 @@ export function numberInputWrapperAttrs(
 		hasNumberSteppers && styles.wrapperWithNumberSteppers,
 		sizeStyles[size],
 		isDisabled && inputWrapperStyles.disabled,
+		isDisabled && inputDisabledFocusStyles.ring,
 		statusType && inputStatusBorderStyles[statusType],
 		statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType],

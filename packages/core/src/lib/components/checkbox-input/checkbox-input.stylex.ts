@@ -2,6 +2,7 @@ import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import {
 	colorVars,
+	radiusVars,
 	spacingVars,
 	typographyVars,
 	typeScaleVars,
@@ -9,6 +10,19 @@ import {
 } from '../../styles/tokens.stylex.js';
 import type { SizeValue } from '../../internal/types.js';
 import { indicatorScope } from '../indicator/indicator.markers.stylex.js';
+import { indicatorPressScope } from '../../internal/indicator-press.stylex.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+
+/** Written by the touch press controller while the row is pressed. */
+const PRESSED_ON = '[data-astryx-press="on"]';
+/** Written by the touch press controller for the press's release. */
+const PRESSED_FADING = '[data-astryx-press="fading"]';
+
+// The touch press's paint, declared by the shared overlay styles on the
+// element the controller writes to (`pressedAlpha`) at the press's strength,
+// 1 while on and 1 → 0 over the release, and inherited resolved by the layer
+// that paints it. See interaction-overlay.stylex.ts.
+const pressedOverlayImage = 'var(--_press-paint-image)';
 
 /**
  * `CheckboxInput`'s styles, ported from Astryx's `CheckboxInput/CheckboxInput.tsx`.
@@ -31,6 +45,30 @@ const styles = stylex.create({
 	containerLabelHidden: {
 		gap: 0
 	},
+	// Under a coarse pointer the row contains its hit band.
+	hitAreaHost: {
+		position: { default: null, '@media (pointer: coarse)': 'relative' }
+	},
+	// An indicator in another package may not name this row's private press
+	// attribute. So the row hands its touch press image down to an indicator
+	// that paints its own press, but only in its own press states. A pressed
+	// outer row hands down nothing, as for the built-in box. The property has
+	// no default: a layered stylesheet ranks a default above the arms. Only this
+	// row declares it. A menu item paints its own press, so a mapped indicator
+	// there paints none.
+	indicatorPressImage: {
+		'--_indicator-press-image': {
+			default: null,
+			[PRESSED_ON]: 'var(--_press-paint-image)',
+			[PRESSED_FADING]: 'var(--_press-paint-image)'
+		}
+	},
+	// Under a row that owns the press (CheckboxRowPressContext), this row is
+	// never pressed. So it hands down that row's press paint, which the
+	// built-in box reads too.
+	indicatorRowPressImage: {
+		'--_indicator-press-image': 'var(--_checkbox-row-press-paint, none)'
+	},
 	checkboxWrapper: {
 		position: 'relative',
 		display: 'flex',
@@ -41,6 +79,7 @@ const styles = stylex.create({
 	},
 	input: {
 		position: 'absolute',
+		top: '50%',
 		margin: 0,
 		padding: 0,
 		opacity: 0,
@@ -48,30 +87,70 @@ const styles = stylex.create({
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		zIndex: 1,
-		minInlineSize: {
-			default: null,
-			'@media (pointer: coarse)': '24px'
-		},
-		minBlockSize: {
-			default: null,
-			'@media (pointer: coarse)': '24px'
-		},
-		insetBlockStart: {
-			default: null,
-			'@media (pointer: coarse)': '50%'
-		},
-		insetInlineStart: {
-			default: null,
-			'@media (pointer: coarse)': '50%'
-		},
-		transform: {
-			default: null,
-			'@media (pointer: coarse)': 'translate(-50%, -50%)'
+		zIndex: 1
+	},
+	inputCoarse: {
+		'@media (pointer: coarse)': {
+			minInlineSize: 24,
+			minBlockSize: 24
 		}
 	},
 	inputDisabled: {
 		cursor: 'default'
+	},
+	// The owner paints this layer over the resolved indicator, so a plain theme
+	// replacement keeps the pressed feedback. An indicator with
+	// `indicatorPressScope` paints its own press from what the row hands down,
+	// so this layer stays off over it. A mouse keeps `:active` (see
+	// interaction-overlay.stylex.ts). Under a coarse pointer that arm is
+	// dropped. The touch press controller then writes the press attribute on
+	// the row. This layer reads it off the scope marker, as the hover tint does.
+	// Under a row that owns the press (CheckboxRowPressContext), the row's own
+	// checkbox paints that row's press paint instead (indicatorRowPressOverlay).
+	indicatorPressOverlay: {
+		'::after': {
+			// `when.descendant` takes a pseudo-class; `:is(*)` matches any marked
+			// indicator.
+			content: {
+				default: '""',
+				[stylex.when.descendant(':is(*)', indicatorPressScope)]: 'none'
+			},
+			position: 'absolute',
+			inset: 0,
+			borderRadius: radiusVars['--radius-inner'],
+			pointerEvents: 'none',
+			backgroundColor: {
+				default: 'transparent',
+				[stylex.when.ancestor(':active', indicatorScope)]: {
+					default: colorVars['--color-overlay-pressed'],
+					'@media (pointer: coarse)': 'transparent'
+				}
+			},
+			// The touch press, as an image layer over the colour: an image change
+			// is discrete, so no transition can delay the onset, and the strength
+			// the row's `pressedAlpha` arms own (1 while on, 1 → 0 over the
+			// release) is what moves. Coarse pointers only, like the drop above.
+			backgroundImage: {
+				default: null,
+				[stylex.when.ancestor(PRESSED_ON, indicatorScope)]: {
+					default: null,
+					'@media (pointer: coarse)': pressedOverlayImage
+				},
+				[stylex.when.ancestor(PRESSED_FADING, indicatorScope)]: {
+					default: null,
+					'@media (pointer: coarse)': pressedOverlayImage
+				}
+			}
+		}
+	},
+	// The row's own checkbox when its row owns the press
+	// (CheckboxRowPressContext). It paints only the paint that row declares
+	// (`--_checkbox-row-press-paint`). No outer row, card or fine pointer
+	// reaches it.
+	indicatorRowPressOverlay: {
+		'::after': {
+			backgroundImage: 'var(--_checkbox-row-press-paint, none)'
+		}
 	},
 	// Holds only the indicator, so the focus ring has one unambiguous target.
 	// `display: contents` adds no box of its own — the indicator keeps whatever
@@ -81,8 +160,7 @@ const styles = stylex.create({
 	},
 	labelWrapper: {
 		display: 'flex',
-		flexDirection: 'column',
-		gap: spacingVars['--spacing-0-5']
+		flexDirection: 'column'
 	},
 	// Declared by upstream but never applied — the description is rendered by
 	// `FieldLabel`, not here. Kept so the authored surface matches source; it is
@@ -142,18 +220,40 @@ export function checkboxFieldAttrs(
  */
 export function checkboxContainerAttrs(
 	isLabelHidden: boolean,
-	isDisabled: boolean
+	isDisabled: boolean,
+	isReadOnly: boolean,
+	isRowPressSurface: boolean
 ): SvelteStyleAttrs {
+	const hasHitArea = !isLabelHidden && !isDisabled && !isReadOnly;
+	const ownsPress = !isDisabled && !isRowPressSurface;
 	return sx(
 		styles.container,
 		isLabelHidden && styles.containerLabelHidden,
-		!isDisabled && indicatorScope
+		hasHitArea && styles.hitAreaHost,
+		// Hover and focus reach the checkbox visual through this ancestor marker
+		// rather than props, so the whole row drives it.
+		!isDisabled && indicatorScope,
+		!isDisabled && (isRowPressSurface ? styles.indicatorRowPressImage : styles.indicatorPressImage),
+		// The touch press's strength and release live on the row the controller
+		// writes to; the layer over the checkbox box inherits and paints it.
+		// Under a row that owns the press, the box inherits that row's strength
+		// instead.
+		ownsPress && interactionOverlayStyles.pressedAlpha
 	);
 }
 
 /** The positioned wrapper around the native input and the visual box. */
-export function checkboxWrapperAttrs(size: CheckboxInputSize): SvelteStyleAttrs {
-	return sx(styles.checkboxWrapper, wrapperSizeStyles[size]);
+export function checkboxWrapperAttrs(
+	size: CheckboxInputSize,
+	isDisabled: boolean,
+	ownsPress: boolean
+): SvelteStyleAttrs {
+	return sx(
+		styles.checkboxWrapper,
+		wrapperSizeStyles[size],
+		!isDisabled && styles.indicatorPressOverlay,
+		!isDisabled && !ownsPress && styles.indicatorRowPressOverlay
+	);
 }
 
 /**
@@ -162,7 +262,12 @@ export function checkboxWrapperAttrs(size: CheckboxInputSize): SvelteStyleAttrs 
  * clickable — upstream passes `wrapperSizeStyles[size]` here too.
  */
 export function checkboxInputAttrs(size: CheckboxInputSize, isDisabled: boolean): SvelteStyleAttrs {
-	return sx(styles.input, wrapperSizeStyles[size], isDisabled && styles.inputDisabled);
+	return sx(
+		styles.input,
+		styles.inputCoarse,
+		wrapperSizeStyles[size],
+		isDisabled && styles.inputDisabled
+	);
 }
 
 /**

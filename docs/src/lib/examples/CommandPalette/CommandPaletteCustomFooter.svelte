@@ -5,12 +5,7 @@
 	here, so each is declared above the component rather than inline.
 -->
 <script lang="ts">
-	import {
-		CommandPalette,
-		CommandPaletteFooter,
-		Text,
-		createStaticSource
-	} from '@astryx-svelte/core';
+	import { CommandPalette, CommandPaletteFooter, Text, createStaticSource } from '@astryx-sv/core';
 
 	const source = createStaticSource([
 		{ id: 'home', label: 'Home' },

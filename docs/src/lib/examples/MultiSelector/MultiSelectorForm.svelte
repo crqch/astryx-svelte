@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { MultiSelector, VStack } from '@astryx-svelte/core';
+	import { MultiSelector, VStack } from '@astryx-sv/core';
 
 	let columns = $state<string[]>(['name', 'email']);
 	let filters = $state<string[]>([]);

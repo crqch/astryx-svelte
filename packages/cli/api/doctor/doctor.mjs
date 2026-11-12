@@ -17,8 +17,8 @@
  *   - 'fail' — something is broken and should be fixed (drives exit 1).
  *   - 'info' — purely informational; never affects exit code.
  *
- * Every difference from upstream is an identity string — `@astryx-svelte/core`,
- * `@astryx-svelte/cli`, `@astryx-svelte/theme-*`, `astryx-svelte.config.*` — with
+ * Every difference from upstream is an identity string — `@astryx-sv/core`,
+ * `@astryx-sv/cli`, `@astryx-sv/theme-*`, `astryx-svelte.config.*` — with
  * one exception worth naming: **`checkPeerDeps` reads whatever core declares**,
  * and core declares `svelte` where upstream declares `react`/`react-dom` *and*
  * `@stylexjs/stylex`. StyleX is a plain `dependency` here, not a peer, so there
@@ -36,11 +36,11 @@ import { findConfigPath, Project } from '../../foundation/config/project.mjs';
 import { semverCompare, isValidSemver, satisfiesRange } from '../../foundation/env/semver.mjs';
 
 /** The design-system package this CLI diagnoses. */
-const CORE_PACKAGE = '@astryx-svelte/core';
+const CORE_PACKAGE = '@astryx-sv/core';
 /** This CLI's own package name, for the version-alignment check. */
-const CLI_PACKAGE = '@astryx-svelte/cli';
+const CLI_PACKAGE = '@astryx-sv/cli';
 /** npm scope every first-party package (core, cli, themes) lives under. */
-const SCOPE = '@astryx-svelte';
+const SCOPE = '@astryx-sv';
 /** Prefix of a theme package directory name inside {@link SCOPE}. */
 const THEME_PREFIX = 'theme-';
 /** The config basename named in every fix string. */
@@ -114,7 +114,7 @@ function findNodeModules(startDir) {
 }
 
 /**
- * Find every installed @astryx-svelte/theme-* package under node_modules.
+ * Find every installed @astryx-sv/theme-* package under node_modules.
  * @param {string} cwd
  * @returns {Array<{name: string, version: string|null}>}
  */
@@ -134,7 +134,8 @@ function findThemePackages(cwd) {
 	for (const entry of entries) {
 		if (!entry.name.startsWith(THEME_PREFIX)) continue;
 		const dir = path.join(scopeDir, entry.name);
-		// pnpm installs packages as symlinks into node_modules/.pnpm, and a
+		// Package managers install workspace packages as symlinks into their store
+		// (.pnpm for pnpm, .bun for Bun), and a
 		// symlink dirent reports isDirectory() as false — stat the target instead.
 		let isDir = entry.isDirectory();
 		if (!isDir && entry.isSymbolicLink()) {
@@ -232,7 +233,7 @@ export function checkNodeVersion(ctx) {
 }
 
 /**
- * Check 2 — @astryx-svelte/core is installed and resolvable from the project.
+ * Check 2 — @astryx-sv/core is installed and resolvable from the project.
  * @param {DoctorContext} ctx
  * @returns {DoctorCheck}
  */
@@ -313,7 +314,7 @@ export function checkVersionAlignment(ctx) {
 }
 
 /**
- * Check 4 — at least one @astryx-svelte/theme-* is installed and a theme is wired.
+ * Check 4 — at least one @astryx-sv/theme-* is installed and a theme is wired.
  * @param {DoctorContext} ctx
  * @returns {DoctorCheck}
  */
@@ -581,7 +582,7 @@ const VITE_CONFIGS = [
 ];
 
 /**
- * Whether the project imports `@astryx-svelte/core/astryx.css` anywhere under
+ * Whether the project imports `@astryx-sv/core/astryx.css` anywhere under
  * `src/`.
  *
  * A text scan, like the rest of this check, and bounded: the engine's contract
@@ -620,7 +621,7 @@ function importsPrebuiltStylesheet(cwd) {
 			if (!EXTENSIONS.has(path.extname(entry.name))) continue;
 			budget--;
 			try {
-				if (fs.readFileSync(full, 'utf-8').includes('@astryx-svelte/core/astryx.css')) return true;
+				if (fs.readFileSync(full, 'utf-8').includes('@astryx-sv/core/astryx.css')) return true;
 			} catch {
 				// Unreadable file: not evidence either way.
 			}
@@ -639,7 +640,7 @@ function importsPrebuiltStylesheet(cwd) {
  * accepts either.
  *
  * The first is the pre-built stylesheet: `core`'s `dist` ships compiled, so
- * importing `@astryx-svelte/core/astryx.css` styles everything with no bundler
+ * importing `@astryx-sv/core/astryx.css` styles everything with no bundler
  * configuration whatsoever. Finding that import is a pass, and it is tested
  * first — otherwise a correctly configured project would be told it is broken
  * for lacking a compiler it does not need.
@@ -647,7 +648,7 @@ function importsPrebuiltStylesheet(cwd) {
  * The second is compiling the package yourself, from the `source` export
  * condition. That needs three things present, two of which exist only because
  * Vite has two separate ways to route a dependency around its own plugin
- * pipeline. The preset (`@astryx-svelte/core/vite`) supplies all three, so
+ * pipeline. The preset (`@astryx-sv/core/vite`) supplies all three, so
  * finding it is a pass on its own.
  *
  * Deliberately a **text scan**, not an import: a `vite.config.ts` is TypeScript
@@ -685,12 +686,12 @@ export function checkStyleXSetup(ctx) {
 			label,
 			status: 'pass',
 			message:
-				'This project imports @astryx-svelte/core/astryx.css, so the components are ' +
+				'This project imports @astryx-sv/core/astryx.css, so the components are ' +
 				'styled from the pre-built stylesheet and need no StyleX wiring.'
 		};
 	}
 
-	if (/@astryx-svelte\/core\/vite/.test(source)) {
+	if (/@astryx-sv\/core\/vite/.test(source)) {
 		return {
 			id: 'stylex-setup',
 			label,
@@ -722,7 +723,7 @@ export function checkStyleXSetup(ctx) {
 			'Components would render unstyled, with no error.',
 		fix:
 			'Replace the hand-rolled StyleX block with the preset:\n' +
-			"    import { astryx } from '@astryx-svelte/core/vite';\n" +
+			"    import { astryx } from '@astryx-sv/core/vite';\n" +
 			'    export default defineConfig({ plugins: [astryx(), sveltekit()] });'
 	};
 }

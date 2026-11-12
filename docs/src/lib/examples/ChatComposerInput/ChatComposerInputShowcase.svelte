@@ -6,7 +6,7 @@
 	the element it writes inline becomes one.
 -->
 <script lang="ts">
-	import { ChatComposer, ChatComposerInput, Stack } from '@astryx-svelte/core';
+	import { ChatComposer, ChatComposerInput, Stack } from '@astryx-sv/core';
 </script>
 
 {#snippet input()}

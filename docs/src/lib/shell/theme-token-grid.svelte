@@ -1,12 +1,52 @@
 <script lang="ts" module>
-	import type { DefinedTheme } from '@astryx-svelte/core/theme';
+	import type { DefinedTheme } from '@astryx-sv/core/theme';
+
+	/**
+	 * Split on top-level commas, so a `light-dark()` pair whose sides are
+	 * themselves function calls — `color-mix(in srgb, …)` — stays two parts and
+	 * the `in srgb, …` commas inside are not mistaken for the separator.
+	 */
+	function splitTopLevel(value: string): string[] {
+		const parts: string[] = [];
+		let depth = 0;
+		let quote: string | null = null;
+		let start = 0;
+		for (let index = 0; index < value.length; index += 1) {
+			const character = value[index];
+			if (quote != null) {
+				if (character === quote && value[index - 1] !== '\\') quote = null;
+				continue;
+			}
+			if (character === '"' || character === "'") {
+				quote = character;
+			} else if (character === '(') {
+				depth += 1;
+			} else if (character === ')') {
+				depth -= 1;
+			} else if (character === ',' && depth === 0) {
+				parts.push(value.slice(start, index));
+				start = index + 1;
+			}
+		}
+		parts.push(value.slice(start));
+		return parts;
+	}
 
 	/** The declared value for one mode: `[light, dark]` picks a side, a bare string is both. */
 	export function tokenValue(theme: DefinedTheme, name: string, mode: 'light' | 'dark'): string {
 		const declared = theme.tokens?.[name];
 		if (declared == null) return '';
 		if (Array.isArray(declared)) return String(declared[mode === 'dark' ? 1 : 0] ?? '');
-		return String(declared);
+		const raw = String(declared);
+		// Five of the eight packages declare pairs as `light-dark(light, dark)`
+		// rather than as tuples. Showing the whole call in both modes made the
+		// panel's "values for … mode" caption false for them.
+		const wrapped = /^light-dark\(([\s\S]*)\)$/.exec(raw.trim());
+		if (wrapped) {
+			const sides = splitTopLevel(wrapped[1]);
+			if (sides.length === 2) return sides[mode === 'dark' ? 1 : 0].trim();
+		}
+		return raw;
 	}
 
 	/**
@@ -35,7 +75,7 @@
 </script>
 
 <script lang="ts">
-	import { Code, Heading, Text, VStack } from '@astryx-svelte/core';
+	import { Code, Heading, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Every token one theme package **declares**, grouped by family.

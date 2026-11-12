@@ -6,8 +6,8 @@
 	a **getter**, where upstream passes the config object.
 -->
 <script lang="ts">
-	import { Table, useTableRowStatus, proportional, pixel } from '@astryx-svelte/core';
-	import type { TableColumn, TableRowStatus } from '@astryx-svelte/core';
+	import { Table, useTableRowStatus, proportional, pixel } from '@astryx-sv/core';
+	import type { TableColumn, TableRowStatus } from '@astryx-sv/core';
 
 	interface Job extends Record<string, unknown> {
 		id: string;

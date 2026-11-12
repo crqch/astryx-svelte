@@ -7,6 +7,7 @@
 		DayOfWeekName,
 		ISODateString
 	} from '../../utils/date-types.js';
+	import type { CalendarSystem, CalendarMonth } from '../../utils/calendar-system.js';
 
 	// Upstream's `Calendar.tsx` re-exports `ISODateString`/`DayOfWeek`/
 	// `DayOfWeekName`/`DateRange` from `utils/dateTypes`, and `Calendar/index.ts`
@@ -109,13 +110,23 @@
 		 * composed onto the root element; upstream names it `onKeyDown`.
 		 */
 		onkeydown?: KeyboardEventHandler<HTMLDivElement>;
+		/**
+		 * The calendar system the grid shows, such as `'persian'` or `'hebrew'`.
+		 * It sets the months, their names, and month and year navigation. `value`,
+		 * `min`, `max`, `focusDate`, and every callback stay Gregorian ISO dates.
+		 * Calendars other than `gregory`, `iso8601`, `buddhist`, `roc`, and
+		 * `japanese` need `Temporal`; where the runtime lacks it, the grid shows
+		 * Gregorian months and warns once in development.
+		 * @default the InternationalizationProvider calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
 	}
 
 	interface CalendarSingleProps extends CalendarBaseProps {
 		/** Selection mode */
 		mode?: 'single';
-		/** Selected date in ISO format (YYYY-MM-DD) */
-		value?: ISODateString;
+		/** Selected date in ISO format (YYYY-MM-DD), or null for a controlled empty state */
+		value?: ISODateString | null;
 		/** Default value for uncontrolled mode */
 		defaultValue?: ISODateString;
 		/** Callback when date is selected */
@@ -125,8 +136,8 @@
 	interface CalendarRangeProps extends CalendarBaseProps {
 		/** Selection mode */
 		mode: 'range';
-		/** Selected date range */
-		value?: DateRange;
+		/** Selected date range, or null for a controlled empty state */
+		value?: DateRange | null;
 		/** Default value for uncontrolled mode */
 		defaultValue?: DateRange;
 		/** Callback when range is selected */
@@ -149,15 +160,22 @@
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { normalizeDayOfWeek, type PlainDate } from '../../utils/date-types.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
+		calendarAddMonths,
+		calendarMonthOf,
+		calendarShiftMonths,
+		calendarShiftYears,
+		formatCalendarDate,
+		formatCalendarMonthLabel,
+		isInCalendarMonth
+	} from '../../utils/calendar-system.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
+	import {
 		DATE_FORMAT_WITH_WEEKDAY,
 		plainDateAddDays,
-		plainDateAddMonths,
-		plainDateFormat,
+		plainDateDiffDays,
 		plainDateFromISO,
 		plainDateIsBefore,
 		plainDateIsEqual,
-		plainDateSetFirstOfMonth,
 		plainDateToDate,
 		plainDateToISO,
 		plainDateToday
@@ -166,6 +184,7 @@
 	import Icon from '../icon/icon.svelte';
 	import { getInitialFocusDate } from './get-initial-focus-date.js';
 	import MonthGrid from './month-grid.svelte';
+	import { useCalendarConstraints } from './use-calendar-constraints.svelte.js';
 	import {
 		calendarAttrs,
 		calendarHeaderAttrs,
@@ -199,6 +218,7 @@
 		hasWeekNumbers = false,
 		hasVariableRowCount = false,
 		weekStartsOn: weekStartsOnProp = 0,
+		calendar: calendarProp,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -208,6 +228,7 @@
 
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(() => calendarProp, 'Calendar');
 
 	// Normalize `weekStartsOn` (number or three-letter day name) to a numeric
 	// DayOfWeek so all downstream date math keeps working with an index.
@@ -229,7 +250,7 @@
 	const today = plainDateToday();
 
 	// Internal state for uncontrolled mode.
-	let internalValue = $state<ISODateString | DateRange | undefined>(defaultValue);
+	let internalValue = $state<ISODateString | DateRange | null | undefined>(defaultValue);
 
 	// Range selection in progress (first click made, waiting for second).
 	let rangeSelectionStart = $state<ISODateString | null>(null);
@@ -241,6 +262,22 @@
 	let pendingFocus = $state<ISODateString | null>(null);
 
 	const effectiveValue = $derived(value !== undefined ? value : internalValue);
+
+	// Upstream's `isMonthKnown`: without a focus date or a selected value the
+	// opening month follows today, which is unknown during the server render and
+	// the render that hydrates server HTML. The port cannot read Svelte's private
+	// `hydrating` flag (see the Drawer debt), so the pending state resolves in an
+	// effect, before the browser paints the client-only mount. A consumer's own
+	// `focusDate` or `value` names the month outright, so those are known at once.
+	// svelte-ignore state_referenced_locally
+	let isMonthKnown = $state(
+		focusDateProp !== undefined || value !== undefined || defaultValue !== undefined
+	);
+	$effect(() => {
+		if (!isMonthKnown) {
+			isMonthKnown = true;
+		}
+	});
 
 	// Focus date state (which month is visible). Seeded once, as upstream's lazy
 	// `useState` initialiser is: `focusDate` → the effective value (a range
@@ -254,11 +291,12 @@
 	let internalFocusDate = $state<PlainDate>(
 		getInitialFocusDate({
 			focusDate: focusDateProp,
-			value: effectiveValue,
+			value: effectiveValue ?? undefined,
 			min,
 			max,
 			numberOfMonths,
-			today
+			today,
+			calendar: calendar()
 		})
 	);
 
@@ -285,20 +323,18 @@
 		}
 	}
 
-	// Base month (first day of focus month).
-	const baseMonth = $derived(plainDateSetFirstOfMonth(focusDate));
+	// Base month (first day of the focus month in the shown calendar).
+	const baseMonth = $derived(calendarMonthOf(calendar(), focusDate));
 
 	const visibleMonths = $derived(
-		Array.from({ length: numberOfMonths }, (_, i) => plainDateAddMonths(baseMonth, i))
+		Array.from({ length: numberOfMonths }, (_, i) => calendarAddMonths(calendar(), baseMonth, i))
 	);
 
 	const monthYearLabel = $derived.by(() => {
-		if (numberOfMonths === 1) {
-			return plainDateFormat(visibleMonths[0], DATE_FORMAT_MONTH_YEAR, locale());
+		if (!isMonthKnown) {
+			return '';
 		}
-		return visibleMonths
-			.map((m) => plainDateFormat(m, DATE_FORMAT_MONTH_YEAR, locale()))
-			.join(' – ');
+		return visibleMonths.map((m) => formatCalendarMonthLabel(calendar(), m, locale())).join(' – ');
 	});
 
 	let monthsContainer = $state<HTMLDivElement | null>(null);
@@ -308,47 +344,67 @@
 	 *
 	 * **This runs here rather than in `MonthGrid`, and the difference is not
 	 * cosmetic.** Upstream passes `pendingFocus` and an `onPendingFocusHandled`
-	 * callback to *every* pane, and each pane's `useEffect` searches its own grid,
-	 * falls back to its own first enabled button, focuses it and clears the flag.
-	 * React effects run against committed props, so the first pane clearing the
-	 * flag does not stop the others: every pane runs, and the **last one wins**.
+	 * callback to *every* pane, and each pane's `useEffect` checks that the
+	 * pending date belongs to its own calendar month, then focuses the target
+	 * (or that month's first enabled day) and clears the flag. React effects run
+	 * against committed props, so the first pane clearing the flag does not stop
+	 * the others.
 	 *
 	 * A Svelte child reads the parent's `$state` live, so the first pane's clear
 	 * would be visible to the second immediately and only one pane would ever run.
-	 * With `numberOfMonths={2}` — which is `DateRangeInput`'s default — paging
-	 * forward from the right-hand pane put the target seven days past the left
-	 * pane's window, so the left pane found nothing, focused its own first day and
-	 * cleared the flag before the right pane (which *did* contain the target) got
-	 * a turn.
+	 * With `numberOfMonths={2}` — which is `DateRangeInput`'s default — the target
+	 * month is often the right-hand pane, so a per-child clear would leave the
+	 * pane that actually holds the target without a turn.
 	 *
-	 * So the pass is hoisted to the parent and walks the panes in DOM order,
-	 * applying each pane's rule in turn. That reproduces upstream's sequence
-	 * exactly, last-writer-wins included — the intermediate `.focus()` calls are
-	 * not observable, since no paint happens between them.
+	 * So the pass is hoisted to the parent, pairs the grids with `visibleMonths`,
+	 * and applies upstream's per-pane month check in DOM order. No paint happens
+	 * between the intermediate `.focus()` calls, so only the final target is
+	 * observable.
 	 */
 	function runPendingFocus(target: ISODateString): void {
 		if (!monthsContainer) {
 			return;
 		}
 
-		const targetIso = plainDateToISO(plainDateFromISO(target));
+		const targetPd = plainDateFromISO(target);
+		const targetIso = plainDateToISO(targetPd);
+		const grids = monthsContainer.querySelectorAll<HTMLElement>('[role="grid"]');
 
-		for (const grid of monthsContainer.querySelectorAll<HTMLElement>('[role="grid"]')) {
-			const buttons = grid.querySelectorAll<HTMLElement>('button:not([disabled])');
+		// Only the pane showing the target's month acts. A neighbouring pane's
+		// fallback must never override the right target, so panes are paired with
+		// `visibleMonths` rather than searched indiscriminately (upstream's
+		// per-pane `isInCalendarMonth` guard).
+		for (const [index, grid] of Array.from(grids).entries()) {
+			const month = visibleMonths[index];
+			if (!month || !isInCalendarMonth(targetPd, month)) {
+				continue;
+			}
 
-			let targetButton: HTMLElement | null = null;
-			for (const button of buttons) {
-				if (button.getAttribute('data-date') === targetIso) {
-					targetButton = button;
-					break;
+			const buttons = Array.from(
+				grid.querySelectorAll<HTMLElement>(
+					'button[data-date]:not([disabled]):not([aria-disabled="true"])'
+				)
+			);
+
+			// The real target day, else the month's first enabled day, else — in a
+			// month with no enabled day — the first day button that can still take
+			// focus (a borrowed adjacent-month day), so focus stays in the grid
+			// rather than dropping to the page.
+			const targetButton =
+				buttons.find((button) => button.getAttribute('data-date') === targetIso) ??
+				buttons[0] ??
+				grid.querySelector<HTMLElement>('button[data-date]:not([disabled])') ??
+				null;
+
+			if (targetButton != null) {
+				// The target becomes this grid's one Tab stop before it takes focus,
+				// the way the hook's own arrow moves do: a programmatic focus alone
+				// would leave the stop on the day the grid mounted with.
+				for (const button of grid.querySelectorAll<HTMLElement>('button[data-date]')) {
+					button.tabIndex = button === targetButton ? 0 : -1;
 				}
+				targetButton.focus();
 			}
-
-			if (!targetButton && buttons.length > 0) {
-				targetButton = buttons[0];
-			}
-
-			targetButton?.focus();
 		}
 	}
 
@@ -391,48 +447,154 @@
 
 	// Whether prev/next navigation is possible given min/max.
 	const canNavigatePrevious = $derived.by(() => {
+		if (!isMonthKnown) {
+			return false;
+		}
 		if (!min) {
 			return true;
 		}
 		const minDate = plainDateFromISO(min);
 		// Can't go back if min is in the current focus month.
-		return (
-			minDate.year < baseMonth.year ||
-			(minDate.year === baseMonth.year && minDate.month < baseMonth.month)
-		);
+		return plainDateIsBefore(minDate, baseMonth.start);
 	});
 
+	const lastVisibleMonth = $derived(visibleMonths[visibleMonths.length - 1]);
+
 	const canNavigateNext = $derived.by(() => {
+		if (!isMonthKnown) {
+			return false;
+		}
 		if (!max) {
 			return true;
 		}
 		const maxDate = plainDateFromISO(max);
 		// Check against the last visible month, not just baseMonth.
-		const lastVisibleMonth = plainDateAddMonths(baseMonth, numberOfMonths - 1);
-		return (
-			maxDate.year > lastVisibleMonth.year ||
-			(maxDate.year === lastVisibleMonth.year && maxDate.month > lastVisibleMonth.month)
-		);
+		return plainDateIsBefore(lastVisibleMonth.end, maxDate);
 	});
 
-	function navigateMonth(delta: number, focusedDate?: ISODateString, offset?: number): void {
-		const newPd = plainDateAddMonths(baseMonth, delta);
-		const newISO = plainDateToISO(newPd);
+	// The same constraint view the grids use, so a key can resolve its target
+	// before the month changes. Upstream's `rootRangeAnchor` + root
+	// `useCalendarConstraints`.
+	const rootRangeAnchor = $derived(
+		mode === 'range' && rangeSelectionStart ? plainDateFromISO(rangeSelectionStart) : null
+	);
+	const rootConstraints = useCalendarConstraints(() => ({
+		min,
+		max,
+		dateConstraints,
+		maxRangeSpan,
+		minRangeSpan,
+		rangeAnchor: rootRangeAnchor
+	}));
 
-		// Target focus date, when a focused date was provided.
-		if (focusedDate) {
-			const currentPd = plainDateFromISO(focusedDate);
-			const daysToMove = offset ?? 7;
-			const targetPd = plainDateAddDays(currentPd, delta * daysToMove);
-			pendingFocus = plainDateToISO(targetPd);
+	/** The first day of a calendar month that no constraint disables. */
+	function firstEnabledDayOfMonth(
+		month: CalendarMonth,
+		isDisabled: (pd: PlainDate) => boolean
+	): PlainDate | null {
+		for (let offset = 0; offset < month.length; offset += 1) {
+			const pd = plainDateAddDays(month.start, offset);
+			if (!isDisabled(pd)) {
+				return pd;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Navigate the visible months, resolving a keyboard target before deciding.
+	 *
+	 * A key resolves its target day first, so a boundary blocks only
+	 * out-of-range targets, never the month movement itself, and a direction
+	 * with no enabled day left changes nothing rather than dropping focus.
+	 * PageUp/PageDown step by whole months and, with Shift, by years. Arrow keys
+	 * walk `offset` days and land on the first enabled day in that direction.
+	 */
+	function navigateMonth(
+		delta: number,
+		focusedDate?: ISODateString,
+		offset?: number,
+		unit: 'days' | 'months' | 'years' = 'days'
+	): void {
+		// The Previous/Next buttons move the month with no focused day.
+		if (!focusedDate) {
+			if ((delta < 0 && !canNavigatePrevious) || (delta > 0 && !canNavigateNext)) {
+				return;
+			}
+			const newPd = calendarAddMonths(calendar(), baseMonth, delta).start;
+			onFocusDateChange?.(plainDateToISO(newPd));
+			if (!isControlledFocus) {
+				internalFocusDate = newPd;
+			}
+			return;
 		}
 
-		// Note this tests `onFocusDateChange` alone, *not* `isControlledFocus` —
-		// a caller passing only the callback gets notified without the month
-		// moving. Upstream's own behaviour, replicated rather than corrected.
-		if (onFocusDateChange) {
-			onFocusDateChange(newISO);
+		const currentPd = plainDateFromISO(focusedDate);
+		const inRange = (pd: PlainDate) =>
+			!(min && plainDateIsBefore(pd, plainDateFromISO(min))) &&
+			!(max && plainDateIsBefore(plainDateFromISO(max), pd));
+
+		let targetPd: PlainDate;
+		if (unit === 'months' || unit === 'years') {
+			// A page or a year step keeps the day of the calendar month and clamps
+			// it to the target month's length. A month with no enabled day is no
+			// target, the same as for an arrow.
+			const candidate =
+				unit === 'years'
+					? calendarShiftYears(calendar(), currentPd, delta)
+					: calendarShiftMonths(calendar(), currentPd, delta);
+			if (!inRange(candidate)) {
+				return;
+			}
+			if (rootConstraints.isDateDisabled(candidate)) {
+				const firstEnabled = firstEnabledDayOfMonth(
+					calendarMonthOf(calendar(), candidate),
+					rootConstraints.isDateDisabled
+				);
+				if (firstEnabled == null) {
+					return;
+				}
+				targetPd = firstEnabled;
+			} else {
+				targetPd = candidate;
+			}
 		} else {
+			// Walk the arrow's direction to the first enabled day, up to a year
+			// away; past `min`/`max` or with every day disabled, nothing moves.
+			const step = delta * (offset ?? 7);
+			let candidate = plainDateAddDays(currentPd, step);
+			let found: PlainDate | null = null;
+			while (Math.abs(plainDateDiffDays(currentPd, candidate)) <= 366) {
+				if (!inRange(candidate)) {
+					return;
+				}
+				if (!rootConstraints.isDateDisabled(candidate)) {
+					found = candidate;
+					break;
+				}
+				candidate = plainDateAddDays(candidate, step);
+			}
+			if (found == null) {
+				return;
+			}
+			targetPd = found;
+		}
+
+		// Focus moves to the target; the months change only when the target's
+		// month is not already shown. The view shifts the least it can in the
+		// key's direction, so the target month becomes the first (backwards) or
+		// last (forwards) month shown.
+		pendingFocus = plainDateToISO(targetPd);
+		const isBeforeShown = plainDateIsBefore(targetPd, baseMonth.start);
+		if (!isBeforeShown && !plainDateIsBefore(lastVisibleMonth.end, targetPd)) {
+			return;
+		}
+		const targetMonth = calendarMonthOf(calendar(), targetPd);
+		const newPd = isBeforeShown
+			? targetMonth.start
+			: calendarAddMonths(calendar(), targetMonth, -(numberOfMonths - 1)).start;
+		onFocusDateChange?.(plainDateToISO(newPd));
+		if (!isControlledFocus) {
 			internalFocusDate = newPd;
 		}
 	}
@@ -472,24 +634,24 @@
 				rangeSelectionStart = iso;
 				announce(
 					t('@astryx.calendar.rangeStartAnnounce', {
-						date: plainDateFormat(date, DATE_FORMAT_WITH_WEEKDAY, locale())
+						date: formatCalendarDate(calendar(), date, DATE_FORMAT_WITH_WEEKDAY, locale())
 					})
 				);
 			} else {
 				// Second click — complete the range.
 				const startPd = plainDateFromISO(rangeSelectionStart);
 
-				// Clicking the anchor again clears the in-progress start rather than
-				// committing a zero-length range. This is also the escape hatch when
-				// `minRangeSpan` disables the days around the anchor: without it the
-				// anchor would be the only clickable day left and the start could never
-				// be moved. `minRangeSpan` leaves the anchor itself enabled precisely so
-				// this toggle stays reachable.
-				if (plainDateIsEqual(date, startPd)) {
+				// Clicking the anchor again commits a one-day range when the minimum
+				// span allows it. For longer minimum spans it clears the in-progress
+				// start instead: the anchor is the only nearby day that remains
+				// enabled, so this preserves an escape hatch for moving the start
+				// without violating the configured minimum. `minRangeSpan` leaves the
+				// anchor itself enabled precisely so this toggle stays reachable.
+				if (plainDateIsEqual(date, startPd) && (minRangeSpan ?? 1) > 1) {
 					rangeSelectionStart = null;
 					announce(
 						t('@astryx.calendar.rangeClearedAnnounce', {
-							date: plainDateFormat(date, DATE_FORMAT_WITH_WEEKDAY, locale())
+							date: formatCalendarDate(calendar(), date, DATE_FORMAT_WITH_WEEKDAY, locale())
 						})
 					);
 					return;
@@ -515,8 +677,18 @@
 				// swapped {start, end} above even for a reverse pick).
 				announce(
 					t('@astryx.calendar.rangeCompleteAnnounce', {
-						start: plainDateFormat(plainDateFromISO(start), DATE_FORMAT_WITH_WEEKDAY, locale()),
-						end: plainDateFormat(plainDateFromISO(end), DATE_FORMAT_WITH_WEEKDAY, locale())
+						start: formatCalendarDate(
+							calendar(),
+							plainDateFromISO(start),
+							DATE_FORMAT_WITH_WEEKDAY,
+							locale()
+						),
+						end: formatCalendarDate(
+							calendar(),
+							plainDateFromISO(end),
+							DATE_FORMAT_WITH_WEEKDAY,
+							locale()
+						)
 					})
 				);
 			}
@@ -527,7 +699,7 @@
 	const rootAttrs = $derived(calendarAttrs(xstyle));
 	const headerAttrs = calendarHeaderAttrs();
 	const labelAttrs = calendarMonthYearLabelAttrs();
-	const monthsAttrs = calendarMonthsContainerAttrs();
+	const monthsAttrs = $derived(calendarMonthsContainerAttrs(isMonthKnown));
 	const navIconAttrs = calendarNavIconAttrs();
 </script>
 
@@ -583,10 +755,20 @@
 		</Button>
 	</div>
 	<!-- Month grids -->
-	<div bind:this={monthsContainer} class={monthsAttrs.class} style={monthsAttrs.style}>
-		{#each visibleMonths as month (`${month.year}-${month.month}`)}
+	<!-- Before the month is known the grids keep their space but stay hidden
+	     and out of reach. With the default six-row grid, the month appears
+	     with no layout jump. -->
+	<div
+		bind:this={monthsContainer}
+		aria-hidden={isMonthKnown ? undefined : true}
+		inert={!isMonthKnown}
+		class={monthsAttrs.class}
+		style={monthsAttrs.style}
+	>
+		{#each visibleMonths as month (plainDateToISO(month.start))}
 			<MonthGrid
 				{month}
+				calendar={calendar()}
 				value={effectiveValue}
 				{mode}
 				{rangeSelectionStart}
@@ -603,8 +785,9 @@
 				onDayClick={handleDayClick}
 				onDayHover={(date) => (hoveredDate = date ? plainDateToISO(date) : null)}
 				{today}
-				onNavigatePrevious={(focusedDate, offset) => navigateMonth(-1, focusedDate, offset)}
-				onNavigateNext={(focusedDate, offset) => navigateMonth(1, focusedDate, offset)}
+				onNavigatePrevious={(focusedDate, offset, unit) =>
+					navigateMonth(-1, focusedDate, offset, unit)}
+				onNavigateNext={(focusedDate, offset, unit) => navigateMonth(1, focusedDate, offset, unit)}
 			/>
 		{/each}
 	</div>

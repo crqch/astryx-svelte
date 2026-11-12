@@ -1,4 +1,4 @@
-/** Type surface for `@astryx-svelte/cli/xle` — the browser-safe layout language. */
+/** Type surface for `@astryx-sv/cli/xle` — the browser-safe layout language. */
 
 export interface XLEIssue {
 	message: string;

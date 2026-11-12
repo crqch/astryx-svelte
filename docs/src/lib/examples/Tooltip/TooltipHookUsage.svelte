@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Center, TooltipLayer, useTooltip } from '@astryx-svelte/core';
+	import { Button, Center, TooltipLayer, useTooltip } from '@astryx-sv/core';
 
 	/**
 	 * Two translations, both this port's standing shapes rather than changes to

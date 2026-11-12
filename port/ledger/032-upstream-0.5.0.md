@@ -189,7 +189,7 @@ a *consumer* compiles to `var(--<constKey>)` where the key is
 ``hash(`${packageName}:${pathFromPackageRoot}//${exportName}.${key}`)``. `processStylexRules` puts the
 literal back only when the sheet is written. So a const-derived rule ends up with a **byte-identical
 declaration** on both sides and a class name that can never agree — ours hashes
-`@astryx-svelte/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
+`@astryx-sv/core:src/lib/components/date-input/tokens.stylex.ts`, upstream's
 `@astryxdesign/core:src/DateInput/tokens.stylex.ts`. Nine rules were affected.
 
 This is the same standing a `defineMarker` class already has, and both oracles now treat it that
@@ -374,7 +374,7 @@ Every stage green. What was run, and what it said:
 | **CSS oracle**                      | **0 mismatches**                              |
 | pseudo-locale                       | current                                       |
 | all 8 theme packages                | oracles green, mismatch 0 each                |
-| `@astryx-svelte/cli`                | 114 files, 2104 cases, themes bundle current  |
+| `@astryx-sv/cli`                | 114 files, 2104 cases, themes bundle current  |
 | `emit-core-docs --check`            | 224 docs, all current                         |
 
 ### Two things the gate caught that review had not

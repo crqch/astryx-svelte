@@ -11,6 +11,8 @@
 		'data-testid'?: string;
 		/** Consumer `onclick` for the onClick-composition cases. */
 		onclick?: (e: MouseEvent) => void;
+		/** A caller description id, joined before the group's disabled reason. */
+		describedBy?: string;
 	}
 </script>
 
@@ -33,16 +35,17 @@
 	 * ("updates aria-checked when value changes") drives the change with `rerender`,
 	 * upstream's `rerender`.
 	 *
-	 * `before` adds the leading `<button>` upstream writes as a JSX sibling for the
-	 * focus-entry (#3597) cases. `icon` renders the `<span data-testid="icon">` that
-	 * upstream passes as the `icon` element.
+	 * `before`/`after` add the sibling `<button>`s upstream writes around the group
+	 * for the focus-entry and Tab-order cases. `icon` renders the
+	 * `<span data-testid="icon">` that upstream passes as the `icon` element.
 	 */
 	interface Props extends Omit<SegmentedControlProps, 'children'> {
 		items: SegmentItemConfig[];
 		before?: boolean;
+		after?: boolean;
 	}
 
-	let { items, before = false, ...rest }: Props = $props();
+	let { items, before = false, after = false, ...rest }: Props = $props();
 </script>
 
 {#snippet iconSnippet()}
@@ -59,7 +62,9 @@
 			isDisabled={item.isDisabled}
 			icon={item.icon ? iconSnippet : undefined}
 			data-testid={item['data-testid']}
+			aria-describedby={item.describedBy}
 			onclick={item.onclick}
 		/>
 	{/each}
 </SegmentedControl>
+{#if after}<button type="button">after</button>{/if}

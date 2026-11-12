@@ -3,16 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		Card,
-		HStack,
-		Icon,
-		IconButton,
-		Text,
-		VisuallyHidden,
-		VStack
-	} from '@astryx-svelte/core';
-	import type { IconName } from '@astryx-svelte/core';
+	import { Card, HStack, Icon, IconButton, Text, VisuallyHidden, VStack } from '@astryx-sv/core';
+	import type { IconName } from '@astryx-sv/core';
 
 	/**
 	 * VisuallyHidden is invisible by design, so this hero teaches the concept by

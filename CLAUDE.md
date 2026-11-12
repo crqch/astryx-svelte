@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-A Svelte 5 port of [Astryx](https://astryx.atmeta.com/), Meta's open source design system. pnpm
+A Svelte 5 port of [Astryx](https://astryx.atmeta.com/), Meta's open source design system. Bun
 monorepo: `packages/core` (components), `packages/cli`, `packages/themes/*`, `docs`.
 
 ## The parity rule
@@ -24,7 +24,7 @@ worth consulting; it just must not auto-load.
 
 **`port/` holds everything about building this port**, and `port/README.md` maps what goes where.
 `port/todo.md` is the backlog — the current goal and what's next, no metrics and no batch history.
-`port/status.md` is **generated** by `scripts/status.mjs` and must never be hand-edited; `pnpm
+`port/status.md` is **generated** by `scripts/status.mjs` and must never be hand-edited; `bun run
 verify` regenerates it and fails when the committed file has drifted. `port/debts.md` records every
 deliberate divergence from upstream with a machine-readable head (`units`, `kind`, `retires`).
 `port/ledger/` holds one file per batch — how the work was actually done. `port/research/` is frozen
@@ -66,15 +66,15 @@ Five agents in `.claude/agents/` own distinct axes. Use them — they encode thi
 ## Commands
 
 ```sh
-pnpm verify        # the gate: every stage runs and every result reports, then port/status.md is
+bun run verify        # the gate: every stage runs and every result reports, then port/status.md is
                    #   regenerated and diffed against what's committed. Prefer this to chaining
                    #   build/check/lint/test with && — that reports "failed" identically whether
                    #   one stage failed or both ran, and once hid six real errors behind the first.
-                   #   **Redirect its output, never pipe it.** `pnpm verify 2>&1 | tail -80` returns
+                   #   **Redirect its output, never pipe it.** `bun run verify 2>&1 | tail -80` returns
                    #   `tail`'s exit code, so a run that failed 3 of 7 stages reads as a clean pass
                    #   — the same hazard as the && chain, reached from the other direction. Write to
                    #   a file and grep the file (batch 032).
-pnpm verify --fast # skips the whole test stage — the browser suite (real Chromium, thousands of
+bun run verify --fast # skips the whole test stage — the browser suite (real Chromium, thousands of
                    #   cases), the node suites, the CLI's own checks and the theme oracles. Use it
                    #   for a quick read *between* commits, never as a batch's gate. Batch 029 was
                    #   gated on it and the first full run found four defects it structurally could
@@ -82,26 +82,26 @@ pnpm verify --fast # skips the whole test stage — the browser suite (real Chro
                    #   became an object, the CLI's bundled copy of `neutral-theme.ts` left stale by
                    #   a Banner change, three documented theming targets with no `themeProps`
                    #   literal, and two `InputClearButton` cases the pin move added. Three of those
-                   #   came from one commit. **`pnpm verify` — full — before the batch is called
+                   #   came from one commit. **`bun run verify` — full — before the batch is called
                    #   done, and before any release.**
-pnpm -r build     # must run before check — theme-neutral typechecks against core's built dist/,
+bun run build     # must run before check — theme-neutral typechecks against core's built dist/,
                   #   and the docs generator reads props types out of that same dist/
-pnpm -r check     # svelte-check + tsc
-pnpm -r lint      # prettier --check && eslint
-pnpm -r test      # vitest + all three fidelity oracles
-pnpm -F @astryx-svelte/core test:unit --run      # unit tests only
-pnpm -F @astryx-svelte/core test:unit --run src/tests/foo.svelte.test.ts   # one file
-#   NOTE: no `--`. Under pnpm 10 the `--` is passed through, so vitest sees
-#   `"--" "--run" "<path>"`, ignores both the flag and the filter, and starts a
-#   full run in *watch mode* that never exits. It looks exactly like a hang.
-#   `--project=client` / `--project=server` narrows to one vitest project.
-pnpm -F @astryx-svelte/core test:client   # the client project, chunked — see below
+bun run --filter '*' check     # svelte-check + tsc
+bun run --filter '*' lint      # oxfmt --check && oxlint
+bun run --filter '*' test      # vitest + all three fidelity oracles
+bun run --filter @astryx-sv/core test:unit --run   # unit tests only
+bun run --filter @astryx-sv/core test:unit --run src/tests/foo.svelte.test.ts   # one file
+#   Flags after the script name are forwarded to vitest. The old pnpm warning
+#   about `--` no longer applies: Bun handles it, but passing it is unnecessary
+#   and reads as a pnpm habit. `--project=client` / `--project=server` narrows
+#   to one vitest project.
+bun run --filter @astryx-sv/core test:client   # the client project, chunked — see below
 #   Run it alone. Two vitest processes on this project at once fail at *project
 #   init* — `EPERM: operation not permitted, rename` on Windows, as both write
 #   `.svelte-kit` and the Vite cache — and every chunk then reports as failed.
 #   It reads as a catastrophic regression rather than as contention, and it cost
 #   a full 30-minute gate run to a background agent that was running the suite
-#   at the same time. Same rule for `pnpm verify`, which runs this.
+#   at the same time. Same rule for `bun run verify`, which runs this.
 #   **The run you collide with may be one nobody is watching.** `child.on('close')`
 #   was the only thing that ever resolved a chunk, so a chunk whose browser died
 #   *without* closing its vitest process never resolved — the run hung instead of
@@ -158,19 +158,40 @@ pnpm -F @astryx-svelte/core test:client   # the client project, chunked — see 
 #   `^H`. It failed *safe* - overstating the work - which is why nobody audits it.
 #   `node -e "const s=require('fs').readFileSync(F,'utf8');"` plus a scan for
 #   codepoints under 32 settles it in one command.
-pnpm dev          # the docs site — the only demo surface (see below)
-pnpm -F docs generate   # regenerate the docs content registries (runs automatically on dev/build)
+bun run dev          # the docs site — the only demo surface (see below)
+bun run --filter docs generate   # regenerate the docs content registries (runs automatically on dev/build)
 ```
 
 Never install with `--prod` or prune devDependencies: all three oracles **and the docs content
 pipeline** read the upstream `@astryxdesign/*` packages, which are devDependencies.
+
+## Toolchain
+
+**Bun is the package manager and script runner.** `bun.lock` is the only lockfile; `pnpm-lock.yaml`
+and `pnpm-workspace.yaml` are gone, and the workspace list lives in the root `package.json`.
+
+**oxc is the formatter and linter.** One root `.oxfmtrc.json` and one root `.oxlintrc.json` govern
+every package. `oxfmt` formats JS/TS/JSON/CSS/Markdown and Svelte (through the bundled
+`prettier-plugin-svelte`, which needs the root `svelte` devDependency). `oxlint` lints JavaScript,
+TypeScript and the `<script>` block of `.svelte` files. **It does not lint Svelte templates** —
+`eslint-plugin-svelte`'s markup and a11y rules have no oxlint counterpart yet. `svelte-check` still
+covers template types; a template-only lint regression is a review responsibility, not a gate one.
+The local `no-physical-properties` rule lives in `packages/core/oxlint-plugins/` and loads through
+`jsPlugins`; it is the same rule body as before, wrapped in Oxlint's plugin shape.
+
+**Four StyleX scripts stay on Node**: `build-css.mjs`, `compile-dist-stylex.mjs`,
+`compare-upstream-classes.mjs` and `compare-upstream-css.mjs`. `@stylexjs/babel-plugin`'s media-query
+parser leaks state under Bun — the thirteenth `transformAsync` in one process throws `Invalid media
+query syntax` — while the identical script is clean under Node. This is a Bun/plugin interaction,
+not a choice; once upstream or Bun fixes it, those four script entries can drop `node` for `bun`.
+The published CLI's `bin` keeps its Node shebang for the same reason a consumer may not have Bun.
 
 ## The docs site
 
 **It is the port's only demo surface.** `packages/core` used to carry a SvelteKit demo route beside
 its library — 36 files that predated the docs site and were kept because nothing else showed a
 component running. Once `docs/` covered every component with its own example blocks, the route was
-two places to demonstrate the same thing, and the parity rule applied to both. It is gone; `pnpm
+two places to demonstrate the same thing, and the parity rule applied to both. It is gone; `bun run
 dev` runs the docs site, and a component's examples live in `docs/src/lib/examples/<Name>/`.
 
 See `port/todo.md`'s `## Current goal` for what's active. Two things about `docs/` are easy to get
@@ -179,7 +200,7 @@ wrong:
 - **It compiles core's StyleX itself.** `dist/` ships `.stylex.js` _uncompiled_ — `svelte-package`
   transpiles TypeScript and does not run StyleX — so `docs/vite.config.ts` runs the same
   `@stylexjs/unplugin` options as `packages/core`, plus `optimizeDeps.exclude` and `ssr.noExternal`
-  for `@astryx-svelte/core`. Without those last two, Vite's pre-bundler and the SSR externaliser
+  for `@astryx-sv/core`. Without those last two, Vite's pre-bundler and the SSR externaliser
   route the modules around the plugin and the page renders unstyled **with no error**.
 - **Content comes from `node_modules`, not the upstream clone.** `docs/scripts/generate-content.mjs`
   reads `.doc.mjs` from `@astryxdesign/core` and `@astryxdesign/cli`, both pinned **exact** at the
@@ -189,7 +210,7 @@ wrong:
 - **`packages/core/src/lib/**/*.doc.mjs` are generated, and hand-editing them is a mistake** — each
   says so at the top. `docs/scripts/emit-core-docs.mjs` writes them from the pinned upstream
   `.doc.mjs` plus core's built `dist/**/*.d.ts`, so after a version bump the whole prose delta lands
-  with `pnpm -r build && pnpm -F docs emit-core-docs` (17 files at 0.4.2), and `--check` fails on
+  with `bun run build && bun run --filter docs emit-core-docs` (17 files at 0.4.2), and `--check` fails on
   drift. They are the CLI's discovery corpus, not just the docs site's.
 
 ## The fidelity oracles
@@ -249,7 +270,7 @@ Two vitest projects, selected by filename:
 
 Tests and fixtures live in `packages/core/src/tests/`, deliberately outside `src/lib` so
 `svelte-package` can never copy them into `dist/`. **This is lint-enforced** — a `*.test.ts` under
-`src/lib` is an eslint error, because the rule had drifted once and the only thing keeping the
+`src/lib` is a lint error, because the rule had drifted once and the only thing keeping the
 build artifacts out of the tarball was `package.json`'s `files` denylist. Import through `$lib/…`,
 not a relative path out of `src/tests/`. Svelte has no `renderHook`; the substitute is a
 _probe_ fixture that runs the hooks and renders their result (a handler-returning hook exposes them
@@ -388,4 +409,5 @@ reproduce. Such a file says so at the top and mutation-checks its fixes.
   cosmetic: `hasContentSeg = isVertical && children != null` drives the **connector geometry**, so
   the vertical `StepperCustomContent` block would have grown a segment on every inactive step. Pass
   it through instead — `children={active === 0 ? content : undefined}` (batch 038).
-- Prettier: **tabs**, single quotes, **no trailing commas**, 100 columns.
+- oxfmt: **tabs**, single quotes, **no trailing commas**, 100 columns. Oxlint is the linter; linting is
+  configured once at the repo root in `.oxlintrc.json`, not per package.

@@ -17,7 +17,7 @@
  * 1. WRAP THE APP. A theme does nothing until it is provided.
  *
  *      <script lang="ts">
- *        import { Theme } from '@astryx-svelte/core';
+ *        import { Theme } from '@astryx-sv/core';
  *        import { myTheme } from './theme';
  *      <\/script>
  *
@@ -79,9 +79,9 @@
  * - /packages/core/src/lib/theme/expand-motion-scale.ts
  */
 
-import { defineTheme } from '@astryx-svelte/core/theme/define';
-// import { dracula } from '@astryx-svelte/core/theme/syntax';
-// import { neutralTheme } from '@astryx-svelte/theme-neutral';
+import { defineTheme } from '@astryx-sv/core/theme/define';
+// import { dracula } from '@astryx-sv/core/theme/syntax';
+// import { neutralTheme } from '@astryx-sv/theme-neutral';
 
 export const myTheme = defineTheme({
 	/** Required. Becomes the `data-astryx-theme` attribute and the registry key. */
@@ -170,12 +170,19 @@ export const myTheme = defineTheme({
 	radius: { base: 4, multiplier: 1 },
 
 	/**
-	 * Duration scale in ms. Each of fast/medium/slow also gets a -min and -max
-	 * sibling computed with `ratio` (min = base × ratio, max = base ÷ ratio), so
-	 * a component can pick a longer or shorter variant of the same tempo.
+	 * Motion configuration: two knobs, a duration scale, or both.
+	 *
+	 * - `tempo` (default 1, clamped to 0.75–1.5) scales every duration token and
+	 *   touch motion's springs.
+	 * - `character` ('crisp' | 'standard' | 'expressive') sets --ease-entrance
+	 *   and --ease-move; exits and fades keep --ease-exit.
+	 *
+	 * A duration scale computes each band's -min and -max siblings with `ratio`
+	 * (min = base × ratio, max = base ÷ ratio), so a component can pick a longer
+	 * or shorter variant of the same tempo. Its durations win over `tempo`;
+	 * explicit tokens win over both. `easing` overrides --ease-standard.
 	 *   Snappy {fast: 100, medium: 250} · Default {fast: 175, medium: 410, slow: 975}
 	 *   Cinematic {fast: 200, medium: 500, slow: 1200}
-	 * `easing` overrides --ease-standard.
 	 *
 	 * Reference: `astryx-svelte docs motion`.
 	 */
@@ -205,17 +212,17 @@ export const myTheme = defineTheme({
 	//   --border-width   hairline thickness shared by bordered surfaces
 	//   --radius-*       none · inner · element · container · page · chat · full
 	//   --shadow-*       low/med/high + inset-{hover,selected,success,warning,error}
-	//   --duration-*     {fast,medium,slow} × {-min, base, -max}
-	//   --ease-standard
+	//   --duration-*     {fast,medium,slow} × {-min, base, -max}, + exit
+	//   --ease-*         standard · entrance · move · exit
 	//   --font-family-*  body · heading · code
 	//   --font-size-*    4xs … 5xl
 	//   --font-weight-*  normal · medium · semibold · bold
 	//   --text-*         {heading-1…6, body, large, label, code, supporting,
 	//                    display-1…3} × {-size, -weight, -leading}
-	//   --color-syntax-* code highlighting
+	//   --color-syntax-* code highlighting · --color-data-* charts
 	// ───────────────────────────────────────────────────────────────────────
 	tokens: {
-		'--color-accent': ['#0064E0', '#2694FE'],
+		'--color-accent': ['#0064E0', '#0171E3'],
 		// Changing an accent means owning its on-colour: this is the label that
 		// sits on top of the fill above, in each mode.
 		'--color-on-accent': ['#FFFFFF', '#FFFFFF'],
@@ -224,6 +231,9 @@ export const myTheme = defineTheme({
 		'--focus-outline-color': 'var(--color-accent)',
 		'--shadow-low': '0 1px 2px light-dark(#0000001A, #00000066)'
 	},
+
+	// localTokens: { '--color-accent-muted': 'var(--color-accent)' }, theme-scoped tokens your own CSS reads, which are not core token names,
+	// adaptations: { rules: [{ when: { width: 600 }, tokens: { '--spacing-6': '12px' } }] }, responsive token overrides scoped to a width,
 
 	// ───────────────────────────────────────────────────────────────────────
 	// components — per-component CSS, emitted inside
@@ -311,7 +321,7 @@ export const myTheme = defineTheme({
 
 	/**
 	 * Code highlighting: sets the --color-syntax-* tokens. Presets live in
-	 * `@astryx-svelte/core/theme/syntax`.
+	 * `@astryx-sv/core/theme/syntax`.
 	 */
 	// syntax: dracula,
 

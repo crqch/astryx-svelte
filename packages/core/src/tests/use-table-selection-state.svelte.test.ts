@@ -1,27 +1,44 @@
 /** PORTS: Table/plugins/selection/useTableSelectionState.test.tsx */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import StateHelperTable, {
 	type SelectionStateItem
 } from './fixtures/table-selection-state-fixture.svelte';
 import FilteredSelectionTable from './fixtures/table-filtered-selection-fixture.svelte';
+import SelectionStateProbe from './fixtures/table-selection-state-probe.svelte';
 
 /**
  * Astryx's `Table/plugins/selection/useTableSelectionState.test.tsx`, ported
- * case for case — **13 upstream cases at the 0.5.0 pin** (7 `useTableSelectionState`, 6
- * `useTableSelectionState with filtered data`), **13 here**. Nothing dropped,
- * nothing added.
+ * case for case — **14 of upstream's 15 at the 0.7.13 pin**.
+ *
+ * The one not ported is the closing
+ * `useTableSelectionState after a render React discards` case. Its subject is
+ * React `Suspense` + `startTransition`: a next-props render is discarded before
+ * commit, and the case asserts select-all reads the committed rows, not the
+ * discarded page's. Svelte has no discarded render — the `$derived`s read the
+ * values the DOM was patched from — so there is nothing for a ported case to
+ * observe. It is named here rather than silently omitted.
+ *
+ * The ported `exposes selected keys, count, presence, and a complete clear
+ * command` case also asserts what upstream cannot: that the same
+ * `selectionState` object goes on reading the live count after
+ * `clearSelection()`. Upstream returns a fresh `useMemo` object when
+ * `selectedKeys` changes; this port returns one stable object whose members are
+ * getters, so a plain property would freeze the first count. That is an
+ * assertion inside a ported case rather than an extra case, so the suite's
+ * count stays honest against upstream's.
  *
  * Upstream's two harnesses become fixtures, since a hook has to run during
  * component init: `StateHelperTable` →
  * `fixtures/table-selection-state-fixture.svelte`, `FilteredSelectionTable` →
- * `fixtures/table-filtered-selection-fixture.svelte`. Both are transcriptions,
- * with `useState` → `$state` and the config object → the getter the port's hook
- * takes. `setSelectedKeys` is a plain setter here rather than React's updater
- * form — the hook's docstring says why, and no case in this file passes an
- * updater.
+ * `fixtures/table-filtered-selection-fixture.svelte`. The `renderHook` case
+ * reads through `fixtures/table-selection-state-probe.svelte`. Both are
+ * transcriptions, with `useState` → `$state` and the config object → the getter
+ * the port's hook takes. `setSelectedKeys` is a plain setter here rather than
+ * React's updater form — the hook's docstring says why, and no case in this
+ * file passes an updater.
  *
  * Standing translations, as in `use-table-selection.svelte.test.ts`:
  *
@@ -339,5 +356,32 @@ describe('useTableSelectionState with filtered data', () => {
 		expect(rows[2]).toHaveAttribute('aria-selected', 'true'); // Bob
 		expect(rows[3]).not.toHaveAttribute('aria-selected'); // Charlie
 		expect(rows[4]).not.toHaveAttribute('aria-selected'); // Diana
+	});
+});
+
+describe('useTableSelectionState selection state output', () => {
+	it('exposes selected keys, count, presence, and a complete clear command', async () => {
+		const setSelectedKeys = vi.fn();
+		const screen = await render(SelectionStateProbe, {
+			props: {
+				initialSelected: new Set(['2', '4']),
+				onSetSelectedKeys: setSelectedKeys
+			}
+		});
+
+		const selectionState = screen.component.api.selectionState;
+
+		expect([...selectionState.selectedKeys]).toEqual(['2', '4']);
+		expect(selectionState.selectedCount).toBe(2);
+		expect(selectionState.hasSelection).toBe(true);
+
+		selectionState.clearSelection();
+		expect(setSelectedKeys).toHaveBeenCalledWith(new Set());
+		await expect.element(screen.getByTestId('selected-count')).toHaveTextContent('0');
+		expect(screen.getByTestId('has-selection').element()).toHaveTextContent('false');
+		// The same object still reads live after the controlled set changed — see
+		// the header; this is the port's substitute for upstream's fresh useMemo.
+		expect(selectionState.selectedCount).toBe(0);
+		expect(selectionState.hasSelection).toBe(false);
 	});
 });

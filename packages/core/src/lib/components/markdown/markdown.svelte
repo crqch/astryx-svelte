@@ -9,6 +9,7 @@
 		MarkdownInlinePlugin,
 		MarkdownSource
 	} from './markdown-types.js';
+	import type { MarkdownPluginEntry } from './plugins/protocol.js';
 
 	export interface MarkdownProps extends BaseProps<HTMLElement> {
 		children: string;
@@ -62,6 +63,14 @@
 		contentAlign?: 'start' | 'center';
 		components?: Partial<MarkdownComponents>;
 		/**
+		 * Ordered Markdown extensions. This port's parser has no generic plugin
+		 * protocol yet, so the entry this accepts is
+		 * `createMarkdownHeadingLinks()`: it gives built-in h1–h6 a stable identity
+		 * and an inline sibling copy button. Omitted or empty preserves the
+		 * released Markdown output.
+		 */
+		plugins?: ReadonlyArray<MarkdownPluginEntry>;
+		/**
 		 * Plugins that transform text patterns into custom elements.
 		 * Applied to text nodes after parsing — code blocks and inline code
 		 * are unaffected. Patterns are matched in order; first match wins
@@ -103,6 +112,9 @@
 	import TableHeaderCell from '../table/table-header-cell.svelte';
 	import TableRow from '../table/table-row.svelte';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
+	import HeadingLinksRenderer from './plugins/heading-links-renderer.svelte';
+	import { projectMarkdownHeadings } from './heading-projection.js';
+	import { prepareMarkdownPlugins, reportMarkdownPluginFailure } from './plugins/protocol.js';
 	import { useStreamingText } from '../../hooks/use-streaming-text.svelte.js';
 	import { useTheme } from '../../theme/use-theme.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
@@ -135,15 +147,22 @@
 		markdownCodeBlockWrapperAttrs,
 		markdownCodeBlockXstyle,
 		markdownFadeInAttrs,
+		markdownHeaderCellXstyle,
 		markdownHeadingAttrs,
+		markdownHeadingBlockSpacingStyle,
+		markdownHeadingLinksHeadingAttrs,
+		markdownHeadingTextStyle,
 		markdownHrAttrs,
 		markdownImageAttrs,
 		markdownImageBlockAttrs,
 		markdownLinkAttrs,
+		markdownListIndentXstyle,
 		markdownListWrapperAttrs,
 		markdownParagraphAttrs,
 		markdownRootAttrs,
 		markdownStrikethroughAttrs,
+		markdownTableCellCodeStyle,
+		markdownTableOuterEdgeStyle,
 		markdownTableWrapperAttrs,
 		markdownTaskListWrapperAttrs,
 		type BlockStyleContext
@@ -182,6 +201,7 @@
 		contentWidth = 680,
 		contentAlign = 'start',
 		components,
+		plugins,
 		inlinePlugins,
 		autolink,
 		xstyle,
@@ -245,6 +265,26 @@
 		const input = isStreaming ? trimStreamingArtifacts(smoothed.current) : children;
 		return parseInline(input, parseOptions);
 	});
+
+	// Upstream prepares the plugin registry in a `useMemo` and catches a
+	// malformed list once, falling back to the released no-plugin output for the
+	// whole document. Same shape: validate before projecting anything.
+	const preparedPlugins = $derived.by(() => {
+		if (plugins == null) {
+			return undefined;
+		}
+		try {
+			return prepareMarkdownPlugins(plugins);
+		} catch (error) {
+			reportMarkdownPluginFailure('configuration', 'transform', error);
+			return undefined;
+		}
+	});
+
+	// One projection per parse, keyed by node identity. Root headings get ids in
+	// the released output; the heading-links entry widens the allocator to every
+	// depth and adds permalink URLs.
+	const headingProjection = $derived(projectMarkdownHeadings(blocks, preparedPlugins));
 
 	// Track recent boundaries for stacked fade-in animation.
 	// The number of spans needed = ceil(animationDuration / tickInterval).
@@ -385,7 +425,7 @@
 	{/if}
 {/snippet}
 
-{#snippet inlineNode(node: InlineNode)}
+{#snippet inlineNode(node: InlineNode, inTable = false)}
 	{#if node.type === 'text'}
 		{#each plan.text.get(node) ?? [] as seg (seg.key)}
 			{#if seg.kind === 'text'}
@@ -396,29 +436,29 @@
 		{/each}
 	{:else if node.type === 'bold'}
 		<strong class={boldAttrs.class} style={boldAttrs.style}>
-			{@render inlineFragment(node.children)}
+			{@render inlineFragment(node.children, inTable)}
 		</strong>
 	{:else if node.type === 'italic'}
-		<em>{@render inlineFragment(node.children)}</em>
+		<em>{@render inlineFragment(node.children, inTable)}</em>
 	{:else if node.type === 'strikethrough'}
 		<del class={strikeAttrs.class} style={strikeAttrs.style}>
-			{@render inlineFragment(node.children)}
+			{@render inlineFragment(node.children, inTable)}
 		</del>
 	{:else if node.type === 'code'}
 		{#if components?.inlineCode}
 			{@const InlineCodeComp = components.inlineCode}
 			<InlineCodeComp children={node.content} />
 		{:else}
-			<Code>{node.content}</Code>
+			<Code xstyle={inTable ? markdownTableCellCodeStyle : undefined}>{node.content}</Code>
 		{/if}
 	{:else if node.type === 'link'}
 		{@const safeHref = sanitizeUrl(node.href)}
 		{#if safeHref == null}
 			<!-- Unsafe URL — render as plain text -->
-			<span>{@render inlineFragment(node.children)}</span>
+			<span>{@render inlineFragment(node.children, inTable)}</span>
 		{:else if components?.link}
 			{@const LinkComp = components.link}
-			<LinkComp href={safeHref}>{@render inlineFragment(node.children)}</LinkComp>
+			<LinkComp href={safeHref}>{@render inlineFragment(node.children, inTable)}</LinkComp>
 		{:else}
 			<!--
 				Use linkComponent for internal links, native <a> for external links.
@@ -429,7 +469,7 @@
 				component={isExternalHref(safeHref) ? 'a' : linkComponent}
 				props={linkProps(safeHref)}
 			>
-				{@render inlineFragment(node.children)}
+				{@render inlineFragment(node.children, inTable)}
 			</LinkElement>
 		{/if}
 	{:else if node.type === 'image'}
@@ -462,9 +502,9 @@
 	{/if}
 {/snippet}
 
-{#snippet inlineFragment(nodes: InlineNode[])}
+{#snippet inlineFragment(nodes: InlineNode[], inTable = false)}
 	{#each nodes as node, i (i)}
-		{@render inlineNode(node)}
+		{@render inlineNode(node, inTable)}
 	{/each}
 {/snippet}
 
@@ -481,20 +521,57 @@
 	{@const ctx = blockCtx(node, index, blockCount)}
 	{#if node.type === 'heading'}
 		{@const level = Math.min(node.level + headingLevelStart - 1, 6) as 1 | 2 | 3 | 4 | 5 | 6}
+		{@const headingId = headingProjection.ids.get(node)}
+		{@const headingLabel = headingProjection.labels.get(node) ?? ''}
+		{@const permalinkUrl = headingProjection.permalinkUrls.get(node)}
 		{#if components?.heading}
 			{@const HeadingComp = components.heading}
-			<HeadingComp {level}>{@render inlineFragment(node.children)}</HeadingComp>
-		{:else}
+			<HeadingComp {level} id={headingId}>{@render inlineFragment(node.children)}</HeadingComp>
+		{:else if permalinkUrl == null || headingId == null}
+			<!--
+				The released path. Root headings carry the generated id an Outline
+				item names; a nested heading stays id-less unless the heading-links
+				plugin widens the allocator to every depth.
+			-->
 			{@const attrs = markdownHeadingAttrs(ctx, level)}
 			{@const headingTheme = themeProps('markdown-heading', { density, level })}
 			<svelte:element
 				this={`h${level}`}
+				id={headingId}
 				{...headingTheme}
 				class={cx(headingTheme.class, attrs.class)}
 				style={attrs.style}
 			>
 				{@render inlineFragment(node.children)}
 			</svelte:element>
+		{:else}
+			<!--
+				The heading-links row owns the prose column and block spacing; the
+				heading element keeps only its own typography plus the module's
+				flex/min-width/margin reset, and the copy control is a sibling so it
+				can align to the heading's baseline without nesting inside it.
+			-->
+			{@const headingTheme = themeProps('markdown-heading', { density, level })}
+			{@const attrs = markdownHeadingLinksHeadingAttrs(level)}
+			<HeadingLinksRenderer
+				{headingId}
+				{headingLabel}
+				{permalinkUrl}
+				contentWidth={contentWidthValue}
+				{contentAlign}
+				headingTextStyle={markdownHeadingTextStyle(level)}
+				blockSpacingStyle={markdownHeadingBlockSpacingStyle(ctx)}
+			>
+				<svelte:element
+					this={`h${level}`}
+					id={headingId}
+					{...headingTheme}
+					class={cx(headingTheme.class, attrs.class)}
+					style={attrs.style}
+				>
+					{@render inlineFragment(node.children)}
+				</svelte:element>
+			</HeadingLinksRenderer>
 		{/if}
 	{:else if node.type === 'paragraph'}
 		{#if components?.paragraph}
@@ -586,7 +663,7 @@
 					listStyle={node.ordered ? 'decimal' : 'disc'}
 					density="compact"
 					start={node.ordered ? node.start : undefined}
-					xstyle={markdownBlockIndentXstyle}
+					xstyle={markdownListIndentXstyle(node.ordered)}
 				>
 					{#each node.items as item, i (i)}
 						{#snippet itemLabel()}
@@ -601,25 +678,20 @@
 		{@const colMinWidths = computeTableColumnMinWidths(node)}
 		{@const attrs = markdownTableWrapperAttrs(ctx)}
 		<!--
-			Keyboard-focusable so keyboard users can scroll a horizontally
-			overflowing GFM table. Uses role="group" (not "region") so multiple
-			tables don't create duplicate same-named landmarks (axe: landmark-unique).
+			No role, name, or tab stop here: Table's own Scroll region owns the
+			table's horizontal overflow, its accessible name, and its conditional
+			keyboard focusability. This block only carries spacing, sizing, and
+			alignment.
 		-->
-		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-		<div
-			tabindex="0"
-			role="group"
-			aria-label={t('@astryx.markdown.table')}
-			{...tableTheme}
-			class={cx(tableTheme.class, attrs.class)}
-			style={attrs.style}
-		>
-			<Table dividers="rows" textOverflow="wrap">
+		<div {...tableTheme} class={cx(tableTheme.class, attrs.class)} style={attrs.style}>
+			<Table dividers="grid" textOverflow="wrap" xstyle={markdownTableOuterEdgeStyle}>
 				<TableHeader>
 					<TableRow>
 						{#each node.headers as header, i (i)}
-							<TableHeaderCell xstyle={markdownCellXstyle(colMinWidths[i], node.alignments[i])}>
-								{@render inlineFragment(header.children)}
+							<TableHeaderCell
+								xstyle={markdownHeaderCellXstyle(colMinWidths[i], node.alignments[i])}
+							>
+								{@render inlineFragment(header.children, true)}
 							</TableHeaderCell>
 						{/each}
 					</TableRow>
@@ -628,8 +700,8 @@
 					{#each node.rows as row, i (i)}
 						<TableRow>
 							{#each row as cell, j (j)}
-								<TableCell xstyle={markdownCellXstyle(null, node.alignments[j])}>
-									{@render inlineFragment(cell.children)}
+								<TableCell xstyle={markdownCellXstyle(node.alignments[j])}>
+									{@render inlineFragment(cell.children, true)}
 								</TableCell>
 							{/each}
 						</TableRow>

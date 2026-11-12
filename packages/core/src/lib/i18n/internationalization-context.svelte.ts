@@ -1,4 +1,5 @@
 import { Context } from '../internal/context.js';
+import type { CalendarSystem } from '../utils/calendar-system.js';
 import type { Locale, MessagesByLocale, Overrides } from './types.js';
 
 /**
@@ -22,6 +23,11 @@ export interface InternationalizationContextValue {
 	 * consumers to derive, so a subtree cannot disagree with itself.
 	 */
 	direction: 'ltr' | 'rtl';
+	/**
+	 * The provider's requested calendar system. A context without it means
+	 * Gregorian dates.
+	 */
+	calendar?: CalendarSystem;
 	messages: MessagesByLocale;
 	overrides?: Overrides;
 }

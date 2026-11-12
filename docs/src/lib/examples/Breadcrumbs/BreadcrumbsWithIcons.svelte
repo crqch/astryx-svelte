@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { BreadcrumbItem, Breadcrumbs, Icon } from '@astryx-svelte/core';
+	import { BreadcrumbItem, Breadcrumbs, Icon } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Home` and `Cog6Tooth`; the registry has no house

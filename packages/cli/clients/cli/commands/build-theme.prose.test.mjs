@@ -1,7 +1,7 @@
 /**
  * @file Regression test for prose output of `astryx-svelte theme build`.
  *
- * `theme build` has a single CSS-generation path — @astryx-svelte/core's
+ * `theme build` has a single CSS-generation path — @astryx-sv/core's
  * generator, the same one the `<Theme>` runtime uses (generateThemeCss). It
  * always emits prose element defaults (h1–h6, p, small, code, hr) so unstyled
  * HTML inherits the theme's typography, exactly like the runtime. There is
@@ -44,7 +44,7 @@ function writeTheme(dir, name) {
 	return file;
 }
 
-// `theme build` imports the compiled @astryx-svelte/core/theme/define entry.
+// `theme build` imports the compiled @astryx-sv/core/theme/define entry.
 // Build core once if it isn't already present so the suite works in any CI job.
 beforeAll(() => {
 	ensureCoreBuilt();

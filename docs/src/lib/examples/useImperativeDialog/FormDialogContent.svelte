@@ -24,7 +24,7 @@
 		TextArea,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const { onClose }: { onClose: () => void } = $props();
 

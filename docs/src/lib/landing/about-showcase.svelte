@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Heading, Link, Text, VStack } from '@astryx-svelte/core';
+	import { Heading, Link, Text, VStack } from '@astryx-sv/core';
 	import coverage from '$lib/generated/coverage.js';
 	import docsRegistry from '$lib/generated/docs-registry.js';
 	import themeRegistry from '$lib/generated/theme-registry.js';

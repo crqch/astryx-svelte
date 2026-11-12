@@ -77,7 +77,7 @@ function declarations(css) {
 export async function compareThemeCss({ packageDir, upstreamPackage, emittedElsewhere = {} }) {
 	const oursPath = join(packageDir, 'dist', 'theme.css');
 	const ours = await readFile(oursPath, 'utf8').catch(() => {
-		console.error(`${oursPath} does not exist — run \`pnpm build\` in this package first.`);
+		console.error(`${oursPath} does not exist — run \`bun run build\` in this package first.`);
 		process.exit(1);
 	});
 

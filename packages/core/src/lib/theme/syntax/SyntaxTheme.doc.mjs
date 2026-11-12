@@ -14,7 +14,7 @@ export default {
 	isHiddenFromOverview: true,
 	usage: {
 		description:
-			'Applies syntax highlighting colors to CodeBlock and any code component in the subtree. By default, code components use the theme-level syntax colors (set via defineTheme({ syntax: ... })), which derive from the palette (--color-text-accent for keywords, --color-text-green for strings, etc.). SyntaxTheme lets you override those per-region. The system uses 14 semantic tokens (keyword, string, comment, number, function, type, variable, operator, constant, tag, attribute, property, punctuation, background) validated against 11 community themes. Custom themes are created with defineSyntaxTheme() and can use [light, dark] tuples for automatic color-scheme adaptation. Built-in presets: oneDarkPro, dracula, monokai, nord, tokyoNight, catppuccinMocha, githubLight, githubDark, solarizedLight, oneLight (import from @astryx-svelte/core/theme/syntax).',
+			'Applies syntax highlighting colors to CodeBlock and any code component in the subtree. By default, code components use the theme-level syntax colors (set via defineTheme({ syntax: ... })), which derive from the palette (--color-text-accent for keywords, --color-text-green for strings, etc.). SyntaxTheme lets you override those per-region. The system uses 14 semantic tokens (keyword, string, comment, number, function, type, variable, operator, constant, tag, attribute, property, punctuation, background) validated against 11 community themes. Custom themes are created with defineSyntaxTheme() and can use [light, dark] tuples for automatic color-scheme adaptation. Built-in presets: oneDarkPro, dracula, monokai, nord, tokyoNight, catppuccinMocha, githubLight, githubDark, solarizedLight, oneLight (import from @astryx-sv/core/theme/syntax).',
 		bestPractices: [
 			{
 				guidance: true,
@@ -48,7 +48,7 @@ export default {
 			name: 'theme',
 			type: 'SyntaxThemeDefinition',
 			description:
-				'Syntax highlighting theme: a preset from @astryx-svelte/core/theme/syntax or a custom theme created with defineSyntaxTheme().',
+				'Syntax highlighting theme: a preset from @astryx-sv/core/theme/syntax or a custom theme created with defineSyntaxTheme().',
 			required: true
 		},
 		{

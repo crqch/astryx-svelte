@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge, Card, Table, pixel, type TableColumn } from '@astryx-svelte/core';
+	import { Badge, Card, Table, pixel, type TableColumn } from '@astryx-sv/core';
 	import InlineMarkdown from './inline-markdown.svelte';
 	import type { BestPractice } from '$lib/generated/types.js';
 
@@ -9,7 +9,7 @@
 	 * column of prose, at `density="spacious"` with `dividers="rows"`.
 	 *
 	 * It used to be a hand-written `<table>`, on a note saying `Table` was
-	 * unported. **`Table` has since landed** (`@astryx-svelte/core` exports it and
+	 * unported. **`Table` has since landed** (`@astryx-sv/core` exports it and
 	 * ten sub-components), so this is now upstream's own composition. Two things
 	 * come with the swap and both are measurable: the table gets
 	 * `.astryx-table-scroll-wrapper`'s `overflow-x: auto`, so a long practice

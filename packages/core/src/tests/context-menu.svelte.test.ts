@@ -3,6 +3,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import ContextMenuFixture from './fixtures/context-menu-fixture.svelte';
+import { stubMatchMedia } from './stub-match-media.js';
+import { contextMenuSheetMenuAttrs } from '$lib/components/context-menu/context-menu.stylex.js';
 
 /**
  * Ported from Astryx's `ContextMenu/ContextMenu.test.tsx`.
@@ -12,7 +14,7 @@ import ContextMenuFixture from './fixtures/context-menu-fixture.svelte';
  * count goes stale on every upstream release by construction:
  *
  * - upstream at the **0.5.0 pin: 43** cases
- * - here: **32**
+ * - here: **32**, plus the five bottom-sheet cases below added at the 0.7.13 pin
  *
  * The 32nd is 0.3.0's `closes the menu when Tab is pressed inside it`, ported
  * with the component change it covers (the APG menus-5 fix).
@@ -470,4 +472,116 @@ describe('ContextMenu compound mode', () => {
 			expect(anchor.style.top).toBe('20px');
 		});
 	});
+});
+
+describe('ContextMenu bottom-sheet presentation', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	async function openSheet(
+		screen: Awaited<ReturnType<typeof render>>,
+		label = 'Row actions'
+	): Promise<HTMLDialogElement> {
+		screen.getByText('Right-click me', { exact: true }).element().dispatchEvent(contextMenuEvent());
+		await expect.element(screen.getByRole('dialog', { name: label })).toBeInTheDocument();
+		return screen.getByRole('dialog', { name: label }).element() as HTMLDialogElement;
+	}
+
+	it('opens the real menu content in a BottomSheet when requested', async () => {
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const screen = await render(ContextMenuFixture, {
+			props: {
+				props: {
+					presentation: 'bottom-sheet',
+					label: 'Row actions',
+					items: [{ label: 'Edit', description: 'Change the title.', variant: 'destructive' }]
+				}
+			}
+		});
+
+		await openSheet(screen);
+		const actionList = screen.container.querySelector<HTMLElement>('[data-autofocus]');
+		expect(actionList).not.toBeNull();
+		await vi.waitFor(() => expect(actionList).toHaveFocus());
+		expect(screen.getByRole('button', { name: 'Edit' }).element()).not.toHaveFocus();
+		expect(screen.getByText('Change the title.')).toBeInTheDocument();
+		expect(showPopover).not.toHaveBeenCalled();
+	});
+
+	it('drills into nested data items inside the BottomSheet', async () => {
+		const onMove = vi.fn();
+		const screen = await render(ContextMenuFixture, {
+			props: {
+				props: {
+					presentation: 'bottom-sheet',
+					label: 'Row actions',
+					items: [
+						{
+							label: 'Move to project',
+							items: [{ label: 'Apollo launch', onClick: onMove }]
+						}
+					]
+				}
+			}
+		});
+
+		await openSheet(screen);
+		(screen.getByRole('button', { name: 'Move to project' }).element() as HTMLElement).click();
+
+		await expect
+			.element(screen.getByRole('heading', { name: 'Move to project' }))
+			.toBeInTheDocument();
+		const submenuHeading = screen.getByRole('heading', { name: 'Move to project' }).element();
+		await vi.waitFor(() => expect(submenuHeading).toHaveFocus());
+
+		(screen.getByRole('button', { name: 'Apollo launch' }).element() as HTMLElement).click();
+		expect(onMove).toHaveBeenCalledOnce();
+		await vi.waitFor(() =>
+			expect(screen.baseElement.querySelector('[role="dialog"]')).not.toBeInTheDocument()
+		);
+	});
+
+	it('uses the BottomSheet for adaptive presentation on compact touch', async () => {
+		stubMatchMedia({ pointer: 'coarse', matches: true });
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const screen = await render(ContextMenuFixture, {
+			props: {
+				props: {
+					presentation: 'adaptive',
+					label: 'Row actions',
+					items: [{ label: 'Edit' }]
+				}
+			}
+		});
+
+		await openSheet(screen);
+		expect(showPopover).not.toHaveBeenCalled();
+	});
+
+	for (const mode of ['items', 'compound'] as const) {
+		it(`insets a ${mode} menu sheet itself and publishes the inset to its rows`, async () => {
+			const screen = await render(ContextMenuFixture, {
+				props: {
+					props: {
+						presentation: 'bottom-sheet',
+						...(mode === 'items' ? { items: [{ label: 'Edit' }] } : {})
+					},
+					...(mode === 'compound' ? { compound: [{ label: 'Edit' }] } : {})
+				}
+			});
+
+			await openSheet(screen, 'Context menu');
+			const content = screen.container.querySelector<HTMLElement>('dialog .astryx-context-menu');
+			expect(content).not.toBeNull();
+			// No Section wrapper: the menu element keeps the sheet's side inset plus
+			// its own, and publishes the padding it applies.
+			expect(content?.parentElement?.closest('.astryx-section')).toBeNull();
+			for (const className of contextMenuSheetMenuAttrs(undefined)
+				.class.split(/\s+/)
+				.filter(Boolean)) {
+				expect(content).toHaveClass(className);
+			}
+		});
+	}
 });

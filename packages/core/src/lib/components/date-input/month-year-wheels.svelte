@@ -1,5 +1,9 @@
 <script lang="ts" module>
+	import type { MonthModel } from './month-geometry.js';
+
 	export interface MonthYearWheelsProps {
+		/** The calendar's months, by index. */
+		monthModel: MonthModel;
 		/** The month the wheels currently show. */
 		monthIndex: number;
 		/** First reachable month. */
@@ -14,14 +18,24 @@
 		yearLabel: string;
 		/** False while the panel is hidden. */
 		isActive?: boolean;
+		/**
+		 * The day of the month the picker keeps, such as the selected date's. A
+		 * year that spans an era change is labeled with the era of this day in the
+		 * selected month. The first day of the month applies when it is absent.
+		 */
+		keptDay?: number;
 	}
 </script>
 
 <script lang="ts">
-	import { DATE_FORMAT_MONTH_ONLY, plainDateFormat } from '../../utils/plain-date.js';
+	import {
+		calendarYearSpansEras,
+		formatCalendarMonthName,
+		formatCalendarYearLabel
+	} from '../../utils/calendar-system.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import Wheel, { type WheelOption } from './wheel.svelte';
-	import { fromMonthIndex, toMonthIndex } from './month-geometry.js';
+	import { clampIndex } from './month-geometry.js';
 	import { monthYearWheelsAttrs } from './month-year-wheels.stylex.js';
 
 	/**
@@ -36,60 +50,64 @@
 	 * keeps it out of `DateInput/index.ts`.
 	 */
 	let {
+		monthModel,
 		monthIndex,
 		minMonthIndex,
 		maxMonthIndex,
 		onChange,
 		monthLabel,
 		yearLabel,
-		isActive = true
+		isActive = true,
+		keptDay = 1
 	}: MonthYearWheelsProps = $props();
 
 	const locale = useLocale();
-	const parts = $derived(fromMonthIndex(monthIndex));
-
-	// Day 15 of a fixed year: no timezone can push it into an adjacent month
-	// the way day 1 or day 31 can.
-	//
-	// `plainDateFormat` rather than a raw `Intl.DateTimeFormat`, which the
-	// shared lint rule forbids and which would duplicate the format vocabulary
-	// besides. Recompute when the provider locale changes so the wheel labels
-	// stay in sync with the field and calendar — upstream's `useMemo(…,
-	// [locale])`, and a `$derived` here for the same reason.
-	const monthNames = $derived(
-		Array.from({ length: 12 }, (_, index) =>
-			plainDateFormat({ year: 2021, month: index + 1, day: 15 }, DATE_FORMAT_MONTH_ONLY, locale())
-		)
-	);
+	const calendar = $derived(monthModel.calendar);
+	const parts = $derived(monthModel.yearMonthAt(monthIndex));
 
 	// Months outside the range stay on the wheel rather than vanishing: a list
-	// whose length changes with the year would jump under the finger.
+	// whose length changes with the range would jump under the finger. Only the
+	// calendar changes its length, for a year with a leap month.
 	const monthOptions: WheelOption[] = $derived(
-		monthNames.map((name, index) => {
-			const candidate = toMonthIndex(parts.year, index + 1);
+		Array.from({ length: monthModel.monthsInYear(parts.year) }, (_, index) => {
+			const candidate = monthModel.indexOfYearMonth(parts.year, index + 1);
 			return {
 				value: index + 1,
-				label: name,
+				label: formatCalendarMonthName(calendar, monthModel.monthAt(candidate), locale()),
 				isDisabled: candidate < minMonthIndex || candidate > maxMonthIndex
 			};
 		})
 	);
 
-	const yearOptions: WheelOption[] = $derived.by(() => {
-		const first = fromMonthIndex(minMonthIndex).year;
-		const last = fromMonthIndex(maxMonthIndex).year;
-		const out: WheelOption[] = [];
+	// Every listed year holds a reachable month: the list runs from the year of
+	// the first reachable month to the year of the last.
+	const years = $derived.by(() => {
+		const first = monthModel.yearMonthAt(minMonthIndex).year;
+		const last = monthModel.yearMonthAt(maxMonthIndex).year;
+		const out: { value: number; label: string; spansEras: boolean }[] = [];
 		for (let candidate = first; candidate <= last; candidate++) {
 			out.push({
 				value: candidate,
-				label: String(candidate),
-				// A year is reachable when any of its months is.
-				isDisabled:
-					toMonthIndex(candidate, 12) < minMonthIndex || toMonthIndex(candidate, 1) > maxMonthIndex
+				label: formatCalendarYearLabel(calendar, candidate, locale()),
+				spansEras: calendarYearSpansEras(calendar, candidate, locale())
 			});
 		}
 		return out;
 	});
+
+	// A year with an era change takes the era of the shown date, as iOS does.
+	// Its row text changes as the month turns. Each row keeps one fixed size.
+	const yearOptions: WheelOption[] = $derived(
+		years.map(({ value, label, spansEras }) => ({
+			value,
+			label: spansEras
+				? formatCalendarYearLabel(calendar, value, locale(), {
+						month: parts.month,
+						day: keptDay
+					})
+				: label
+		}))
+	);
 
 	const attrs = monthYearWheelsAttrs();
 </script>
@@ -100,7 +118,7 @@
 		options={monthOptions}
 		value={parts.month}
 		{isActive}
-		onChange={(nextMonth) => onChange(toMonthIndex(parts.year, nextMonth))}
+		onChange={(nextMonth) => onChange(monthModel.indexOfYearMonth(parts.year, nextMonth))}
 	/>
 	<Wheel
 		label={yearLabel}
@@ -108,10 +126,11 @@
 		value={parts.year}
 		{isActive}
 		onChange={(nextYear) => {
-			// Jan 31 -> Feb has no equivalent here (months carry no day), but a
-			// year change can still land outside the range; clamp to it.
-			const candidate = toMonthIndex(nextYear, parts.month);
-			onChange(Math.min(Math.max(candidate, minMonthIndex), maxMonthIndex));
+			// The same month of the new year, or its common counterpart when the
+			// new year lacks a leap month (Adar I becomes Adar). A year change can
+			// still land outside the range; clamp to it.
+			const candidate = monthModel.shiftYears(monthIndex, nextYear - parts.year);
+			onChange(clampIndex(candidate, minMonthIndex, maxMonthIndex));
 		}}
 	/>
 </div>

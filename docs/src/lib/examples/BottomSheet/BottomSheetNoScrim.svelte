@@ -3,15 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		BottomSheet,
-		Button,
-		Divider,
-		Heading,
-		Section,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
+	import { BottomSheet, Button, Divider, Heading, Section, Text, VStack } from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 	let backgroundClicks = $state(0);

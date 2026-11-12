@@ -15,12 +15,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Root of the @astryx-svelte/cli package */
+/** Root of the @astryx-sv/cli package */
 export const CLI_ROOT = path.resolve(__dirname, '..', '..');
 
 /**
  * Find packages/core directory by walking up from startDir.
- * Also checks node_modules/@astryx-svelte/core for installed usage.
+ * Also checks node_modules/@astryx-sv/core for installed usage.
  *
  * @param {string} [startDir]
  */
@@ -33,7 +33,7 @@ export function findCoreDir(startDir = process.cwd()) {
 			return candidate;
 		}
 
-		const nodeModules = path.join(dir, 'node_modules', '@astryx-svelte', 'core');
+		const nodeModules = path.join(dir, 'node_modules', '@astryx-sv', 'core');
 		if (fs.existsSync(nodeModules)) {
 			return nodeModules;
 		}
@@ -137,7 +137,7 @@ export function discoverExternalPackages(startDir = process.cwd()) {
 
 			try {
 				const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf-8'));
-				if (pkg.name === '@astryx-svelte/core') continue;
+				if (pkg.name === '@astryx-sv/core') continue;
 				if (pkg.astryx && pkg.astryx.docs) {
 					externals.push({
 						name: pkg.name,

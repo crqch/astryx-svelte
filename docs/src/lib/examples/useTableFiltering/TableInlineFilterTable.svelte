@@ -28,8 +28,8 @@
 		useTableFilterState,
 		useTableFiltering,
 		usePowerSearchConfig
-	} from '@astryx-svelte/core';
-	import type { PowerSearchFilter, TableColumn } from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
+	import type { PowerSearchFilter, TableColumn } from '@astryx-sv/core';
 
 	interface Employee extends Record<string, unknown> {
 		id: string;

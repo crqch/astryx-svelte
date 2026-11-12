@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Heading, Stack } from '@astryx-svelte/core';
+	import { Heading, Stack } from '@astryx-sv/core';
 
 	const LEVELS = [1, 2, 3, 4, 5, 6] as const;
 </script>

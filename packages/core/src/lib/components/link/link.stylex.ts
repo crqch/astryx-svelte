@@ -1,6 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
-import type { StyleArg, SvelteStyleAttrs } from '../../internal/sx.js';
+import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { focusVars } from '../../styles/tokens.stylex.js';
 import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
 import type { TextColor } from '../text/text.stylex.js';
 import {
 	colorVars,
@@ -46,8 +48,31 @@ const styles = stylex.create({
 		backgroundColor: 'transparent',
 		borderStyle: 'none',
 		padding: 0,
+		// Browsers centre a button's text; a wrapped label lines up as an
+		// anchor's does.
+		textAlign: 'inherit',
 		pointerEvents: 'auto',
 		position: 'relative'
+	},
+	// A truncating label needs a box that stops at its container: an
+	// inline-flex root otherwise grows to its whole text, so its Text never
+	// overflows and draws no ellipsis (`component:Link` FR6, `component:Text`
+	// FR4).
+	truncating: {
+		maxWidth: '100%',
+		minWidth: 0
+	},
+	// Inside a clamped Text the root joins the text's line boxes, so the
+	// clamp can cut through the link. An inline-flex box is atomic: a clamp
+	// cannot truncate it. The clamp also clips at the line edges, so the ring
+	// sits inside each line box.
+	inClampedText: {
+		display: 'inline',
+		outlineOffset: `calc(-1 * ${focusVars['--focus-outline-width']})`
+	},
+	externalIconInClampedText: {
+		marginInlineStart: spacingVars['--spacing-0-5'],
+		verticalAlign: 'middle'
 	},
 	hasUnderline: {
 		textDecoration: 'underline'
@@ -107,6 +132,10 @@ export interface LinkStyleOptions {
 	isStandalone: boolean;
 	/** Adds the disabled dim. Always true on the disabled-anchor branch. */
 	isDisabled: boolean;
+	/** A clamp on the inner Text needs the root to stop at its container. */
+	isTruncating: boolean;
+	/** The root joins an enclosing clamped Text's line boxes. */
+	isInClampedText: boolean;
 }
 
 /**
@@ -117,16 +146,33 @@ export interface LinkStyleOptions {
  */
 export function linkAttrs(
 	color: TextColor,
-	{ isButton, hasUnderline, isStandalone, isDisabled }: LinkStyleOptions,
+	{
+		isButton,
+		hasUnderline,
+		isStandalone,
+		isDisabled,
+		isTruncating,
+		isInClampedText
+	}: LinkStyleOptions,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return focusOutlineProps.focusVisible(
 		styles.base,
 		isButton && styles.buttonReset,
+		!isButton && isInClampedText && styles.inClampedText,
 		linkColorStyles[color],
+		// The system's pressed overlay behind the text; the hover stays the
+		// colour change above, so a press is the one background it paints.
+		isButton && !isDisabled && interactionOverlayStyles.pressedBackgroundColor,
 		hasUnderline && styles.hasUnderline,
 		isStandalone && styles.standalone,
 		isDisabled && styles.disabled,
+		isTruncating && styles.truncating,
 		xstyle
 	);
+}
+
+/** The external-link glyph inside an enclosing clamped Text. */
+export function linkExternalIconAttrs(isInClampedText: boolean): SvelteStyleAttrs {
+	return sx(isInClampedText && styles.externalIconInClampedText);
 }

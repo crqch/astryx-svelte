@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Avatar, Button, Heading, HoverCard, Stack, Text } from '@astryx-svelte/core';
+	import { Avatar, Button, Heading, HoverCard, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <HoverCard placement="above">

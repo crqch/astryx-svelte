@@ -4,7 +4,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TopNavMegaMenuFeaturedCard } from '@astryx-svelte/core';
+	import { TopNavMegaMenuFeaturedCard } from '@astryx-sv/core';
 </script>
 
 <TopNavMegaMenuFeaturedCard

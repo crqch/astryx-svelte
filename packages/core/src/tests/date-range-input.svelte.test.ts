@@ -629,21 +629,46 @@ describe('DateRangeInput statusVariant forwarding', () => {
 			const screen = await render(DateRangeInput, {
 				props: { label: 'Range', value: null, onChange: noop }
 			});
-			expect(await openAndReadWeekdays(screen)).toEqual(['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']);
+			// 0.7.13 resolves CLDR abbreviated names when they fit the header.
+			expect(await openAndReadWeekdays(screen)).toEqual([
+				'Sun',
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat'
+			]);
 		});
 
 		it('forwards a numeric weekStartsOn to the calendar', async () => {
 			const screen = await render(DateRangeInput, {
 				props: { label: 'Range', value: null, onChange: noop, weekStartsOn: 1 }
 			});
-			expect(await openAndReadWeekdays(screen)).toEqual(['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']);
+			expect(await openAndReadWeekdays(screen)).toEqual([
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
+			]);
 		});
 
 		it('accepts a three-letter day name', async () => {
 			const screen = await render(DateRangeInput, {
 				props: { label: 'Range', value: null, onChange: noop, weekStartsOn: 'mon' }
 			});
-			expect(await openAndReadWeekdays(screen)).toEqual(['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']);
+			expect(await openAndReadWeekdays(screen)).toEqual([
+				'Mon',
+				'Tue',
+				'Wed',
+				'Thu',
+				'Fri',
+				'Sat',
+				'Sun'
+			]);
 		});
 	});
 });

@@ -15,7 +15,7 @@
 		ToggleButtonGroup,
 		VStack,
 		useAppShellMobile
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import templateRegistry from '$lib/generated/template-registry.js';
 	import ShowcaseThumbnail from '$lib/shell/showcase-thumbnail.svelte';
 	import TemplatePreviewDialog from '$lib/shell/template-preview-dialog.svelte';

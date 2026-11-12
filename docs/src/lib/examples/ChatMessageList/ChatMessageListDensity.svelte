@@ -9,7 +9,7 @@
 	already a fragment.
 -->
 <script lang="ts">
-	import type { ChatDensity } from '@astryx-svelte/core';
+	import type { ChatDensity } from '@astryx-sv/core';
 	import {
 		Avatar,
 		ChatMessage,
@@ -18,7 +18,7 @@
 		Divider,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const DENSITIES: ChatDensity[] = ['compact', 'balanced', 'spacious'];
 </script>

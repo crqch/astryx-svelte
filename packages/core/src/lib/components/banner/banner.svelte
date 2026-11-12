@@ -87,6 +87,8 @@
 		bannerHeaderContentAttrs,
 		bannerIconWrapperAttrs,
 		bannerRootAttrs,
+		bannerStatusControlAttrs,
+		bannerStatusForegroundAttrs,
 		bannerTitleAttrs
 	} from './banner.stylex.js';
 
@@ -215,14 +217,18 @@
 	const isCard = $derived(container === 'card');
 
 	const rootAttrs = $derived(bannerRootAttrs(elevation, container === 'card', xstyle));
+	const frameTheme = themeProps('banner-frame');
 	const headerTheme = $derived(themeProps('banner', { container, status }));
 	const headerAttrs = $derived(bannerHeaderAttrs(status, isSingleLine, isCard, showContent));
 	const iconTheme = $derived(themeProps('banner-icon', { status }));
 	const iconWrapperAttrs = bannerIconWrapperAttrs();
 	const headerContentAttrs = $derived(bannerHeaderContentAttrs(endContent != null));
 	const titleAttrs = bannerTitleAttrs();
+	const descriptionTheme = themeProps('banner-description');
 	const descriptionAttrs = bannerDescriptionAttrs();
 	const endAreaAttrs = bannerEndAreaAttrs();
+	const statusControlAttrs = $derived(bannerStatusControlAttrs(status));
+	const statusForegroundAttrs = $derived(bannerStatusForegroundAttrs(status));
 	const contentTheme = $derived(themeProps('banner-content', { container, status }));
 	const contentAreaAttrs = $derived(bannerContentAreaAttrs(isCard));
 
@@ -297,7 +303,7 @@
 		{role}
 		onfocusincapture={handleFocusInCapture}
 		onpointerdowncapture={handlePointerDownCapture}
-		class={cx(rootAttrs.class, className)}
+		class={cx(frameTheme.class, rootAttrs.class, className)}
 		style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
 	>
 		<!-- Header: colored status background — primary theme target ('banner') -->
@@ -340,11 +346,15 @@
 				</div>
 			{/if}
 			<div class={headerContentAttrs.class} style={headerContentAttrs.style}>
-				<div class={titleAttrs.class} style={titleAttrs.style}>
+				<div class={cx(titleAttrs.class, statusForegroundAttrs?.class)} style={titleAttrs.style}>
 					{#if typeof title === 'function'}{@render title()}{:else}{title}{/if}
 				</div>
 				{#if hasDescription}
-					<div class={descriptionAttrs.class} style={descriptionAttrs.style}>
+					<div
+						{...descriptionTheme}
+						class={cx(descriptionTheme.class, descriptionAttrs.class, statusForegroundAttrs?.class)}
+						style={descriptionAttrs.style}
+					>
 						{#if typeof description === 'function'}{@render description()}{:else}{description}{/if}
 					</div>
 				{/if}
@@ -356,6 +366,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
+							class={statusControlAttrs?.class}
 							label={toggleLabel}
 							tooltip={toggleLabel}
 							icon={chevronIcon}
@@ -369,6 +380,7 @@
 						<Button
 							variant="ghost"
 							size="sm"
+							class={statusControlAttrs?.class}
 							label={t('@astryx.banner.dismiss')}
 							tooltip={t('@astryx.banner.dismiss')}
 							icon={closeIcon}

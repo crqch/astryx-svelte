@@ -22,6 +22,9 @@ const styles = stylex.create({
 		justifyContent: 'center',
 		minWidth: spacingVars['--spacing-5'],
 		height: spacingVars['--spacing-5'],
+		// The theme height holds while one line of text fits. A taller line
+		// grows the badge.
+		minHeight: '1lh',
 		paddingInline: spacingVars['--spacing-1'],
 		borderRadius: radiusVars['--radius-inner'],
 		backgroundColor: colorVars['--color-neutral'],
@@ -29,7 +32,7 @@ const styles = stylex.create({
 		borderBottomWidth: '2px',
 		borderBottomStyle: 'solid',
 		borderBottomColor: colorVars['--color-border-emphasized'],
-		color: colorVars['--color-text-secondary'],
+		color: colorVars['--color-text-primary'],
 		// Body family, not code: the glyphs are symbols, not source.
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: typeScaleVars['--text-supporting-size'],

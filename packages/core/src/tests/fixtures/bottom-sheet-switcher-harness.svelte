@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { SpacingStep } from '$lib/internal/types.js';
 	import BottomSheet from '$lib/components/bottom-sheet/bottom-sheet.svelte';
 	import BottomSheetSwitcher from '$lib/components/bottom-sheet/bottom-sheet-switcher.svelte';
 
@@ -14,6 +15,7 @@
 		onActiveSheetChange = () => {},
 		hasScrim,
 		height = 'tall',
+		padding,
 		first,
 		second
 	}: {
@@ -21,13 +23,14 @@
 		onActiveSheetChange?: (sheetId: string | null) => void;
 		hasScrim?: boolean;
 		height?: 'hug' | 'capped' | 'tall';
+		padding?: SpacingStep;
 		first: Snippet;
 		second?: Snippet;
 	} = $props();
 </script>
 
 <BottomSheetSwitcher {activeSheet} {onActiveSheetChange} {hasScrim}>
-	<BottomSheet sheetId="comment" label="Add a comment" {height}>
+	<BottomSheet sheetId="comment" label="Add a comment" {height} {padding}>
 		{@render first()}
 	</BottomSheet>
 	{#if second}

@@ -33,25 +33,30 @@ const styles = stylex.create({
 		paddingInlineStart: 0,
 		paddingInlineEnd: spacingVars['--spacing-3']
 	},
-	// The cell spans every column, so on a table scrolled sideways the heading
-	// would slide out of view while the columns it names stay pinned. Sticking
-	// the inner span to the start edge keeps the chevron and the label together
-	// and on screen.
+	// Shared row layout. Custom renderers keep this full-width so their layout
+	// continues to use the full spanning cell.
 	headerInner: {
 		display: 'flex',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-1'],
-		insetInlineStart: 0,
-		position: 'sticky',
 		// No inline start padding on the cell, so the chevron aligns with the
 		// table's leading edge (Ernest review #1).
 		paddingInlineStart: spacingVars['--spacing-1']
 	},
-	// Applied alongside `headerInner` when using the built-in default heading. A
-	// custom `renderGroupHeader` may need the full column width, so the
-	// shrink-wrap is opt-in rather than unconditional.
-	headerInnerFitContent: {
+	// The built-in heading moves with its chevron and can safely shrink-wrap.
+	// Sticking the inner span to the start edge keeps the chevron and the label
+	// together and on screen when the table is scrolled sideways.
+	headerInnerPinned: {
+		insetInlineStart: 0,
+		position: 'sticky',
 		width: 'fit-content'
+	},
+	// A custom header may rely on the full row width. Pin only the plugin-owned
+	// control so custom content keeps its original containing block.
+	customHeaderChevronPinned: {
+		insetInlineStart: spacingVars['--spacing-1'],
+		position: 'sticky',
+		zIndex: 1
 	},
 	// Standalone chevron button with no heavy chrome (transparent, borderless,
 	// zero padding) so the icon sits flush with the start of the table
@@ -63,8 +68,9 @@ const styles = stylex.create({
 		flexShrink: '0',
 		padding: 0,
 		margin: 0,
-		background: 'transparent',
-		border: 'none',
+		backgroundColor: 'transparent',
+		borderWidth: 0,
+		borderStyle: 'none',
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
@@ -114,13 +120,15 @@ export function groupHeaderCellAttrs(): SvelteStyleAttrs {
 }
 
 export function groupHeaderInnerAttrs(hasCustomHeader: boolean): SvelteStyleAttrs {
-	// The shrink-wrap is opt-in: a custom `renderGroupHeader` may need the full
-	// column width, so only the built-in heading takes it.
-	return sx(styles.headerInner, !hasCustomHeader && styles.headerInnerFitContent);
+	// The built-in heading pins and shrink-wraps; a custom `renderGroupHeader`
+	// may need the full column width, so the pin is opt-in.
+	return sx(styles.headerInner, !hasCustomHeader && styles.headerInnerPinned);
 }
 
-export function groupChevronAttrs(): SvelteStyleAttrs {
-	return sx(styles.chevron);
+export function groupChevronAttrs(hasCustomHeader: boolean): SvelteStyleAttrs {
+	// The plugin-owned control pins on its own when a custom header keeps the
+	// full row width.
+	return sx(styles.chevron, hasCustomHeader && styles.customHeaderChevronPinned);
 }
 
 /**

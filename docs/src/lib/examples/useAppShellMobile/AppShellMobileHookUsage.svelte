@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, HStack, Text, useAppShellMobile, VStack } from '@astryx-svelte/core';
+	import { Button, HStack, Text, useAppShellMobile, VStack } from '@astryx-sv/core';
 
 	/**
 	 * `useAppShellMobile()` returns a **getter**, so upstream's

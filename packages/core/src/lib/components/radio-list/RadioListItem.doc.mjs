@@ -9,7 +9,8 @@ export default {
 	name: 'RadioListItem',
 	displayName: 'Radio List Item',
 	subComponentOf: 'RadioList',
-	description: 'Individual radio item with label, description, and content slots.',
+	description:
+		'Individual radio item with label, description, and content slots. Under a coarse pointer an enabled option’s target grows toward 44 px through an invisible hit area. It never shrinks below the row and stops at half the gap to a closer neighbour; the row keeps its size. That hit area is the row’s `::after`, so decorate a row with a child.',
 	keywords: [
 		'radiolist',
 		'radio',
@@ -39,8 +40,15 @@ export default {
 		{
 			name: 'label',
 			type: 'string',
-			description: 'Label text for the radio item.',
+			description:
+				'Primary label for the radio item. Rich labels may contain links or buttons, which keep their own behavior without selecting the item. The label text names the radio; use aria-label only when that text is absent, or retain every visible label word in the override.',
 			required: true
+		},
+		{
+			name: 'aria-label',
+			type: 'string | null',
+			description:
+				'Plain-text accessible name for the radio, applied to the control rather than the row. It overrides the name derived from the label. Use it when a rich label has no visible text; otherwise retain every visible label word.'
 		},
 		{
 			name: 'value',
@@ -51,7 +59,15 @@ export default {
 		{
 			name: 'description',
 			type: 'string',
-			description: 'Description text displayed below the label.'
+			description:
+				'Secondary content displayed below the label. Links and buttons keep their own click behaviour — the row only delegates clicks from its non-interactive surface to the radio.'
+		},
+		{
+			name: 'align',
+			type: "'center' | 'start' | 'first-line'",
+			description:
+				'Vertical alignment of the start and end content against the label, passed through to Item unchanged. `first-line` keeps a small mark (a radio) level with the first line of a wrapped label. See Item.align.',
+			default: "'center'"
 		},
 		{
 			name: 'isDisabled',

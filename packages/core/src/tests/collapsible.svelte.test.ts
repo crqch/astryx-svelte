@@ -6,25 +6,28 @@ import { render } from 'vitest-browser-svelte';
 import { createAttachmentKey } from 'svelte/attachments';
 import CollapsibleProbe from './fixtures/collapsible-probe.svelte';
 import CollapsibleGroupProbe from './fixtures/collapsible-group-probe.svelte';
+import { cssIn } from './forced-colors.js';
 
 /**
- * Astryx's `Collapsible/Collapsible.test.tsx`, ported case for case.
+ * Astryx's `Collapsible/Collapsible.test.tsx`, ported case for case at the
+ * **0.7.13** pin, the version this port targets.
  *
- * Upstream at the **0.5.0** pin has **36** `it` cases across seven describe
- * blocks (8 structure, 7 uncontrolled, 4 controlled, 6 disabled, 3
- * prop-forwarding, 4 single-group, 2 multiple-group, 2 presentation). **35 are
- * ported here; 1 is dropped** (`exposes a displayName for devtools`, below).
- * Upstream's file is unchanged between v0.3.0 — where this header last stated
- * the count — and 0.5.0, so the 36 and the block breakdown carry over intact.
+ * One case is not here, named rather than silently dropped:
+ * `exposes a displayName for devtools`. Svelte has no `displayName` surface, so
+ * there is nothing to assert; the standing translation is recorded in the
+ * header rather than in a skipped body.
  *
- * (The previous header said "**35** … 7 structure … 34 ported, 1 dropped". The
- * structure block has 8: `renders the stable astryx-collapsible-trigger class on
- * the trigger button` was unported and unnamed. It is ported here and passed on
- * the first run.)
+ * This file also keeps earlier-pin coverage of the uncontrolled open state
+ * (`is open by default`, `honors defaultIsOpen`, toggling by click and by
+ * keyboard, and content visibility). Those cases no longer appear in
+ * upstream's suite — it now asserts the chevron rotation for the same area —
+ * but they are real behaviour here and remain useful. The pin's current cases
+ * are all present, and the one named above is the only upstream case absent.
  *
  * Because `Collapsible`'s `children` is a `Snippet` and cannot be authored in a
  * `.ts` test, every standalone case renders through `collapsible-probe.svelte`
- * (body described by `body`/`childTestId` props) and every group case through
+ * (body described by `body`/`childTestId`/`bodyButton` props and an optional
+ * `Elsewhere` sibling) and every group case through
  * `collapsible-group-probe.svelte` (items described by an array). See those files.
  *
  * `act()` has no counterpart — a `$state` write flushes on its own and
@@ -40,7 +43,22 @@ import CollapsibleGroupProbe from './fixtures/collapsible-group-probe.svelte';
  *   props. It receives the element (asserted `instanceof HTMLDivElement`, matching
  *   upstream's `expect.any(HTMLDivElement)`), which is strictly more than proving a
  *   callback ran.
+ * - `paints the pressed overlay on the trigger row while it is pressed` — the
+ *   upstream `hasPressedArm` helper reads jsdom's injected sheets globally; this
+ *   port uses `cssIn`, the scoped helper every pressed-state case here uses, so
+ *   the rule has to be on the trigger's own compiled classes.
  */
+
+/** The stylesheet's declarations for this element, whitespace-normalized. */
+function declaredCss(element: Element): string {
+	return cssIn(element).replace(/\s+/g, ' ');
+}
+
+/** Whether the element's own rules paint the system pressed overlay on :active. */
+function hasPressedArm(element: Element): boolean {
+	const css = declaredCss(element);
+	return css.includes(':active') && css.includes('--color-overlay-pressed');
+}
 
 /**
  * Resolves the content region a trigger controls via aria-controls, so tests
@@ -451,6 +469,293 @@ describe('Collapsible', () => {
 				props: { trigger: 'A', body: 'Body', 'data-testid': 'item' }
 			});
 			await expect.element(screen.getByTestId('item')).not.toHaveAttribute('data-density');
+		});
+
+		it('reflects the visual axes and states on their owning theme targets', async () => {
+			// Two roots in one test, as upstream renders one fragment: the group's
+			// presentation targets and a standalone item's defaults side by side.
+			await render(CollapsibleGroupProbe, {
+				props: {
+					type: 'single',
+					hasDividers: true,
+					density: 'compact',
+					chevronPosition: 'start',
+					defaultValue: 'open',
+					items: [
+						{ trigger: 'Open', value: 'open', body: 'Open body', 'data-testid': 'open-item' },
+						{
+							trigger: 'Disabled',
+							value: 'disabled',
+							body: 'Disabled body',
+							isDisabled: true,
+							'data-testid': 'disabled-item'
+						}
+					]
+				}
+			});
+			await render(CollapsibleProbe, {
+				props: {
+					trigger: 'Standalone',
+					defaultIsOpen: false,
+					body: 'Standalone body',
+					'data-testid': 'standalone-item'
+				}
+			});
+
+			const openRoot = document.querySelector<HTMLElement>('[data-testid="open-item"]')!;
+			const openTrigger = openRoot.querySelector('button')!;
+			const openContent = contentFor(openTrigger);
+			expect(openRoot).toHaveAttribute('data-density', 'compact');
+			expect(openRoot).toHaveAttribute('data-divided', 'divided');
+			expect(openTrigger).toHaveAttribute('data-density', 'compact');
+			expect(openTrigger).toHaveAttribute('data-chevron-position', 'start');
+			expect(openTrigger).toHaveAttribute('data-open', 'open');
+			expect(openTrigger).not.toHaveAttribute('data-disabled');
+			expect(openContent).toHaveAttribute('data-density', 'compact');
+			expect(openContent).toHaveAttribute('data-open', 'open');
+
+			const disabledRoot = document.querySelector<HTMLElement>('[data-testid="disabled-item"]')!;
+			const disabledTrigger = disabledRoot.querySelector('button')!;
+			expect(disabledTrigger).toHaveAttribute('data-disabled', 'disabled');
+			expect(disabledTrigger).not.toHaveAttribute('data-open');
+			expect(contentFor(disabledTrigger)).not.toHaveAttribute('data-open');
+
+			const standaloneRoot = document.querySelector<HTMLElement>(
+				'[data-testid="standalone-item"]'
+			)!;
+			const standaloneTrigger = standaloneRoot.querySelector('button')!;
+			const standaloneContent = contentFor(standaloneTrigger);
+			expect(standaloneRoot).not.toHaveAttribute('data-density');
+			expect(standaloneRoot).not.toHaveAttribute('data-divided');
+			expect(standaloneTrigger).toHaveAttribute('data-chevron-position', 'end');
+			expect(standaloneTrigger).not.toHaveAttribute('data-density');
+			expect(standaloneTrigger).not.toHaveAttribute('data-open');
+			expect(standaloneTrigger).not.toHaveAttribute('data-disabled');
+			expect(standaloneContent).not.toHaveAttribute('data-density');
+			expect(standaloneContent).not.toHaveAttribute('data-open');
+		});
+	});
+
+	describe('chevron position', () => {
+		/**
+		 * Placement is a DOM order question. Both the label and the chevron render
+		 * as spans, so they are told apart by what they hold — the chevron is the
+		 * one carrying the svg — and compared by position rather than tag.
+		 */
+		function triggerParts(container: HTMLElement, testId: string) {
+			const root = container.querySelector<HTMLElement>(`[data-testid="${testId}"]`)!;
+			const button = root.querySelector('button')!;
+			const children = [...button.children] as HTMLElement[];
+			return {
+				chevronIndex: children.findIndex((el) => el.querySelector('svg')),
+				labelIndex: children.findIndex((el) => el.textContent?.trim() !== ''),
+				glyph: button.querySelector('svg')?.innerHTML
+			};
+		}
+
+		it('puts the chevron after the label by default', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'A', body: 'Body', 'data-testid': 'item' }
+			});
+			const { chevronIndex, labelIndex } = triggerParts(screen.container, 'item');
+			expect(chevronIndex).toBeGreaterThan(labelIndex);
+		});
+
+		it('puts the chevron before the label when position is start', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'A', chevronPosition: 'start', body: 'Body', 'data-testid': 'item' }
+			});
+			const { chevronIndex, labelIndex } = triggerParts(screen.container, 'item');
+			expect(chevronIndex).toBeLessThan(labelIndex);
+		});
+
+		it('swaps the glyph with the side, not just the position', async () => {
+			// A leading arrow points into the row and turns down; a trailing one
+			// points down and flips up. Reusing one glyph for both would leave a
+			// closed leading chevron pointing the wrong way, so the two positions
+			// must not render the same art.
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'A', body: 'Body', 'data-testid': 'at-end' }
+			});
+			await render(CollapsibleProbe, {
+				props: {
+					trigger: 'A',
+					chevronPosition: 'start',
+					body: 'Body',
+					'data-testid': 'at-start'
+				}
+			});
+			const endGlyph = triggerParts(screen.container, 'at-end').glyph;
+			const startGlyph = triggerParts(document.body, 'at-start').glyph;
+			expect(endGlyph).toBeTruthy();
+			expect(startGlyph).toBeTruthy();
+			expect(startGlyph).not.toBe(endGlyph);
+		});
+
+		it('takes the position from the surrounding group', async () => {
+			const screen = await render(CollapsibleGroupProbe, {
+				props: {
+					type: 'single',
+					chevronPosition: 'start',
+					items: [{ trigger: 'A', value: 'a', body: 'Body', 'data-testid': 'item' }]
+				}
+			});
+			const { chevronIndex, labelIndex } = triggerParts(screen.container, 'item');
+			expect(chevronIndex).toBeLessThan(labelIndex);
+		});
+
+		it('lets an item override the group position', async () => {
+			const screen = await render(CollapsibleGroupProbe, {
+				props: {
+					type: 'single',
+					chevronPosition: 'start',
+					items: [
+						{
+							trigger: 'A',
+							value: 'a',
+							chevronPosition: 'end',
+							body: 'Body',
+							'data-testid': 'item'
+						}
+					]
+				}
+			});
+			const { chevronIndex, labelIndex } = triggerParts(screen.container, 'item');
+			expect(chevronIndex).toBeGreaterThan(labelIndex);
+		});
+
+		it('gives the label the rest of the row when the chevron leads', async () => {
+			// The trigger is `space-between`. With the chevron trailing that is what
+			// separates the two, but with it leading there is nothing to absorb the
+			// free space, so an unfilled label would be thrown to the far edge with
+			// a gap behind the arrow. It also has to grow for a trigger that spreads
+			// its own contents to have a row to spread across.
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'A', chevronPosition: 'start', body: 'Body', 'data-testid': 'item' }
+			});
+			const root = screen.container.querySelector<HTMLElement>('[data-testid="item"]')!;
+			const button = root.querySelector('button')!;
+			const label = [...button.children].find((el) => el.textContent?.trim() !== '');
+			expect(label).toHaveStyle('flex-grow: 1');
+		});
+
+		it('does not leak the group position into a nested collapsible', async () => {
+			// Collapsible resets the presentation context around its children, so a
+			// collapsible nested in an item's body keeps its own default.
+			const screen = await render(CollapsibleGroupProbe, {
+				props: {
+					type: 'single',
+					defaultValue: 'a',
+					chevronPosition: 'start',
+					items: [
+						{
+							trigger: 'A',
+							value: 'a',
+							nestedTrigger: 'B',
+							body: 'Body',
+							'data-testid': 'outer'
+						}
+					]
+				}
+			});
+			const { chevronIndex, labelIndex } = triggerParts(screen.container, 'inner');
+			expect(chevronIndex).toBeGreaterThan(labelIndex);
+		});
+	});
+
+	describe('pressed state', () => {
+		it('paints the pressed overlay on the trigger row while it is pressed', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'Details', body: 'Body' }
+			});
+			expect(hasPressedArm(screen.getByRole('button').element())).toBe(true);
+		});
+
+		it('does not press a disabled trigger', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'Details', body: 'Body', isDisabled: true }
+			});
+			expect(hasPressedArm(screen.getByRole('button').element())).toBe(false);
+		});
+	});
+
+	describe('Collapsible close focus (AR4)', () => {
+		it('moves focus inside the content to the trigger when it closes', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: {
+					trigger: 'Details',
+					bodyButton: 'Inside',
+					isOpen: true,
+					onOpenChange: () => {},
+					elsewhere: true
+				}
+			});
+			const inside = screen.getByRole('button', { name: 'Inside', exact: true }).element();
+			(inside as HTMLElement).focus();
+			await screen.rerender({
+				trigger: 'Details',
+				bodyButton: 'Inside',
+				isOpen: false,
+				onOpenChange: () => {},
+				elsewhere: true
+			});
+			await expect
+				.element(screen.getByRole('button', { name: 'Details', exact: true }))
+				.toHaveFocus();
+		});
+
+		it('moves no focus that is outside the content', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: {
+					trigger: 'Details',
+					bodyButton: 'Inside',
+					isOpen: true,
+					onOpenChange: () => {},
+					elsewhere: true
+				}
+			});
+			const elsewhere = screen.getByRole('button', { name: 'Elsewhere', exact: true }).element();
+			(elsewhere as HTMLElement).focus();
+			await screen.rerender({
+				trigger: 'Details',
+				bodyButton: 'Inside',
+				isOpen: false,
+				onOpenChange: () => {},
+				elsewhere: true
+			});
+			expect(elsewhere).toHaveFocus();
+		});
+
+		it('keeps focus on the trigger when the trigger closes it', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: { trigger: 'Details', bodyButton: 'Inside' }
+			});
+			const trigger = screen.getByRole('button', { name: 'Details', exact: true });
+			await userEvent.click(trigger);
+			await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
+			await expect.element(trigger).toHaveFocus();
+		});
+
+		it('moves no focus when it opens', async () => {
+			const screen = await render(CollapsibleProbe, {
+				props: {
+					trigger: 'Details',
+					bodyButton: 'Inside',
+					isOpen: false,
+					onOpenChange: () => {},
+					elsewhere: true
+				}
+			});
+			const elsewhere = screen.getByRole('button', { name: 'Elsewhere', exact: true }).element();
+			(elsewhere as HTMLElement).focus();
+			await screen.rerender({
+				trigger: 'Details',
+				bodyButton: 'Inside',
+				isOpen: true,
+				onOpenChange: () => {},
+				elsewhere: true
+			});
+			expect(elsewhere).toHaveFocus();
 		});
 	});
 });

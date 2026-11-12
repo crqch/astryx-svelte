@@ -109,7 +109,9 @@ const styles = stylex.create({
 		// A single unbroken token (a URL, an ID, a German compound) otherwise sets
 		// the flex item's min-content width and pushes the page into horizontal
 		// scrolling at 320px, which is a WCAG 1.4.10 reflow failure.
-		overflowWrap: 'anywhere'
+		overflowWrap: 'anywhere',
+		// Text inside keeps `anywhere` too (Text FR3).
+		'--_astryx-text-overflow-wrap': 'anywhere'
 	},
 	description: {
 		margin: 0,
@@ -118,7 +120,13 @@ const styles = stylex.create({
 		fontWeight: fontWeightVars['--font-weight-normal'],
 		lineHeight: typeScaleVars['--text-supporting-leading'],
 		color: colorVars['--color-text-secondary'],
-		overflowWrap: 'anywhere'
+		overflowWrap: 'anywhere',
+		// Text inside keeps `anywhere` too (Text FR3).
+		'--_astryx-text-overflow-wrap': 'anywhere'
+	},
+	// Built-in status title and description inherit the header's on-muted colour.
+	statusForeground: {
+		color: 'inherit'
 	},
 	iconWrapper: {
 		display: 'flex',
@@ -132,6 +140,10 @@ const styles = stylex.create({
 		justifyContent: 'flex-end',
 		gap: spacingVars['--spacing-2'],
 		flexShrink: 0,
+		// The status surface owns an inherited on-muted foreground; consumer
+		// endContent does not. Reset the end area's ordinary text context, then
+		// let the built-in controls opt back into the status foreground.
+		color: colorVars['--color-text-primary'],
 		// Bounded so a group of actions wider than the row wraps within itself
 		// rather than pushing the banner past the viewport (WCAG 1.4.10).
 		maxWidth: '100%',
@@ -185,17 +197,47 @@ const elevationStyles = stylex.create({
 
 const statusStyles = stylex.create({
 	info: {
-		backgroundColor: colorVars['--color-accent-muted']
+		backgroundColor: colorVars['--color-info-muted'],
+		color: colorVars['--color-on-info-muted'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible.
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	warning: {
-		backgroundColor: colorVars['--color-warning-muted']
+		backgroundColor: colorVars['--color-warning-muted'],
+		color: colorVars['--color-on-warning-muted'],
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	error: {
-		backgroundColor: colorVars['--color-error-muted']
+		backgroundColor: colorVars['--color-error-muted'],
+		color: colorVars['--color-on-error-muted'],
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	success: {
-		backgroundColor: colorVars['--color-success-muted']
+		backgroundColor: colorVars['--color-success-muted'],
+		color: colorVars['--color-on-success-muted'],
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	}
+});
+
+/** The status tint the toggle/dismiss buttons inherit as `--color-text-primary`. */
+const statusControlStyles = stylex.create({
+	info: { '--color-text-primary': colorVars['--color-on-info-muted'] },
+	warning: { '--color-text-primary': colorVars['--color-on-warning-muted'] },
+	error: { '--color-text-primary': colorVars['--color-on-error-muted'] },
+	success: { '--color-text-primary': colorVars['--color-on-success-muted'] }
 });
 
 /**
@@ -236,6 +278,16 @@ export function bannerHeaderAttrs(
 		hasStatusStyle(status) && statusStyles[status],
 		isCard && (showContent ? styles.headerCardWithContent : styles.headerCardStandalone)
 	);
+}
+
+/** The status tint for the trailing controls, when the status has one. */
+export function bannerStatusControlAttrs(status: BannerStatus): SvelteStyleAttrs | null {
+	return hasStatusStyle(status) ? sx(statusControlStyles[status]) : null;
+}
+
+/** Built-in status title/description inherit the header's on-muted colour. */
+export function bannerStatusForegroundAttrs(status: BannerStatus): SvelteStyleAttrs | null {
+	return hasStatusStyle(status) ? sx(styles.statusForeground) : null;
 }
 
 export function bannerIconWrapperAttrs(): SvelteStyleAttrs {

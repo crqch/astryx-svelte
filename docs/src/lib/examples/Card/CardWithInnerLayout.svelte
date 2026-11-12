@@ -13,7 +13,7 @@
 		LayoutFooter,
 		LayoutHeader,
 		Text
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 <Card width={380}>

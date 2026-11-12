@@ -43,6 +43,11 @@ export default {
 			{
 				guidance: true,
 				description:
+					"For iOS paging under a finger and on a trackpad swipe, pass hasSnap={useSnapPaging()} from @astryx-sv/core A flick moves one view, or one item with useSnapPaging({pages: 'item'}). A mouse wheel keeps native snapping. Only a carousel given it loads the paging code."
+			},
+			{
+				guidance: true,
+				description:
 					'Reach for hasLoop on small, cyclable sets like a photo gallery, where wrapping past the last item back to the first feels natural.'
 			},
 			{
@@ -53,7 +58,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Carousel implements the WAI-ARIA APG carousel pattern (https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) without auto-rotation: the region is labelled and carries aria-roledescription="carousel", each item is a group named "Slide N of M", and the scroll container is a tab stop so keyboard users can pan it with the arrow keys.'
+					'Carousel implements the WAI-ARIA APG carousel pattern (https://www.w3.org/WAI/ARIA/apg/patterns/carousel/) without auto-rotation: the region is labelled and carries aria-roledescription="carousel", each item is a group named "Slide N of M", and the scroll container is a tab stop while its content overflows, so keyboard users can pan it with the arrow keys; while everything fits it stays out of the tab order.'
 			},
 			{
 				guidance: true,
@@ -115,7 +120,7 @@ export default {
 		},
 		{
 			name: 'gap',
-			type: '0 | 2 | 4 | 0.5 | 1 | 1.5 | 3',
+			type: '0 | 4 | 2 | 0.5 | 1 | 1.5 | 3',
 			description: 'Gap between items using the spacing token scale.',
 			default: '1'
 		},
@@ -141,13 +146,14 @@ export default {
 		},
 		{
 			name: 'hasSnap',
-			type: 'boolean',
-			description: 'Enable scroll-snap so each child snaps to the start edge.',
+			type: 'boolean | SnapPaging',
+			description:
+				"Snap each child to the start edge. hasSnap uses native CSS scroll snap. hasSnap={useSnapPaging()} adds iOS paging under a finger and on a trackpad swipe, on the same stops: a flick moves one view, or one item with useSnapPaging({pages: 'item'}). Only that value loads the paging code.",
 			default: 'false'
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Inline padding inside the scroll container, with matching scroll-padding so snap points align to the content edge.'
 		},

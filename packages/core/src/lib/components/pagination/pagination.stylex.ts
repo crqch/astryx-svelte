@@ -26,28 +26,39 @@ import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 const styles = stylex.create({
 	root: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		gap: spacingVars['--spacing-4']
 	},
 	controls: {
 		display: 'flex',
+		flexWrap: 'wrap',
 		alignItems: 'center',
-		gap: spacingVars['--spacing-1']
+		gap: spacingVars['--spacing-1'],
+		// Lets the controls row narrow to the landmark's width, so it wraps
+		// instead of pushing past it.
+		minWidth: 0
+	},
+	compactFirst: {
+		marginInlineEnd: `calc(-1 * ${spacingVars['--spacing-1']})`
+	},
+	compactLast: {
+		marginInlineStart: `calc(-1 * ${spacingVars['--spacing-1']})`
 	},
 	ellipsis: {
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 		minWidth: sizeVars['--size-element-md'],
-		height: sizeVars['--size-element-md'],
+		minHeight: sizeVars['--size-element-md'],
 		color: colorVars['--color-text-secondary'],
 		fontSize: typeScaleVars['--text-label-size'],
 		userSelect: 'none'
 	},
 	ellipsisSm: {
 		minWidth: sizeVars['--size-element-sm'],
-		height: sizeVars['--size-element-sm'],
+		minHeight: sizeVars['--size-element-sm'],
 		fontSize: typeScaleVars['--text-supporting-size']
 	},
 	infoText: {
@@ -137,6 +148,15 @@ export function paginationControlsAttrs(): SvelteStyleAttrs {
 /** The `…` between page-number buttons. */
 export function paginationEllipsisAttrs(isSm: boolean): SvelteStyleAttrs {
 	return sx(styles.ellipsis, isSm && styles.ellipsisSm);
+}
+
+/** The compact variant pulls the first/last control into the row's edge. */
+export function paginationCompactFirstAttrs(): SvelteStyleAttrs {
+	return sx(styles.compactFirst);
+}
+
+export function paginationCompactLastAttrs(): SvelteStyleAttrs {
+	return sx(styles.compactLast);
 }
 
 /** The `count` / `compact` text wrapper. */

@@ -24,9 +24,75 @@ export default {
 			{
 				className: 'astryx-checkbox-list'
 			}
+		],
+		vars: [
+			{
+				name: '--_checkbox-row-press-paint',
+				description:
+					"The touch press paint a row that owns its checkbox's press hands that checkbox's box: none at rest, and the press paint at the press's strength while the touch press controller presses that row under a coarse pointer. Set on the row by its own press arms; the box reads its nearest row's value, so a list placed in a row's content keeps its own rows' paint.",
+				default: 'none',
+				private: true
+			}
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Group',
+				required: true,
+				description: 'Container for the labeled checkbox group.'
+			},
+			{
+				name: 'Group label',
+				required: true,
+				description: 'Text identifying what the checkbox options represent.'
+			},
+			{
+				name: 'Description',
+				required: false,
+				description: 'Helper text below the group label.'
+			},
+			{
+				name: 'Options list',
+				required: true,
+				description: 'List containing the available checkbox options.'
+			},
+			{
+				name: 'Option row',
+				required: true,
+				description: 'Selectable row containing one option.'
+			},
+			{
+				name: 'Checkbox',
+				required: true,
+				description: 'Selection indicator for an option.'
+			},
+			{
+				name: 'Option label',
+				required: true,
+				description: 'Primary content identifying an option.'
+			},
+			{
+				name: 'Option description',
+				required: false,
+				description: 'Secondary text below an option label.'
+			},
+			{
+				name: 'End content',
+				required: false,
+				description: 'Caller-provided content at the end of an option row.'
+			},
+			{
+				name: 'Spinner',
+				required: false,
+				description: 'Loading indicator shown inside the pending checkbox.'
+			},
+			{
+				name: 'Status message',
+				required: false,
+				description: 'Error, warning, or success message below the group.'
+			}
+		],
 		description:
 			'CheckboxList shows a small group of checkboxes so users can turn several options on or off at once. Place it in settings pages, filter panels, or forms where every choice should be visible without scrolling. For a single standalone checkbox (like "I agree to the terms"), use CheckboxInput instead. If only one option can be picked, use RadioList. If the list is long enough to need searching or scrolling, use MultiSelector instead.',
 		bestPractices: [
@@ -103,6 +169,20 @@ export default {
 			description: 'Description text displayed below the label.'
 		},
 		{
+			name: 'isOptional',
+			type: 'boolean',
+			description:
+				'Whether the group is optional. Shows the optional indicator after the group label, unless a surrounding FormLayout already makes fields optional by default.',
+			default: 'false'
+		},
+		{
+			name: 'isRequired',
+			type: 'boolean',
+			description:
+				'Whether the group needs at least one checked box. Shows the required indicator after the group label by the same rules as every input field. While no box is checked, the browser blocks submit and moves focus to the first box that is neither disabled nor read-only, with its own message. A disabled or read-only group requires nothing. Show your own error text through status. Mutually exclusive with isOptional.',
+			default: 'false'
+		},
+		{
 			name: 'density',
 			type: "'compact' | 'balanced' | 'spacious'",
 			description: 'Spacing density for list items.',
@@ -127,6 +207,13 @@ export default {
 				'Explains why the group is disabled. Applies to the whole-group disabled state (isDisabled), not per item. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the checkboxes focusable via aria-disabled (toggling stays blocked). Use this instead of wrapping a disabled CheckboxList in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
 		},
 		{
+			name: 'isReadOnly',
+			type: 'boolean',
+			description:
+				'Whether all checkbox items are read-only. Displays the current state at full opacity but prevents interaction. Unlike isDisabled, read-only checkboxes are not visually dimmed.',
+			default: 'false'
+		},
+		{
 			name: 'status',
 			type: 'InputStatus',
 			description: 'Status indicator ({ type, message }).'
@@ -138,9 +225,36 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
-			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

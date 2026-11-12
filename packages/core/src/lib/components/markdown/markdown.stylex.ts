@@ -12,6 +12,7 @@ import {
 	typographyVars
 } from '../../styles/tokens.stylex.js';
 import type { BlockNode } from './parser.js';
+import { headingLinksHeadingStyle } from './plugins/heading-links.stylex.js';
 
 /**
  * Ported from the styles declared in Astryx's `Markdown/Markdown.tsx`.
@@ -49,11 +50,69 @@ const dynamicStyles = stylex.create({
 });
 
 const cellAlignStyles = stylex.create({
+	start: { textAlign: 'start' },
 	center: { textAlign: 'center' },
 	// Upstream migrated this to logical `end` at 0.3.0, retiring the physical
 	// exception this port carried at 0.2.0. The *parser* value is still the GFM
 	// `---:` marker (`'right'`); only the declaration is logical.
 	end: { textAlign: 'end' }
+});
+
+/**
+ * Cell sizing for Markdown's own default Table part, layered over Table's
+ * wrap-mode defaults. Table's wrap mode clamps every cell's min-content
+ * contribution, so a Markdown table would divide its container equally; here
+ * the cell reports an honest min-content, the header wraps instead of
+ * truncating, and `box-sizing: content-box` makes the per-column `ch` floor a
+ * floor on the text box rather than on the padded border box.
+ */
+const markdownTableCellStyles = stylex.create({
+	cell: {
+		boxSizing: 'content-box',
+		maxWidth: 'none',
+		overflow: 'visible',
+		overflowWrap: 'break-word',
+		paddingBlock: spacingVars['--spacing-2'],
+		paddingInline: spacingVars['--spacing-2'],
+		wordBreak: 'normal'
+	},
+	headerCell: {
+		boxSizing: 'content-box',
+		maxWidth: 'none',
+		overflow: 'visible',
+		overflowWrap: 'break-word',
+		paddingBlock: spacingVars['--spacing-2'],
+		paddingInline: spacingVars['--spacing-2'],
+		textOverflow: 'clip',
+		whiteSpace: 'normal',
+		wordBreak: 'normal'
+	},
+	// Inline Code sets `word-break: break-word` so a long token cannot widen a
+	// paragraph. Inside a table cell that same rule zeroes the token's
+	// min-content and splits an identifier across lines; the cell keeps it whole
+	// and lets the column carry the width instead.
+	code: {
+		wordBreak: 'normal'
+	},
+	// A cell that reads against its table draws the column rule on the table's
+	// inline-end side, which is the cell's own inline-start.
+	ruleOnTableEnd: {
+		borderInlineEndWidth: 0,
+		borderInlineStartWidth: {
+			default: borderVars['--border-width'],
+			':last-child': '0'
+		},
+		borderInlineStartStyle: 'solid',
+		borderInlineStartColor: colorVars['--color-border']
+	},
+	// The grid's outer edge — `dividers="grid"` stops at the table's rim, so
+	// without this the top, bottom, and sides stay open. On the table element,
+	// so `border-collapse: collapse` merges it with the cell lines.
+	tableOuterEdge: {
+		borderWidth: borderVars['--border-width'],
+		borderStyle: 'solid',
+		borderColor: colorVars['--color-border']
+	}
 });
 
 const styles = stylex.create({
@@ -196,7 +255,9 @@ const styles = stylex.create({
 		maxWidth: '100%'
 	},
 	tableWrapper: {
-		overflowX: 'auto',
+		// No `overflow-x` here: Table's own Scroll region is the table's
+		// scroller, and this block is exactly as wide as it, so a second scroll
+		// container would only add a dead focus stop.
 		maxWidth: '100%',
 		'--container-padding-inline-start': '0px',
 		'--container-padding-inline-end': '0px',
@@ -204,7 +265,16 @@ const styles = stylex.create({
 		'--container-padding-block-end': '0px'
 	},
 	blockIndent: {
-		marginInline: `calc(-1 * ${spacingVars['--spacing-2']})`
+		marginInline: `calc(-1 * ${spacingVars['--spacing-2']})`,
+		// Static Markdown lists never host swipe actions. Let outside counter ink
+		// paint through both ordered and unordered ancestors.
+		overflowInline: 'visible'
+	},
+	// Numbered document lists keep their ordinary text inset regardless of
+	// counter width, matching RichText's native outside markers.
+	markerGutter: {
+		marginInlineStart: `calc(-1 * (${spacingVars['--spacing-2']} + ${spacingVars['--spacing-4']}))`,
+		paddingInlineStart: spacingVars['--spacing-4']
 	},
 	// HR
 	hr: {
@@ -345,6 +415,29 @@ export function markdownHeadingAttrs(
 	);
 }
 
+/**
+ * The heading's own text style, for the plugin-owned row. The row carries the
+ * spacing, prose width and alignment, so the heading element takes only its
+ * base and level typography.
+ */
+export function markdownHeadingTextStyle(level: 1 | 2 | 3 | 4 | 5 | 6): StyleArg[] {
+	return [styles.headingBase, headingStyles[level]];
+}
+
+/** The block spacing and first/last edge, applied to the plugin-owned row. */
+export function markdownHeadingBlockSpacingStyle(ctx: BlockStyleContext): StyleArg[] {
+	return [getElementSpacing(ctx.node, ctx.density), ...edgeStyles(ctx)];
+}
+
+/**
+ * The `h1`–`h6` element while the heading-links module owns its row: upstream
+ * adds `headingLinksHeadingStyle`'s flex/min-width/margin reset, and the row
+ * takes the prose column instead.
+ */
+export function markdownHeadingLinksHeadingAttrs(level: 1 | 2 | 3 | 4 | 5 | 6): SvelteStyleAttrs {
+	return sx(styles.headingBase, headingLinksHeadingStyle, headingStyles[level]);
+}
+
 /** The `<div role="paragraph">` a markdown paragraph renders as. */
 export function markdownParagraphAttrs(ctx: BlockStyleContext): SvelteStyleAttrs {
 	return sx(getElementSpacing(ctx.node, ctx.density), ...proseStyles(ctx), ...edgeStyles(ctx));
@@ -390,7 +483,15 @@ export function markdownListWrapperAttrs(ctx: BlockStyleContext): SvelteStyleAtt
 /** The negative inline margin both list flavours hand to `List`/`CheckboxList`. */
 export const markdownBlockIndentXstyle: StyleArg = styles.blockIndent;
 
-/** The horizontally scrollable `<div role="group">` around a table. */
+/**
+ * The list's inset: the block indent, plus the marker gutter that keeps an
+ * ordered list's ordinary text inset whatever the counter width.
+ */
+export function markdownListIndentXstyle(ordered: boolean): StyleArg {
+	return [styles.blockIndent, ordered && styles.markerGutter];
+}
+
+/** The horizontal-scrolling `<div>` around a table. */
 export function markdownTableWrapperAttrs(ctx: BlockStyleContext): SvelteStyleAttrs {
 	return sx(
 		styles.tableWrapper,
@@ -400,17 +501,49 @@ export function markdownTableWrapperAttrs(ctx: BlockStyleContext): SvelteStyleAt
 	);
 }
 
-/** A header or body cell's min-width plus its column alignment. */
+/** The table element's own outer edge, under `dividers="grid"`. */
+export const markdownTableOuterEdgeStyle: StyleArg = markdownTableCellStyles.tableOuterEdge;
+
+/** A body cell: the cell box plus its column alignment and rule. */
 export function markdownCellXstyle(
+	alignment: 'left' | 'center' | 'right' | null,
+	isAgainstTable = false
+): StyleArg[] {
+	return [markdownTableCellStyles.cell, ...tableCellSideStyles(alignment, isAgainstTable)];
+}
+
+/** A header cell: the header box, its `ch` floor, alignment and rule. */
+export function markdownHeaderCellXstyle(
 	minWidth: number | null,
-	alignment: 'left' | 'center' | 'right' | null
+	alignment: 'left' | 'center' | 'right' | null,
+	isAgainstTable = false
 ): StyleArg[] {
 	return [
-		minWidth != null ? dynamicStyles.cellMinWidth(`${minWidth}px`) : null,
-		alignment === 'center' && cellAlignStyles.center,
-		alignment === 'right' && cellAlignStyles.end
+		markdownTableCellStyles.headerCell,
+		minWidth != null ? dynamicStyles.cellMinWidth(`${minWidth}ch`) : null,
+		...tableCellSideStyles(alignment, isAgainstTable)
 	];
 }
+
+/**
+ * The alignment and column-rule styles for a Markdown table cell. For a cell
+ * that reads against its table, the table's start is the cell's end, so an
+ * explicit alignment and the rule swap logical sides.
+ */
+function tableCellSideStyles(
+	align: 'left' | 'center' | 'right' | null,
+	isAgainstTable: boolean
+): StyleArg[] {
+	return [
+		align === 'center' && cellAlignStyles.center,
+		align === 'right' && (isAgainstTable ? cellAlignStyles.start : cellAlignStyles.end),
+		align === 'left' && isAgainstTable && cellAlignStyles.end,
+		isAgainstTable && markdownTableCellStyles.ruleOnTableEnd
+	];
+}
+
+/** Inline code inside a table cell keeps its token whole. */
+export const markdownTableCellCodeStyle: StyleArg = markdownTableCellStyles.code;
 
 /** `<hr>`. */
 export function markdownHrAttrs(ctx: BlockStyleContext): SvelteStyleAttrs {

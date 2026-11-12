@@ -10,7 +10,7 @@ export default {
 	displayName: 'Layer Provider',
 	subComponentOf: 'Layer',
 	description:
-		'App-level provider for layer systems such as toast viewports and imperative modals. Nested providers pass through.',
+		'App-level configuration for toasts and the viewport inset. A nested provider mounts no second toast viewport and keeps the outer toast configuration; one that declares an inset applies its declared edges to the anchored layers in its subtree.',
 	keywords: [
 		'layer',
 		'overlay',
@@ -36,7 +36,13 @@ export default {
 			name: 'toast',
 			type: 'LayerToastConfig',
 			description:
-				'Toast viewport configuration. Controls position, maxVisible, and inset for toasts shown through useToast.'
+				'Toast viewport configuration. Controls position, maxVisible, and a toast-only inset that overrides the provider inset per edge for toasts shown through useToast.'
+		},
+		{
+			name: 'inset',
+			type: 'LayerInset',
+			description:
+				'A persistent bar floating over a viewport edge, declared once: blockStart, blockEnd, inlineStart, inlineEnd as pixel numbers or CSS lengths. Each edge adds to the gutter every anchored layer keeps from that edge and moves the toast viewport by the same amount. Defaults to zero on every edge.'
 		}
 	]
 };

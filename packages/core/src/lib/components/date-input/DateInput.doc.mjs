@@ -29,10 +29,6 @@ export default {
 			{
 				className: 'astryx-date-input-toggle-icon',
 				states: ['state']
-			},
-			{
-				className: 'astryx-date-input-clear-icon',
-				deprecatedFor: 'input-clear-icon'
 			}
 		]
 	},
@@ -40,6 +36,11 @@ export default {
 		description:
 			'DateInput lets the user type or pick a date from a calendar popover. Use it for scheduling, deadlines, booking dates, or any form field that needs a specific calendar date.',
 		bestPractices: [
+			{
+				guidance: true,
+				description:
+					"Base props such as ref, id, data-*, aria-*, and DOM event handlers go to the date input, the element that is focused and announced. A DOM handler runs after DateInput's own handler for the same event and still receives events it handled (including ones it called preventDefault on), so it cannot cancel built-in behavior."
+			},
 			{
 				guidance: true,
 				description:
@@ -52,12 +53,22 @@ export default {
 			},
 			{
 				guidance: true,
+				description:
+					'Set min and max on a Buddhist or Minguo calendar field, so a Gregorian year typed by mistake shows an error instead of a date centuries away.'
+			},
+			{
+				guidance: true,
 				description: 'Use hasClear when the date is optional so the user can reset it.'
 			},
 			{
 				guidance: true,
 				description:
 					'Show a loading state with changeAction when the date triggers a server-side save.'
+			},
+			{
+				guidance: true,
+				description:
+					'On a fine pointer the field follows the WAI-ARIA combobox pattern with a dialog popup, as in the APG date picker combobox: ArrowDown or Alt+ArrowDown opens the calendar, and Escape closes it and returns focus to the field.'
 			},
 			{
 				guidance: true,
@@ -81,7 +92,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled DateInput in Tooltip to explain why it is disabled; disabled triggers swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled DateInput in Tooltip to explain why it is disabled. Use the disabledMessage prop instead, which ties the reason to the field.'
 			}
 		],
 		anatomy: [
@@ -94,7 +105,7 @@ export default {
 				name: 'Text input',
 				required: true,
 				description:
-					'A field where the user can type a date directly. Parses common formats like MM/DD/YYYY.'
+					"A field where the user can type a date directly, written the way the locale writes it in the field's calendar."
 			},
 			{
 				name: 'Calendar icon',
@@ -104,7 +115,8 @@ export default {
 			{
 				name: 'Calendar popover',
 				required: false,
-				description: 'A month grid that appears when the icon is clicked or the input is focused.'
+				description:
+					'A month grid that appears when the icon or the input is clicked, or when ArrowDown is pressed in the input.'
 			},
 			{
 				name: 'Clear button',
@@ -152,14 +164,15 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disable the input and calendar.',
+			description:
+				'Disable the input and calendar. The field stays focusable and exposes `aria-disabled`; typing and opening are blocked.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the field focusable via aria-disabled (activation stays blocked). Use this instead of wrapping a disabled DateInput in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus (activation stays blocked). Use this instead of wrapping a disabled DateInput in Tooltip.'
 		},
 		{
 			name: 'value',
@@ -181,7 +194,7 @@ export default {
 			name: 'isLoading',
 			type: 'boolean',
 			description:
-				'Whether the input is in a loading state. Disables interaction and shows a spinner.',
+				'Whether the input is in a loading state. The field stays focusable and exposes `aria-busy` with a spinner; typing, picking, and clearing are blocked until loading ends.',
 			default: 'false'
 		},
 		{
@@ -202,7 +215,8 @@ export default {
 		{
 			name: 'placeholder',
 			type: 'string',
-			description: 'Placeholder text shown in the text input.',
+			description:
+				'Placeholder text shown in the text input. A caller placeholder replaces the calendar format hint.',
 			default: "'Select a date'"
 		},
 		{
@@ -243,23 +257,37 @@ export default {
 		},
 		{
 			name: 'weekStartsOn',
-			type: "0 | 6 | 2 | 4 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
+			type: "0 | 4 | 6 | 2 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
 			description:
-				'First day of week in the calendar popover. A number (0 = Sunday to 6 = Saturday) or a three-letter day name.',
+				'First day of week in Astryx calendar surfaces. A number (0 = Sunday to 6 = Saturday) or a three-letter day name; native pickers remain browser/OS-owned.',
 			default: '0'
 		},
 		{
 			name: 'format',
 			type: 'DateInputFormat | ((value: ISODateString) => string)',
 			description:
-				"How the committed date value is displayed. Named values are reused from Timestamp's format vocabulary: 'date' shows 'Mar 21, 2026', 'date_long' shows 'March 21, 2026', 'date_weekday' shows 'Wed, Mar 21, 2026', 'system_date' shows '2026-03-21'. A function receives the ISO value and returns a custom string. Applies only to the committed value, never to text being typed.",
+				"How the committed date value is displayed. Named values are reused from Timestamp's format vocabulary: 'date' shows 'Mar 21, 2026', 'date_long' shows 'March 21, 2026', 'date_weekday' shows 'Wed, Mar 21, 2026', 'system_date' shows '2026-03-21'. 'date', 'date_long', and 'date_weekday' write the date in the field's calendar; 'system_date' stays the Gregorian ISO date. A function receives the ISO value and returns a custom string; the field cannot re-commit text it cannot read back. Applies only to the committed value, never to text being typed.",
 			default: "'date_long'"
+		},
+		{
+			name: 'calendar',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
+			description:
+				'The calendar the text field reads and writes dates in, and the calendar its popover and bottom sheet show. value, onChange, min, and max stay Gregorian ISO dates. People type a date the way the locale writes it in this calendar, in any decimal digits; the field reports a date only once it is complete, and names a date the calendar does not have. Years are years of this calendar: a Buddhist field reads 2026 as Buddhist year 2026, so set min and max on Buddhist and Minguo calendar fields to catch a Gregorian year typed by mistake. Calendars other than gregory, iso8601, buddhist, roc, and japanese need Temporal, native or a polyfill the application loads; without it the field shows Gregorian dates. With a calendar other than gregory or iso8601, a presentation that would show the native date control shows the popover on a fine pointer and the bottom sheet on a coarse pointer, because the native control is Gregorian; the bottom sheet shows the months, leap months, and era years of the calendar. A year in which the era changes is labeled with the era of the shown month, such as 平成31 in January 2019 and 令和元 in July.',
+			default: "the InternationalizationProvider's calendar, else 'gregory'"
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'native' | 'adaptive-bottom-sheet' | 'adaptive-native'",
+			description:
+				"Which surface draws the date picker. 'adaptive-native' (the default) uses Astryx's calendar popover on a fine pointer and the browser/OS picker (input type=date) on a coarse pointer, keeping Astryx fallbacks where a native control cannot express the value; 'native' always uses the browser/OS picker with no fallback; 'adaptive-bottom-sheet' uses the popover on a fine pointer and Astryx's bottom-sheet picker on a coarse pointer; 'popover' and 'bottom-sheet' force that Astryx surface on every pointer. Every value opens a picker; a typed-only field is TimeInput's alone. Use a non-native presentation for a field that needs weekStartsOn, numberOfMonths or dateConstraints, none of which a native picker can express. With a calendar other than gregory or iso8601, 'native' and 'adaptive-native' use the popover on a fine pointer and the bottom sheet on a coarse pointer, and an explicit 'native' warns in development.",
+			default: "'adaptive-native'"
 		},
 		{
 			name: 'nativePicker',
 			type: "'touch' | 'always' | 'never'",
 			description:
-				"Which surface draws the date picker. 'touch' (the default) hands a touch device to the browser/OS: the field becomes an input type=date and the platform draws the picker (the iOS wheel, the Android calendar dialog); 'always' does that wherever the browser supports input type=date; 'never' keeps Astryx's own pickers everywhere (the bottom-sheet picker on a finger, the calendar popover on a mouse). Use 'never' for a field that needs weekStartsOn, numberOfMonths or dateConstraints, none of which a native picker can express. format and placeholder still apply in native mode; min and max are forwarded, but a native picker may not show them (on iOS an out-of-range date can be selected and is refused on commit rather than greyed out).",
+				"Deprecated: use presentation ('touch' = 'adaptive-native', 'always' = 'native', 'never' = 'adaptive-bottom-sheet'). Still works exactly as released; presentation wins when both are set. With a calendar other than gregory or iso8601, 'touch' and 'always' use the popover on a fine pointer and the bottom sheet on a coarse pointer.",
 			default: "'touch'"
 		},
 		{
@@ -269,10 +297,36 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+				'StyleX styles for the Field box around the label, control, and status. containerClassName and containerStyle take a class name and inline styles for the same box. No effect (development warning) where no Field box renders: inside InputGroup (style the group) and in a horizontal-labels FormLayout.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the Field box. Same targeting as containerXstyle.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the Field box. Same targeting as containerXstyle.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the bordered element that holds the text, icons, and end controls, never the native input. controlClassName and controlStyle take a class name and inline styles for the same box. Replaces root xstyle, className, and style, which this component does not accept.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box. Same targeting as controlXstyle.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box. Same targeting as controlXstyle.'
 		}
 	]
 };

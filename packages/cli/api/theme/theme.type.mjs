@@ -1,7 +1,7 @@
 /**
  * @file Colocated types for the `theme` command — the source of truth for its
  * build/list/add JSON response shapes. The leaves' `@returns` reference these
- * directly (functions own their types); the public `@astryx-svelte/cli/api`
+ * directly (functions own their types); the public `@astryx-sv/cli/api`
  * surface re-exports them, so consumers see the same names.
  *
  * Invocation                                        -> type discriminator

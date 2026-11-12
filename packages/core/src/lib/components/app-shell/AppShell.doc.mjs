@@ -42,7 +42,7 @@ export default {
 	},
 	usage: {
 		description:
-			'The outermost layout for an application. Provides slots for top navigation, side navigation, banners, and main content. Use it as the root wrapper for every page. It handles responsive mobile navigation and skip-to-content automatically. Configure side nav collapse on SideNav with its collapsible prop.',
+			'AppShell is the page shell for an application. It provides slots for top navigation, side navigation, banners, and main content. Use it as the root wrapper for every page. It handles responsive mobile navigation and skip-to-content automatically. Configure side nav collapse on SideNav with its collapsible prop.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -65,6 +65,11 @@ export default {
 					'Start the page heading inside `children`. AppShell owns the skip link, the banner landmark and the main landmark, but it renders no heading, so the first heading in the content area is the page h1.'
 			},
 			{
+				guidance: true,
+				description:
+					'On phones, opt the page into the full screen with `viewport-fit=cover` in the viewport meta tag (`width=device-width, initial-scale=1, viewport-fit=cover`). AppShell then extends its header under the status bar and out to the screen sides, and keeps the header\'s items and the end of the content inside the device\'s safe area. An installed web app can also draw under the status bar with `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`. In landscape only the header is inset: an inline SideNav and the content\'s sides still reach under a notch, so keep content padding there. A shell with no header region or phone top bar keeps no top inset; keep top padding there.'
+			},
+			{
 				guidance: false,
 				description: "Nest one AppShell inside another; it's the outermost layout frame."
 			},
@@ -79,6 +84,12 @@ export default {
 			}
 		],
 		anatomy: [
+			{
+				name: 'Page shell',
+				required: true,
+				description:
+					'Outermost application frame that owns page-level navigation, responsive shell behavior, and the main content landmark.'
+			},
 			{
 				name: 'Skip link',
 				required: true,
@@ -107,7 +118,7 @@ export default {
 				name: 'Main content',
 				required: true,
 				description:
-					'children, rendered in the main landmark. Scrolls internally when height is fill, and with the page when it is auto.'
+					'children, rendered in the main landmark. Scrolls internally when height is fill, and with the page when it is auto. While it scrolls content that overflows, it is a stop in the tab order; Tab entry moves on when its first focusable element is a plain link or button, and otherwise main is one stop before it.'
 			},
 			{
 				name: 'Mobile nav drawer',
@@ -131,7 +142,7 @@ export default {
 		},
 		{
 			name: 'contentPadding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Padding for the main content area. Set based on the dominant content pattern: 4 (16px) for forms/settings/text, 0 for dashboards/maps/tables. Override individual sections with Section.',
 			default: '0'
@@ -150,7 +161,7 @@ export default {
 			name: 'mobileNav',
 			type: 'false | MobileNavConfig | Snippet',
 			description:
-				"Mobile navigation configuration. Accepts false (disable), a config object (tune auto behavior), or ReactNode (full custom drawer). The config object is {hasToggle?: boolean, isOpen?: boolean, onOpenChange?: (isOpen: boolean) => void, content?: ReactNode, breakpoint?: 'sm' | 'md' | 'lg' | 'none', defaultIsMobile?: boolean}; breakpoint defaults to 'md'."
+				"Mobile navigation configuration. Accepts false (disable), a config object (tune auto behavior), or ReactNode (full custom drawer). The config object is {hasToggle?: boolean, isOpen?: boolean, onOpenChange?: (isOpen: boolean) => void, content?: ReactNode, breakpoint?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'none', defaultIsMobile?: boolean}; breakpoint defaults to 'md', resolves through the nearest Theme's widthBreakpoints, and switches to the wider layout at equality. 'none' is always non-mobile and ignores defaultIsMobile."
 		},
 		{
 			name: 'banner',
@@ -166,7 +177,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'wash' | 'surface' | 'section' | 'elevated'",
+			type: "'section' | 'wash' | 'surface' | 'elevated'",
 			description:
 				"Navigation background style controlling how nav areas contrast with content. 'wash' uses wash background, 'surface' uses surface background, 'section' adds dividers between nav and content, 'elevated' uses wash nav with elevated surface content and border radius.",
 			default: "'elevated'"

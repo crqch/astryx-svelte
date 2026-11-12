@@ -10,7 +10,7 @@ export default {
 	displayName: 'useTableRowExpansion',
 	subComponentOf: 'Table',
 	description:
-		'Hook that returns a TablePlugin which expands a full-width detail panel below a row, rendered by the consumer via renderExpanded(item). Adds a leading chevron column and a right-click "Expand/Collapse row" action; the consumer owns the expandedKeys set. Use it for master-detail rows (order details, forms, charts, nested tables). For hierarchical data where child rows reuse the parent columns, use useTableTreeData + useTableTreeState instead.',
+		'Hook that returns a TablePlugin which expands a full-width detail panel below a row, rendered by the consumer via renderExpanded(item). Adds a leading chevron column and a right-click "Expand/Collapse row" action; the consumer owns the expandedKeys set. The panel spans the row but starts its content at the first column, past the chevron, so detail lines up with the labels above it; the inset follows the table density. Use it for master-detail rows (order details, forms, charts, nested tables). For hierarchical data where child rows reuse the parent columns, use useTableTreeData + useTableTreeState instead.',
 	keywords: [
 		'table',
 		'datatable',
@@ -46,6 +46,12 @@ export default {
 			required: true
 		},
 		{
+			name: 'getRowLabel',
+			type: '(item: T) => string',
+			description:
+				'Derive a human-readable row identity for the chevron accessible name. Astryx combines it with localized expand/collapse wording. Omit it, or return blank text, to keep the generic "Expand row" and "Collapse row" labels.'
+		},
+		{
 			name: 'renderExpanded',
 			type: 'Snippet<[T]>',
 			description:
@@ -57,6 +63,26 @@ export default {
 			type: '(item: T) => boolean',
 			description:
 				'Control which rows are expandable. Non-expandable rows show no chevron, no context-menu action, and never render a panel. Defaults to all rows expandable.'
+		},
+		{
+			name: 'panelVariant',
+			type: "'transparent' | 'muted'",
+			description:
+				"Background behind the detail panel. 'transparent' (default) paints nothing: the panel is the row's continuation and takes whatever surface the table sits on, so a Card shows through and a striped table's zebra reads on unchanged. 'muted' washes it, marking it as commentary rather than another row of data — reach for it in a bare table with no card, dividers or striping, where nothing else makes that distinction. The wash is a low-alpha near-black, so it is close to invisible over a dark card: 'muted' is largely a light-theme effect.",
+			default: "'transparent'"
+		},
+		{
+			name: 'hasRowClickExpansion',
+			type: 'boolean',
+			description:
+				'Toggle a row by clicking anywhere on it, not only on its chevron. A pointer-only convenience layered over the chevron, which stays the accessible control for keyboard and assistive tech. Clicks on interactive cell content (buttons, links, form controls) or on a text selection do not toggle, and non-expandable rows stay inert.',
+			default: 'false'
+		},
+		{
+			name: 'animatedLayout',
+			type: 'AnimatedLayout',
+			description:
+				"A handle from useAnimatedLayout. With it, opening or closing a panel glides the rows after it (and the content after the table) to their new places instead of jumping, the opening panel plays in on the same motion, and each row's divider moves with it. Under Reduce Motion the rows fade in place on a touch screen and change at once with a mouse; in a table with column lines (dividers columns or grid, which do not move yet) they change at once. Without it, rows jump."
 		}
 	]
 };

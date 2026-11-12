@@ -52,9 +52,9 @@ as an appointed representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to the
 project maintainer through a [GitHub private security
-advisory](https://github.com/devrohit06/astryx-svelte/security/advisories/new), which is private
+advisory](https://github.com/crqch/astryx-svelte/security/advisories/new), which is private
 to the reporter and the maintainer, or by direct message to
-[@DevRohit06](https://github.com/DevRohit06).
+[@crqch](https://github.com/crqch).
 
 Please do not report Code of Conduct concerns through public issues or discussions.
 

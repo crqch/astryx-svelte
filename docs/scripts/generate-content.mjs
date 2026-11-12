@@ -8,7 +8,7 @@
 //    to the exact version packages/core targets — not from the gitignored
 //    upstream clone. The published tarballs ship `src/`, so the `.doc.mjs` files
 //    are all there, and a CI checkout generates byte-identical output.
-// 2. Component entries are filtered to what `@astryx-svelte/core` actually
+// 2. Component entries are filtered to what `@astryx-sv/core` actually
 //    exports. The docs describe this library; documenting an unported component
 //    would document nothing shippable.
 // 3. Prop types are mapped React → Svelte (see lib/prop-types.mjs).
@@ -102,7 +102,7 @@ function findDocModules(dir, accept = (name) => name.endsWith('.doc.mjs')) {
  * at 0.3.0). When it does, the old path resolves to nothing, every downstream
  * count silently becomes zero, and the generator writes **empty registries over
  * real ones** while exiting 0 — which is what happened on the 0.3.0 bump, and
- * `pnpm -r build` reported success throughout because it runs this script.
+ * `bun run build` reported success throughout because it runs this script.
  *
  * So a root that does not exist, or exists and yields no modules, throws. The
  * pipeline must fail *closed*: a wrong path is a diagnosable error, never a
@@ -166,7 +166,7 @@ async function importDoc(file, exportName) {
  * `/DateRangeInput`) and this port publishes none of them — everything comes
  * off the root barrel. So the rule reads core's own `exports` and keeps a
  * mapped subpath only when core really has it (`./theme`, `./theme/syntax`,
- * `./locales/*`), collapsing the rest to `@astryx-svelte/core`. Reading the
+ * `./locales/*`), collapsing the rest to `@astryx-sv/core`. Reading the
  * export map rather than listing the survivors is what keeps this correct when
  * core's subpaths change.
  *
@@ -196,10 +196,10 @@ function rewriteSpecifiersIn(text) {
 		.replace(/@astryxdesign\/core((?:\/[A-Za-z0-9._*-]+)*\/?)/g, (_match, subpath) => {
 			const trailingSlash = subpath.endsWith('/');
 			const clean = trailingSlash ? subpath.slice(0, -1) : subpath;
-			if (corePathExists(clean)) return `@astryx-svelte/core${clean}${trailingSlash ? '/' : ''}`;
-			return '@astryx-svelte/core';
+			if (corePathExists(clean)) return `@astryx-sv/core${clean}${trailingSlash ? '/' : ''}`;
+			return '@astryx-sv/core';
 		})
-		.replace(/@astryxdesign\/theme-/g, '@astryx-svelte/theme-');
+		.replace(/@astryxdesign\/theme-/g, '@astryx-sv/theme-');
 }
 
 /**
@@ -448,17 +448,17 @@ const PROSE_CORRECTIONS = [
 	{
 		entry: 'Button',
 		find:
-			"use IconButton from '@astryx-svelte/core'. It is a separate component, " +
-			"not exported from '@astryx-svelte/core'.",
+			"use IconButton from '@astryx-sv/core'. It is a separate component, " +
+			"not exported from '@astryx-sv/core'.",
 		replace:
 			'use IconButton. It is a separate component from Button, exported from ' +
-			"'@astryx-svelte/core' alongside it."
+			"'@astryx-sv/core' alongside it."
 	},
 	{
 		entry: 'Button',
 		find:
 			'Tip: for a dedicated icon-only button component, use IconButton from ' +
-			"'@astryx-svelte/core' instead.",
+			"'@astryx-sv/core' instead.",
 		replace: 'Tip: for a dedicated icon-only button component, use IconButton instead.'
 	}
 ];
@@ -949,7 +949,7 @@ function normaliseEntry(entry, importPathByName, propsIndex, reports) {
 		// their page has, so it must survive normalisation.
 		description: entry.description ?? null,
 		moduleName: entry.moduleName,
-		importPath: importPathByName.get(entry.name) ?? '@astryx-svelte/core',
+		importPath: importPathByName.get(entry.name) ?? '@astryx-sv/core',
 		group: entry.group ?? null,
 		category: entry.category ?? null,
 		keywords: entry.keywords ?? [],
@@ -1318,7 +1318,7 @@ async function buildDocsRegistry() {
  *
  * 1. **A `private` package is kept, not skipped.** Upstream drops
  *    `private: true` entries because a package it does not publish is a package
- *    it does not document. `@astryx-svelte/cli` is private at `0.0.0` and is
+ *    it does not document. `@astryx-sv/cli` is private at `0.0.0` and is
  *    nonetheless the CLI this whole port is driven by, so dropping it would
  *    remove the one page that explains how to run it. The flag is carried
  *    instead, and the install block says plainly that npm will not resolve it —
@@ -1350,7 +1350,7 @@ async function buildDocsRegistry() {
  *
  * **Drafts follow `NODE_ENV`, as upstream's do** — included in dev, excluded
  * from production output. That is the one line worth reading twice, because it
- * means `pnpm dev` and `pnpm build` legitimately disagree about the post count,
+ * means `bun run dev` and `bun run build` legitimately disagree about the post count,
  * and a `draft: true` post that renders locally is *supposed* to vanish from the
  * deploy.
  *
@@ -1387,7 +1387,7 @@ function buildLibraryPackages() {
 
 		const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 		const name = /** @type {string} */ (manifest.name);
-		const slug = name.replace(/^@astryx-svelte\//, '');
+		const slug = name.replace(/^@astryx-sv\//, '');
 		if (slug === name) continue;
 		// `/themes/<slug>` serves these; upstream's route excludes them too.
 		if (slug.startsWith('theme-')) continue;
@@ -1463,7 +1463,7 @@ function buildThemeRegistry() {
 		if (!fs.existsSync(manifestPath)) continue;
 
 		const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-		const slug = /** @type {string} */ (manifest.name).replace(/^@astryx-svelte\/theme-/, '');
+		const slug = /** @type {string} */ (manifest.name).replace(/^@astryx-sv\/theme-/, '');
 		if (slug === manifest.name) continue;
 
 		const upstream = Object.keys(manifest.devDependencies ?? {}).find(
@@ -1682,7 +1682,7 @@ async function buildTemplateRegistry() {
  * Upstream's component pages caption the title with `{pkg} v{version} ·
  * {moduleName}`, read from its generated `packageRegistry`. That registry exists
  * upstream because its docsite documents several packages at once; this one
- * documents `@astryx-svelte/core`, so the same caption needs only this pair.
+ * documents `@astryx-sv/core`, so the same caption needs only this pair.
  *
  * @returns {{ name: string, version: string }}
  */
@@ -1734,7 +1734,7 @@ export async function reconcile({ quiet = false } = {}) {
 
 	if (!fs.existsSync(path.join(CORE_DIST, 'index.d.ts'))) {
 		throw new Error(
-			`packages/core/dist is missing. Run \`pnpm -F @astryx-svelte/core build\` first — ` +
+			`packages/core/dist is missing. Run \`bun run --filter @astryx-sv/core build\` first — ` +
 				`the docs generator reads the published export surface from it.`
 		);
 	}
@@ -1754,10 +1754,10 @@ export async function reconcile({ quiet = false } = {}) {
 	assertNoUpstreamSpecifiers(entries);
 
 	// Deliberately `console.warn`, not `log`. `quiet` exists to keep the progress
-	// lines out of `pnpm dev:docs` and `pnpm -F docs build`, which regenerate on
+	// lines out of `bun run dev` and `bun run --filter docs build`, which regenerate on
 	// every `.doc.mjs` change — but `vite-plugin-content.mjs` passes it on *both*
 	// paths, so the drift report was suppressed in exactly the two runs a person
-	// is watching, and printed only on a direct `pnpm -F docs generate`. A drift
+	// is watching, and printed only on a direct `bun run --filter docs generate`. A drift
 	// report is a warning about the output's fidelity, not a progress line;
 	// it survives `quiet` and is short enough that being seen costs nothing.
 	if (drift.length > 0) {

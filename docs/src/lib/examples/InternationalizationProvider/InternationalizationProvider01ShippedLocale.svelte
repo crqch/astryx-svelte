@@ -13,8 +13,8 @@
 		SegmentedControlItem,
 		Selector,
 		Stack
-	} from '@astryx-svelte/core';
-	import frFR from '@astryx-svelte/core/locales/fr-FR.json';
+	} from '@astryx-sv/core';
+	import frFR from '@astryx-sv/core/locales/fr-FR.json';
 
 	type Locale = 'en' | 'fr-FR';
 

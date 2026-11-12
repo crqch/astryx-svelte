@@ -9,6 +9,10 @@ import Fixture from './fixtures/multi-selector-fixture.svelte';
 import { __resetLiveRegionsForTest } from '$lib/hooks/use-announce.js';
 import { defineTheme } from '$lib/theme/define-theme.js';
 import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
+import { sx } from '$lib/internal/sx.js';
+import { selectorPresentationStyles } from '$lib/components/selector/selector-presentation.stylex.js';
+import { selectorPresentationProbe } from './fixtures/selector-presentation-probe.stylex.js';
+import { stubMatchMedia } from './stub-match-media.js';
 
 /**
  * Astryx's `MultiSelector/MultiSelector.test.tsx`, ported case for case — **111
@@ -21,7 +25,7 @@ import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
  * icon theme target`, `MultiSelector list structure`, `MultiSelector search
  * affordances`, `MultiSelector disabled state theme target`, `MultiSelector
  * dropdown option theme target` and `MultiSelector popup theme target`), **101
- * here** — 1 dropped and 9 unported, all named below.
+ * here** — 1 dropped and the cases below are unported, all named below.
  *
  * Two titles differ and are **not** gaps: upstream's `announces the
  * empty-results message when nothing matches`, `announces the all-selected
@@ -36,19 +40,20 @@ import { generateThemeCss } from '$lib/theme/generate-theme-rules.js';
  * `collapsible.svelte.test.ts` and `more-menu.svelte.test.ts` drop. There is no
  * ref-callback case in the file, so nothing else is React-only.
  *
- * ## The 9 that are unported
+ * ## What remains unported
  *
- * **Six arrived at 0.5.0**, all in the top-level `MultiSelector` block:
- *
- * - **Five `formatValue` cases** — `formats the count display with
- *   formatValue`, `passes selected values and resolved labels to formatValue`,
- *   `formats the labels display with formatValue`, `ignores formatValue in
- *   badges display`, and `shows the placeholder rather than calling formatValue
- *   when empty`. This is a **component** gap: `MultiSelector` here has no
- *   `formatValue` prop at all, so none of the five has anything to call.
  * - **`hides a standalone divider from the accessibility tree (#4994)`**, in
  *   `MultiSelector list structure`. `Selector` and `AvatarGroup` carry the
  *   sibling of this case, and both are unported there too.
+ *
+ * The shared presentation block is now ported: the cases under `presentation`
+ * (`uses a bottom sheet and stays open while toggling options`, `uses a bottom
+ * sheet for adaptive presentation on compact touch`, `moves keyboard focus
+ * into a bottom-sheet listbox`, `restores touch focus without painting a
+ * trigger focus ring`, `shows no disabled focus ring after a pointer pick`, and
+ * the four-row read-only transition table) transcribe from upstream. This
+ * suite has no `keeps adaptive presentation anchored` case upstream;
+ * `Selector` does.
  *
  * **Three predate 0.5.0** and have been missing across more than one pin, since
  * this header stated its count against a stale tag:
@@ -237,6 +242,94 @@ describe('MultiSelector', () => {
 			.toBeInTheDocument();
 	});
 
+	it('formats the count display with formatValue', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Spaces',
+				options: defaultOptions,
+				value: ['Apple', 'Banana'],
+				onChange: () => {},
+				formatValue: (items) => `${items.length} spaces selected`
+			}
+		});
+		await expect
+			.element(screen.getByText('2 spaces selected', { exact: true }))
+			.toBeInTheDocument();
+	});
+
+	it('passes selected values and resolved labels to formatValue', async () => {
+		const formatValue = vi.fn(
+			(items: { value: string; label: string }[]) =>
+				`${items[0].label} and ${items.length - 1} more`
+		);
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: [
+					{ value: 'a', label: 'Apple' },
+					{ value: 'b', label: 'Banana' }
+				],
+				value: ['a', 'b'],
+				onChange: () => {},
+				formatValue
+			}
+		});
+		expect(formatValue).toHaveBeenCalledWith([
+			{ value: 'a', label: 'Apple' },
+			{ value: 'b', label: 'Banana' }
+		]);
+		await expect.element(screen.getByText('Apple and 1 more', { exact: true })).toBeInTheDocument();
+	});
+
+	it('formats the labels display with formatValue', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: ['Apple', 'Banana', 'Orange'],
+				onChange: () => {},
+				triggerDisplay: 'labels',
+				formatValue: (items) => items.map((item) => item.label).join(' & ')
+			}
+		});
+		await expect
+			.element(screen.getByText('Apple & Banana & Orange', { exact: true }))
+			.toBeInTheDocument();
+	});
+
+	it('ignores formatValue in badges display', async () => {
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: ['Apple', 'Banana'],
+				onChange: () => {},
+				triggerDisplay: 'badges',
+				formatValue: () => 'formatted'
+			}
+		});
+		const trigger = screen.getByRole('combobox').element();
+		expect(trigger.textContent).not.toContain('formatted');
+		expect(trigger.textContent).toContain('Apple');
+		expect(trigger.textContent).toContain('Banana');
+	});
+
+	it('shows the placeholder rather than calling formatValue when empty', async () => {
+		const formatValue = vi.fn(() => 'formatted');
+		const screen = await render(MultiSelector, {
+			props: {
+				label: 'Fruit',
+				options: defaultOptions,
+				value: [],
+				onChange: () => {},
+				placeholder: 'Pick fruits...',
+				formatValue
+			}
+		});
+		expect(formatValue).not.toHaveBeenCalled();
+		await expect.element(screen.getByText('Pick fruits...', { exact: true })).toBeInTheDocument();
+	});
+
 	it('opens dropdown on click', async () => {
 		const screen = await render(MultiSelector, {
 			props: { label: 'Fruit', options: defaultOptions, value: [], onChange: () => {} }
@@ -322,6 +415,201 @@ describe('MultiSelector', () => {
 		await expect.element(trigger).toHaveAttribute('aria-haspopup', 'listbox');
 		await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
 		await expect.element(trigger).toHaveAttribute('aria-required', 'true');
+	});
+
+	describe('presentation', () => {
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		/** Upstream's `fireEvent.pointerDown(el, {pointerType: 'touch'})`. */
+		function touchDown(element: HTMLElement): void {
+			element.dispatchEvent(
+				new PointerEvent('pointerdown', {
+					pointerType: 'touch',
+					bubbles: true,
+					cancelable: true
+				})
+			);
+		}
+
+		/** Upstream's `fireEvent.click(el, {detail: 1})`. */
+		function pointerClick(element: HTMLElement): void {
+			element.dispatchEvent(
+				new MouseEvent('click', { detail: 1, bubbles: true, cancelable: true })
+			);
+		}
+
+		it('uses a bottom sheet and stays open while toggling options', async () => {
+			const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+			const onChange = vi.fn();
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange,
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			await userEvent.click(screen.getByRole('combobox'));
+
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			expect(showPopover).not.toHaveBeenCalled();
+
+			const option = screen
+				.getByRole('option', { name: 'Banana', exact: true })
+				.element() as HTMLElement;
+			option.click();
+			expect(onChange).toHaveBeenCalledWith(['Banana']);
+			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
+		});
+
+		it('uses a bottom sheet for adaptive presentation on compact touch', async () => {
+			stubMatchMedia({ pointer: 'coarse', matches: true });
+			const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'adaptive'
+				}
+			});
+
+			await userEvent.click(screen.getByRole('combobox'));
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			expect(showPopover).not.toHaveBeenCalled();
+		});
+
+		it('moves keyboard focus into a bottom-sheet listbox', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			trigger.focus();
+			await userEvent.keyboard('{Enter}');
+
+			await expect.element(screen.getByRole('listbox')).toHaveFocus();
+		});
+
+		it('restores touch focus without painting a trigger focus ring', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			touchDown(trigger);
+			pointerClick(trigger);
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			const dialog = screen.getByRole('dialog', { name: 'Fruit' }).element() as HTMLDialogElement;
+			touchDown(dialog);
+			pointerClick(dialog);
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+
+			trigger.focus();
+			expect(trigger).toHaveFocus();
+			const wrapper = trigger.parentElement!;
+			for (const cls of sx(selectorPresentationStyles.pointerRestoredFocus).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(true);
+			}
+		});
+
+		it('shows no disabled focus ring after a pointer pick (spec:AST-085 FR6)', async () => {
+			const screen = await render(MultiSelector, {
+				props: {
+					label: 'Fruit',
+					options: defaultOptions,
+					value: [],
+					onChange: () => {},
+					presentation: 'bottom-sheet'
+				}
+			});
+
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			touchDown(trigger);
+			pointerClick(trigger);
+			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
+			const dialog = screen.getByRole('dialog', { name: 'Fruit' }).element() as HTMLDialogElement;
+			touchDown(dialog);
+			pointerClick(dialog);
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+			await screen.rerender({ isDisabled: true });
+
+			const wrapper = screen.getByRole('combobox').element()!.parentElement!;
+			for (const cls of sx(selectorPresentationStyles.pointerRestoredFocus).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(true);
+			}
+			for (const cls of sx(selectorPresentationProbe.ring).class.split(/\s+/)) {
+				expect(wrapper.classList.contains(cls)).toBe(false);
+			}
+		});
+
+		it.each([
+			{ presentation: 'bottom-sheet', hasSearch: false },
+			{ presentation: 'bottom-sheet', hasSearch: true },
+			{ presentation: 'adaptive', hasSearch: false },
+			{ presentation: 'adaptive', hasSearch: true }
+		] as const)(
+			'finishes $presentation close and restores focus when read-only changes (search=$hasSearch)',
+			async ({ presentation, hasSearch }) => {
+				if (presentation === 'adaptive') {
+					stubMatchMedia({ pointer: 'coarse', matches: true });
+				}
+				const screen = await render(MultiSelector, {
+					props: {
+						label: 'Fruit',
+						options: defaultOptions,
+						value: [],
+						onChange: () => {},
+						hasSearch,
+						presentation
+					}
+				});
+
+				const editableTrigger = hasSearch
+					? screen.getByRole('button', { name: /^Fruit\b/ })
+					: screen.getByRole('combobox');
+				await userEvent.click(editableTrigger);
+				const dialogLocator = screen.getByRole('dialog', { name: 'Fruit' });
+				await expect.element(dialogLocator).toBeInTheDocument();
+				const dialog = dialogLocator.element() as HTMLDialogElement;
+
+				await screen.rerender({ isReadOnly: true });
+
+				// The sheet starts its exit; focus stays inside it until the exit
+				// ends, so it is not inert yet.
+				await vi.waitFor(() => expect(dialog.getAttribute('aria-modal')).toBeNull());
+				const panel = dialog.querySelector<HTMLElement>('.astryx-bottom-sheet')!;
+				expect(panel).not.toBeNull();
+				panel.dispatchEvent(
+					new TransitionEvent('transitionend', {
+						propertyName: 'transform',
+						bubbles: true
+					})
+				);
+
+				const readOnlyTrigger = screen.getByRole('combobox', { name: 'Fruit' });
+				await expect.element(readOnlyTrigger).toHaveFocus();
+				expect(screen.container.querySelector('[role="dialog"]')).not.toBeInTheDocument();
+				expect(screen.container.querySelector('[role="listbox"]')).not.toBeInTheDocument();
+			}
+		);
 	});
 
 	it('renders listbox with aria-multiselectable', async () => {
@@ -1693,7 +1981,7 @@ describe('MultiSelector indicator (chevron) icon theme target', () => {
 		expect(css).toContain('.astryx-multi-selector-indicator-icon {');
 		expect(css).toContain('width: 14px');
 		expect(css).toContain('height: 14px');
-		expect(css).toContain('.astryx-multi-selector-indicator-icon.expanded');
+		expect(css).toContain('.astryx-multi-selector-indicator-icon[data-state="expanded"]');
 		expect(css).toContain('color: var(--color-icon-primary)');
 	});
 });
@@ -1988,7 +2276,7 @@ describe('MultiSelector disabled state theme target', () => {
 			}
 		});
 		const css = generateThemeCss(theme);
-		expect(css).toContain('.astryx-multi-selector.disabled');
+		expect(css).toContain('.astryx-multi-selector[data-disabled="disabled"]');
 		expect(css).toContain('opacity: 0.4');
 	});
 });
@@ -2104,9 +2392,9 @@ describe('MultiSelector dropdown option theme target', () => {
 		});
 		const css = generateThemeCss(theme);
 		expect(css).toContain('.astryx-multi-selector-option {');
-		expect(css).toContain('.astryx-multi-selector-option.selected');
-		expect(css).toContain('.astryx-multi-selector-option.select-all');
-		expect(css).toContain('.astryx-multi-selector-option.lg');
+		expect(css).toContain('.astryx-multi-selector-option[data-selected="selected"]');
+		expect(css).toContain('.astryx-multi-selector-option[data-select-all="select-all"]');
+		expect(css).toContain('.astryx-multi-selector-option[data-size="lg"]');
 	});
 });
 
@@ -2124,7 +2412,7 @@ describe('MultiSelector popup theme target', () => {
 
 		const popup = screen.container.querySelector('.astryx-multi-selector-popup') as HTMLElement;
 		expect(popup).not.toBeNull();
-		expect(popup).toHaveClass('astryx-popover-surface');
+		expect(popup).not.toHaveClass('astryx-popover-surface');
 		// The scrolling list is a descendant, not the target itself.
 		expect(popup.querySelector('[role="listbox"]')).not.toBeNull();
 		expect(popup.getAttribute('role')).toBeNull();

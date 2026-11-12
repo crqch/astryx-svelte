@@ -63,7 +63,7 @@ import { getIcon, type IconName } from './icon-registry.js';
  * @example
  * ```svelte
  * <script lang="ts">
- *   import { useIcon } from '@astryx-svelte/core';
+ *   import { useIcon } from '@astryx-sv/core';
  *   const chevron = useIcon(() => 'chevronDown');
  * </script>
  *

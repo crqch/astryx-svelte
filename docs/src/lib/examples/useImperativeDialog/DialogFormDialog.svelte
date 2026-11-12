@@ -13,7 +13,7 @@
 	translations `useImperativeDialog` documents.
 -->
 <script lang="ts">
-	import { Dialog, ImperativeDialogLayer, useImperativeDialog } from '@astryx-svelte/core';
+	import { Dialog, ImperativeDialogLayer, useImperativeDialog } from '@astryx-sv/core';
 	import FormDialogContent from './FormDialogContent.svelte';
 
 	const dialog = useImperativeDialog(() => ({ purpose: 'form', width: 480 }));

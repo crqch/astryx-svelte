@@ -2,8 +2,8 @@
 	Neutral's icon registry — ported from Astryx's
 	`packages/themes/neutral/src/icons.tsx`.
 
-	Maps the 28 semantic icon names to Lucide glyphs. These icons are bundled with
-	the theme, not with `@astryx-svelte/core`, which is upstream's arrangement and
+	Maps the 29 semantic icon names to Lucide glyphs. These icons are bundled with
+	the theme, not with `@astryx-sv/core`, which is upstream's arrangement and
 	the reason core ships its own dependency-free placeholders instead.
 
 	## Why this is a `.svelte` file
@@ -32,7 +32,7 @@
 	and would make this file stop matching the source it is transcribed from.
 -->
 <script module lang="ts">
-	import type { IconRegistry } from '@astryx-svelte/core';
+	import type { IconRegistry } from '@astryx-sv/core';
 	import {
 		X,
 		ChevronDown,
@@ -58,6 +58,7 @@
 		EyeOff,
 		Columns,
 		Copy,
+		Upload,
 		CheckCheck,
 		Wrench,
 		Square,
@@ -95,6 +96,7 @@
 		eyeSlash,
 		viewColumns,
 		copy,
+		upload,
 		checkDouble,
 		wrench,
 		stop,
@@ -126,6 +128,7 @@
 {#snippet eyeSlash()}<EyeOff {...iconProps} />{/snippet}
 {#snippet viewColumns()}<Columns {...iconProps} />{/snippet}
 {#snippet copy()}<Copy {...iconProps} />{/snippet}
+{#snippet upload()}<Upload {...iconProps} />{/snippet}
 {#snippet checkDouble()}<CheckCheck {...iconProps} />{/snippet}
 {#snippet wrench()}<Wrench {...iconProps} />{/snippet}
 {#snippet stop()}<Square {...iconProps} />{/snippet}

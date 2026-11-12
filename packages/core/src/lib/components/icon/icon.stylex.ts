@@ -35,14 +35,17 @@ const colorStyles = stylex.create({
 	accent: {
 		color: colorVars['--color-accent']
 	},
+	info: {
+		color: colorVars['--color-icon-info']
+	},
 	success: {
-		color: colorVars['--color-success']
+		color: colorVars['--color-icon-success']
 	},
 	error: {
-		color: colorVars['--color-error']
+		color: colorVars['--color-icon-error']
 	},
 	warning: {
-		color: colorVars['--color-warning']
+		color: colorVars['--color-icon-warning']
 	},
 	inherit: {
 		color: 'inherit'
@@ -84,58 +87,70 @@ const colorStyles = stylex.create({
  * Size styles for direct SVG icon components.
  * Uses width/height only — SVG components handle their own viewBox scaling.
  *
- * Sizes are expressed in `rem` (relative to the root font-size) so icons scale
- * in step with text when the document font-size changes, matching the rest of
- * the design system's rem-based type scale. Values are the px-equivalents at a
- * 16px root: 12px → 0.75rem, 16px → 1rem, 20px → 1.25rem, 24px → 1.5rem.
+ * The dimensions are the `icon` target's private vars (`--_icon-width` /
+ * `--_icon-height`) so a theme's `width`/`height` on that target's size
+ * selector sets the glyph dimension; with no theme value each size falls back
+ * to its rem value at a 16px root: 12px → 0.75rem, 16px → 1rem, 20px → 1.25rem,
+ * 24px → 1.5rem.
  */
 const sizeStyles = stylex.create({
 	xsm: {
-		width: '0.75rem',
-		height: '0.75rem'
+		width: 'var(--_icon-width, 0.75rem)',
+		height: 'var(--_icon-height, 0.75rem)'
 	},
 	sm: {
-		width: '1rem',
-		height: '1rem'
+		width: 'var(--_icon-width, 1rem)',
+		height: 'var(--_icon-height, 1rem)'
 	},
 	md: {
-		width: '1.25rem',
-		height: '1.25rem'
+		width: 'var(--_icon-width, 1.25rem)',
+		height: 'var(--_icon-height, 1.25rem)'
 	},
 	lg: {
-		width: '1.5rem',
-		height: '1.5rem'
+		width: 'var(--_icon-width, 1.5rem)',
+		height: 'var(--_icon-height, 1.5rem)'
 	}
 });
 
 /**
  * Size styles for string-based (registry) icons.
- * Includes fontSize so that 1em-based icons from the registry scale correctly.
- *
- * Expressed in `rem` for the same reason as {@link sizeStyles} — icons track the
- * root font-size instead of being locked to absolute pixels.
+ * Reads the same private vars, plus a `fontSize`, because registry artwork is
+ * 1em-based. `fontSize` is the smaller side, which fits square artwork into a
+ * non-square box the way an SVG viewBox does.
  */
-const spanSizeStyles = stylex.create({
+const registrySizeStyles = stylex.create({
 	xsm: {
-		width: '0.75rem',
-		height: '0.75rem',
-		fontSize: '0.75rem'
+		width: 'var(--_icon-width, 0.75rem)',
+		height: 'var(--_icon-height, 0.75rem)',
+		fontSize: 'min(var(--_icon-width, 0.75rem), var(--_icon-height, 0.75rem))'
 	},
 	sm: {
-		width: '1rem',
-		height: '1rem',
-		fontSize: '1rem'
+		width: 'var(--_icon-width, 1rem)',
+		height: 'var(--_icon-height, 1rem)',
+		fontSize: 'min(var(--_icon-width, 1rem), var(--_icon-height, 1rem))'
 	},
 	md: {
-		width: '1.25rem',
-		height: '1.25rem',
-		fontSize: '1.25rem'
+		width: 'var(--_icon-width, 1.25rem)',
+		height: 'var(--_icon-height, 1.25rem)',
+		fontSize: 'min(var(--_icon-width, 1.25rem), var(--_icon-height, 1.25rem))'
 	},
 	lg: {
-		width: '1.5rem',
-		height: '1.5rem',
-		fontSize: '1.5rem'
+		width: 'var(--_icon-width, 1.5rem)',
+		height: 'var(--_icon-height, 1.5rem)',
+		fontSize: 'min(var(--_icon-width, 1.5rem), var(--_icon-height, 1.5rem))'
 	}
+});
+
+/**
+ * Size styles for component-owned icon boxes. Unlike the direct-SVG set above,
+ * these are literal rem values (upstream's `iconBoxSizeStyles`): the box is
+ * sized by the owning component, and `fontSize` keeps 1em-based icons in step.
+ */
+const iconBoxSizeStyles = stylex.create({
+	xsm: { width: '0.75rem', height: '0.75rem', fontSize: '0.75rem' },
+	sm: { width: '1rem', height: '1rem', fontSize: '1rem' },
+	md: { width: '1.25rem', height: '1.25rem', fontSize: '1.25rem' },
+	lg: { width: '1.5rem', height: '1.5rem', fontSize: '1.5rem' }
 });
 
 export type IconColor = keyof typeof colorStyles;
@@ -150,11 +165,16 @@ export function iconAttrs(color: IconColor, size: IconSize, xstyle?: StyleArg): 
 	return sx(styles.root, colorStyles[color], sizeStyles[size], xstyle);
 }
 
+/** Raw StyleX styles for a component-owned icon box. */
+export function iconBoxStyle(size: IconSize): StyleArg {
+	return iconBoxSizeStyles[size];
+}
+
 /** The `<span>` wrapping a registry icon, whose font-size sizes the 1em SVG. */
 export function iconSpanAttrs(
 	color: IconColor,
 	size: IconSize,
 	xstyle?: StyleArg
 ): SvelteStyleAttrs {
-	return sx(styles.span, colorStyles[color], spanSizeStyles[size], xstyle);
+	return sx(styles.span, colorStyles[color], registrySizeStyles[size], xstyle);
 }

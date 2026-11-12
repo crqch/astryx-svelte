@@ -10,7 +10,7 @@ export default {
 	displayName: 'Command Palette Footer',
 	subComponentOf: 'CommandPalette',
 	description:
-		'Footer showing keyboard navigation hints. Renders default arrow/Enter/Escape hints when no children are provided.',
+		'Footer with keyboard guidance. CommandPalette renders the default arrow, Enter, and Escape hints automatically.',
 	keywords: [
 		'command',
 		'spotlight',
@@ -22,11 +22,37 @@ export default {
 		'search',
 		'modal',
 		'dialog',
-		'navigation'
+		'navigation',
+		'commandmenu',
+		'cmdk'
 	],
 	group: 'CommandPalette',
 	category: 'Overlay',
 	isHiddenFromOverview: true,
+	theming: {
+		targets: [
+			{
+				className: 'astryx-command-palette-footer'
+			}
+		]
+	},
+	usage: {
+		description:
+			'CommandPalette renders CommandPaletteFooter automatically. Pass a CommandPaletteFooter to the footer slot only when replacing the default guidance.',
+		anatomy: [
+			{
+				name: 'Footer',
+				required: true,
+				description:
+					'Supporting region that presents default guidance or caller-provided footer content.'
+			},
+			{
+				name: 'Keyboard shortcut',
+				required: false,
+				description: 'Default Kbd badges for navigation, selection, and dismissal.'
+			}
+		]
+	},
 	props: [
 		{
 			name: 'children',

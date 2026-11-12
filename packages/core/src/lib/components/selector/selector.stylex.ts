@@ -7,11 +7,14 @@ import {
 } from '../field/input-styles.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
+import { reducedMotionFadeConsts } from '../../motion/reduced-motion.stylex.js';
 import {
 	borderVars,
 	colorVars,
 	durationVars,
 	easeVars,
+	focusVars,
 	fontWeightVars,
 	radiusVars,
 	sizeVars,
@@ -20,7 +23,10 @@ import {
 	typographyVars
 } from '../../styles/tokens.stylex.js';
 import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { focusWithinOwner } from '../../private-attributes/focus-owner.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
+import { selectorPresentationStyles } from './selector-presentation.stylex.js';
 
 /**
  * Ported from Astryx's `Selector/Selector.tsx`, where the styles are inline in
@@ -48,12 +54,15 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-label-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a
+			// focused control sits under 16px, and only iOS WebKit implements
+			// -webkit-touch-callout to key the coarse-pointer floor to it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-label-size']})`
+			}
 		},
-		// One text line, pinned: the trigger is sized by padding rather than by a
-		// fixed height, so the line box has to be a known quantity. `Item`'s own
-		// rows set their line heights and are unaffected.
-		lineHeight: spacingVars['--spacing-5'],
+		// The line box is set per size in sizeStyles below, where it can be
+		// capped to what that size token holds.
 		color: colorVars['--color-text-primary'],
 		cursor: {
 			default: 'pointer',
@@ -124,6 +133,7 @@ const styles = stylex.create({
 	triggerGhost: {
 		width: 'auto',
 		borderWidth: 0,
+		lineHeight: `max(${spacingVars['--spacing-5']}, 20px, 1rem)`,
 		backgroundColor: 'transparent',
 		boxShadow: {
 			default: 'none',
@@ -136,14 +146,61 @@ const styles = stylex.create({
 		transitionProperty: 'background-image, background-color, color, opacity, transform',
 		transform: {
 			default: 'scale(1)',
-			':active': 'scale(0.98)'
+			// A mouse press; under a coarse pointer the touch press model writes
+			// `data-astryx-press` instead (see interaction-overlay.stylex.ts).
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			'[data-astryx-press="on"]': 'scale(0.98)'
+		}
+	},
+	// Secondary is ghost's chrome with the resting fill of a secondary
+	// button (`--color-neutral`): no border, no shadow, content width, so a
+	// selector in a nav reads as the sibling of the secondary buttons and
+	// segmented controls beside it instead of as a form field. The hover and
+	// pressed answers come from the shared interaction overlay, layered over
+	// the fill via backgroundImage.
+	triggerSecondary: {
+		width: 'auto',
+		borderWidth: 0,
+		lineHeight: `max(${spacingVars['--spacing-5']}, 20px, 1rem)`,
+		backgroundColor: colorVars['--color-neutral'],
+		boxShadow: {
+			default: 'none',
+			':hover:not(:focus-within):where(:not(:disabled,[aria-disabled="true"]))': {
+				'@media (hover: hover)': 'none'
+			},
+			':focus-within': 'none'
+		},
+		fontWeight: fontWeightVars['--font-weight-medium'],
+		transitionProperty: 'background-image, background-color, color, opacity, transform',
+		transform: {
+			default: 'scale(1)',
+			':active': {
+				default: 'scale(0.98)',
+				'@media (pointer: coarse)': 'scale(1)'
+			},
+			'[data-astryx-press="on"]': 'scale(0.98)'
 		}
 	},
 	triggerGhostDisabled: {
 		backgroundImage: 'none',
 		transform: {
 			default: 'none',
-			':active': 'none'
+			':active': 'none',
+			'[data-astryx-press="on"]': 'none'
+		}
+	},
+	triggerReadOnly: {
+		cursor: 'default'
+	},
+	triggerGhostReadOnly: {
+		backgroundImage: 'none',
+		transform: {
+			default: 'none',
+			':active': 'none',
+			'[data-astryx-press="on"]': 'none'
 		}
 	},
 
@@ -165,20 +222,67 @@ const styles = stylex.create({
 		borderRadius: radiusVars['--radius-element']
 	},
 
+	// A panel with a search field, capped as a whole.
+	searchPanel: {
+		display: 'flex',
+		flexDirection: 'column',
+		// No taller than its layer's block-size cap, which folds in the software
+		// keyboard's. The search field's row keeps its height, and the list takes
+		// what is left.
+		maxHeight: stylex.firstThatWorks(
+			`calc(${layerViewportInset.maxBlockSize})`,
+			`calc(${layerViewportInset.maxBlockSizeFallback})`
+		)
+	},
+
 	// Dropdown container
 	dropdown: {
 		boxSizing: 'border-box',
-		maxHeight: '300px',
+		// In a search panel, the list shrinks below its content to fit the cap.
+		minHeight: 0,
+		// 300 px, and no taller than its layer's block-size cap, which folds in
+		// the software keyboard's: the list ends above the keyboard with the
+		// layer.
+		maxHeight: stylex.firstThatWorks(
+			`min(300px, ${layerViewportInset.maxBlockSize})`,
+			`min(300px, ${layerViewportInset.maxBlockSizeFallback})`
+		),
 		overflowY: 'auto',
+		outline: 'none',
 		paddingBlock: spacingVars['--spacing-1'],
 		paddingInline: spacingVars['--spacing-1'],
 		opacity: 1,
-		transition: `opacity ${durationVars['--duration-fast']}`
+		// Under Reduce Motion the list appears at once on a fine pointer, and
+		// takes the shared cross-fade on a coarse one.
+		transitionProperty: 'opacity',
+		transitionDuration: {
+			default: durationVars['--duration-fast'],
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+				reducedMotionFadeConsts.duration,
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': '0s'
+		},
+		transitionTimingFunction: {
+			default: 'ease',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+				reducedMotionFadeConsts.easing
+		}
 	},
 	dropdownInput: {
 		// The input trigger's text inset includes its border. Mirror that extra
 		// pixel in the menu; the borderless ghost variant needs no correction.
 		paddingInline: `calc(${spacingVars['--spacing-1']} + ${borderVars['--border-width']})`
+	},
+	// Scroll ownership by the browser's own signal, as the menus declare it: a
+	// list whose options fit keeps every one-finger move, so a slide over the
+	// options stays a slide; one that scrolls lets the browser pan it vertically
+	// and cancel the press when it does. Both leave a two-finger pinch to the
+	// browser, so the page stays zoomable over an open list.
+	touchPinchZoom: {
+		touchAction: 'pinch-zoom'
+	},
+	touchPanYPinchZoom: {
+		touchAction: 'pan-y pinch-zoom',
+		overscrollBehavior: 'contain'
 	},
 	// Same correction for the search row's gutter, so the search field and the
 	// option rows share one left edge.
@@ -187,7 +291,8 @@ const styles = stylex.create({
 	},
 	dropdownHidden: {
 		opacity: 0,
-		transition: 'none'
+		// A longhand: the shorthand would lose to the list's longhands.
+		transitionProperty: 'none'
 	},
 
 	// Popover container (for anchor positioning)
@@ -238,13 +343,14 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-label-size'],
 		color: colorVars['--color-text-primary'],
 		backgroundColor: 'transparent',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
 		textAlign: 'start',
-		outline: 'none'
+		outlineStyle: 'none'
 	},
 	itemContent: {
 		display: 'flex',
@@ -253,18 +359,20 @@ const styles = stylex.create({
 		flex: 1,
 		minWidth: 0
 	},
-	// The mark's column, reserved on every row and at either position, so a row
-	// occupies the same geometry whether or not it is the chosen one — the
-	// default check draws nothing when unchecked, and without the column a list
-	// would indent (or truncate) its chosen row differently from the rest.
-	// `minWidth` rather than `width`: a theme can replace `check` with a larger
-	// indicator (a radio is 20px at `sm`), and the column has to grow with it.
+	// The wrapper keeps a visible mark at either logical position and lets a
+	// replacement indicator grow beyond the default 1rem minimum. When the
+	// resolved indicator draws nothing, `:empty` removes the wrapper from layout
+	// instead of reserving blank space. Selected and unselected labels may
+	// therefore shift or have different available width by design.
 	itemMarkColumn: {
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 		flexShrink: 0,
-		minWidth: '1rem'
+		minWidth: '1rem',
+		':empty': {
+			display: 'none'
+		}
 	},
 	itemCheckmark: {
 		flexShrink: 0,
@@ -274,6 +382,15 @@ const styles = stylex.create({
 	},
 	itemHighlighted: {
 		backgroundColor: colorVars['--color-overlay-hover']
+	},
+	// The fill alone does not reach 3:1 against the listbox. After keyboard
+	// input, the active option also draws the standard focus ring, inside the
+	// row by its own width, as a focused menu row does.
+	itemKeyboardHighlighted: {
+		outlineWidth: focusVars['--focus-outline-width'],
+		outlineStyle: focusVars['--focus-outline-style'],
+		outlineColor: focusVars['--focus-outline-color'],
+		outlineOffset: `calc(-1 * ${focusVars['--focus-outline-width']})`
 	},
 	itemSelected: {
 		fontWeight: fontWeightVars['--font-weight-medium']
@@ -290,7 +407,8 @@ const styles = stylex.create({
 	// token, and the value box is centred in it.
 	triggerInGroup: {
 		minHeight: 0,
-		paddingBlock: 0
+		paddingBlock: 0,
+		lineHeight: `max(${spacingVars['--spacing-5']}, 20px, 1rem)`
 	},
 	// Wrapper for `renderValue` output. Takes the free width and clips
 	// horizontally so a long value ellipsizes rather than widening the trigger;
@@ -323,29 +441,38 @@ const styles = stylex.create({
 
 // The trigger is sized by PADDING, not by a fixed height, so it is the size
 // token plus one text line for each extra line the value uses: 28/32/36 for one
-// line, 48/52/56 for two. The token and a text line are both multiples of 4, so
-// every trigger lands on the 4px rhythm and lines up with the Buttons and inputs
-// beside it. No prop picks the height — the content does, and it can only land
-// on the grid.
+// line, 48/52/56 for two with the default tokens, where the token and a text
+// line are both multiples of 4 and the trigger lines up with the Buttons and
+// inputs beside it. No prop picks the height — the content does.
 //
-// `--spacing-5` is one line here because `triggerContainer` pins its line-height
-// to exactly that; the two must stay in step, which is why both read the same
-// token rather than one hardcoding 20px.
-const linePad = (token: string) =>
-	`calc((${token} - ${spacingVars['--spacing-5']} - 2 * ${borderVars['--border-width']}) / 2)`;
-
+// The line box is `--spacing-5`, floored at the 20px clear control and 1rem
+// icons. When that row would not fit inside the size token's borders, it is
+// capped at what the token holds, so a spacing scale taller than the token
+// cannot push a one-line trigger past it. The cap never goes below 1.5em of the
+// trigger's own font — the type scale's loosest target leading, a conservative
+// bound above a label's glyph extent — so label text too large for the token
+// keeps room rather than being clipped. Line box and padding read the same
+// value; nothing changes wherever the row already fit. Ghost, secondary and
+// grouped triggers keep the uncapped line box.
+//
+// Keep these calculations inline: a consumer's Babel preset can lower a
+// module-scope helper to a function expression before StyleX evaluates this
+// object, and StyleX cannot constant-evaluate that transformed helper.
 const sizeStyles = stylex.create({
 	sm: {
 		minHeight: sizeVars['--size-element-sm'],
-		paddingBlock: linePad(sizeVars['--size-element-sm'])
+		lineHeight: `max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-sm']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem)`,
+		paddingBlock: `calc((${sizeVars['--size-element-sm']} - max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-sm']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem) - 2 * ${borderVars['--border-width']}) / 2)`
 	},
 	md: {
 		minHeight: sizeVars['--size-element-md'],
-		paddingBlock: linePad(sizeVars['--size-element-md'])
+		lineHeight: `max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-md']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem)`,
+		paddingBlock: `calc((${sizeVars['--size-element-md']} - max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-md']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem) - 2 * ${borderVars['--border-width']}) / 2)`
 	},
 	lg: {
 		minHeight: sizeVars['--size-element-lg'],
-		paddingBlock: linePad(sizeVars['--size-element-lg'])
+		lineHeight: `max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-lg']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem)`,
+		paddingBlock: `calc((${sizeVars['--size-element-lg']} - max(min(${spacingVars['--spacing-5']}, max(${sizeVars['--size-element-lg']} - 2 * ${borderVars['--border-width']}, 1.5em)), 20px, 1rem) - 2 * ${borderVars['--border-width']}) / 2)`
 	}
 });
 
@@ -380,7 +507,7 @@ export type SelectorSize = keyof typeof sizeStyles;
  * and withholds `SelectorVariant`, so the barrel does too — the standing
  * `SelectorOptionProps` already has.
  */
-export type SelectorVariant = 'input' | 'ghost';
+export type SelectorVariant = 'input' | 'secondary' | 'ghost';
 
 /** The bordered surface wrapping the trigger button, spinner, clear and chevron. */
 export function selectorTriggerContainerAttrs(
@@ -388,8 +515,10 @@ export function selectorTriggerContainerAttrs(
 	variant: SelectorVariant,
 	statusType: InputStatusType | undefined,
 	isDisabled: boolean,
+	isReadOnly: boolean,
 	hasSelectedItem: boolean,
 	inGroup: boolean,
+	isFocusRingSuppressed: boolean,
 	xstyle: StyleArg
 ): SvelteStyleAttrs {
 	return sx(
@@ -397,18 +526,28 @@ export function selectorTriggerContainerAttrs(
 		styles.triggerContainer,
 		sizeStyles[size],
 		variant === 'ghost' && styles.triggerGhost,
-		// Upstream 0.5.1 moved the ghost trigger's hover/pressed overlay into the
-		// shared module, under the same `ghost` gate and in upstream's position.
-		variant === 'ghost' && interactionOverlayStyles.backgroundImage,
-		// A ghost trigger has no bordered wrapper of its own, so the shared ring is
-		// what makes its keyboard focus visible (#4935/#4973). `focusWithin` is
-		// `:has(:focus-visible)`, so a pointer click does not draw it.
-		variant === 'ghost' && focusOutlineStyles.focusWithin,
+		variant === 'secondary' && styles.triggerSecondary,
+		// The borderless variants moved their hover/pressed overlay into the
+		// shared module, under the same `variant !== 'input'` gate and in
+		// upstream's position.
+		variant !== 'input' && interactionOverlayStyles.backgroundImage,
+		// A borderless trigger has no bordered wrapper of its own, so the shared
+		// ring is what makes its keyboard focus visible (#4935/#4973).
+		// `focusWithinOwner` rings only the marked trigger, so a clear or status
+		// button inside does not light the row. A pointer-returned focus keeps the
+		// suppressed arm below instead.
+		variant !== 'input' && !isFocusRingSuppressed && focusWithinOwner,
+		isFocusRingSuppressed && selectorPresentationStyles.pointerRestoredFocus,
 		isDisabled && inputWrapperStyles.disabled,
-		variant === 'ghost' && isDisabled && styles.triggerGhostDisabled,
+		// The shared disabled style drops the focus ring; restore it while the
+		// trigger, a direct child, has keyboard focus (`spec:AST-085` FR6).
+		variant === 'input' && isDisabled && !isFocusRingSuppressed && inputDisabledFocusStyles.ring,
+		isReadOnly && styles.triggerReadOnly,
+		variant !== 'input' && isDisabled && styles.triggerGhostDisabled,
+		variant !== 'input' && isReadOnly && styles.triggerGhostReadOnly,
 		!hasSelectedItem && styles.triggerPlaceholder,
-		variant !== 'ghost' && statusType && inputStatusBorderStyles[statusType],
-		variant !== 'ghost' && statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
+		variant === 'input' && statusType && inputStatusBorderStyles[statusType],
+		variant === 'input' && statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
 		variant !== 'ghost' && inGroup && groupStyles.inGroup,
 		inGroup && styles.triggerInGroup,
 		xstyle
@@ -416,8 +555,12 @@ export function selectorTriggerContainerAttrs(
 }
 
 /** The `role="combobox"` button itself. */
-export function selectorTriggerAttrs(inGroup: boolean): SvelteStyleAttrs {
-	return sx(styles.trigger, inGroup && styles.triggerButtonInGroup);
+export function selectorTriggerAttrs(inGroup: boolean, isReadOnly: boolean): SvelteStyleAttrs {
+	return sx(
+		styles.trigger,
+		isReadOnly && styles.triggerReadOnly,
+		inGroup && styles.triggerButtonInGroup
+	);
 }
 
 /** The truncating label inside the trigger. */
@@ -454,17 +597,26 @@ export function selectorStatusButtonAttrs(): SvelteStyleAttrs {
 /**
  * The scrolling `role="listbox"`, transparent until the overlay offset is
  * measured. `dropdownInput` mirrors the bordered trigger's extra pixel of text
- * inset; the borderless ghost variant needs no correction.
+ * inset; the borderless ghost variant needs no correction. `hasOverflow` picks
+ * the touch-action the browser is allowed to claim: a list that fits keeps
+ * one-finger slides, one that scrolls hands vertical panning to the browser.
  */
 export function selectorDropdownAttrs(
 	variant: SelectorVariant,
-	isPositioned: boolean
+	isPositioned: boolean,
+	hasOverflow: boolean
 ): SvelteStyleAttrs {
 	return sx(
 		styles.dropdown,
-		variant !== 'ghost' && styles.dropdownInput,
+		hasOverflow ? styles.touchPanYPinchZoom : styles.touchPinchZoom,
+		variant === 'input' && styles.dropdownInput,
 		!isPositioned && styles.dropdownHidden
 	);
+}
+
+/** The panel that holds the search row, its divider and the listbox. */
+export function selectorSearchPanelAttrs(): SvelteStyleAttrs {
+	return sx(styles.searchPanel);
 }
 
 /**
@@ -488,6 +640,7 @@ export function selectorSectionHeadingAttrs(): SvelteStyleAttrs {
 export function selectorItemAttrs(
 	size: SelectorSize,
 	isHighlighted: boolean,
+	isKeyboardHighlighted: boolean,
 	isSelected: boolean,
 	isDisabled: boolean
 ): SvelteStyleAttrs {
@@ -495,6 +648,7 @@ export function selectorItemAttrs(
 		styles.item,
 		itemSizeStyles[size],
 		isHighlighted && styles.itemHighlighted,
+		isKeyboardHighlighted && styles.itemKeyboardHighlighted,
 		isSelected && styles.itemSelected,
 		isDisabled && styles.itemDisabled
 	);

@@ -20,7 +20,7 @@
 		TopNavHeading,
 		TopNavItem,
 		TopNavMenu
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet cubeIcon()}<Icon icon="stop" size="sm" />{/snippet}

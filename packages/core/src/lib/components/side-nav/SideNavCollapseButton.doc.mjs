@@ -27,12 +27,19 @@ export default {
 	group: 'Navigation',
 	category: 'Navigation',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			collapsible: {
+				isCollapsed: false
+			}
+		}
+	},
 	props: [
 		{
 			name: 'collapsible',
 			type: 'SideNavControlledCollapsible',
 			description:
-				'The same controlled collapsible config passed to SideNav. Only needed when the button is rendered outside the sidenav, where collapse context cannot reach it.'
+				'The same controlled collapsible config passed to SideNav, with all its keys. Only needed when the button is rendered outside the sidenav, where collapse context cannot reach it.'
 		},
 		{
 			name: 'handleRef',

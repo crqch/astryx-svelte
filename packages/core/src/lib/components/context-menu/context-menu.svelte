@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { BaseProps } from '../../base-props.js';
 	import type { StyleArg } from '../../internal/sx.js';
+	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import type { DropdownMenuSize } from '../dropdown-menu/dropdown-menu-item.stylex.js';
 	import type {
 		DropdownMenuDividerData,
@@ -43,6 +44,15 @@
 		isDisabled?: boolean;
 		/** Called when the menu opens or closes. */
 		onOpenChange?: (isOpen: boolean) => void;
+		/**
+		 * Presentation policy for the menu.
+		 * - `popover`: open beside the pointer position.
+		 * - `bottom-sheet`: open as an action sheet.
+		 * - `adaptive`: use a BottomSheet on compact coarse-pointer viewports and
+		 *   the cursor-positioned popover elsewhere.
+		 * @default 'popover'
+		 */
+		presentation?: AdaptivePresentation;
 		'data-testid'?: string;
 	}
 
@@ -63,7 +73,12 @@
 
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import Button from '../button/button.svelte';
+	import Heading from '../heading/heading.svelte';
+	import Icon from '../icon/icon.svelte';
 	import Layer from '../layer/layer.svelte';
+	import MenuBottomSheet from '../dropdown-menu/menu-bottom-sheet.svelte';
+	import MenuBottomSheetActionList from '../dropdown-menu/menu-bottom-sheet-action-list.svelte';
 	import RenderDropdownItems from '../dropdown-menu/render-dropdown-items.svelte';
 	import { setDropdownMenuContext } from '../dropdown-menu/dropdown-menu-context.svelte.js';
 	import {
@@ -71,19 +86,28 @@
 		MENU_ITEM_ROLES,
 		MENU_ITEM_SELECTOR
 	} from '../dropdown-menu/menu-item-roles.js';
+	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
+	import { useMenuPress } from '../../hooks/use-menu-press.svelte.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { useLayer } from '../layer/use-layer.svelte.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import { useLongPress } from '../../hooks/use-long-press.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
+	import { useMenuOverflow } from '../dropdown-menu/use-menu-overflow.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
+	import { rtlStyles } from '../../utils/rtl.stylex.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import type { DropdownMenuItemData as MenuItemData } from '../dropdown-menu/dropdown-menu-types.js';
 	import {
 		contextMenuAttrs,
 		contextMenuCursorAnchorAttrs,
 		contextMenuPopoverXstyle,
+		contextMenuSheetHeaderAttrs,
+		contextMenuSheetMenuAttrs,
+		contextMenuSheetRootHeadingStyle,
+		contextMenuSheetViewHeadingStyle,
 		contextMenuTriggerAttrs
 	} from './context-menu.stylex.js';
 
@@ -114,6 +138,7 @@
 		label: labelFromProps,
 		isDisabled = false,
 		onOpenChange,
+		presentation = 'popover',
 		class: className,
 		style: styleProp,
 		xstyle,
@@ -144,17 +169,34 @@
 
 	let isOpen = $state(false);
 
+	// The menu's presentation policy resolves once per render against the active
+	// theme, and the sheet has its own view stack.
+	const resolvedPresentation = useAdaptivePresentation(() => presentation);
+	const usesBottomSheet = $derived(resolvedPresentation.resolved === 'bottom-sheet');
+	let submenuPath = $state<MenuItemData[]>([]);
+	let viewHeadingEl = $state<HTMLElement | null>(null);
+	const currentSubmenu = $derived(submenuPath.at(-1));
+	const currentTitle = $derived(currentSubmenu?.label ?? label);
+	const sheetLabel = $derived(typeof currentTitle === 'string' ? currentTitle : label);
+	const currentItems = $derived(currentSubmenu?.items ?? items ?? []);
+
+	function updateOpenState(nextIsOpen: boolean): void {
+		if (!nextIsOpen) {
+			submenuPath = [];
+		}
+		isOpen = nextIsOpen;
+		onOpenChange?.(nextIsOpen);
+	}
+
 	const layer = useLayer(() => ({
 		mode: 'context',
 		id: layerId,
 		lightDismiss: false,
 		onShow: () => {
-			isOpen = true;
-			onOpenChange?.(true);
+			updateOpenState(true);
 		},
 		onHide: () => {
-			isOpen = false;
-			onOpenChange?.(false);
+			updateOpenState(false);
 			const toRestore = triggerFocusEl;
 			triggerFocusEl = null;
 			if (toRestore && document.contains(toRestore)) {
@@ -164,7 +206,21 @@
 	}));
 
 	function closeMenu(): void {
-		layer.hide();
+		if (usesBottomSheet) {
+			updateOpenState(false);
+		} else {
+			layer.hide();
+		}
+	}
+
+	function handleSheetSelect(item: MenuItemData, _event: MouseEvent): void {
+		if (item.isDisabled) {
+			return;
+		}
+		item.onClick?.();
+		if (item.hasCloseOnSelect !== false) {
+			closeMenu();
+		}
 	}
 
 	const listFocus = useListFocus(() => ({
@@ -187,11 +243,22 @@
 			)
 	}));
 
+	// The press model: the row under a release acts, the highlight follows a
+	// held pointer, a mouse released outside dismisses and a finger leaves the
+	// menu open. The sheet is modal and has its own press path, so the model is
+	// off there.
+	const menuPress = useMenuPress(() => ({
+		menu: () => menuEl,
+		itemSelector: MENU_ITEM_SELECTOR,
+		onDismiss: closeMenu,
+		isEnabled: !usesBottomSheet
+	}));
+
 	// Dismiss on any click outside the menu. The layer is `popover="manual"`, not
 	// `"auto"`, because native light-dismiss treats the mouseup from the opening
 	// right-click as a dismissal; handling mousedown ourselves avoids that race.
 	$effect(() => {
-		if (!isOpen) return;
+		if (!isOpen || usesBottomSheet) return;
 
 		const handleClickOutside = (e: MouseEvent) => {
 			const menu = untrack(() => menuEl);
@@ -209,7 +276,7 @@
 	// fires with focus inside it; this document-level listener is the reliable
 	// fallback. Guards against an IME composition-cancel.
 	$effect(() => {
-		if (!isOpen) return;
+		if (!isOpen || usesBottomSheet) return;
 
 		const handleEscape = (e: KeyboardEvent) => {
 			if (e.key !== 'Escape') return;
@@ -269,6 +336,10 @@
 		// close, instead of dropping focus to <body>.
 		triggerFocusEl =
 			document.activeElement instanceof HTMLElement ? document.activeElement : focusEl;
+		if (usesBottomSheet) {
+			updateOpenState(true);
+			return;
+		}
 		layer.show();
 		requestAnimationFrame(() => listFocus.focusFirst());
 	}
@@ -305,12 +376,133 @@
 
 	setDropdownMenuContext(() => ({ closeMenu, menuSize: size }));
 
+	// A menu that overflows hands vertical touch scrolling to the browser; one
+	// that fits keeps pinch-zoom only, so a pan cannot drag the page behind it.
+	const menuOverflow = useMenuOverflow({
+		menu: () => menuEl,
+		content: () => (items !== undefined ? items : menuContent),
+		isOpen: () => isOpen && !usesBottomSheet
+	});
+	const hasOverflow = $derived(menuOverflow());
+
+	// The sheet's content element carries `data-autofocus`, as upstream's does:
+	// focus lands on the action list, not on the first row. The shared
+	// `focusPanel` keeps native dialog focus on the panel when it is already
+	// inside, so the sheet names its content target here after it mounts.
+	$effect(() => {
+		if (!isOpen || !usesBottomSheet) return;
+		const frame = requestAnimationFrame(() => menuEl?.focus({ preventScroll: true }));
+		return () => cancelAnimationFrame(frame);
+	});
+
+	// A drilled-in sheet view's heading takes focus as the view changes; the
+	// root view does not steal it on open.
+	let previousSubmenuDepth = 0;
+	$effect(() => {
+		if (!isOpen) {
+			previousSubmenuDepth = 0;
+			return;
+		}
+		const depth = submenuPath.length;
+		if (depth === previousSubmenuDepth) return;
+		previousSubmenuDepth = depth;
+		const frame = requestAnimationFrame(() => viewHeadingEl?.focus({ preventScroll: true }));
+		return () => cancelAnimationFrame(frame);
+	});
+
 	const theme = themeProps('context-menu');
 	const triggerAttrs = $derived(contextMenuTriggerAttrs(triggerXstyle));
 	const anchorAttrs = contextMenuCursorAnchorAttrs();
-	const menuAttrs = $derived(contextMenuAttrs(xstyle));
+	const sheetMenuAttrs = $derived(contextMenuSheetMenuAttrs(xstyle));
+	const sheetHeaderAttrs = contextMenuSheetHeaderAttrs();
+	const menuAttrs = $derived(
+		usesBottomSheet ? sheetMenuAttrs : contextMenuAttrs(xstyle, hasOverflow)
+	);
 	const popoverXstyle = $derived(contextMenuPopoverXstyle(menuWidth));
 </script>
+
+{#snippet sheetViewHeading()}
+	<Heading
+		{@attach (element: HTMLElement) => {
+			viewHeadingEl = element;
+		}}
+		level={3}
+		tabindex={-1}
+		xstyle={[
+			contextMenuSheetViewHeadingStyle,
+			currentSubmenu == null && contextMenuSheetRootHeadingStyle
+		]}
+	>
+		{#if typeof currentTitle === 'string'}
+			{currentTitle}
+		{:else}
+			{@render currentTitle()}
+		{/if}
+	</Heading>
+{/snippet}
+
+{#snippet backIcon()}
+	<Icon icon="chevronLeft" size="sm" xstyle={rtlStyles.mirror} />
+{/snippet}
+
+{#snippet renderedMenu()}
+	<div
+		bind:this={menuEl}
+		{@attach listFocus.attachList}
+		id={menuId}
+		role="menu"
+		aria-label={label}
+		data-autofocus={usesBottomSheet ? '' : undefined}
+		tabindex={usesBottomSheet ? 0 : -1}
+		{...menuPress.menuProps}
+		onkeydown={listKeyDown}
+		oncontextmenu={(e) => e.preventDefault()}
+		{...theme}
+		class={cx(theme.class, menuAttrs.class, className)}
+		style={mergeStyle(menuAttrs.style, styleProp as string | undefined)}
+	>
+		{#if items !== undefined}
+			<RenderDropdownItems {items} />
+		{:else}
+			{@render menuContent?.()}
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet sheetDataContent()}
+	<!-- The content element is the sheet's `data-autofocus` target, as upstream's
+	     is: a programmatic tab stop, not a control. -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<div
+		bind:this={menuEl}
+		data-autofocus=""
+		tabindex={0}
+		{...theme}
+		class={cx(theme.class, sheetMenuAttrs.class, className)}
+		style={mergeStyle(sheetMenuAttrs.style, styleProp as string | undefined)}
+	>
+		{#if currentSubmenu != null}
+			<div {...sheetHeaderAttrs}>
+				<Button
+					label={t('@astryx.dropdownMenu.back')}
+					variant="ghost"
+					size="sm"
+					icon={backIcon}
+					isIconOnly
+					onclick={() => (submenuPath = submenuPath.slice(0, -1))}
+				/>
+				{@render sheetViewHeading()}
+			</div>
+		{:else}
+			{@render sheetViewHeading()}
+		{/if}
+		<MenuBottomSheetActionList
+			items={currentItems}
+			onSelect={handleSheetSelect}
+			onOpenSubmenu={(item) => (submenuPath = [...submenuPath, item])}
+		/>
+	</div>
+{/snippet}
 
 <div
 	bind:this={triggerEl}
@@ -330,23 +522,21 @@
 	></span>
 </div>
 
-<Layer {layer} placement="below" alignment="start" xstyle={[popoverXstyle, layerAnimations.below]}>
-	<div
-		bind:this={menuEl}
-		{@attach listFocus.attachList}
-		id={menuId}
-		role="menu"
-		aria-label={label}
-		onkeydown={listKeyDown}
-		oncontextmenu={(e) => e.preventDefault()}
-		{...theme}
-		class={cx(theme.class, menuAttrs.class, className)}
-		style={mergeStyle(menuAttrs.style, styleProp as string | undefined)}
-	>
+{#if usesBottomSheet}
+	<MenuBottomSheet {isOpen} onOpenChange={updateOpenState} label={sheetLabel}>
 		{#if items !== undefined}
-			<RenderDropdownItems {items} />
+			{@render sheetDataContent()}
 		{:else}
-			{@render menuContent?.()}
+			{@render renderedMenu()}
 		{/if}
-	</div>
-</Layer>
+	</MenuBottomSheet>
+{:else}
+	<Layer
+		{layer}
+		placement="below"
+		alignment="start"
+		xstyle={[popoverXstyle, layerAnimations.below]}
+	>
+		{@render renderedMenu()}
+	</Layer>
+{/if}

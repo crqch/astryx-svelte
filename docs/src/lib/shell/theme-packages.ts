@@ -1,12 +1,12 @@
-import type { DefinedTheme } from '@astryx-svelte/core/theme';
-import { butterTheme } from '@astryx-svelte/theme-butter';
-import { chocolateTheme } from '@astryx-svelte/theme-chocolate';
-import { gothicTheme } from '@astryx-svelte/theme-gothic';
-import { liquidGlassTheme } from '@astryx-svelte/theme-liquid-glass';
-import { matchaTheme } from '@astryx-svelte/theme-matcha';
-import { neutralTheme } from '@astryx-svelte/theme-neutral';
-import { stoneTheme } from '@astryx-svelte/theme-stone';
-import { y2kTheme } from '@astryx-svelte/theme-y2k';
+import type { DefinedTheme } from '@astryx-sv/core/theme';
+import { butterTheme } from '@astryx-sv/theme-butter';
+import { chocolateTheme } from '@astryx-sv/theme-chocolate';
+import { gothicTheme } from '@astryx-sv/theme-gothic';
+import { liquidGlassTheme } from '@astryx-sv/theme-liquid-glass';
+import { matchaTheme } from '@astryx-sv/theme-matcha';
+import { neutralTheme } from '@astryx-sv/theme-neutral';
+import { stoneTheme } from '@astryx-sv/theme-stone';
+import { y2kTheme } from '@astryx-sv/theme-y2k';
 import themeRegistry from '$lib/generated/theme-registry.js';
 import type { ThemePackage } from '$lib/generated/types.js';
 
@@ -60,10 +60,15 @@ function rank(slug: string): number {
 export interface ThemeListing extends ThemePackage {
 	theme: DefinedTheme;
 	/**
-	 * How many of the theme's own token declarations carry a `[light, dark]`
-	 * pair. **Zero means the theme is single-mode** — `gothic` is dark-only, and
-	 * upstream emits no `html[data-theme=…]` block for it at all. Read off the
-	 * object rather than tabulated, so it cannot go stale.
+	 * How many of the theme's own token declarations resolve differently in light
+	 * and dark. **Zero means the theme is single-mode** — `gothic` is dark-only, and
+	 * upstream emits no `html[data-theme=…]` block for it at all.
+	 *
+	 * Both declaration shapes this port's packages use count: a `[light, dark]`
+	 * tuple (Neutral and Liquid Glass) and a `light-dark(…)` string (five of the
+	 * other six). Counting tuples alone read every `light-dark()` theme as
+	 * single-mode, which disabled Butter's and Matcha's preview toggle. Read off
+	 * the object rather than tabulated, so it cannot go stale.
 	 */
 	lightDarkPairs: number;
 	/** Token declarations the theme sets, of core's 184-name vocabulary. */
@@ -93,7 +98,10 @@ export const THEME_LISTINGS: ThemeListing[] = themeRegistry
 		return {
 			...entry,
 			theme,
-			lightDarkPairs: tokens.filter((value) => Array.isArray(value)).length,
+			lightDarkPairs: tokens.filter(
+				(value) =>
+					Array.isArray(value) || (typeof value === 'string' && value.includes('light-dark('))
+			).length,
 			tokenCount: tokens.length,
 			componentCount: Object.keys(theme.components ?? {}).length
 		};

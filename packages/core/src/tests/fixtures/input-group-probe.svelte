@@ -36,7 +36,14 @@
 	 * (`null`). `DateInput` takes no `value` at all, as upstream's case does.
 	 */
 	type Variant =
-		'currency' | 'plain' | 'url' | 'number' | 'selector' | 'multi-selector' | 'typeahead' | 'date';
+		| 'currency'
+		| 'plain'
+		| 'url'
+		| 'number'
+		| 'selector'
+		| 'multi-selector'
+		| 'typeahead'
+		| 'date';
 
 	interface Props extends Omit<InputGroupProps, 'children'> {
 		variant?: Variant;

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { AspectRatio, Button, Overlay, Text, VStack } from '@astryx-svelte/core';
+	import { AspectRatio, Button, Overlay, Text, VStack } from '@astryx-sv/core';
 </script>
 
 <Overlay align="center">

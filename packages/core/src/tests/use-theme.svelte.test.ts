@@ -94,7 +94,7 @@ describe('useTheme', () => {
 		await expect
 			.element(screen.getByTestId('token:--color-text-primary'))
 			.toHaveTextContent('#0A1317');
-		await expect.element(screen.getByTestId('token:--spacing-1')).toHaveTextContent('4px');
+		await expect.element(screen.getByTestId('token:--spacing-1')).toHaveTextContent('0.25rem');
 		await expect.element(screen.getByTestId('mode')).toHaveTextContent('light');
 	});
 
@@ -128,8 +128,8 @@ describe('useTheme', () => {
 		const screen = await render(Probe, {
 			props: { theme: testTheme, mode: 'light', tokenNames: TOKENS }
 		});
-		// --spacing-1 is not overridden — it must be the default '4px'.
-		await expect.element(screen.getByTestId('token:--spacing-1')).toHaveTextContent('4px');
+		// --spacing-1 is not overridden — it must be the default '0.25rem'.
+		await expect.element(screen.getByTestId('token:--spacing-1')).toHaveTextContent('0.25rem');
 	});
 
 	it('resolves default light-dark() string tokens for the mode', async () => {
@@ -161,7 +161,7 @@ describe('useTheme', () => {
 		const tokens = JSON.parse(screen.getByTestId('tokens').element().textContent ?? '{}');
 		expect(tokens['--color-accent']).toBe('#AA0000');
 		expect(tokens['--spacing-4']).toBe('20px');
-		expect(tokens['--spacing-1']).toBe('4px');
+		expect(tokens['--spacing-1']).toBe('0.25rem');
 	});
 
 	it('uses the same token resolution as resolveThemeTokens', async () => {

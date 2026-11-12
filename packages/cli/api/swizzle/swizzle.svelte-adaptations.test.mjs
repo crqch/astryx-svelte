@@ -6,7 +6,7 @@
  *
  * 1. **A `.svelte` default import.** A Svelte component's export is its default;
  *    the barrel republishes it under a name (`export {default as Spinner}`), so
- *    a specifier-only rewrite yields `import Spinner from '@astryx-svelte/core'`
+ *    a specifier-only rewrite yields `import Spinner from '@astryx-sv/core'`
  *    — a default import from a namespace that has none. React components are
  *    already imported by name, so upstream never changes a statement's shape.
  *    *Mutation:* drop the DEFAULT_IMPORT_RE pass and this case reports the
@@ -51,7 +51,7 @@ function coreRewriteContext({ dir, fileDir } = {}) {
 	const unresolved = [];
 	return {
 		ctx: {
-			ownerPackage: '@astryx-svelte/core',
+			ownerPackage: '@astryx-sv/core',
 			ownerRoot: CORE_ROOT,
 			fileDir: fileDir ?? copiedRoot,
 			copiedRoot,
@@ -65,15 +65,13 @@ describe('swizzle import rewriting — Svelte-only hazards', () => {
 	it('converts an escaping .svelte default import into a named import', () => {
 		const { ctx } = coreRewriteContext();
 		const input = `import Spinner from '../spinner/spinner.svelte';`;
-		expect(rewriteImports(input, ctx)).toBe(`import { Spinner } from '@astryx-svelte/core';`);
+		expect(rewriteImports(input, ctx)).toBe(`import { Spinner } from '@astryx-sv/core';`);
 	});
 
 	it('aliases when the local name differs from the published one', () => {
 		const { ctx } = coreRewriteContext();
 		const input = `import Spin from '../spinner/spinner.svelte';`;
-		expect(rewriteImports(input, ctx)).toBe(
-			`import { Spinner as Spin } from '@astryx-svelte/core';`
-		);
+		expect(rewriteImports(input, ctx)).toBe(`import { Spinner as Spin } from '@astryx-sv/core';`);
 	});
 
 	it('leaves an import that escapes the file but stays inside the copied directory alone', () => {

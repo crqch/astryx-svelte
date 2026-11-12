@@ -7,7 +7,7 @@
 		ToggleButton,
 		ToggleButtonGroup,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import type { BlogPost, BlogPostType } from './schema.js';
 	import { POST_TYPE_LABELS } from './schema.js';
 	import BlogCard from './blog-card.svelte';

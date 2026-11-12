@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { BreadcrumbItem, Breadcrumbs, Stack, Text } from '@astryx-svelte/core';
+	import { BreadcrumbItem, Breadcrumbs, Stack, Text } from '@astryx-sv/core';
 
 	const SEPARATORS = [
 		{ char: '›', label: 'Chevron' },

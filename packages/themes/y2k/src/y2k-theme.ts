@@ -13,33 +13,48 @@
  * Core neutral: H=75 C=8 (warm cream neutral derived from #FFF6ED)
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
+/** Y2k syntax palette — upstream 0.7.13's resolved values. */
 const y2kSyntax = defineSyntaxTheme({
-	name: 'xds-y2k',
+	name: 'astryx-y2k',
 	tokens: {
-		keyword: ['#615a7a', '#aea6ca'],
-		string: ['#586242', '#a5af8b'],
-		comment: ['#5e5e5e', '#ababab'],
-		number: ['#775843', '#c8a48c'],
-		function: ['#39637d', '#87b0cd'],
-		type: ['#615a7a', '#aea6ca'],
-		variable: ['#5e5e5e', '#ababab'],
-		operator: ['#5e5e5e', '#ababab'],
-		constant: ['#775843', '#c8a48c'],
-		tag: ['#7f5351', '#d19f9d'],
-		attribute: ['#6c5c3e', '#bca987'],
-		property: ['#3c6755', '#87b5a1'],
-		punctuation: ['#5e5e5e', '#ababab'],
-		background: ['#FFF6ED', '#190f00']
+		keyword: 'light-dark(#663ebd, #bbaaff)',
+		string: 'light-dark(#546800, #95b041)',
+		comment: 'light-dark(#675d52, #a6acd6)',
+		number: 'light-dark(#904800, #ffb477)',
+		function: 'light-dark(#00649b, #70c1ff)',
+		type: 'light-dark(#663ebd, #bbaaff)',
+		variable: 'light-dark(#675d52, #a6acd6)',
+		operator: 'light-dark(#675d52, #a6acd6)',
+		constant: 'light-dark(#904800, #ffb477)',
+		tag: 'light-dark(#9d002a, #ff969a)',
+		attribute: 'light-dark(#745b00, #d0a601)',
+		property: 'light-dark(#007050, #5bc29a)',
+		punctuation: 'light-dark(#675d52, #a6acd6)',
+		background: 'light-dark(#fff6ed, #0e0f1a)',
+		added: 'light-dark(#c5e17a40, #c5e17a33)',
+		removed: 'light-dark(#ffc3c340, #ffc3c333)',
+		'diff-header': 'transparent',
+		'added-marker': 'light-dark(#3f4e00, #95b041)',
+		'removed-marker': 'light-dark(#880023, #ff969a)'
 	}
 });
 
+/**
+ * Y2k theme — ported from upstream 0.7.13. Colour and component
+ * values are literals so this package needs none of upstream's palette helpers;
+ * typography and motion stay as configs so the shared generator derives the
+ * same sizes, leadings and durations.
+ */
 export const y2kTheme = defineTheme({
 	name: 'y2k',
 
 	typography: {
-		scale: { base: 16, ratio: 1.25 },
+		scale: {
+			base: 16,
+			ratio: 1.25
+		},
 		body: {
 			family: 'Poppins',
 			fallbacks:
@@ -56,186 +71,244 @@ export const y2kTheme = defineTheme({
 		}
 	},
 
-	radius: { base: 4, multiplier: 0 },
-
-	motion: { fast: 100, medium: 250, slow: 600, ratio: 0.8 },
-
+	motion: {
+		fast: 100,
+		medium: 250,
+		slow: 600,
+		ratio: 0.8
+	},
+	onDark: {
+		tokens: {
+			'color-scheme': 'dark',
+			'--color-text-primary': 'var(--color-on-dark)',
+			'--color-icon-primary': 'var(--color-on-dark)',
+			'--color-accent': 'var(--color-on-dark)'
+		}
+	},
+	onLight: {
+		tokens: {
+			'color-scheme': 'light',
+			'--color-text-primary': 'var(--color-on-light)',
+			'--color-icon-primary': 'var(--color-on-light)',
+			'--color-accent': 'var(--color-on-light)'
+		}
+	},
 	syntax: y2kSyntax,
-
 	tokens: {
-		// =========================================================================
-		// Spacing — comfortable preset (base=6)
-		// =========================================================================
-		'--spacing-0-5': '3px',
-		'--spacing-1': '6px',
-		'--spacing-1-5': '9px',
-		'--spacing-2': '12px',
-		'--spacing-3': '18px',
-		'--spacing-4': '24px',
-		'--spacing-5': '30px',
-		'--spacing-6': '36px',
-		'--spacing-7': '42px',
-		'--spacing-8': '48px',
-
-		// Size — comfortable preset
-		'--size-element-sm': '32px',
-		'--size-element-md': '40px',
-		'--size-element-lg': '48px',
-
-		// =========================================================================
-		// Colors — Y2K pop palette
-		// Neutral: H=75 C=8 (warm cream)
-		// Accent: charcoal (#292427)
-		// =========================================================================
-
-		// Core semantic — neutral H=75 C=8 (cream)
-		'--color-accent': ['#2d241b', '#EDEFFC'],
-		'--color-accent-muted': ['#2d241b14', '#EDEFFC20'],
-		'--color-neutral': ['#2d241b10', '#EDEFFC1A'],
-		'--color-background-surface': ['#FFFFFF', '#16182b'],
-		'--color-background-body': ['#CCCFFA', '#0e0f1a'],
-		'--color-overlay': ['#2d241b80', '#0a0b14CC'],
-		'--color-overlay-hover': ['#2d241b0D', '#EDEFFC0D'],
-		'--color-overlay-pressed': ['#2d241b1A', '#EDEFFC1A'],
-		'--color-background-muted': ['#ede0d4', '#1f2238'],
-
-		// Text — neutral H=75 (cream)
-		'--color-text-primary': ['#2d241b', '#EDEFFC'],
-		'--color-text-secondary': ['#675d52', '#a6acd6'],
-		'--color-text-disabled': ['#d1c5b8', '#4a4f6b'],
-		'--color-text-accent': ['#2d241b', '#EDEFFC'],
-		'--color-on-dark': '#FFFFFF',
-		'--color-on-light': '#2d241b',
-		'--color-on-accent': ['#FFFFFF', '#16182b'],
-		'--color-on-success': ['#3a5500', '#1e3200'],
-		'--color-on-error': ['#8b1d24', '#5c0008'],
-		'--color-on-warning': ['#614400', '#3f2600'],
-
-		// Icon — neutral H=75 (cream)
-		'--color-icon-accent': ['#2d241b', '#EDEFFC'],
-		'--color-icon-primary': ['#2d241b', '#EDEFFC'],
-		'--color-icon-secondary': ['#675d52', '#a6acd6'],
-		'--color-icon-disabled': ['#d1c5b8', '#4a4f6b'],
-
-		// Surface variants — white cards, cream body
-		'--color-background-card': ['#FFFFFF', '#16182b'],
-		'--color-background-popover': ['#FFFFFF', '#1f2238'],
-		'--color-background-inverted': ['#2d241b', '#EDEFFC'],
-
-		// Status / Sentiment — same in light and dark
-		'--color-success': ['#C5E17A', '#C5E17A'],
-		'--color-success-muted': ['#C5E17A', '#C5E17A'],
-		'--color-error': ['#FFC5C3', '#FFC5C3'],
-		'--color-error-muted': ['#FFC5C3', '#FFC5C3'],
-		'--color-warning': ['#FFE08A', '#FFE08A'],
-		'--color-warning-muted': ['#FFE08A', '#FFE08A'],
-
-		// Bold charcoal borders in light mode (default + card) for the heavy-outline
-		// Y2K look. Dark mode unchanged.
-		'--color-border': ['#2F292E', '#EDEFFC1A'],
-		'--color-border-emphasized': ['#2F292E', '#3a3f5e'],
-
-		// Effects
-		'--color-skeleton': ['#d1c5b8', '#2a2e47'],
-		'--color-shadow': ['#2d241b1A', '#0000004D'],
-		'--color-tint-hover': ['#2d241b', '#EDEFFC'],
-
-		// Typography override
-		'--text-supporting-size': '12px',
-
-		// Categorical — hand-tuned for equal optical brightness, same light/dark
-		'--color-background-green': ['#C5E17A', '#C5E17A'],
-		'--color-border-green': ['#B5D16A', '#B5D16A'],
-		'--color-icon-green': ['#3a5500', '#1e3200'],
-		'--color-text-green': ['#3a5500', '#1e3200'],
-
-		'--color-background-red': ['#FFC5C3', '#FFC5C3'],
-		'--color-border-red': ['#FF9E9A', '#FF9E9A'],
-		'--color-icon-red': ['#8b1d24', '#5c0008'],
-		'--color-text-red': ['#8b1d24', '#5c0008'],
-
-		'--color-background-yellow': ['#FFE08A', '#FFE08A'],
-		'--color-border-yellow': ['#FFCC55', '#FFCC55'],
-		'--color-icon-yellow': ['#614400', '#3f2600'],
-		'--color-text-yellow': ['#614400', '#3f2600'],
-
-		'--color-background-blue': ['#B8E0FF', '#B8E0FF'],
-		'--color-border-blue': ['#8ECFFF', '#8ECFFF'],
-		'--color-icon-blue': ['#004e74', '#002c4d'],
-		'--color-text-blue': ['#004e74', '#002c4d'],
-
-		'--color-background-pink': ['#FFC8E0', '#FFC8E0'],
-		'--color-border-pink': ['#FFA0C8', '#FFA0C8'],
-		'--color-icon-pink': ['#822050', '#580030'],
-		'--color-text-pink': ['#822050', '#580030'],
-
-		'--color-background-purple': ['#DDD0FF', '#DDD0FF'],
-		'--color-border-purple': ['#C0AAFF', '#C0AAFF'],
-		'--color-icon-purple': ['#453080', '#201058'],
-		'--color-text-purple': ['#453080', '#201058'],
-
-		'--color-background-cyan': ['#A8F0E2', '#A8F0E2'],
-		'--color-border-cyan': ['#70E8D0', '#70E8D0'],
-		'--color-icon-cyan': ['#005548', '#003028'],
-		'--color-text-cyan': ['#005548', '#003028'],
-
-		'--color-background-orange': ['#FFCCA0', '#FFCCA0'],
-		'--color-border-orange': ['#FFAA66', '#FFAA66'],
-		'--color-icon-orange': ['#703500', '#4a1800'],
-		'--color-text-orange': ['#703500', '#4a1800'],
-
-		'--color-background-teal': ['#A8EED0', '#A8EED0'],
-		'--color-border-teal': ['#78E0B0', '#78E0B0'],
-		'--color-icon-teal': ['#005530', '#003018'],
-		'--color-text-teal': ['#005530', '#003018'],
-
-		// Gray (cream neutral H=75 C=8)
-		'--color-background-gray': ['#ede0d4', '#ede0d4'],
-		'--color-border-gray': ['#dfd2c6', '#dfd2c6'],
-		'--color-icon-gray': ['#4f453b', '#2d241b'],
-		'--color-text-gray': ['#4f453b', '#2d241b'],
-
-		// =========================================================================
-		// Radius — sharp / brutalist (multiplier: 0 via radius config + explicit)
-		// =========================================================================
 		'--radius-none': '0px',
 		'--radius-inner': '0px',
 		'--radius-element': '0px',
 		'--radius-container': '0px',
 		'--radius-page': '0px',
+		'--radius-chat': '0px',
 		'--radius-full': '0px',
-
-		// =========================================================================
-		// Shadows — warm cream neutral
-		// =========================================================================
+		'--spacing-0-5': '0.1875rem',
+		'--spacing-1': '0.375rem',
+		'--spacing-1-5': '0.5625rem',
+		'--spacing-2': '0.75rem',
+		'--spacing-3': '1.125rem',
+		'--spacing-4': '1.5rem',
+		'--spacing-5': '1.875rem',
+		'--spacing-6': '2.25rem',
+		'--spacing-7': '2.625rem',
+		'--spacing-8': '3rem',
+		'--size-element-sm': '32px',
+		'--size-element-md': '40px',
+		'--size-element-lg': '48px',
+		'--color-accent': 'light-dark(#2d241b, #edeffc)',
+		'--color-accent-muted': 'light-dark(#2d241b14, #edeffc20)',
+		'--color-neutral': 'light-dark(#2d241b10, #edeffc1A)',
+		'--color-background-surface': 'light-dark(#ffffff, #16182b)',
+		'--color-background-body': 'light-dark(#cccffa, #0e0f1a)',
+		'--color-overlay': 'light-dark(#2d241b80, #0e0f1aCC)',
+		'--color-overlay-hover': 'light-dark(#2d241b0D, #edeffc0D)',
+		'--color-overlay-pressed': 'light-dark(#2d241b1A, #edeffc1A)',
+		'--color-background-muted': 'light-dark(#f1e6db, #1f2238)',
+		'--color-text-primary': 'light-dark(#2d241b, #edeffc)',
+		'--color-text-secondary': 'light-dark(#5a5146, #a6acd6)',
+		'--color-text-disabled': 'light-dark(#d1c5b8, #4a4f6b)',
+		'--color-text-accent': 'light-dark(#2d241b, #edeffc)',
+		'--color-on-dark': '#ffffff',
+		'--color-on-light': '#2d241b',
+		'--color-on-accent': 'light-dark(#ffffff, #16182b)',
+		'--color-on-success': 'light-dark(#3f4e00, #2a3600)',
+		'--color-on-error': 'light-dark(#880023, #610016)',
+		'--color-on-warning': 'light-dark(#584400, #3d2e00)',
+		'--color-info': 'light-dark(#00649b, #70c1ff)',
+		'--color-info-muted': 'var(--color-background-blue)',
+		'--color-text-info': 'light-dark(#003454, #70c1ff)',
+		'--color-text-success': 'light-dark(#3f4e00, #b5d263)',
+		'--color-text-warning': 'light-dark(#584400, #f3d172)',
+		'--color-text-error': 'light-dark(#880023, #ff969a)',
+		'--color-on-info-muted': 'var(--color-text-blue)',
+		'--color-on-success-muted': 'var(--color-text-green)',
+		'--color-on-warning-muted': 'var(--color-text-yellow)',
+		'--color-on-error-muted': 'var(--color-text-red)',
+		'--color-icon-accent': 'light-dark(#2d241b, #edeffc)',
+		'--color-icon-primary': 'light-dark(#2d241b, #edeffc)',
+		'--color-icon-secondary': 'light-dark(#675d52, #a6acd6)',
+		'--color-icon-disabled': 'light-dark(#d1c5b8, #4a4f6b)',
+		'--color-background-card': 'light-dark(#ffffff, #16182b)',
+		'--color-background-popover': 'light-dark(#ffffff, #1f2238)',
+		'--color-background-inverted': 'light-dark(#2d241b, #edeffc)',
+		'--color-success': 'light-dark(#c5e17a, #c5e17a)',
+		'--color-success-muted': 'light-dark(#c5e17a, #c5e17a)',
+		'--color-error': 'light-dark(#ffc3c3, #ffc3c3)',
+		'--color-error-muted': 'light-dark(#ffc3c3, #ffc3c3)',
+		'--color-warning': 'light-dark(#ffe08a, #fde08f)',
+		'--color-warning-muted': 'light-dark(#ffe08a, #fde08f)',
+		'--color-border': 'light-dark(#382e24, #edeffc1A)',
+		'--color-border-emphasized': 'light-dark(#382e24, #636889)',
+		'--color-skeleton': 'light-dark(#d1c5b8, #2c3048)',
+		'--color-shadow': 'light-dark(#2d241b1A, #0000004D)',
+		'--color-tint-hover': 'light-dark(#2d241b, #edeffc)',
+		'--color-background-green': 'light-dark(#c5e17a, #c5e17a)',
+		'--color-border-green': 'light-dark(#b5d360, #b5d263)',
+		'--color-icon-green': 'light-dark(#3f4e00, #2a3600)',
+		'--color-text-green': 'light-dark(#3f4e00, #2a3600)',
+		'--color-background-red': 'light-dark(#ffc3c3, #ffc3c3)',
+		'--color-border-red': 'light-dark(#ff969a, #ff969a)',
+		'--color-icon-red': 'light-dark(#880023, #610016)',
+		'--color-text-red': 'light-dark(#880023, #610016)',
+		'--color-background-yellow': 'light-dark(#ffe08a, #fde08f)',
+		'--color-border-yellow': 'light-dark(#f9d059, #f3d172)',
+		'--color-icon-yellow': 'light-dark(#584400, #3d2e00)',
+		'--color-text-yellow': 'light-dark(#584400, #3d2e00)',
+		'--color-background-blue': 'light-dark(#addbff, #addbff)',
+		'--color-border-blue': 'light-dark(#70c1ff, #70c1ff)',
+		'--color-icon-blue': 'light-dark(#003454, #003454)',
+		'--color-text-blue': 'light-dark(#003454, #003454)',
+		'--color-background-pink': 'light-dark(#ffbfd9, #ffbfd9)',
+		'--color-border-pink': 'light-dark(#ffa8cd, #ffa8cd)',
+		'--color-icon-pink': 'light-dark(#82004f, #5d0037)',
+		'--color-text-pink': 'light-dark(#82004f, #5d0037)',
+		'--color-background-purple': 'light-dark(#d5cdff, #d5cdff)',
+		'--color-border-purple': 'light-dark(#bbaaff, #bbaaff)',
+		'--color-icon-purple': 'light-dark(#431a88, #2a1159)',
+		'--color-text-purple': 'light-dark(#431a88, #2a1159)',
+		'--color-background-cyan': 'light-dark(#b2f0ed, #baeeec)',
+		'--color-border-cyan': 'light-dark(#73dbd7, #84d8d4)',
+		'--color-icon-cyan': 'light-dark(#005250, #002d2c)',
+		'--color-text-cyan': 'light-dark(#005250, #002d2c)',
+		'--color-background-orange': 'light-dark(#ffc89d, #ffc89d)',
+		'--color-border-orange': 'light-dark(#ffb477, #ffb477)',
+		'--color-icon-orange': 'light-dark(#703400, #411800)',
+		'--color-text-orange': 'light-dark(#703400, #411800)',
+		'--color-background-teal': 'light-dark(#b6f2d7, #a6e5c9)',
+		'--color-border-teal': 'light-dark(#81dcb6, #8ed9b9)',
+		'--color-icon-teal': 'light-dark(#00553b, #002f1e)',
+		'--color-text-teal': 'light-dark(#00553b, #002f1e)',
+		'--color-background-gray': 'light-dark(#f1e6db, #dfe2f3)',
+		'--color-border-gray': 'light-dark(#dfd5c9, #d0d4eb)',
+		'--color-icon-gray': 'light-dark(#4f453b, #16182b)',
+		'--color-text-gray': 'light-dark(#4f453b, #16182b)',
 		'--shadow-low': '0 2px 4px #2d241b0D, 0 4px 8px #2d241b1A',
 		'--shadow-med': '0 2px 4px #2d241b0D, 0 4px 12px #2d241b1A',
 		'--shadow-high': '0 4px 6px #2d241b1A, 0 12px 24px #2d241b26',
 		'--shadow-inset-hover': 'inset 0px 0px 0px 2px #2d241b30',
 		'--shadow-inset-selected': 'inset 0px 0px 0px 2px #2d241b50',
-		'--shadow-inset-success': 'inset 0px 0px 0px 2px #3a550050',
-		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #61440050',
-		'--shadow-inset-error': 'inset 0px 0px 0px 2px #8b1d2450'
+		'--shadow-inset-success': 'inset 0px 0px 0px 2px #3f4e0050',
+		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #58440050',
+		'--shadow-inset-error': 'inset 0px 0px 0px 2px #88002350',
+		'--color-on-info': 'light-dark(#FFFFFF, #2D241B)',
+		'--text-supporting-size': '0.75rem'
 	},
-
 	components: {
-		// Display sizes use a Crimson Text serif, distinct from the Poppins
-		// used for body/headings.
-		text: {
+		heading: {
+			'level:1': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-1-size)',
+				fontWeight: 'var(--text-heading-1-weight)',
+				lineHeight: 'var(--text-heading-1-leading)'
+			},
+			'level:2': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-2-size)',
+				fontWeight: 'var(--text-heading-2-weight)',
+				lineHeight: 'var(--text-heading-2-leading)'
+			},
+			'level:3': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-3-size)',
+				fontWeight: 'var(--text-heading-3-weight)',
+				lineHeight: 'var(--text-heading-3-leading)'
+			},
+			'level:4': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-4-size)',
+				fontWeight: 'var(--text-heading-4-weight)',
+				lineHeight: 'var(--text-heading-4-leading)'
+			},
+			'level:5': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-5-size)',
+				fontWeight: 'var(--text-heading-5-weight)',
+				lineHeight: 'var(--text-heading-5-leading)'
+			},
+			'level:6': {
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-heading-6-size)',
+				fontWeight: 'var(--text-heading-6-weight)',
+				lineHeight: 'var(--text-heading-6-leading)'
+			},
 			'type:display-1': {
-				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif'
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
 			},
 			'type:display-2': {
-				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif'
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
 			},
 			'type:display-3': {
-				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif'
+				fontFamily: 'var(--font-family-heading)',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
 			}
 		},
-
-		// TopNav items: drop the pill background on the selected state and rely on
-		// weight + primary text color for emphasis. Hover/active keep the neutral
-		// overlay from the base styles.
+		text: {
+			'type:body': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-body-size)',
+				lineHeight: 'var(--text-body-leading)'
+			},
+			'type:large': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-large-size)',
+				lineHeight: 'var(--text-large-leading)'
+			},
+			'type:label': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-label-size)',
+				lineHeight: 'var(--text-label-leading)'
+			},
+			'type:code': {
+				fontFamily: 'var(--font-family-code)',
+				fontSize: 'var(--text-code-size)',
+				lineHeight: 'var(--text-code-leading)'
+			},
+			'type:supporting': {
+				fontFamily: 'var(--font-family-body)',
+				fontSize: 'var(--text-supporting-size)',
+				lineHeight: 'var(--text-supporting-leading)'
+			},
+			'type:display-1': {
+				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif',
+				fontSize: 'var(--text-display-1-size)',
+				lineHeight: 'var(--text-display-1-leading)'
+			},
+			'type:display-2': {
+				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif',
+				fontSize: 'var(--text-display-2-size)',
+				lineHeight: 'var(--text-display-2-leading)'
+			},
+			'type:display-3': {
+				fontFamily: '"Crimson Text", Georgia, "Times New Roman", Times, serif',
+				fontSize: 'var(--text-display-3-size)',
+				lineHeight: 'var(--text-display-3-leading)'
+			}
+		},
 		'top-nav-item': {
 			selected: {
 				backgroundColor: 'transparent',
@@ -280,7 +353,46 @@ export const y2kTheme = defineTheme({
 				borderColor: 'var(--color-text-red)'
 			}
 		},
-
+		selector: {
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'var(--color-background-green)',
+					borderWidth: '1px',
+					borderStyle: 'solid',
+					borderColor: 'var(--color-text-green)',
+					color: 'var(--color-text-green)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'var(--color-border-green)'
+				}
+			}
+		},
+		'multi-selector': {
+			'variant:secondary': {
+				':not(.astryx-input-group *)': {
+					backgroundColor: 'var(--color-background-green)',
+					borderWidth: '1px',
+					borderStyle: 'solid',
+					borderColor: 'var(--color-text-green)',
+					color: 'var(--color-text-green)'
+				},
+				':hover:not([data-disabled], [data-readonly], .astryx-input-group *)': {
+					backgroundColor: 'var(--color-border-green)'
+				}
+			}
+		},
+		'complex-selector': {
+			'variant:secondary': {
+				backgroundColor: 'var(--color-background-green)',
+				borderWidth: '1px',
+				borderStyle: 'solid',
+				borderColor: 'var(--color-text-green)',
+				color: 'var(--color-text-green)',
+				':hover:not(:has(> :is(:disabled, [aria-disabled="true"])))': {
+					backgroundColor: 'var(--color-border-green)'
+				}
+			}
+		},
 		badge: {
 			base: {
 				borderRadius: '9999px',
@@ -309,50 +421,38 @@ export const y2kTheme = defineTheme({
 				color: 'var(--color-text-red)'
 			}
 		},
-
 		banner: {
 			base: {
 				borderRadius: '0px'
 			},
 			'status:info': {
-				backgroundColor: 'var(--color-background-blue)',
-				'--color-text-primary': 'var(--color-text-blue)',
-				'--color-text-secondary': 'var(--color-text-blue)',
-				'--color-accent': 'var(--color-text-blue)'
+				'--color-info-muted': 'var(--color-background-blue)',
+				'--color-on-info-muted': 'var(--color-text-blue)'
 			},
 			'status:success': {
-				backgroundColor: 'var(--color-background-green)',
-				'--color-text-primary': 'var(--color-text-green)',
-				'--color-text-secondary': 'var(--color-text-green)',
-				'--color-success': 'var(--color-text-green)'
+				'--color-success-muted': 'var(--color-background-green)',
+				'--color-on-success-muted': 'var(--color-text-green)'
 			},
 			'status:warning': {
-				backgroundColor: 'var(--color-background-yellow)',
-				'--color-text-primary': 'var(--color-text-yellow)',
-				'--color-text-secondary': 'var(--color-text-yellow)',
-				'--color-warning': 'var(--color-text-yellow)'
+				'--color-warning-muted': 'var(--color-background-yellow)',
+				'--color-on-warning-muted': 'var(--color-text-yellow)'
 			},
 			'status:error': {
-				backgroundColor: 'var(--color-background-red)',
-				'--color-text-primary': 'var(--color-text-red)',
-				'--color-text-secondary': 'var(--color-text-red)',
-				'--color-error': 'var(--color-text-red)'
+				'--color-error-muted': 'var(--color-background-red)',
+				'--color-on-error-muted': 'var(--color-text-red)'
 			}
 		},
-
 		field: {
 			base: {
 				borderRadius: '0px'
 			}
 		},
-
 		card: {
 			base: {
 				borderRadius: '0px',
 				padding: 'var(--spacing-3)'
 			}
 		},
-
 		section: {
 			base: {
 				padding: 'var(--spacing-3)'

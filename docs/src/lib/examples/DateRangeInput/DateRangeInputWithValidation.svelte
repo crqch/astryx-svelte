@@ -6,7 +6,7 @@
 	`style` attribute takes one.
 -->
 <script lang="ts">
-	import { DateRangeInput, Stack, type DateRange } from '@astryx-svelte/core';
+	import { DateRangeInput, Stack, type DateRange } from '@astryx-sv/core';
 
 	let errorRange = $state<DateRange | null>({ start: '2026-01-01', end: '2026-01-31' });
 	let warningRange = $state<DateRange | null>({ start: '2026-06-01', end: '2026-06-30' });

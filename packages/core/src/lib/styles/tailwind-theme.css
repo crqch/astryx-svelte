@@ -1,7 +1,7 @@
 /**
  * Tailwind Bridge — ported from Astryx's `src/tailwind-theme.css`.
  *
- * The mappings are upstream's, token for token; all 95 tokens it bridges resolve
+ * The mappings are upstream's, token for token; every token it bridges resolves
  * against this port's own stylesheet, because the theme packages emit
  * byte-identical declarations. Two names are translated in the usage block
  * below: the package scope, and `reset.css` → `base.css`, because this port
@@ -30,25 +30,27 @@
  *
  *   @import "tailwindcss/theme.css" layer(theme);
  *   @import "tailwindcss/preflight.css" layer(base);
- *   @import "@astryx-svelte/core/base.css";
- *   @import "@astryx-svelte/core/astryx.css";
- *   @import "@astryx-svelte/theme-neutral/theme.css";
- *   @import "@astryx-svelte/core/tailwind-theme.css";
+ *   @import "@astryx-sv/core/base.css";
+ *   @import "@astryx-sv/core/astryx.css";
+ *   @import "@astryx-sv/theme-neutral/theme.css";
+ *   @import "@astryx-sv/core/tailwind-theme.css";
  *   @import "tailwindcss/utilities.css" layer(utilities);
  *
  * @position infrastructure — sits between system tokens and Tailwind utility generation
  */
 
 /*
- * `@theme inline` registers theme variables that Tailwind uses to generate
- * utility classes, WITHOUT emitting CSS declarations. The actual values come
+ * `@theme reference inline` registers theme variables that Tailwind uses to
+ * generate utility classes. `reference` prevents Tailwind from emitting those
+ * variables as runtime declarations, while `inline` places the mapped system
+ * custom property directly in each generated utility. The actual values come
  * from the system CSS custom properties (set by astryx.css / theme packages).
  *
  * This means theme switching just works — when system tokens change (e.g. dark
  * mode, custom theme), Tailwind utilities automatically resolve to the new
  * values because they reference the same CSS custom properties.
  */
-@theme inline {
+@theme reference inline {
 	/* =========================================================================
    * Colors — Semantic
    *
@@ -85,6 +87,9 @@
 	--color-tint-hover: var(--color-tint-hover);
 
 	/* --- Status --- */
+	--color-info: var(--color-info);
+	--color-info-muted: var(--color-info-muted);
+	--color-on-info: var(--color-on-info);
 	--color-success: var(--color-success);
 	--color-success-muted: var(--color-success-muted);
 	--color-on-success: var(--color-on-success);
@@ -94,6 +99,52 @@
 	--color-warning: var(--color-warning);
 	--color-warning-muted: var(--color-warning-muted);
 	--color-on-warning: var(--color-on-warning);
+	/* Each --color-<status> is the strong status fill, with --color-on-<status>
+   * content at 4.5:1 or more (architecture:theme-tokens INV11). text-status-*
+   * reads the status text role for page text; icons and borders use the same
+   * colour by default. */
+	--text-color-status-info: var(--color-text-info);
+	--text-color-status-success: var(--color-text-success);
+	--text-color-status-warning: var(--color-text-warning);
+	--text-color-status-error: var(--color-text-error);
+	/* Each status projects by paint property: text-like utilities (text-,
+   * decoration-, placeholder-, caret-) read the status text role, line-like
+   * utilities (border-, divide-, outline-, ring-) read the status border role,
+   * and fill-like utilities (bg-, accent-, fill-, stroke-, shadows, gradients)
+   * keep the strong fill. Tailwind resolves these per-utility keys before
+   * --color-*. */
+	--text-color-info: var(--color-text-info);
+	--text-color-success: var(--color-text-success);
+	--text-color-warning: var(--color-text-warning);
+	--text-color-error: var(--color-text-error);
+	--text-decoration-color-info: var(--color-text-info);
+	--text-decoration-color-success: var(--color-text-success);
+	--text-decoration-color-warning: var(--color-text-warning);
+	--text-decoration-color-error: var(--color-text-error);
+	--placeholder-color-info: var(--color-text-info);
+	--placeholder-color-success: var(--color-text-success);
+	--placeholder-color-warning: var(--color-text-warning);
+	--placeholder-color-error: var(--color-text-error);
+	--caret-color-info: var(--color-text-info);
+	--caret-color-success: var(--color-text-success);
+	--caret-color-warning: var(--color-text-warning);
+	--caret-color-error: var(--color-text-error);
+	--border-color-info: var(--color-border-info);
+	--border-color-success: var(--color-border-success);
+	--border-color-warning: var(--color-border-warning);
+	--border-color-error: var(--color-border-error);
+	--outline-color-info: var(--color-border-info);
+	--outline-color-success: var(--color-border-success);
+	--outline-color-warning: var(--color-border-warning);
+	--outline-color-error: var(--color-border-error);
+	--ring-color-info: var(--color-border-info);
+	--ring-color-success: var(--color-border-success);
+	--ring-color-warning: var(--color-border-warning);
+	--ring-color-error: var(--color-border-error);
+	--color-on-info-muted: var(--color-on-info-muted);
+	--color-on-success-muted: var(--color-on-success-muted);
+	--color-on-warning-muted: var(--color-on-warning-muted);
+	--color-on-error-muted: var(--color-on-error-muted);
 
 	/* --- Borders --- */
 	--color-border: var(--color-border);

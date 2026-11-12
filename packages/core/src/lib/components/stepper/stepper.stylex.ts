@@ -12,20 +12,28 @@ import type { StepperIndicatorPosition, StepperOrientation } from './stepper-con
  */
 const styles = stylex.create({
 	root: {
+		// Horizontal consumer styles live on the frame. Explicit inheritance keeps
+		// the public variable discoverable on this theme target without masking a
+		// frame value; the connector use site supplies the 0px default.
+		'--step-connector-gap': 'inherit',
 		display: 'flex',
 		width: '100%',
 		listStyleType: 'none',
 		margin: 0,
 		padding: 0
 	},
+	// The gap between steps is the break between connector segments, so it is
+	// sized to match the connector's own thickness (BAR_WIDTH, the same token).
+	// That keeps the track reading as one dashed line rather than as bars with
+	// an arbitrary space between them, and holds at any theme scale.
 	horizontal: {
 		flexDirection: 'row',
 		alignItems: 'flex-start',
-		gap: spacingVars['--spacing-0-5']
+		gap: spacingVars['--spacing-1']
 	},
 	vertical: {
 		flexDirection: 'column',
-		gap: spacingVars['--spacing-0-5']
+		gap: spacingVars['--spacing-1']
 	},
 	// On-track: steps must abut so their connector segments form one continuous
 	// line, so the inter-step gap collapses to zero.
@@ -37,6 +45,34 @@ const styles = stylex.create({
 	verticalOnTrack: {
 		flexDirection: 'column',
 		gap: 0
+	},
+	// The horizontal component's public layout box: consumer styling sizes and
+	// places the track and compact summary together. The list fills this frame,
+	// so observing its width still measures the complete component constraint.
+	frame: {
+		'--step-connector-gap': '0px',
+		display: 'flex',
+		flexDirection: 'column',
+		gap: 0,
+		width: '100%'
+	},
+	// Laid out as a row so the controls can bracket the step: they belong at
+	// the edges the flow moves between, and the name reads between them.
+	summary: {
+		alignItems: 'center',
+		display: 'flex',
+		gap: spacingVars['--spacing-2'],
+		justifyContent: 'space-between',
+		minWidth: 0
+	},
+	// Centred, so the name sits under the middle of the track rather than
+	// drifting toward whichever control happens to be enabled.
+	summaryBody: {
+		display: 'flex',
+		flexDirection: 'column',
+		flexGrow: 1,
+		minWidth: 0,
+		textAlign: 'center'
 	}
 });
 
@@ -61,4 +97,19 @@ export function stepperRootAttrs(
 				: styles.vertical;
 
 	return sx(styles.root, orientationStyle, xstyle);
+}
+
+/** The horizontal component's layout box: list and compact summary together. */
+export function stepperFrameAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
+	return sx(styles.frame, xstyle);
+}
+
+/** The compact row beneath a collapsed horizontal track. */
+export function stepperSummaryAttrs(): SvelteStyleAttrs {
+	return sx(styles.summary);
+}
+
+/** The centred slot the active step draws its compact label into. */
+export function stepperSummaryBodyAttrs(): SvelteStyleAttrs {
+	return sx(styles.summaryBody);
 }

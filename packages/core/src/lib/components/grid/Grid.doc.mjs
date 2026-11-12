@@ -36,18 +36,37 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Grid container',
+				required: true,
+				description:
+					'Two-dimensional layout container that arranges caller-supplied items in rows and columns.'
+			},
+			{
+				name: 'Spanning item',
+				required: false,
+				description:
+					"Optional GridSpan wrapper that changes one item's column or row participation."
+			}
+		],
 		description:
-			'A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. Supports fixed column counts and responsive columns that reflow based on available width.',
+			'A CSS grid layout container for arranging children in rows and columns. Use Grid for card galleries, dashboards, and any multi-column layout. For columns that reflow on small screens, use `columns={{minWidth, max}}`; a numeric `columns` is exactly N columns at every width and never reflows.',
 		bestPractices: [
 			{
 				guidance: true,
 				description:
-					'Use responsive columns for layouts that should adapt to screen size: `columns={{minWidth: 280}}`.'
+					'Default to responsive columns for anything that must survive a phone: `columns={{minWidth: 240, max: 4}}` renders at most 4 columns, each at least 240px, and drops to one full-width column when narrow.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use `columns={4}` for a row that must work on small screens; a number never reflows and renders four narrow tracks on a phone. Reserve numbers for rows that must stay fixed, such as a 7-day week.'
 			},
 			{
 				guidance: true,
 				description:
-					'Cap the column count with `max` to prevent rows from getting too wide on large screens.'
+					'Always pair `minWidth` with `max`: `max` caps the count on wide screens and lets the last column shrink to a narrow container; `{minWidth}` alone overflows a phone narrower than `minWidth`.'
 			},
 			{
 				guidance: true,
@@ -69,12 +88,18 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			columns: 3,
+			gap: 2
+		}
+	},
 	props: [
 		{
 			name: 'columns',
 			type: 'GridColumns',
 			description:
-				'Column configuration. Use a number for fixed columns (e.g. `columns={3}`). Use an object for responsive columns: `minWidth` sets the minimum column width in px, `repeat` controls track behavior (`"fill"` preserves empty tracks for consistent widths, `"fit"` collapses empty tracks so items stretch; defaults to `"fill"`), and `max` caps the maximum number of columns.'
+				'Column configuration. A number creates exactly N `1fr` tracks at every width and never reflows (e.g. `columns={3}`); a child\'s minimum content may widen its track. For columns that reflow on small screens, use `{minWidth, max}`. Use an object for responsive columns: `minWidth` sets the minimum column width in px, `repeat` controls track behavior (`"fill"` preserves empty tracks for consistent widths, `"fit"` collapses empty tracks so items stretch; defaults to `"fill"`), and `max` caps the maximum number of columns.'
 		},
 		{
 			name: 'width',
@@ -99,30 +124,36 @@ export default {
 		},
 		{
 			name: 'gap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Spacing between all items.'
 		},
 		{
 			name: 'rowGap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Row spacing; overrides `gap` for the row axis.'
 		},
 		{
 			name: 'columnGap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Column spacing; overrides `gap` for the column axis.'
+		},
+		{
+			name: 'rowHeight',
+			type: 'number',
+			description:
+				'Height of each implicit row track in pixels. Pair with `GridSpan rows={N}` for masonry-style layouts.'
 		},
 		{
 			name: 'align',
 			type: "'end' | 'start' | 'center' | 'stretch'",
-			description: 'Vertical alignment of items.',
-			default: "'stretch'"
+			description:
+				'Vertical alignment of items (`align-items`). Unset leaves the browser default, `normal`, which stretches items that have no natural size or aspect ratio.'
 		},
 		{
 			name: 'justify',
 			type: "'end' | 'start' | 'center' | 'stretch'",
-			description: 'Horizontal alignment of items.',
-			default: "'stretch'"
+			description:
+				'Horizontal alignment of items (`justify-items`). Unset leaves the browser default, `normal`, which stretches items that have no natural size or aspect ratio.'
 		},
 		{
 			name: 'children',

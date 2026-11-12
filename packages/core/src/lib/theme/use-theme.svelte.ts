@@ -37,7 +37,7 @@ import type { DefinedTheme } from './define-theme.js';
  * @example
  * ```svelte
  * <script lang="ts">
- *   import { useTheme } from '@astryx-svelte/core';
+ *   import { useTheme } from '@astryx-sv/core';
  *   const theme = useTheme();
  * <\/script>
  *

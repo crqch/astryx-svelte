@@ -7,14 +7,14 @@
 	the template.
 -->
 <script lang="ts">
-	import type { ChatComposerTrigger, SearchableItem } from '@astryx-svelte/core';
+	import type { ChatComposerTrigger, SearchableItem } from '@astryx-sv/core';
 	import {
 		ChatComposer,
 		ChatComposerInput,
 		Stack,
 		Text,
 		createStaticSource
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const USERS: SearchableItem[] = [
 		{ id: 'cindy', label: 'Cindy Zhang' },

@@ -24,25 +24,43 @@ export default {
 	params: [
 		{
 			name: 'defaultSize',
-			type: 'number | string',
-			description: 'Initial size in pixels or percentage string (e.g. "20%").'
+			type: 'ResizableSize | SizeValue',
+			description:
+				'Initial size. Numbers, exact "Npx", and pixel(value) are pixels. Exact "N%" has no additional pixel bound. percent(value, {min: pixel(value)}) or percent(value, {max: pixel(value)}) adds one pixel floor or ceiling. A percentage resolves ONCE into pixels — against containerRef when supplied, against the viewport otherwise — and does not track its basis afterwards. The released broad number | string type remains compatible; runtime validation is authoritative.',
+			default: '250'
 		},
 		{
-			name: 'minSizePx',
-			type: 'number',
-			description: 'Minimum size in pixels.',
+			name: 'minSize',
+			type: 'ResizableSize',
+			description:
+				'Minimum size. Numbers, exact "Npx", and pixel(value) remain pixels; exact "N%" has no additional pixel bound; percent(value, {min: pixel(value)}) or percent(value, {max: pixel(value)}) adds exactly one. Percentage minimums re-resolve when their basis changes and clamp the current pixel selection.',
 			default: '50'
 		},
 		{
-			name: 'maxSizePx',
-			type: 'number',
-			description: 'Maximum size in pixels.',
+			name: 'maxSize',
+			type: 'ResizableSize',
+			description:
+				'Maximum size. Numbers, exact "Npx", and pixel(value) remain pixels; exact "N%" has no additional pixel bound; percent(value, {min: pixel(value)}) or percent(value, {max: pixel(value)}) adds exactly one. Percentage maximums re-resolve when their basis changes and clamp the current pixel selection.',
 			default: 'Infinity'
+		},
+		{
+			name: 'containerRef',
+			type: '{ readonly current: HTMLElement | null; }',
+			description:
+				'The element a percentage is a share of. Caller-owned: the hook never infers one. Omitted, percentages use the viewport, which is the released behaviour. The ref may point at a different element over time — the basis follows it. Until that element is actually laid out (not yet mounted, display:none, detached) percentages use a temporary 1200px basis rather than its zero measurement, and nothing is persisted from it.'
+		},
+		{
+			name: 'direction',
+			type: "'horizontal' | 'vertical'",
+			description:
+				"Which axis this region resizes along. Selects the container's inline or block content-box size as the percentage basis, and must match the direction given to ResizeHandle.",
+			default: "'horizontal'"
 		},
 		{
 			name: 'collapsible',
 			type: 'boolean',
-			description: 'Whether dragging below the collapsed threshold collapses the region to zero.',
+			description:
+				'Whether a lift or a key step below the collapsed threshold collapses the region to zero.',
 			default: 'false'
 		},
 		{
@@ -65,12 +83,13 @@ export default {
 			name: 'isCollapsed',
 			type: 'boolean',
 			description:
-				'Controlled collapse state. collapse(), expand() and a drag past the threshold then report through onCollapseChange instead of changing state internally.'
+				'Controlled collapse state. collapse(), expand(), a lift or a key step past the threshold, and a drag that reopens the region then report through onCollapseChange instead of changing state internally.'
 		},
 		{
 			name: 'onCollapseChange',
 			type: '(isCollapsed: boolean) => void',
-			description: 'Called once per collapse state change, via drag or programmatically.'
+			description:
+				'Called once per collapse state change: a lift or a key step that closes the region, a drag or a key that reopens it, Enter, a double-click, or a call to collapse(), expand() or resize().'
 		}
 	],
 	returns: [
@@ -111,6 +130,21 @@ export default {
 		bestPractices: [
 			{
 				guidance: true,
+				description:
+					'Use percent(40, {min: pixel(333)}) for a 40% size with a 333px floor, or percent(10, {max: pixel(400)}) for a 10% size with a 400px ceiling. The options argument is required and carries a floor XOR a ceiling.'
+			},
+			{
+				guidance: true,
+				description:
+					'A structured default is an initial choice only; a structured minSize or maxSize remains live. State, persistence, callbacks, resize(), paint, and ARIA all use resolved pixel numbers.'
+			},
+			{
+				guidance: true,
+				description:
+					'Import percent and Table’s same pixel binding from @astryx-sv/core when constructing configuration in a Server Component; the root package exposes one pixel symbol and one percent symbol without collision.'
+			},
+			{
+				guidance: true,
 				description: 'Use with Layout or AppShell sidebar for resizable navigation panels.'
 			},
 			{
@@ -120,12 +154,12 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Set minSizePx too small; content becomes unreadable. Prefer collapsible for panels that can hide entirely.'
+					'Set minSize too small; content becomes unreadable. Prefer collapsible for panels that can hide entirely.'
 			}
 		]
 	},
 	relatedComponents: ['Resizable', 'AppShell', 'Layout', 'SideNav'],
 	relatedHooks: ['useCollapsible'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'Layout'
 };

@@ -69,6 +69,13 @@ export interface MarkdownComponents {
 	heading?: Component<{
 		level: 1 | 2 | 3 | 4 | 5 | 6;
 		children: Snippet;
+		/**
+		 * Generated stable id for this heading, matching Markdown-derived Outline.
+		 * Released output supplies it to root headings; createMarkdownHeadingLinks()
+		 * expands the shared allocator to headings nested in blockquotes and lists.
+		 * Custom renderers own their output and should apply the id they receive.
+		 */
+		id?: string;
 	}>;
 	paragraph?: Component<{ children: Snippet }>;
 	image?: Component<{ src: string; alt: string }>;

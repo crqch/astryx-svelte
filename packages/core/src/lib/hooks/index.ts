@@ -12,7 +12,12 @@
  * `__resetDevWarnings` (in `utils/dev-warning.ts`) has the same standing.
  */
 
-export { useAnnounce, type AnnounceFn, type AnnouncePoliteness } from './use-announce.js';
+export {
+	useAnnounce,
+	type AnnounceFn,
+	type AnnouncePoliteness,
+	type UseAnnounceOptions
+} from './use-announce.js';
 
 export {
 	useClickableContainer,
@@ -49,7 +54,7 @@ export {
 } from './use-focus-trap.svelte.js';
 
 /**
- * @deprecated Import from `@astryx-svelte/core/utils` instead — this is a pure
+ * @deprecated Import from `@astryx-sv/core/utils` instead — this is a pure
  * predicate, not a hook. Re-exported here for one release so consumers can move;
  * will be removed in an upcoming major.
  */
@@ -139,6 +144,10 @@ export type { KeyboardHintLayerProps } from './keyboard-hint-layer.svelte';
 
 export { useMediaQuery, type MediaQueryState } from './use-media-query.svelte.js';
 
+// The press model's public entry point: spread its result on the element that
+// paints the press. The private modules it drives stay barrel-absent.
+export { usePressFeedback } from './use-press-feedback.svelte.js';
+
 export {
 	useOverflow,
 	type UseOverflowOptions,
@@ -171,3 +180,19 @@ export {
 	type UseTypeaheadOptions,
 	type UseTypeaheadReturn
 } from './use-typeahead.js';
+
+export {
+	useMenuPress,
+	MENU_PRESS_MARKER,
+	isMenuPressActivation,
+	type UseMenuPressOptions,
+	type UseMenuPressReturn
+} from './use-menu-press.svelte.js';
+export { menuPressStep, MENU_PRESS_SETTLE_MS } from './menu-press-gesture.js';
+export type {
+	MenuPressEffect,
+	MenuPressEvent,
+	MenuPressGesture,
+	MenuPressPointerType,
+	MenuPressStep
+} from './menu-press-gesture.js';

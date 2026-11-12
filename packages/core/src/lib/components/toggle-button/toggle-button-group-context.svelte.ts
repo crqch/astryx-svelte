@@ -20,6 +20,8 @@ export interface ToggleButtonGroupContextValue {
 	size?: ButtonSize;
 	/** Group disabled state. */
 	isDisabled?: boolean;
+	/** The group tracks a press across its toggles that have a value. */
+	tracksPress?: boolean;
 }
 
 const ToggleButtonGroupContext = new Context<() => ToggleButtonGroupContextValue>(

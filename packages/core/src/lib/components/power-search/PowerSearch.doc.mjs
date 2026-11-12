@@ -25,6 +25,22 @@ export default {
 			{
 				className: 'astryx-power-search'
 			}
+		],
+		vars: [
+			{
+				name: '--_power-search-sheet-hit-inset',
+				description:
+					"Outset of the invisible hit area of the touch sheet's icon-sized actions (the Filters header's Add filter and each row's remove button), applied to a ::after overlay. 0 on a fine pointer; negative on a coarse one, which grows the action to a 44px touch target without changing what is drawn.",
+				default: '0px',
+				private: true
+			},
+			{
+				name: '--_power-search-sheet-hit-content',
+				description:
+					'Whether the touch sheet\'s invisible hit overlay exists. `none` on a fine pointer, so no ::after is generated and hover still reaches the action; `""` on a coarse one, where the overlay provides the 44px touch target.',
+				default: 'none',
+				private: true
+			}
 		]
 	},
 	usage: {
@@ -52,6 +68,63 @@ export default {
 					'Wrap a disabled PowerSearch in Tooltip to explain why it is disabled; disabled controls swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
 			}
 		]
+	},
+	playground: {
+		defaults: {
+			config: {
+				name: 'IssueSearch',
+				fields: [
+					{
+						key: 'status',
+						label: 'Status',
+						defaultOperator: 'is',
+						operators: [
+							{
+								key: 'is',
+								label: 'is',
+								value: {
+									type: 'enum',
+									values: [
+										{
+											value: 'open',
+											label: 'Open'
+										},
+										{
+											value: 'closed',
+											label: 'Closed'
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						key: 'title',
+						label: 'Title',
+						defaultOperator: 'contains',
+						operators: [
+							{
+								key: 'contains',
+								label: 'contains',
+								value: {
+									type: 'string'
+								}
+							}
+						]
+					}
+				]
+			},
+			filters: [
+				{
+					field: 'status',
+					operator: 'is',
+					value: {
+						type: 'enum',
+						value: 'open'
+					}
+				}
+			]
+		}
 	},
 	props: [
 		{
@@ -100,7 +173,8 @@ export default {
 		{
 			name: 'hasClear',
 			type: 'boolean',
-			description: 'Show a clear-all button for removing all filters.',
+			description:
+				'Show a clear-all button that removes every editable filter. Read-only filters stay.',
 			default: 'true'
 		},
 		{
@@ -174,7 +248,8 @@ export default {
 		{
 			name: 'timezoneID',
 			type: 'string',
-			description: 'Timezone ID for date formatting (e.g. "America/New_York").'
+			description:
+				'IANA zone a date-only date_absolute value, and each absolute part of a date_range, is read and written in: the day shows, edits and stores (as that midnight) in it; unset, a day is its UTC day. A date_absolute with isDateOnly: false shows and edits its date and time in it; unset, in the viewer\'s zone. E.g. "America/New_York". Date values are written in the InternationalizationProvider calendar, such as calendar="persian"; filter values stay Unix seconds.'
 		},
 		{
 			name: 'handleRef',
@@ -230,6 +305,13 @@ export default {
 			name: 'xstyle',
 			type: 'StyleArg',
 			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'adaptive'",
+			description:
+				'How the field presents filter editing. adaptive (the default) uses the bottom sheet on compact touch screens and the popover otherwise, resolved the same way Selector resolves it; the server render and the hydrating render are the popover. popover is the tokenizer field with its typeahead and the editor popover on every device. bottom-sheet makes the whole field, on every device, one trigger showing display-only filter tokens: it opens a Filters sheet listing the filters as rows that edit or remove a filter, with Add filter, Done, and Clear all (which asks first and keeps read-only filters); an Add filter sheet with the fields (or the content search with inline suggestions) opens above it, and a value step that stages operator → value and confirms from its footer opens above that. Dismissing a step reveals the one beneath. The flow edits a draft: adding, editing and removing filters and Clear all change the draft, and onChange is called when Done applies it, once per edit in order; dismissing the flow with a changed draft asks before discarding it. List values edit through the Tokenizer\'s own sheet. In the sheet presentation menuWidth and tokenOverflowBehavior have no surface to act on and warn in development. Pass presentation="popover" to keep the tokenizer field and the editor popover on every device.',
+			default: "'adaptive'"
 		}
 	]
 };

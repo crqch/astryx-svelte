@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Breadcrumbs, BreadcrumbItem } from '@astryx-svelte/core';
-	import type { BreadcrumbMenuOption } from '@astryx-svelte/core';
+	import { Breadcrumbs, BreadcrumbItem } from '@astryx-sv/core';
+	import type { BreadcrumbMenuOption } from '@astryx-sv/core';
 
 	const teamMenu: BreadcrumbMenuOption[] = [
 		{ label: 'Design', onClick: () => {} },

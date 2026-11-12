@@ -1,6 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 import type { StyleArg } from '../../internal/sx.js';
-import { colorVars, spacingVars } from '../../styles/tokens.stylex.js';
+import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
+import { menuPressLitRowStyle } from '../../private-attributes/menu-press-lit.stylex.js';
+import { colorVars, focusVars, spacingVars } from '../../styles/tokens.stylex.js';
 
 /**
  * Ported from Astryx's `DropdownMenu/DropdownMenuCheckboxItem.tsx` styles.
@@ -24,13 +26,18 @@ const styles = stylex.create({
 		color: colorVars['--color-text-primary'],
 		backgroundColor: {
 			default: 'transparent',
-			':focus': colorVars['--color-overlay-hover']
+			// menuPressLitRowStyle sets the variable on the row a held finger or pen
+			// lights.
+			':focus': `var(--_menu-row-focus-paint, ${colorVars['--color-overlay-hover']})`
 		},
 		cursor: {
 			default: 'pointer',
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		},
-		outline: 'none'
+		// Rows show focus with a translucent overlay, which forced colors replace
+		// with the page color. The standard focus ring (focusOutlineStyles), drawn
+		// inside the row by its own width, marks the focused row in every mode.
+		outlineOffset: `calc(-1 * ${focusVars['--focus-outline-width']})`
 	},
 	disabled: {
 		opacity: 0.5,
@@ -56,7 +63,13 @@ const styles = stylex.create({
 
 /** The `xstyle` array handed to `Item`. */
 export function checkboxItemXstyle(isDisabled: boolean, xstyle?: StyleArg): StyleArg {
-	return [styles.root, isDisabled && styles.disabled, xstyle];
+	return [
+		focusOutlineStyles.focusVisible,
+		styles.root,
+		menuPressLitRowStyle,
+		isDisabled && styles.disabled,
+		xstyle
+	];
 }
 
 /**

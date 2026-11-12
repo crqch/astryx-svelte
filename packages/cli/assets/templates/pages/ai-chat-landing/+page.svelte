@@ -48,7 +48,7 @@
 		type ChatComposerInputHandle,
 		type ChatComposerTrigger,
 		type SearchableItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { AtSymbolIcon, Cog6ToothIcon, SparklesIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	// Fill the content area so the greeting and composer stay vertically centered.

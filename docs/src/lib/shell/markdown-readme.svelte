@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Markdown } from '@astryx-svelte/core';
+	import { Markdown } from '@astryx-sv/core';
 	import MarkdownHeading from './markdown-heading.svelte';
 	import { setHeadingIds } from './markdown-heading-ids.js';
 

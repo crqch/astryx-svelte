@@ -179,7 +179,8 @@ describe('ResizeHandle', () => {
 
 		await userEvent.keyboard('{Enter}'); // expand again
 		expect(separator).not.toHaveAttribute('aria-valuetext');
-		expect(separator).toHaveAttribute('aria-valuenow', '100');
+		// Back to the size it had before collapsing, not the minimum.
+		expect(separator).toHaveAttribute('aria-valuenow', '200');
 	});
 
 	// --- Disabled guard ---

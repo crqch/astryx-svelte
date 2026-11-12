@@ -5,30 +5,22 @@ import { render } from 'vitest-browser-svelte';
 import { createAttachmentKey } from 'svelte/attachments';
 import Markdown from '$lib/components/markdown/markdown.svelte';
 import MarkdownCustomHeading from './fixtures/markdown-custom-heading.svelte';
+import MarkdownCustomHeadingId from './fixtures/markdown-custom-heading-id.svelte';
 import MarkdownCustomImage from './fixtures/markdown-custom-image.svelte';
 import MarkdownInlinePlugins from './fixtures/markdown-inline-plugins.svelte';
 import type { MarkdownPluginSpec } from './fixtures/markdown-inline-plugins.svelte';
+import { parseOutlineFromMarkdown } from '$lib/components/outline/parse-outline-from-markdown.js';
 
 /**
- * Astryx's `Markdown/Markdown.test.tsx` at the **0.5.0** pin, where it declares
- * **67** cases; **62** are here, in upstream's order and under upstream's
- * names.
+ * Astryx's `Markdown/Markdown.test.tsx`, ported in upstream's order and under
+ * upstream's names. Every case in the pin's file is here; none is dropped.
  *
- * **The 5 that are not here are one block, `describe('heading ids')`** —
- * generated `id` attributes on headings, numeric-suffix disambiguation of
- * duplicate headings, ids matching `parseOutlineFromMarkdown` for the same
- * source, the generated id reaching a custom heading component, and headings
- * nested inside blockquotes getting no id. The block landed upstream between
- * v0.3.0 — where this header last stated its count — and v0.4.5; upstream's
- * file is unchanged between v0.4.5 and 0.5.0. This is a **component** gap, not
- * only a test gap: `markdown.svelte` emits no `id` on a heading at all, so none
- * of the five has anything to assert against. `parse-outline-from-markdown.test.ts`
- * is ported in full, so the id-*derivation* half of the contract already has a
- * home here — what is missing is the renderer putting the derived id on the
- * element.
- *
- * (This header read "(62 cases at 0.3.0) … Nothing is dropped; every upstream
- * `it` has a counterpart here", true only at 0.3.0.)
+ * `describe('heading ids')` landed upstream after v0.3.0 and is now ported: the
+ * released path gives root headings the generated ids an Outline item names,
+ * and the renderer puts each derived id on its heading element. The citation
+ * case arrived with the same block at the current pin, so it is here too.
+ * `parse-outline-from-markdown.test.ts` covers the id-derivation half; these
+ * cases cover the renderer's half.
  *
  * Five things read differently, each commented where it appears:
  *
@@ -51,7 +43,10 @@ import type { MarkdownPluginSpec } from './fixtures/markdown-inline-plugins.svel
  *   arrow components: `MarkdownComponents` types each entry as a Svelte
  *   `Component<…>`, and a Svelte component cannot be declared inside a `.ts`
  *   test. `markdown-custom-image.svelte` and `markdown-custom-heading.svelte`
- *   are upstream's two inline overrides, verbatim.
+ *   are upstream's two inline overrides, verbatim; the heading-id case needs an
+ *   override that applies its `id`, so `markdown-custom-heading-id.svelte` is
+ *   upstream's other inline override.
+
  *
  * The `inlinePlugins` cases go through `markdown-inline-plugins.svelte`:
  * `MarkdownInlinePlugin.render` is a `Snippet<[RegExpMatchArray, string]>` where
@@ -78,6 +73,102 @@ describe('Markdown', () => {
 		const screen = await render(Markdown, { props: { children: '# Heading 1\n\n## Heading 2' } });
 		expect(screen.getByText('Heading 1', { exact: true }).element().tagName).toBe('H1');
 		expect(screen.getByText('Heading 2', { exact: true }).element().tagName).toBe('H2');
+	});
+
+	describe('heading ids', () => {
+		// Outline's documented contract: an outline item id matches the target
+		// heading element id. Markdown renders the ids that
+		// useOutlineFromMarkdown derives, so hash navigation resolves.
+		it('renders generated id attributes on headings', async () => {
+			const screen = await render(Markdown, {
+				props: { children: '# Overview\n\ncontent\n\n# Installation' }
+			});
+			expect(screen.getByText('Overview', { exact: true }).element()).toHaveAttribute(
+				'id',
+				'overview'
+			);
+			expect(screen.getByText('Installation', { exact: true }).element()).toHaveAttribute(
+				'id',
+				'installation'
+			);
+		});
+
+		it('disambiguates duplicate headings with numeric suffixes', async () => {
+			const screen = await render(Markdown, {
+				props: { children: '# Setup\n\n# Setup\n\n# Setup' }
+			});
+			const ids = screen
+				.getByRole('heading')
+				.elements()
+				.map((element) => element.id);
+			expect(ids).toEqual(['setup', 'setup-1', 'setup-2']);
+		});
+
+		it('renders ids matching parseOutlineFromMarkdown for the same source', async () => {
+			// Parity invariant: every id the outline derives must resolve to a
+			// rendered heading with that exact id — including slugified formatting,
+			// duplicate numbering, the empty-slug fallback, and code-fence decoys.
+			const source = [
+				'# **Bold** and _italic_ text',
+				'## Setup',
+				'## Setup',
+				'### !!!',
+				'```',
+				'# not a heading',
+				'```',
+				'## The `useState` hook'
+			].join('\n\n');
+			const screen = await render(Markdown, { props: { children: source } });
+			const outline = parseOutlineFromMarkdown(source);
+			expect(outline.length).toBe(5);
+			for (const item of outline) {
+				const target = screen.container.querySelector(`[id="${item.id}"]`);
+				expect(target, `no rendered heading with id "${item.id}"`).not.toBe(null);
+				expect(target!.tagName).toMatch(/^H[1-6]$/);
+				expect(target!.textContent?.trim()).toBe(item.label);
+			}
+		});
+
+		it('keeps citation markers out of released heading ids', async () => {
+			const screen = await render(Markdown, {
+				props: {
+					sources: { cite: { title: 'Citation' } },
+					children: '# Before [cite] after'
+				}
+			});
+			expect(screen.getByRole('heading', { name: /Before.*after/ }).element()).toHaveAttribute(
+				'id',
+				'before-after'
+			);
+		});
+
+		it('passes the generated id to a custom heading component', async () => {
+			const screen = await render(Markdown, {
+				props: {
+					components: { heading: MarkdownCustomHeadingId },
+					children: '# Overview\n\n# Overview'
+				}
+			});
+			const received = Array.from(screen.container.querySelectorAll('[data-custom]')).map(
+				(element) => element.id
+			);
+			expect(received).toEqual(['overview', 'overview-1']);
+		});
+
+		it('does not assign ids to headings nested inside blockquotes', async () => {
+			// parseOutlineFromMarkdown only lists top-level headings. If nested
+			// headings consumed slugs too, duplicate numbering would drift and
+			// outline links would land on the wrong heading.
+			const source = '> # Quoted\n\n# Quoted';
+			const screen = await render(Markdown, { props: { children: source } });
+			const outline = parseOutlineFromMarkdown(source);
+			expect(outline.map((item) => item.id)).toEqual(['quoted']);
+			const [nested, topLevel] = screen.getByRole('heading').elements();
+			expect(screen.container.querySelector('blockquote')).toContainElement(nested);
+			expect(nested).not.toHaveAttribute('id');
+			expect(topLevel).toHaveAttribute('id', 'quoted');
+			expect(screen.container.querySelector('button[aria-label*="Permalink to"]')).toBeNull();
+		});
 	});
 
 	it('renders paragraphs as block <div> (never <p>) for composition safety', async () => {

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TextInput, Stack, Text } from '@astryx-svelte/core';
+	import { TextInput, Stack, Text } from '@astryx-sv/core';
 
 	let attached = $state('sarah@');
 	let detached = $state('sarah@');

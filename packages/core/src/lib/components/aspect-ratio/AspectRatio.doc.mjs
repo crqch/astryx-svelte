@@ -35,7 +35,8 @@ export default {
 		bestPractices: [
 			{
 				guidance: true,
-				description: 'Express the ratio as a fraction like `16/9` or `4/3` for readability.'
+				description:
+					'Express the ratio as a fraction for readability — `ratio={16 / 9}` rather than `ratio={1.78}`. It is a number, so the string form `ratio="16/9"` is a type error.'
 			},
 			{
 				guidance: true,
@@ -117,7 +118,7 @@ export default {
 		},
 		{
 			name: 'fit',
-			type: "'center' | 'cover' | 'contain'",
+			type: "'center' | 'contain' | 'cover'",
 			description:
 				'How the child is sized inside the ratio box. `cover` fills and crops media, `contain` fills and letterboxes, `center` keeps the natural size centered. When omitted, the child styles itself.'
 		},

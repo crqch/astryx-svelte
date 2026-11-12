@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Step, Stepper } from '@astryx-svelte/core';
+	import { Step, Stepper } from '@astryx-sv/core';
 
 	let active = $state(3);
 </script>

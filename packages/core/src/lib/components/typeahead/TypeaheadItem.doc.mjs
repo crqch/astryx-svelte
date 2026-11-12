@@ -52,7 +52,8 @@ export default {
 		{
 			name: 'group',
 			type: 'string',
-			description: 'Group label for grouping items visually.'
+			description:
+				'This prop has no effect. Set `item.auxiliaryData.group` on search-source items to group results in Typeahead or BaseTypeahead.'
 		}
 	]
 };

@@ -37,7 +37,7 @@
 		useMediaQuery,
 		type SearchSource,
 		type SearchableItem
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { MagnifyingGlassIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	const NAV_ITEMS = ['Profile', 'Account', 'Members', 'Billing', 'Invoices', 'API'];

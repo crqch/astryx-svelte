@@ -15,6 +15,40 @@ export default {
 	group: 'Field',
 	category: 'Form Controls',
 	isHiddenFromOverview: true,
+	usage: {
+		description:
+			"Use InputGroupText inside InputGroup for a short fixed prefix or suffix, such as a currency symbol, a protocol, or a unit, or for a decorative icon. It is plain text, not a control, and it is not part of the input's accessible name.",
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Keep the text short, such as $, https://, or kg. It stays on one line and does not shrink.'
+			},
+			{
+				guidance: true,
+				description:
+					'Put what a screen reader user needs in the input\'s own label, such as "Amount in USD" beside a $ prefix. The addon is read as plain text in reading order.'
+			},
+			{
+				guidance: false,
+				description:
+					'Put buttons, links, or other controls inside InputGroupText. Use a Button addon for an action.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use InputGroupText outside InputGroup. Its borders and corners join an InputGroup row.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Text cell',
+				required: true,
+				description:
+					'A non-interactive cell that holds text or an icon and joins the borders of its neighbours in the row.'
+			}
+		]
+	},
 	props: [
 		{
 			name: 'children',
@@ -25,7 +59,8 @@ export default {
 		{
 			name: 'xstyle',
 			type: 'StyleArg',
-			description: 'StyleX styles for customization.'
+			description:
+				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}.'
 		},
 		{
 			name: 'class',
@@ -36,6 +71,11 @@ export default {
 			name: 'style',
 			type: 'string | null',
 			description: 'Inline styles.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the text cell element.'
 		}
 	]
 };

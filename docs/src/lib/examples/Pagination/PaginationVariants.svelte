@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Pagination, Stack } from '@astryx-svelte/core';
+	import { Pagination, Stack } from '@astryx-sv/core';
 
 	let pagesPage = $state(3);
 	let countPage = $state(2);

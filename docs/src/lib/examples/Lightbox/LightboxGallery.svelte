@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Grid, LightboxLayer, Thumbnail, useLightbox } from '@astryx-svelte/core';
+	import { Grid, LightboxLayer, Thumbnail, useLightbox } from '@astryx-sv/core';
 
 	const PHOTOS = [
 		{

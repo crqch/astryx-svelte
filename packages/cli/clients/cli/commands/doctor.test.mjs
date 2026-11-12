@@ -52,15 +52,15 @@ afterEach(() => {
 });
 
 /**
- * Make a minimal node_modules/@astryx-svelte/core in tmpDir with the given version.
+ * Make a minimal node_modules/@astryx-sv/core in tmpDir with the given version.
  * @param {string} [version]
  * @param {Record<string, string>} [peerDependencies]
  */
 function installCore(version = '0.0.14', peerDependencies) {
-	const coreDir = path.join(tmpDir, 'node_modules', '@astryx-svelte', 'core');
+	const coreDir = path.join(tmpDir, 'node_modules', '@astryx-sv', 'core');
 	fs.mkdirSync(coreDir, { recursive: true });
 	/** @type {Record<string, unknown>} */
-	const pkg = { name: '@astryx-svelte/core', version };
+	const pkg = { name: '@astryx-sv/core', version };
 	if (peerDependencies) pkg.peerDependencies = peerDependencies;
 	fs.writeFileSync(path.join(coreDir, 'package.json'), JSON.stringify(pkg));
 	return coreDir;
@@ -158,23 +158,23 @@ describe('doctor — individual checks', () => {
 	});
 
 	it('themes: WARN when theme installed but not wired', () => {
-		installPkg('@astryx-svelte/theme-neutral', '0.0.14');
+		installPkg('@astryx-sv/theme-neutral', '0.0.14');
 		const res = checkThemes(/** @type {any} */ ({ cwd: tmpDir, configTheme: null }));
 		expect(res.status).toBe('warn');
-		expect(res.message).toContain('@astryx-svelte/theme-neutral');
+		expect(res.message).toContain('@astryx-sv/theme-neutral');
 	});
 
 	it('themes: PASS when theme installed and wired via config', () => {
-		installPkg('@astryx-svelte/theme-neutral', '0.0.14');
+		installPkg('@astryx-sv/theme-neutral', '0.0.14');
 		const res = checkThemes(/** @type {any} */ ({ cwd: tmpDir, configTheme: 'default' }));
 		expect(res.status).toBe('pass');
 	});
 
 	it('themes: detects pnpm-style symlinked theme packages', () => {
-		installPkgPnpmStyle('@astryx-svelte/theme-neutral', '0.1.2');
+		installPkgPnpmStyle('@astryx-sv/theme-neutral', '0.1.2');
 		const res = checkThemes(/** @type {any} */ ({ cwd: tmpDir, configTheme: 'default' }));
 		expect(res.status).toBe('pass');
-		expect(res.message).toContain('@astryx-svelte/theme-neutral');
+		expect(res.message).toContain('@astryx-sv/theme-neutral');
 	});
 
 	it('config: INFO when no astryx-svelte.config.*', async () => {
@@ -353,7 +353,7 @@ describe('doctor — command', () => {
 	});
 
 	it('exit code stays 0 when there are no failures', async () => {
-		// Run against the monorepo (where @astryx-svelte/core resolves) → no FAIL.
+		// Run against the monorepo (where @astryx-sv/core resolves) → no FAIL.
 		const prevExit = process.exitCode;
 		process.exitCode = undefined;
 		const program = createProgram();

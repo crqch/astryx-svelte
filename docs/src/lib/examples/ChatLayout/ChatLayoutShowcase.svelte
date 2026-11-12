@@ -6,7 +6,7 @@
 	is passed as a prop: content between the tags would be a `Snippet`.
 -->
 <script lang="ts">
-	import type { ChatComposerToken } from '@astryx-svelte/core';
+	import type { ChatComposerToken } from '@astryx-sv/core';
 	import {
 		ChatComposer,
 		ChatLayout,
@@ -15,7 +15,7 @@
 		ChatMessageList,
 		ChatTokenizedText,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const TOKENS: ChatComposerToken[] = [{ value: '/review', label: '/review', variant: 'blue' }];
 </script>

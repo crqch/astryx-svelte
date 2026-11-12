@@ -32,8 +32,11 @@ export default {
 				states: ['state']
 			},
 			{
-				className: 'astryx-date-range-input-clear-icon',
-				deprecatedFor: 'input-clear-icon'
+				className: 'astryx-date-range-input-presets'
+			},
+			{
+				className: 'astryx-date-range-input-preset',
+				states: ['selected', 'disabled']
 			}
 		]
 	},
@@ -41,6 +44,11 @@ export default {
 		description:
 			'DateRangeInput lets users select a start and end date from a dual-month calendar popover. Use it for filtering data by time period, report generation, analytics dashboards, and booking flows.',
 		bestPractices: [
+			{
+				guidance: true,
+				description:
+					"Base props such as ref, id, data-*, aria-*, and DOM event handlers go to the range trigger, the element that is focused and announced. A DOM handler runs after DateRangeInput's own handler for the same event and still receives events it handled (including ones it called preventDefault on), so it cannot cancel built-in behavior."
+			},
 			{
 				guidance: true,
 				description: 'Use presets for common ranges like "Last 7 days" to speed up selection.'
@@ -69,7 +77,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Wrap a disabled DateRangeInput in Tooltip to explain why it is disabled; disabled triggers swallow the hover events the wrapper needs. Use the disabledMessage prop instead.'
+					'Wrap a disabled DateRangeInput in Tooltip to explain why it is disabled. Use the disabledMessage prop instead, which ties the reason to the field.'
 			}
 		],
 		anatomy: [
@@ -77,6 +85,12 @@ export default {
 				name: 'Label',
 				required: true,
 				description: 'Text above the trigger describing what date range is expected.'
+			},
+			{
+				name: 'Field surface',
+				required: true,
+				description:
+					'Bordered control containing the calendar toggle, range trigger, and end affordances.'
 			},
 			{
 				name: 'Trigger button',
@@ -97,7 +111,14 @@ export default {
 			{
 				name: 'Preset sidebar',
 				required: false,
-				description: 'A list of preset range options beside the calendar.'
+				description:
+					'A list of preset range options beside the calendar, or above it when the two do not fit side by side.'
+			},
+			{
+				name: 'Preset button',
+				required: false,
+				description:
+					'A quick-select action for one preset range, reflecting current and disabled states.'
 			},
 			{
 				name: 'Clear button',
@@ -144,20 +165,21 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disable the trigger and picker.',
+			description:
+				'Disable the trigger and picker. The trigger stays focusable and exposes `aria-disabled`; opening is blocked.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the field focusable via aria-disabled (activation stays blocked). Use this instead of wrapping a disabled DateRangeInput in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and describes the trigger (activation stays blocked). Use this instead of wrapping a disabled DateRangeInput in Tooltip.'
 		},
 		{
 			name: 'value',
 			type: 'DateRange | null',
 			description:
-				'Selected date range or null. Import the `DateRange` type from `@astryx-svelte/core`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches.',
+				'Selected date range or null. Import the `DateRange` type from `@astryx-sv/core`; it is `{start: ISODateString, end: ISODateString}`. Do NOT redeclare your own DateRange type; use the exported one so TypeScript structurally matches.',
 			required: true
 		},
 		{
@@ -183,7 +205,7 @@ export default {
 			name: 'min',
 			type: 'ISODateString',
 			description:
-				'Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `"2026-01-28"`, not a runtime string variable. Import it from `@astryx-svelte/core` or use `as ISODateString` if computing the value dynamically.'
+				'Minimum selectable date. `ISODateString` is a template literal type (`\\`${number}${number}${number}${number}-${number}${number}-${number}${number}\\``). Pass a string literal like `"2026-01-28"`, not a runtime string variable. Import it from `@astryx-sv/core` or use `as ISODateString` if computing the value dynamically.'
 		},
 		{
 			name: 'max',
@@ -211,7 +233,8 @@ export default {
 		{
 			name: 'presets',
 			type: 'ReadonlyArray<DateRangePreset>',
-			description: 'Preset ranges shown as quick-select options beside the calendar.'
+			description:
+				'Preset ranges shown as quick-select options beside the calendar, or above it when the two do not fit side by side. A preset is disabled when either endpoint violates min, max, or dateConstraints, or when its span violates minRangeSpan or maxRangeSpan.'
 		},
 		{
 			name: 'hasClear',
@@ -256,10 +279,17 @@ export default {
 		},
 		{
 			name: 'weekStartsOn',
-			type: "0 | 6 | 2 | 4 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
+			type: "0 | 4 | 6 | 2 | 1 | 3 | 5 | 'sun' | 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat'",
 			description:
 				'First day of week in the calendar. A number (0 = Sunday to 6 = Saturday) or a three-letter day name.',
 			default: '0'
+		},
+		{
+			name: 'calendar',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
+			description:
+				"The calendar the trigger text and the popover calendar show, such as persian, hebrew, or buddhist. value, onChange, min, max, and presets stay Gregorian ISO dates. The field has no typed entry. Calendars other than gregory, iso8601, buddhist, roc, and japanese need Temporal, native or a polyfill the application loads; without it the field shows Gregorian dates and warns in development. Month starts in the Chinese and Dangi calendars come from the runtime's Temporal; when you render on the server, load the same Temporal implementation on the server and in the browser.",
+			default: "the InternationalizationProvider's calendar, else 'gregory'"
 		},
 		{
 			name: 'width',
@@ -268,9 +298,16 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
-			description: 'StyleX styles for layout customization.'
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the Field box around the label, control, and status. containerClassName and containerStyle take a class name and inline styles for the same box. No effect (development warning) where no Field box renders: inside InputGroup (style the group) and in a horizontal-labels FormLayout.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the bordered element that holds the text, icons, and end controls, never the native input. controlClassName and controlStyle take a class name and inline styles for the same box. Replaces root xstyle, className, and style, which this component does not accept.'
 		}
 	]
 };

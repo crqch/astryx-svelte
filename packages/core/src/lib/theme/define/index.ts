@@ -1,5 +1,5 @@
 /**
- * `@astryx-svelte/core/theme/define` — the component-free half of `./theme`.
+ * `@astryx-sv/core/theme/define` — the component-free half of `./theme`.
  *
  * ## Why this subpath exists (it has no upstream counterpart)
  *

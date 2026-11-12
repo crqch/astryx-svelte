@@ -1,4 +1,4 @@
-import { syntaxTokenDefaults, type SyntaxTokenName } from './tokens.js';
+import { DIFF_SYNTAX_TOKEN_NAMES, syntaxTokenDefaults, type SyntaxTokenName } from './tokens.js';
 import { devWarn } from '../../utils/dev-warning.js';
 
 /**
@@ -27,7 +27,16 @@ export type SyntaxThemeTokenKey =
 	| 'attribute'
 	| 'property'
 	| 'punctuation'
-	| 'background';
+	| 'background'
+	| DiffSyntaxThemeTokenKey;
+
+/** The diff row slots a syntax theme MAY set; unset ones keep their defaults. */
+export type DiffSyntaxThemeTokenKey =
+	| 'added'
+	| 'removed'
+	| 'diff-header'
+	| 'added-marker'
+	| 'removed-marker';
 
 /**
  * Token value — either a single string or a `[light, dark]` tuple. Tuples are
@@ -36,10 +45,22 @@ export type SyntaxThemeTokenKey =
 export type SyntaxTokenValue = string | [light: string, dark: string];
 
 /** Token map for `defineSyntaxTheme` input — values can be strings or tuples. */
-export type SyntaxThemeTokenInput = Record<SyntaxThemeTokenKey, SyntaxTokenValue>;
+export type SyntaxThemeTokenInput = Record<
+	Exclude<SyntaxThemeTokenKey, DiffSyntaxThemeTokenKey>,
+	SyntaxTokenValue
+> &
+	Partial<Record<DiffSyntaxThemeTokenKey, SyntaxTokenValue>>;
 
-/** Resolved token map — every value is a CSS string (tuples resolved to `light-dark()`). */
-export type SyntaxThemeTokenMap = Record<SyntaxThemeTokenKey, string>;
+/**
+ * Resolved token map — values are CSS strings (tuples resolved to
+ * `light-dark()`). Diff slots stay optional, so a map written before they
+ * existed still type-checks; an unset slot renders its default.
+ */
+export type SyntaxThemeTokenMap = Record<
+	Exclude<SyntaxThemeTokenKey, DiffSyntaxThemeTokenKey>,
+	string
+> &
+	Partial<Record<DiffSyntaxThemeTokenKey, string>>;
 
 /** Input to `defineSyntaxTheme`. */
 export interface SyntaxThemeInput {
@@ -70,6 +91,18 @@ function toCSSProperty(key: SyntaxThemeTokenKey): SyntaxTokenName {
 /** Every valid human-readable token key, derived from the defaults. */
 export const ALL_SYNTAX_KEYS: SyntaxThemeTokenKey[] = Object.keys(syntaxTokenDefaults).map(
 	(k) => k.replace(CSS_PREFIX, '') as SyntaxThemeTokenKey
+);
+
+const DIFF_KEYS = new Set<SyntaxThemeTokenKey>(
+	DIFF_SYNTAX_TOKEN_NAMES.map((name) => name.replace(CSS_PREFIX, '') as SyntaxThemeTokenKey)
+);
+
+/** The marker slots: unset in a theme, they follow that theme's punctuation. */
+const MARKER_KEYS = new Set<SyntaxThemeTokenKey>(['added-marker', 'removed-marker']);
+
+/** The keys every syntax theme must set: everything but the diff rows. */
+export const REQUIRED_SYNTAX_KEYS: SyntaxThemeTokenKey[] = ALL_SYNTAX_KEYS.filter(
+	(key) => !DIFF_KEYS.has(key)
 );
 
 // =============================================================================
@@ -113,8 +146,9 @@ export function resolveSyntaxTokenForMode(value: SyntaxTokenValue, mode: 'light'
  * - a string, used as-is (`'#ff79c6'`, or `'light-dark(#0064E0, #2694FE)'`)
  * - a `[light, dark]` tuple, converted to `light-dark(light, dark)`
  *
- * A missing token warns rather than throwing, as upstream's does — all 14 are
- * required, but a partial theme still renders.
+ * A missing token warns rather than throwing, as upstream's does — all 14
+ * colour tokens are required, but a partial theme still renders. The five diff
+ * row slots are optional.
  *
  * @example
  * ```ts
@@ -130,19 +164,31 @@ export function resolveSyntaxTokenForMode(value: SyntaxTokenValue, mode: 'light'
  * ```
  */
 export function defineSyntaxTheme(input: SyntaxThemeInput): SyntaxThemeDefinition {
-	const missing = ALL_SYNTAX_KEYS.filter((key) => !(key in input.tokens));
+	const missing = REQUIRED_SYNTAX_KEYS.filter((key) => !(key in input.tokens));
 	if (missing.length > 0) {
 		devWarn(
 			'defineSyntaxTheme',
 			`"${input.name}": missing tokens: ${missing.join(', ')}. ` +
-				`All 14 syntax tokens are required.`
+				`All ${REQUIRED_SYNTAX_KEYS.length} syntax colour tokens are required; ` +
+				'the diff row slots are optional.'
 		);
 	}
 
-	// Resolve tuples to light-dark() CSS strings.
-	const resolved: Partial<SyntaxThemeTokenMap> = {};
+	// Resolve tuples to light-dark() CSS strings. An unset diff paint keeps its
+	// default; an unset marker takes this theme's own punctuation, and an unset
+	// header paint is transparent, so number, glyph and header text stay
+	// legible on the theme's own background.
+	const resolved: Partial<Record<SyntaxThemeTokenKey, string>> = {};
 	for (const key of ALL_SYNTAX_KEYS) {
-		resolved[key] = resolveTokenValue(input.tokens[key]);
+		const value = (input.tokens as Partial<Record<SyntaxThemeTokenKey, SyntaxTokenValue>>)[key];
+		resolved[key] =
+			value !== undefined
+				? resolveTokenValue(value)
+				: MARKER_KEYS.has(key)
+					? 'var(--color-syntax-punctuation)'
+					: key === 'diff-header'
+						? 'transparent'
+						: syntaxTokenDefaults[toCSSProperty(key)];
 	}
 
 	return {
@@ -166,14 +212,15 @@ export function defineSyntaxTheme(input: SyntaxThemeInput): SyntaxThemeDefinitio
 export function syntaxThemeStyle(theme: SyntaxThemeDefinition): Record<string, string> {
 	const vars: Record<string, string> = {};
 	for (const key of ALL_SYNTAX_KEYS) {
-		vars[toCSSProperty(key)] = theme.tokens[key];
+		const value = theme.tokens[key];
+		if (value !== undefined) vars[toCSSProperty(key)] = value;
 	}
 	return vars;
 }
 
 /** Convert a syntax theme to CSS declarations, with no selector wrapper. */
 export function syntaxThemeToCSS(theme: SyntaxThemeDefinition): string {
-	return ALL_SYNTAX_KEYS.map((key) => toCSSProperty(key) + ': ' + theme.tokens[key] + ';').join(
-		'\n  '
-	);
+	return ALL_SYNTAX_KEYS.filter((key) => theme.tokens[key] !== undefined)
+		.map((key) => toCSSProperty(key) + ': ' + theme.tokens[key] + ';')
+		.join('\n  ');
 }

@@ -16,7 +16,7 @@
  * `AcmeLandingPage.template.ts`.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'cli-integrations',
 	title: 'CLI Integrations',
@@ -72,7 +72,7 @@ export const docs = {
 				},
 				{
 					type: 'prose',
-					text: 'Every field is optional. Declare only the contribution roots your package ships. There is no factory to call. Write a plain object, and for editor autocomplete and type-checking annotate it with the `AstryxIntegration` type exported from `@astryx-svelte/cli/authoring`.'
+					text: 'Every field is optional. Declare only the contribution roots your package ships. There is no factory to call. Write a plain object, and for editor autocomplete and type-checking annotate it with the `AstryxIntegration` type exported from `@astryx-sv/cli/authoring`.'
 				}
 			]
 		},
@@ -139,7 +139,7 @@ export const docs = {
 				},
 				{
 					type: 'prose',
-					text: 'All authoring types are exported from `@astryx-svelte/cli/authoring`: `ComponentDoc`, `HookDoc`, and `ReferenceDoc` for docs, `TemplateDoc` for templates, and `AstryxConfig`, `AstryxIntegration`, and `AstryxCodemod` for the project files. Consumers can also run their own post-codemod hooks, such as a reinstall or rebuild, via `hooks.postCodemod` in their `astryx-svelte.config`.'
+					text: 'All authoring types are exported from `@astryx-sv/cli/authoring`: `ComponentDoc`, `HookDoc`, and `ReferenceDoc` for docs, `TemplateDoc` for templates, and `AstryxConfig`, `AstryxIntegration`, and `AstryxCodemod` for the project files. Consumers can also run their own post-codemod hooks, such as a reinstall or rebuild, via `hooks.postCodemod` in their `astryx-svelte.config`.'
 				}
 			]
 		},
@@ -149,7 +149,7 @@ export const docs = {
 			content: [
 				{
 					type: 'prose',
-					text: "Every CLI command loads the consumer's `astryx-svelte.config`, resolves each listed integration's manifest from `node_modules`, and discovers its contributions. Everything is validated against one strict schema at the load boundary: the CLI parses each file through `@astryx-svelte/cli/authoring` when it loads it, not when you author it. There are no factories; you write a plain object and stamp its `type`."
+					text: "Every CLI command loads the consumer's `astryx-svelte.config`, resolves each listed integration's manifest from `node_modules`, and discovers its contributions. Everything is validated against one strict schema at the load boundary: the CLI parses each file through `@astryx-sv/cli/authoring` when it loads it, not when you author it. There are no factories; you write a plain object and stamp its `type`."
 				},
 				{
 					type: 'prose',

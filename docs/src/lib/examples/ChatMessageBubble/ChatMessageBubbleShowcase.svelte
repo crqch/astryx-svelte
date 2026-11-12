@@ -9,7 +9,7 @@
 		ChatMessageList,
 		ChatMessageMetadata,
 		Timestamp
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 </script>
 
 {#snippet userTimestamp()}

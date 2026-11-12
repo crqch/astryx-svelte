@@ -26,7 +26,7 @@
 		StackItem,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const previewCard = 'border-radius: var(--radius-element);';
 	// Negative margin offsets each card's 8px padding so the grid content stays

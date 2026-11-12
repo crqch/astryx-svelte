@@ -217,11 +217,12 @@ describe('overlayPaddingReset', () => {
 		// ...while the page Section outside the overlay still propagates it.
 		// RESTATED: upstream asserts the literal `'var(--spacing-10)'` because
 		// jsdom does not substitute. Chromium computes a custom property's value
-		// with every `var()` resolved, so the assertion is the 40px upstream's own
-		// comment names — the same declaration, checked one step further along.
+		// with every `var()` resolved, so the assertion is the length upstream's
+		// own comment names (40px at a 16px root) — the same declaration, checked
+		// one step further along. The token itself is now upstream's rem value.
 		const pageSection = document.querySelector<HTMLElement>('.astryx-section');
 		expect(
 			getComputedStyle(pageSection as HTMLElement).getPropertyValue('--_section-padding-propagated')
-		).toBe('40px');
+		).toBe('2.5rem');
 	});
 });

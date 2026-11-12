@@ -1,6 +1,6 @@
 /**
  * @file Colocated tests for component-discovery, run against the real
- * `@astryx-svelte/core` source tree plus throwaway fixtures. Complements
+ * `@astryx-sv/core` source tree plus throwaway fixtures. Complements
  * component-discovery.importpath.test.mjs (which covers the `.ts`-source
  * import-path derivation) by pinning the discovery/grouping/resolution
  * behavior and the crash-on-missing-src surface.

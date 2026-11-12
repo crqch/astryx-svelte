@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Stack, Text, Token } from '@astryx-svelte/core';
+	import { Stack, Text, Token } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" gap={10}>

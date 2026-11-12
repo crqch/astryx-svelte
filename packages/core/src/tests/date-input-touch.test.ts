@@ -375,15 +375,15 @@ describe('DateInput — scroll CSS (definition-level)', () => {
 		expect(item).not.toContain("overflow: 'hidden'");
 	});
 
-	it('insets the sheet content equally on every edge', () => {
+	it('insets the sheet content on every edge but the top', () => {
 		const source = read(TOUCH);
 		// One inset, and the header/footer must not add their own on top of it —
 		// that is what put the title and Done 4px off the day grid's line.
 		expect(source).toContain("paddingInline: spacingVars['--spacing-4']");
 		expect(source).toContain("paddingBlockEnd: spacingVars['--spacing-4']");
-		// The block-start is the documented exception: the grab handle floats out
-		// of flow, so the content wrapper owes it the height it occupies.
-		expect(source).toContain("paddingBlockStart: spacingVars['--spacing-6']");
+		// No block-start inset: the sheet keeps the band under its grab bar, and
+		// that band already occupies the space.
+		expect(source).toContain('paddingBlockStart: 0');
 		const header = source.slice(source.indexOf('\theader: {'), source.indexOf('\ttitle: {'));
 		expect(header).not.toContain('paddingInline');
 		const footer = source.slice(source.indexOf('\tfooter: {'), source.indexOf('\tsheetBody: {'));

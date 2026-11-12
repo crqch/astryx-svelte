@@ -6,7 +6,7 @@
  * and the CLI verb in every cross-reference carries this port's bin name.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceDoc} */
 export const docs = {
 	name: 'principles',
 	title: 'Principles',

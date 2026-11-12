@@ -1,5 +1,5 @@
 /*
- * Docs-app chrome only. Component styling belongs to @astryx-svelte/core and
+ * Docs-app chrome only. Component styling belongs to @astryx-sv/core and
  * the theme; nothing here may restyle a component.
  *
  * Declared in the `product` layer, which base.css orders last, so these rules

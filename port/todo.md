@@ -8,16 +8,20 @@ History lives in [`ledger/`](./ledger). Deviations from upstream live in [`debts
 
 ## Current goal
 
-**Full parity with Astryx `0.5.2`**, across every package except three. Set 2026-08-20 against
+**Full parity with Astryx `0.7.13`**, across every package except three. Set 2026-08-20 against
 `0.4.5`, replacing "track each upstream release and cut a matching version" — that goal was about
 staying level with upstream's _movement_; this one is about closing the distance that predates it.
 **Re-target it in the same batch the pin moves**: a goal naming a version this port no longer
 tracks is the same defect as a suite header stating a count against the wrong tag, and it went
-unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032) and to `0.5.2` on
-2026-08-31 (batch 040, which took `0.5.1` and `0.5.2` in one pass). Each move widened the distance
-rather than closing it — `0.5.0` brought a new component (`Stepper`), two breaking changes, and the
-largest single-release test delta this port has tracked; `0.5.2` left the surface whole and moved
-what remains into the _cases_. The size of it is in [`status.md`](./status.md), not here.
+unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0.5.2` on
+2026-08-31 (batch 040), and to `0.7.13` on 2026-11-11. Each move widened the distance rather than
+closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
+dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
+tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea`, `Drawer` and the `SnapPaging`
+subsystem. `Drawer`'s 71-case suite, its header, direction and SSR suites are complete; its 4-case
+touch-entrance suite waits on the input-hold stack. The remaining `useScrollableArea` frame/focus cases
+are test work, not a missing component. All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
+sizes, motion tempo, status aliases, syntax diff slots, adaptations and local tokens. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
 (`CodeEditor`, `RichTextEditor`, `ThreeD`, `Sankey`) wrap React-only libraries with no drop-in
@@ -118,26 +122,28 @@ them.
          caught by neither it nor `package.json`'s `files` denylist. Every fixture is correctly
          placed; the rule is narrower than the invariant it protects
 
-3. **`@astryx-svelte/build`.** Upstream's `build` package is seven files of framework-agnostic
+3. **`@astryx-sv/build`.** Upstream's `build` package is seven files of framework-agnostic
    JavaScript — a PostCSS plugin, a Babel config and a Vite plugin — and it ships on the stable
    release train at `0.4.5`, unlike the canary packages. The only piece needing translation rather
    than transcription is `next.js`, whose counterpart is SvelteKit.
-4. **`@astryx-svelte/richtext`.** Lexical's core is framework-agnostic; only `@lexical/react` is
+4. **`@astryx-sv/richtext`.** Lexical's core is framework-agnostic; only `@lexical/react` is
    not, and its plugins are thin wrappers over `editor.registerCommand` and node transforms. Ten of
    them need Svelte counterparts. Upstream ships this `private` and canary-only, so it is parity
    work with no release pressure behind it.
 5. **The CLI backlog.** `blog`, `components.lock.json` with per-file hashes, the codemod runner and
    the template assets — see Open work → CLI.
 6. **The docs site.** The remaining routes (`/docs/core`, `/docs/cli`, `/changelog`, `/blog`,
-   `/themes`, `/playground`, `/mcp`), the two landing bento tiles, and the deferred `.doc.mjs`
-   examples. The **icon registry expansion** is the cross-cutting piece here: seven demo debts name
+   `/playground`, `/mcp`), the two landing bento tiles, and the deferred `.doc.mjs` examples.
+   `/themes` is implemented: the upstream `ThemePackagePage` with the live theme-showcase
+   template, picker art, mobile carousel and `?theme=` deep links. The **icon registry expansion** is the cross-cutting piece here: seven demo debts name
    it as their retirement condition, because upstream's stories use Heroicons the registry has no
    match for.
 
    On the examples: batch 038 ported the `Stepper` and `Step` blocks, and every icon they reach for
-   already resolves, so they opened no new demo debt. What is left are the blocks for
-   `ComplexSelector`, `ChatDictation`, `AvatarGroup`, `ChatMessageBubble`, `Dialog` and `Selector`.
-   These are ports, not authored demos — the source is
+   already resolves, so they opened no new demo debt. The `ComplexSelector`, `ChatDictation`,
+   `AvatarGroup`, `ChatMessageBubble`, `Dialog` and `SelectorOptionDescriptions` blocks are now
+   ported. What remains is `SelectorBottomSheet`, blocked on the selector's `presentation`
+   controller under Open work → Missing implementation. These are ports, not authored demos — the source is
    `@astryxdesign/cli`'s `assets/templates/blocks/components/<Name>/`, resolved by `exampleFor` in
    the block's `.doc.mjs`, so the parity rule applies to them exactly as it does to a component.
 
@@ -170,23 +176,23 @@ because the thing it types is. None was recorded before; none is a surface-polic
       character offsets (`parser.ts` — the field, and `stampSourceRanges`), and publishes
       `SourceRange` from the root. Our `BlockNode` has no `range` and `ParseOptions` no
       `sourceRanges`. A 0.5.x feature batch 040's pin move did not catch
-- [ ] **`MultiSelector.formatValue` is documented here and unimplemented.** Upstream declares
-      `formatValue?: (items: MultiSelectorSelectedItem[]) => string`, destructures it and calls it
-      twice; ours has no occurrence of the name. `MultiSelector.doc.mjs` documents it anyway — the
-      emitter's fallback for an unresolvable prop absorbed it, the same mechanism `debts.md`'s "22
-      documented props resolve to no declaration in core" entry describes, except this one is a real
-      gap rather than a translation. That entry's count is understated by at least one
-- [ ] **`Icon` rejects namespaced names that upstream accepts.** `icon` is typed
-      `IconName | IconType` where upstream's is `IconType | IconName | NamespacedIconName`, so
-      `<Icon icon="richtext:bold" />` is a type error here and legal upstream — even though
-      `registerIcons` already takes the key at runtime. Needs `NamespacedIconName` declared and
-      published
-- [ ] **Two of upstream's sixteen module-augmentation seams are missing**, and the union drifted with
-      each. `CardVariantMap` is absent and `CardVariant` is a **closed** union where upstream's is
-      `keyof CardVariantMap` — so a theme cannot add a variant, which
-      `selectable-card.stylex.ts` carries a comment asserting it can. `CustomTextTypes` is absent and
-      `TextType` is `BuiltinTextType | (string & {})`, which accepts any string where upstream
-      accepts only registered ones
+- [x] **`MultiSelector.formatValue`** — implemented as upstream declares it: the selected items
+      pass through the formatter for both the trigger label and its text alternative.
+- [x] **`Icon` accepts namespaced names** — `NamespacedIconName` is declared and published, and
+      the `icon` union matches upstream's.
+- [x] **The two module-augmentation seams are present** — `CardVariantMap` backs
+      `CardVariant = keyof CardVariantMap`, and `CustomTextTypes` backs
+      `TextType = BuiltinTextType | keyof CustomTextTypes`. Both are published.
+- [x] **`Selector`/`MultiSelector`'s `presentation` is implemented.** The shared
+      `useSelectorPresentation` controller, the bottom-sheet surface and focus-return policy are
+      ported, and both `SelectorBottomSheet` and `MultiSelectorBottomSheet` examples are present.
+- [x] **`useCombobox` publishes upstream's helper props** — `getFieldProps()`,
+      `getListboxProps()` and `getOptionProps()` are implemented, so the assign-to-field block can
+      be transcribed.
+- [x] **`ComplexSelector` now has upstream's field-styling seam.** The shared
+      `FieldInputBaseProps`/`useFieldInputStyling` module is ported, the component accepts
+      `container*` and `control*` and rejects root styling, and the FR10 field-part cases cover the
+      targets.
 
 ### Core / build
 
@@ -226,26 +232,31 @@ deviation, not a task.
 
 ### Docs site
 
-- [ ] `ThemesPreview`, the Themes bento tile — a scaled-down live `ThemeShowcaseStore` beside a
-      rail of theme swatches. Needs the `theme-showcase` page template, which has landed
-- [ ] `TemplatesPreview`, the Templates bento tile — needs `TemplateThumbnail` and several page
-      templates rendered live and scaled into the tile
-- [ ] Restore the landing bento to upstream's three columns once both tiles above exist (col 1
-      heading + Themes, col 2 Components + CLI, col 3 Templates)
-- [ ] `BlogShowcase`, the remaining landing section, on `blogRegistry` +
-      `BlogCard`/`BlogFeatureCard` — lower priority than the tiles, since it needs post content
-- [ ] `AboutShowcase`'s heading block is intentionally not upstream's copy (Meta's "13,000 apps"
-      institutional claim doesn't fit an unofficial port). Confirm this still reads as the right
-      call, or fold it into `debts.md` as a settled divergence
 - [ ] `/docs/core`, `/docs/cli`, `/changelog` — no longer blocked on a component (`Markdown` +
       `parseOutlineFromMarkdown` landed); needs a package registry in the generator, a ported
       `PackageStubPage`, and a route branch that doesn't 404
-- [ ] `/blog` (mdsvex) and a `/themes` browser
+- [ ] `/blog` (mdsvex)
 - [ ] `/playground` — `svelte/compiler` in a Web Worker + CodeMirror 6. Deliberately last: a
       different problem in Svelte than upstream's `ts.transpileModule`
 - [ ] `/mcp` — `@modelcontextprotocol/sdk` in a `+server.ts`, over the existing content registries
 
 ### Tests
+
+### Both style oracles are green against the 0.7.13 pin
+
+- [x] **Finish the 0.7.13 class-oracle re-baseline.** `test:parity` reports **0 mismatches** over
+      the shared style keys and inline call sites. The re-baseline closed the 1,036-report list by
+      porting the subsystem the reports named, not by adding claims: PowerSearch/Tokenizer sheet
+      presentations, ProgressBar touch, MultiSelector's grid/action model, Lightbox's gallery pager
+      and `usePager`, press-group tracking, DropdownMenu regions/drill-in, and the Typeahead field
+      restructure all landed as features. Five self-retiring skips remain, each with its reason in
+      the script (the Lightbox zoom stage, DateTimeInput's native row, and the `layer-animations`
+      const-keyframe-name debt).
+- [x] **The CSS oracle is green behind it.** `test:css` reports `astryx.css matches upstream.`
+      The fix was the same style refresh: core token defaults re-synced to 0.7.13 (rem spacing, the
+      corrected dark palette, 56 `--color-data-*` tokens), the missing container-corner, focus-owner,
+      gliding/travelling and menu-press-lit modules ported, and the remaining skips named in
+      [`debts.md`](./debts.md) for unported subsystems and upstream's compiled test fixtures.
 
 - [ ] Fold the two per-file `Intl.DateTimeFormat` locale stubs into the client project's `en-US`
       config pin now that it exists, so there's one mechanism instead of three

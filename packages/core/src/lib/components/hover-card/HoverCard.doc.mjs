@@ -24,10 +24,6 @@ export default {
 		targets: [
 			{
 				className: 'astryx-hover-card'
-			},
-			{
-				className: 'astryx-hovercard',
-				deprecatedFor: 'hover-card'
 			}
 		],
 		vars: [
@@ -84,6 +80,11 @@ export default {
 					'Use a HoverCard for content the user must interact with; it disappears when the cursor leaves.'
 			},
 			{
+				guidance: false,
+				description:
+					'Put the trigger inside SVG <foreignObject>. In Chromium it cannot be a CSS anchor, so the card opens at the viewport corner. Render the trigger in an HTML layer positioned over the SVG node instead, and keep the SVG for shapes, edges and labels.'
+			},
+			{
 				guidance: true,
 				description:
 					'Prefer placing HoverCard in a block context rather than directly in a <p>, heading, or link. Those placements are supported when necessary through a corrective portal, but the DOM and tab order may differ.'
@@ -118,7 +119,8 @@ export default {
 		{
 			name: 'children',
 			type: 'string | number | Snippet',
-			description: 'Trigger element that must accept a ref.'
+			description:
+				'The trigger. Text children, a string or number or text written around an expression such as `Edited {when}`, are wrapped in a focusable inline span; holes such as `false` and `null` are ignored. With element children, HoverCard wires the first element, so that element does not need to accept a ref.'
 		},
 		{
 			name: 'content',
@@ -128,7 +130,7 @@ export default {
 		},
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description:
 				"Position relative to the anchor element. Logical: start/end resolve against the popover's own inherited direction (RTL mirrors in pure CSS).",
 			default: "'above'"
@@ -155,14 +157,15 @@ export default {
 		{
 			name: 'focusTrigger',
 			type: "'auto' | 'always' | 'never'",
-			description: 'Controls when focus events trigger the hover card.',
+			description:
+				'When focus should open the hover card. auto opens when the trigger itself takes focus, or focus lands inside a trigger that is focusable at that moment, so a roving-tabindex member opens when the arrow keys reach it.',
 			default: "'auto'"
 		},
 		{
 			name: 'touchTrigger',
 			type: "'none' | 'auto' | 'tap'",
 			description:
-				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (a button, link, or form control), whose tap belongs to the control. tap always opens. none never opens on touch. A tap-opened card is dismissed by a tap outside it.',
+				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (a button, link, or form control), whose tap belongs to the control; an aria-disabled control performs none, so a tap on it opens its reason. tap always opens. none never opens on touch. A tap-opened card is dismissed by a tap outside it.',
 			default: "'auto'"
 		},
 		{
@@ -186,7 +189,8 @@ export default {
 		{
 			name: 'hasHoverIndication',
 			type: "'auto' | boolean",
-			description: 'Shows a dashed underline on the trigger element.',
+			description:
+				'Shows a dashed underline on a text trigger. auto shows it when children is text: strings and numbers, such as `Edited {when}`, with holes such as `false` and `null` ignored. It has no effect on an element trigger, which keeps its own styling.',
 			default: "'auto'"
 		},
 		{
@@ -197,7 +201,24 @@ export default {
 		{
 			name: 'isOpen',
 			type: 'boolean',
-			description: 'Controlled open state for the hover card.'
+			description:
+				'Controlled open state. true holds the card open. false holds it closed against hover and focus. A controlled card answers Escape by calling onOpenChange(false) without closing; it closes when you set isOpen to false, and focus inside the card then returns to the trigger.'
+		},
+		{
+			name: 'xstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the card surface, the element that carries the hover-card theme target.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'Class name added to the card surface, beside the hover-card target class.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description: 'Inline styles for the card surface.'
 		}
 	]
 };

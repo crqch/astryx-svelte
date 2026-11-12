@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CodeBlock } from '@astryx-svelte/core';
+	import { CodeBlock } from '@astryx-sv/core';
 
 	const code = `{
   "name": "@astryxdesign/core",

@@ -22,7 +22,7 @@
 		Text,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { CubeIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	// Standalone auth page paints its own body background (no host shell).

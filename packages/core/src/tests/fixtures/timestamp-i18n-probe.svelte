@@ -3,6 +3,7 @@
 	import Timestamp from '$lib/components/timestamp/timestamp.svelte';
 	import InternationalizationProvider from '$lib/i18n/internationalization-provider.svelte';
 	import type { Locale, Overrides } from '$lib/i18n/types.js';
+	import type { CalendarSystem } from '$lib/utils/calendar-system.js';
 
 	/**
 	 * Upstream's
@@ -15,11 +16,12 @@
 	interface Props extends ComponentProps<typeof Timestamp> {
 		locale: Locale;
 		overrides?: Overrides;
+		calendar?: CalendarSystem;
 	}
 
-	const { locale, overrides, ...timestamp }: Props = $props();
+	const { locale, overrides, calendar, ...timestamp }: Props = $props();
 </script>
 
-<InternationalizationProvider {locale} {overrides}>
+<InternationalizationProvider {locale} {overrides} {calendar}>
 	<Timestamp {...timestamp} />
 </InternationalizationProvider>

@@ -1,7 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import type { SpacingStep } from '../../internal/types.js';
-import { spacingVars } from '../../styles/tokens.stylex.js';
+import { focusVars, spacingVars } from '../../styles/tokens.stylex.js';
+import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 import type { ChatDensity } from './chat-context.svelte.js';
 
 /** Ported from the `styles` block in Astryx's `Chat/ChatMessageList.tsx`. */
@@ -11,6 +12,14 @@ const styles = stylex.create({
 		flexDirection: 'column',
 		flex: 1,
 		minHeight: 0
+	},
+	// The log fills the area that scrolls it, which clips at its edges, so its
+	// keyboard ring sits inside its own box instead of around it.
+	focusRingInset: {
+		outlineOffset: {
+			default: null,
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
 	},
 	inner: {
 		display: 'flex',
@@ -95,7 +104,9 @@ const densityGapStyles = {
 } as const;
 
 export function chatMessageListRootAttrs(xstyle?: StyleArg): SvelteStyleAttrs {
-	return sx(styles.root, xstyle);
+	// A tab stop: the shared ring, which a theme restyles through the
+	// focus-outline tokens.
+	return focusOutlineProps.focusVisible(styles.root, styles.focusRingInset, xstyle);
 }
 
 export function chatMessageListInnerAttrs(

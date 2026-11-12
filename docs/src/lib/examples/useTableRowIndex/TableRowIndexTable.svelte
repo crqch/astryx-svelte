@@ -12,13 +12,7 @@
 	No icon substitutions: the index column is the plugin's own.
 -->
 <script lang="ts">
-	import {
-		Table,
-		pixel,
-		proportional,
-		useTableRowIndex,
-		type TableColumn
-	} from '@astryx-svelte/core';
+	import { Table, pixel, proportional, useTableRowIndex, type TableColumn } from '@astryx-sv/core';
 
 	interface Track extends Record<string, unknown> {
 		id: string;

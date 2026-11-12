@@ -93,6 +93,11 @@ export default {
 					'Pair a card with Layout when you need a structured header, scrollable content, and footer with actions.'
 			},
 			{
+				guidance: true,
+				description:
+					'Let cards share a row or grid on a phone: a card shrinks to fit its track and clips content that cannot wrap at its edge. Truncate long IDs, hashes, and URLs with Text maxLines={1} (the full value shows in a tooltip), and give wide content its own scroll region: Table scrolls by itself; put code or other wide content in a ScrollableArea.'
+			},
+			{
 				guidance: false,
 				description:
 					'Default to cards for visual grouping. A heading + Stack with proper spacing creates hierarchy without adding borders everywhere. Cards should be the exception, not the default.'
@@ -136,7 +141,8 @@ export default {
 		{
 			name: 'width',
 			type: 'SizeValue',
-			description: 'Width of the card (number = pixels, string = used as-is).'
+			description:
+				'Width of the card (number = pixels, string = used as-is). In a flex row or grid track this is the preferred width: the card shrinks below it when the row is narrower. To hold the width in a flex row, wrap the card in StackItem (static by default) and let the row wrap or scroll. In Grid, set a consumer minWidth on the Card and size the track accordingly.'
 		},
 		{
 			name: 'height',
@@ -160,14 +166,14 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				"Internal padding using the spacing scale. Omit it and the card takes the theme's card padding rather than a step, so passing a step is a decision to override the theme, not a way to restate the default.",
 			default: "the theme's card padding (spacing step 4 with no theme)"
 		},
 		{
 			name: 'variant',
-			type: "'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'default' | 'transparent' | 'muted' | 'gray'",
+			type: "'default' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'transparent' | 'muted' | 'gray'",
 			description:
 				'Background color variant. `default` uses the standard card background. `transparent` drops the background entirely. `muted` uses the muted background for de-emphasised cards. The non-semantic variants use the corresponding `--color-background-<name>` token.',
 			default: "'default'"

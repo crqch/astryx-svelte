@@ -1,16 +1,15 @@
 <script lang="ts">
-	import {
-		Divider,
-		Grid,
-		GridSpan,
-		HStack,
-		Link,
-		Section,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
+	import { Divider, Grid, GridSpan, HStack, Link, Section, Text, VStack } from '@astryx-sv/core';
 	import AstryxLogo from './astryx-logo.svelte';
-	import { AUTHOR_NAME, AUTHOR_URL, FOOTER_LINKS, REPO_URL, UPSTREAM_URL } from './nav-items.js';
+	import {
+		AUTHOR_NAME,
+		AUTHOR_URL,
+		FOOTER_LINKS,
+		MAINTAINER_NAME,
+		MAINTAINER_URL,
+		REPO_URL,
+		UPSTREAM_URL
+	} from './nav-items.js';
 	import { homeHref } from './links.js';
 
 	/**
@@ -84,6 +83,11 @@
 				type="supporting"
 				color="secondary"
 				target="_blank">{AUTHOR_NAME}</Link
+			>. Maintained by <Link
+				href={MAINTAINER_URL}
+				type="supporting"
+				color="secondary"
+				target="_blank">{MAINTAINER_NAME}</Link
 			>. The source code is available on
 			<Link href={REPO_URL} type="supporting" color="secondary" target="_blank">GitHub</Link>.
 			Unofficial and not affiliated with Meta. ©{year}

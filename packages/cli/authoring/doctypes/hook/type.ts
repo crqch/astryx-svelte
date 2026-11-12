@@ -15,7 +15,7 @@ import type { ComponentBestPractice, HookParamDoc, HookReturnDoc, UsageDoc } fro
  *
  * Every hook .doc.mjs must export a single `docs` constant:
  *
- *   /\*\* @type {import('@astryx-svelte/cli/authoring').HookDoc} \*\/
+ *   /\*\* @type {import('@astryx-sv/cli/authoring').HookDoc} \*\/
  *   export const docs = { ... };
  */
 export interface HookDoc {
@@ -46,7 +46,7 @@ export interface HookDoc {
 	relatedComponents?: string[];
 	/** Other hook names this hook is commonly used with. */
 	relatedHooks?: string[];
-	/** Import path, e.g. '@astryx-svelte/core/hooks' or '@astryx-svelte/core/Toast'. */
+	/** Import path, e.g. '@astryx-sv/core/hooks' or '@astryx-sv/core/Toast'. */
 	importPath?: string;
 	/** Category for grouping in listings. */
 	category?: string;

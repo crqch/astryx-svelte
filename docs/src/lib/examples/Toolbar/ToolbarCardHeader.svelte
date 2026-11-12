@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Heading, Icon, Section, Toolbar } from '@astryx-svelte/core';
+	import { Button, Card, Heading, Icon, Section, Toolbar } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes Heroicons' `Funnel` and `Plus`. `funnel` is a direct swap;

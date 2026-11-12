@@ -7,7 +7,7 @@
 	`TimeInputConstrained.svelte` for the full note.
 -->
 <script lang="ts">
-	import { Stack, TimeInput, type ISOTimeString } from '@astryx-svelte/core';
+	import { Stack, TimeInput, type ISOTimeString } from '@astryx-sv/core';
 
 	let slot = $state<ISOTimeString | undefined>('09:00' as ISOTimeString);
 </script>

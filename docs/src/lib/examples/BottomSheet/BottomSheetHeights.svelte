@@ -12,7 +12,7 @@
 		Text,
 		VStack,
 		type BottomSheetHeight
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const descriptions: Record<BottomSheetHeight, string> = {
 		hug: 'Hug fits short, bounded content.',

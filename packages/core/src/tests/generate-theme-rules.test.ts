@@ -106,9 +106,12 @@ describe('generateThemeRules', () => {
 	it('includes :scope token block with type scale tokens', () => {
 		const scopeRule = rules.find((r) => r.includes(':scope'));
 		expect(scopeRule).toBeDefined();
-		// Raw size tokens are rem values
-		expect(scopeRule).toContain('--font-size-base: 0.875rem');
-		expect(scopeRule).toContain('--font-size-2xl: 1.5rem');
+		// The public size tokens are references; their reader-scaled counterparts
+		// hold the rem values, as the 0.7.13 Dynamic Type pass emits them.
+		expect(scopeRule).toContain('--font-size-base: var(--_scaled-font-size-base)');
+		expect(scopeRule).toContain('--_scaled-font-size-base: min(calc(0.875rem');
+		expect(scopeRule).toContain('--font-size-2xl: var(--_scaled-font-size-2xl)');
+		expect(scopeRule).toContain('--_scaled-font-size-2xl: min(calc(1.5rem');
 		// Semantic tokens are var() refs
 		expect(scopeRule).toContain('--text-heading-1-size: var(--font-size-2xl)');
 		expect(scopeRule).toContain('--text-heading-4-size: var(--font-size-base)');
@@ -133,9 +136,11 @@ describe('generateThemeRules', () => {
 			'--font-size-4xl'
 		];
 		for (const token of rawSizeTokens) {
-			const match = scopeRule.match(new RegExp(`${token}: ([^;]+)`));
+			const scaled = token.replace('--font-size-', '--_scaled-font-size-');
+			const match = scopeRule.match(new RegExp(`${scaled}: ([^;]+)`));
 			expect(match).not.toBeNull();
-			expect(match![1]).toMatch(/rem$/);
+			expect(match![1]).toMatch(/rem/);
+			expect(scopeRule).toContain(`${token}: var(${scaled})`);
 		}
 	});
 
@@ -167,7 +172,7 @@ describe('generateThemeRules', () => {
 
 	it('includes .astryx-heading.level-* rules for all 6 levels', () => {
 		for (let level = 1; level <= 6; level++) {
-			const rule = rules.find((r) => r.includes(`.astryx-heading.level-${level}`));
+			const rule = rules.find((r) => r.includes(`.astryx-heading[data-level="${level}"]`));
 			expect(rule).toBeDefined();
 			expect(rule).toContain('font-family');
 			expect(rule).toContain(`var(--text-heading-${level}-size)`);
@@ -178,14 +183,14 @@ describe('generateThemeRules', () => {
 
 	it('includes .astryx-text.* rules for all 5 types', () => {
 		for (const type of ['body', 'large', 'label', 'code', 'supporting']) {
-			const rule = rules.find((r) => r.includes(`.astryx-text.${type}`));
+			const rule = rules.find((r) => r.includes(`.astryx-text[data-type="${type}"]`));
 			expect(rule).toBeDefined();
 			expect(rule).toContain(`var(--text-${type}-size)`);
 		}
 	});
 
 	it('includes explicit component overrides', () => {
-		const buttonRule = rules.find((r) => r.includes('.astryx-button.secondary'));
+		const buttonRule = rules.find((r) => r.includes('.astryx-button[data-variant="secondary"]'));
 		expect(buttonRule).toBeDefined();
 		expect(buttonRule).toContain('light-dark(rgba(5, 54, 89, 0.1)');
 	});
@@ -251,9 +256,11 @@ describe('generateThemeRules', () => {
 			(r) => r.trimStart().startsWith(':where(h1)') || r.includes(':where(h1)')
 		);
 		expect(h1Rule).toBeDefined();
-		// Prose rules use val() helper which resolves to the token value (now a var ref)
-		expect(h1Rule).toContain('var(--font-size-2xl)');
-		expect(h1Rule).toContain('var(--font-weight-semibold)');
+		// The reset references the semantic role tokens, so the theme's scale and a
+		// reader-scaled size both flow into bare HTML.
+		expect(h1Rule).toContain('font-size: var(--text-heading-1-size)');
+		expect(h1Rule).toContain('font-weight: var(--text-heading-1-weight)');
+		expect(h1Rule).toContain('line-height: var(--text-heading-1-leading)');
 		// Prose defaults intentionally carry NO block margins: reset.css zeroes
 		// raw element margins and the Markdown/Heading components own their spacing
 		// via StyleX (@layer astryx-base). Emitting margins here would re-introduce
@@ -267,7 +274,7 @@ describe('generateThemeRules', () => {
 			(r) => r.trimStart().startsWith(':where(p)') || r.includes(':where(p)')
 		);
 		expect(pRule).toBeDefined();
-		expect(pRule).toContain('var(--font-size-base)');
+		expect(pRule).toContain('font-size: var(--text-body-size)');
 		expect(pRule).toContain('font-family: var(--font-family-body)');
 		expect(pRule).toContain('var(--color-text-primary)');
 		// No margins on the prose paragraph default (see heading rule note).
@@ -283,12 +290,12 @@ describe('generateThemeRules', () => {
 	// --- Prop-level color overrides ---
 
 	it('includes color prop overrides for text and heading', () => {
-		expect(rules.some((r) => r.includes('.astryx-text.primary'))).toBe(true);
-		expect(rules.some((r) => r.includes('.astryx-text.secondary'))).toBe(true);
-		expect(rules.some((r) => r.includes('.astryx-heading.primary'))).toBe(true);
-		expect(rules.some((r) => r.includes('.astryx-heading.disabled'))).toBe(true);
-		expect(rules.some((r) => r.includes('.astryx-text.active'))).toBe(false);
-		expect(rules.some((r) => r.includes('.astryx-text.accent'))).toBe(true);
+		expect(rules.some((r) => r.includes('.astryx-text[data-color="primary"]'))).toBe(true);
+		expect(rules.some((r) => r.includes('.astryx-text[data-color="secondary"]'))).toBe(true);
+		expect(rules.some((r) => r.includes('.astryx-heading[data-color="primary"]'))).toBe(true);
+		expect(rules.some((r) => r.includes('.astryx-heading[data-color="disabled"]'))).toBe(true);
+		expect(rules.some((r) => r.includes('.astryx-text[data-color="active"]'))).toBe(false);
+		expect(rules.some((r) => r.includes('.astryx-text[data-color="accent"]'))).toBe(true);
 	});
 
 	// --- Size-prop overrides (so `size` beats a themed `type`) ---
@@ -296,13 +303,13 @@ describe('generateThemeRules', () => {
 	it('emits Text size-prop font-size overrides in the same layer as type rules', () => {
 		// Digit-leading sizes are prefixed (size-2xs); word sizes stay bare.
 		const sizeRule = rules.find(
-			(r) => r.includes('.astryx-text.size-2xs') && r.includes('font-size')
+			(r) => r.includes('.astryx-text[data-size="2xs"]') && r.includes('font-size')
 		);
 		expect(sizeRule).toBeDefined();
 		expect(sizeRule).toContain('var(--font-size-2xs)');
 
 		// `xsm` maps to the --font-size-xs token (matches sizeStyles).
-		const xsmRule = rules.find((r) => r.includes('.astryx-text.xsm'));
+		const xsmRule = rules.find((r) => r.includes('.astryx-text[data-size="xsm"]'));
 		expect(xsmRule).toBeDefined();
 		expect(xsmRule).toContain('var(--font-size-xs)');
 
@@ -311,23 +318,13 @@ describe('generateThemeRules', () => {
 	});
 
 	it('emits a size override for every TextSize value', () => {
-		const sizes = [
-			'size-4xs',
-			'size-3xs',
-			'size-2xs',
-			'xsm',
-			'sm',
-			'base',
-			'lg',
-			'xl',
-			'size-2xl',
-			'size-3xl',
-			'size-4xl'
-		];
-		for (const cls of sizes) {
-			expect(rules.some((r) => r.includes(`.astryx-text.${cls}`) && r.includes('font-size'))).toBe(
-				true
-			);
+		const sizes = ['4xs', '3xs', '2xs', 'xsm', 'sm', 'base', 'lg', 'xl', '2xl', '3xl', '4xl'];
+		for (const size of sizes) {
+			expect(
+				rules.some(
+					(r) => r.includes(`.astryx-text[data-size="${size}"]`) && r.includes('font-size')
+				)
+			).toBe(true);
 		}
 	});
 
@@ -335,10 +332,10 @@ describe('generateThemeRules', () => {
 		// Source order breaks specificity ties within a layer, so the size
 		// override must come after the `.astryx-text.<type>` type rule.
 		const typeIdx = rules.findIndex(
-			(r) => r.includes('.astryx-text.supporting') && r.includes('font-size')
+			(r) => r.includes('.astryx-text[data-type="supporting"]') && r.includes('font-size')
 		);
 		const sizeIdx = rules.findIndex(
-			(r) => r.includes('.astryx-text.size-2xs') && r.includes('font-size')
+			(r) => r.includes('.astryx-text[data-size="2xs"]') && r.includes('font-size')
 		);
 		expect(typeIdx).toBeGreaterThanOrEqual(0);
 		expect(sizeIdx).toBeGreaterThan(typeIdx);
@@ -362,9 +359,9 @@ describe('generateThemeRules', () => {
 		// layer as the type rules (astryx-theme / component block), not the
 		// reset-tier prose block.
 		const { prose, component } = generateThemeCSS(theme);
-		expect(component).toContain('.astryx-text.size-2xs');
-		expect(component).toContain('.astryx-text.xsm');
-		expect(prose).not.toContain('.astryx-text.size-2xs');
+		expect(component).toContain('.astryx-text[data-size="2xs"]');
+		expect(component).toContain('.astryx-text[data-size="xsm"]');
+		expect(prose).not.toContain('.astryx-text[data-size="2xs"]');
 	});
 });
 
@@ -392,7 +389,7 @@ describe('generateThemeRules with weight overrides', () => {
 			(r) => r.trimStart().startsWith(':where(h3)') || r.includes(':where(h3)')
 		);
 		expect(h3Rule).toBeDefined();
-		expect(h3Rule).toContain('var(--font-weight-bold)');
+		expect(h3Rule).toContain('font-weight: var(--text-heading-3-weight)');
 	});
 });
 
@@ -515,7 +512,7 @@ describe('derived var expansion', () => {
 			}
 		});
 		const rules = generateThemeRules(theme);
-		const rule = rules.find((r) => r.includes('.astryx-avatar-fallback.sm'));
+		const rule = rules.find((r) => r.includes('.astryx-avatar-fallback[data-size="sm"]'));
 		expect(rule).toBeDefined();
 		expect(rule).toContain('font-size: 9px');
 		// Direct class target now — no internal derived var.
@@ -565,7 +562,7 @@ describe('derived var expansion', () => {
 			}
 		});
 		const rules = generateThemeRules(theme);
-		const rule = rules.find((r) => r.includes('.astryx-card.muted'));
+		const rule = rules.find((r) => r.includes('.astryx-card[data-variant="muted"]'));
 		expect(rule).toBeDefined();
 		expect(rule).toContain('border-radius: 16px');
 		expect(rule).toContain('--_card-radius: 16px');

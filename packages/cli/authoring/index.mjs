@@ -1,5 +1,5 @@
 /**
- * @file `@astryx-svelte/cli/authoring` — one home for Astryx authoring.
+ * @file `@astryx-sv/cli/authoring` — one home for Astryx authoring.
  *
  * Authoring is a pure data contract: TYPES authors write plain objects against,
  * and PARSERS the CLI calls to turn `unknown` into the typed shape (or throw a

@@ -53,7 +53,7 @@
  * disambiguate ownership (core vs. an integration package).
  * @typedef {object} ComponentListEntry
  * @property {string} name
- * @property {string} package - Owner package, e.g. '@astryx-svelte/core' or '@acme/astryx-meta'.
+ * @property {string} package - Owner package, e.g. '@astryx-sv/core' or '@acme/astryx-meta'.
  */
 
 /**
@@ -76,8 +76,8 @@
  * owner package, the import specifier, and whether a swizzleable source file is
  * available — the inputs the integration-component swizzle needs.
  * @typedef {object} ComponentOwnership
- * @property {string} package - Owner package, e.g. '@astryx-svelte/core' or an integration package name.
- * @property {string} import - Import specifier for the component (e.g. '@astryx-svelte/core').
+ * @property {string} package - Owner package, e.g. '@astryx-sv/core' or an integration package name.
+ * @property {string} import - Import specifier for the component (e.g. '@astryx-sv/core').
  * @property {boolean} sourceAvailable - Whether a component source file exists for `--source` / swizzle.
  */
 

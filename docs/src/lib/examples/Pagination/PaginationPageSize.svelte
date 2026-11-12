@@ -6,7 +6,7 @@
 	are inline `style` strings, which is what Svelte's `style` attribute takes.
 -->
 <script lang="ts">
-	import { Heading, Pagination, Stack, Table } from '@astryx-svelte/core';
+	import { Heading, Pagination, Stack, Table } from '@astryx-sv/core';
 
 	const DATA = [
 		{

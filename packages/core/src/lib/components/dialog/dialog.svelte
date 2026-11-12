@@ -83,7 +83,9 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { devWarn } from '../../utils/dev-warning.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import { holdEntranceInput } from '../layer/hold-entrance-input.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
 	import { spacingStepToToken } from '../../internal/padding.stylex.js';
 	import type { SpacingToken } from '../../internal/container.stylex.js';
@@ -136,6 +138,18 @@
 	const effectivePadding = $derived<SpacingStep>(padding ?? 4);
 	const paddingToken = $derived<SpacingToken>(spacingStepToToken[effectivePadding]);
 	const isFullscreen = $derived(variant === 'fullscreen');
+
+	// A dialog open on the server was present on page load, so it opens settled,
+	// with no entry motion; its later opens animate as usual (spec:AST-013 FR13).
+	// Upstream's `useSettledOpen`; the latch ends on the first close.
+	// svelte-ignore state_referenced_locally
+	let opensSettled = $state(isOpen && !isInline);
+
+	$effect(() => {
+		if (!isOpen) {
+			opensSettled = false;
+		}
+	});
 
 	// Derive dismissal behavior from purpose.
 	const allowEscape = $derived(purpose !== 'required');
@@ -258,6 +272,10 @@
 				const autofocusTarget = dialog.querySelector<HTMLElement>('[data-autofocus]');
 				if (autofocusTarget) autofocusTarget.focus();
 			}
+			// Under a coarse primary pointer, nothing takes a tap during the
+			// entrance; keys and assistive technology stay live. The effect cleanup
+			// releases the hold on close or unmount.
+			return holdEntranceInput(dialog) ?? undefined;
 		} else {
 			if (dialog.open) dialog.close();
 			triggerEl?.focus();
@@ -330,7 +348,9 @@
 	}
 
 	const theme = $derived(themeProps('dialog', { variant }));
-	const root = $derived(dialogAttrs({ isOpen, isFullscreen, standardSizing, position, xstyle }));
+	const root = $derived(
+		dialogAttrs({ isOpen, isFullscreen, standardSizing, position, opensSettled, xstyle })
+	);
 	const inlineRoot = $derived(dialogInlineAttrs({ isFullscreen, standardSizing, xstyle }));
 	const inner = $derived(
 		dialogInnerAttrs({
@@ -381,6 +401,8 @@
 		{...purpose === 'required' ? { role: 'alertdialog' } : {}}
 		{@attach syncDefaultLabel}
 	>
-		<LayerDepthProvider>{@render innerContent()}</LayerDepthProvider>
+		<ModalAnnounceProvider dialogRef={() => dialogEl ?? null} {isOpen}>
+			<LayerDepthProvider>{@render innerContent()}</LayerDepthProvider>
+		</ModalAnnounceProvider>
 	</dialog>
 {/if}

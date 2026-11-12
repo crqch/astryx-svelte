@@ -1,14 +1,15 @@
 /** PORTS: TextInput/TextInput.test.tsx */
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import { createAttachmentKey } from 'svelte/attachments';
-import TextInput from '$lib/components/text-input/text-input.svelte';
+import TextInput, { type TextInputProps } from '$lib/components/text-input/text-input.svelte';
 import IconSlotProbe from './fixtures/icon-slot-probe.svelte';
 import BindHarness from './fixtures/text-input-bind.svelte';
 import TextInputForm from './fixtures/text-input-form.svelte';
 import TextInputGroupProbe from './fixtures/text-input-group-probe.svelte';
+import HorizontalLabelsProbe from './fixtures/horizontal-labels-probe.svelte';
 
 /**
  * Astryx's `TextInput/TextInput.test.tsx`, ported case for case — **all 74 of
@@ -1062,5 +1063,126 @@ describe('TextInput readonly theme state', () => {
 		});
 		const root = screen.container.querySelector('.astryx-text-input');
 		expect(root).not.toHaveAttribute('data-readonly');
+	});
+});
+
+/**
+ * `TextInput/TextInput.fr10.test.tsx`'s render cases, at the surface this port
+ * added: `container*` reaches the Field box, `control*` reaches the bordered
+ * control box, root styling is dropped with a warning, and `container*` is
+ * dropped where no Field box renders. Upstream's type-level
+ * `expectFieldInputProps` case has no runtime counterpart; the props are
+ * declared through `FieldInputBaseProps`.
+ *
+ * Not ported from that suite, and why:
+ * - `forwards base props, ref, and handlers to the primary semantic control` —
+ *   the attachment case above is the counterpart for rest-prop forwarding;
+ *   Svelte has no `ref` prop, and a caller `id` is not forwarded (the component
+ *   mints its control id), so that clause has no port either.
+ * - `keeps a caller aria-describedby alongside the field description` — a
+ *   separate gap in this port's input-ARIA path: the control's own
+ *   `aria-describedby` is composed only from field-owned ids, so a caller's
+ *   value is replaced rather than joined.
+ */
+describe('TextInput field parts (FR10)', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('styles the Field box with container* and the control box with control*', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(TextInput, {
+			props: {
+				label: 'Name',
+				value: '',
+				onChange: noop,
+				containerClassName: 'fr10-container',
+				containerStyle: 'margin-top: 7px',
+				controlClassName: 'fr10-control',
+				controlStyle: 'margin-bottom: 9px'
+			}
+		});
+		const control = inputIn(screen.container);
+		const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+		const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+		expect(fieldBox).not.toBeNull();
+		expect(controlBox).not.toBeNull();
+		expect(fieldBox.getAttribute('style')).toContain('margin-top: 7px');
+		expect(controlBox.getAttribute('style')).toContain('margin-bottom: 9px');
+		// The Field box holds the label and the control box; the control box
+		// holds the native input but is never the native input itself.
+		expect(fieldBox).toContainElement(controlBox);
+		expect(fieldBox).not.toBe(controlBox);
+		expect(controlBox).not.toBe(control);
+		expect(controlBox).toContainElement(control);
+		expect(screen.container.querySelectorAll('.fr10-container')).toHaveLength(1);
+		expect(screen.container.querySelectorAll('.fr10-control')).toHaveLength(1);
+		expect(warn).not.toHaveBeenCalled();
+	});
+
+	it('drops untyped root styling and warns in development', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		// Root `class`/`style` are not props any more. Spread rather than name
+		// them, so they arrive the way an untyped caller's rest object does at
+		// runtime without defeating the type-level rejection.
+		const legacyRootStyling: Record<string, unknown> = {
+			class: 'fr10-root',
+			style: 'outline-color: red'
+		};
+		const screen = await render(TextInput, {
+			props: {
+				...legacyRootStyling,
+				label: 'Name',
+				value: '',
+				onChange: noop
+			} as unknown as TextInputProps
+		});
+		expect(screen.container.querySelector('.fr10-root')).toBeNull();
+		const control = inputIn(screen.container);
+		expect(control.getAttribute('style') ?? '').not.toContain('outline-color');
+		// The old path applied root styling to the control box, not the input, so
+		// a clean native control alone would not have caught it coming back.
+		expect(screen.container.querySelector('[style*="outline-color"]')).toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).startsWith('TextInput:'))).toBe(true);
+	});
+
+	it('ignores container* and warns in a horizontal-labels FormLayout', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(HorizontalLabelsProbe, {
+			props: {
+				component: TextInput,
+				rest: {
+					label: 'Name',
+					value: '',
+					onChange: noop,
+					containerClassName: 'fr10-container'
+				}
+			}
+		});
+		expect(screen.container.querySelector('.fr10-container')).toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).includes('no Field box renders'))).toBe(
+			true
+		);
+	});
+
+	it('ignores container* and warns inside InputGroup, keeping control*', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const screen = await render(TextInputGroupProbe, {
+			props: {
+				group: { label: 'Contact' },
+				textInput: {
+					label: 'Name',
+					value: '',
+					onChange: noop,
+					containerClassName: 'fr10-container',
+					controlClassName: 'fr10-control'
+				}
+			}
+		});
+		expect(screen.container.querySelector('.fr10-container')).toBeNull();
+		expect(screen.container.querySelector('.fr10-control')).not.toBeNull();
+		expect(warn.mock.calls.some((call) => String(call[0]).includes('no Field box renders'))).toBe(
+			true
+		);
 	});
 });

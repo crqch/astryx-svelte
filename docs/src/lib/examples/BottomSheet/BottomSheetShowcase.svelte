@@ -11,7 +11,7 @@
 		Heading,
 		Section,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 	let inStock = $state<boolean | 'indeterminate'>(false);

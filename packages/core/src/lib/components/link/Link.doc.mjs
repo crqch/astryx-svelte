@@ -35,6 +35,11 @@ export default {
 			{
 				guidance: true,
 				description:
+					"Put a Link inside a <Text maxLines> to truncate it with the surrounding text; inside a clamped Text the link flows in the text's lines."
+			},
+			{
+				guidance: true,
+				description:
 					'Only set `label` when the link content is not descriptive text (e.g. an icon-only link). For text links, the visible text is already the accessible name; adding `label` overrides it for screen readers, which is harmful.'
 			},
 			{
@@ -49,6 +54,16 @@ export default {
 				guidance: false,
 				description:
 					'Set `label` on text links; `aria-label` prevents assistive technology from reading the actual link content.'
+			},
+			{
+				guidance: false,
+				description:
+					'Give a Link inside a clamped Text its own `display` or `maxLines`, or render it as a button (`onClick` with no `href`), and expect the outer clamp to cut it; that Link keeps its own box.'
+			},
+			{
+				guidance: false,
+				description:
+					'Put a Link with block-level content, such as an HStack with an icon, inside a clamped Text; block content breaks the clamp. Clamp a text-only Link, or place the composed Link outside the clamp.'
 			}
 		],
 		anatomy: [
@@ -58,14 +73,10 @@ export default {
 				description: 'The visible text of the link.'
 			},
 			{
-				name: 'Right icon',
+				name: 'External icon',
 				required: false,
-				description: 'Icon placed after the label to indicate an action affordance.'
-			},
-			{
-				name: 'Left icon',
-				required: false,
-				description: 'Icon placed before the label to represent meaning.'
+				description:
+					'Extra-small icon after the label when `isExternalLink` is set. It takes the link color. Screen readers hear the new-tab text instead of the icon.'
 			}
 		]
 	},
@@ -90,7 +101,8 @@ export default {
 		{
 			name: 'href',
 			type: 'string',
-			description: 'Link destination URL'
+			description:
+				'Link destination URL. Astryx-owned links and clickable surfaces block javascript:, vbscript:, and data:text/html after control-character removal, outer-whitespace trimming, and case-insensitive scheme inspection. The same rule covers native anchors, custom routers, Markdown links, and every activation method. Relative paths, fragments, protocol-relative URLs, HTTP(S), mailto, tel, safe custom schemes, and accepted downloads keep their existing behavior. A rejected destination renders inertly without invoking a custom router. There is no bypass prop; exceptional behavior requires caller-owned custom rendering outside this guarantee. Images and other resource URLs have separate policies.'
 		},
 		{
 			name: 'hasUnderline',
@@ -101,7 +113,8 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disables the link',
+			description:
+				'Disables the link. It cannot navigate or run `onClick`, keeps its Tab stop, and is announced as disabled.',
 			default: 'false'
 		},
 		{
@@ -157,6 +170,13 @@ export default {
 			default: 'false'
 		},
 		{
+			name: 'type',
+			type: "'large' | 'inherit' | 'label' | 'body' | 'code' | 'supporting' | 'display-1' | 'display-2' | 'display-3'",
+			description:
+				'Text type forwarded to Text, or a custom text type the theme defines. Use `inherit` for a link inside a Text, so the link takes the size and line height of the text around it.',
+			default: "'body'"
+		},
+		{
 			name: 'size',
 			type: "'base' | 'sm' | 'lg' | 'xl' | '4xs' | '3xs' | '2xs' | 'xsm' | '2xl' | '3xl' | '4xl'",
 			description: 'Explicit font size override forwarded to Text.'
@@ -189,6 +209,12 @@ export default {
 			type: 'Snippet',
 			description: 'Link content',
 			required: true
+		},
+		{
+			name: 'ref',
+			type: 'HTMLAnchorElement | HTMLButtonElement | null',
+			description:
+				'Ref to the root element: the anchor, or the button when the link renders as a button.'
 		}
 	]
 };

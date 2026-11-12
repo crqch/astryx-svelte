@@ -96,6 +96,6 @@ export default {
 	},
 	relatedComponents: ['Thumbnail'],
 	relatedHooks: ['useClickableContainer'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

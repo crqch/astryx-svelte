@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CommandPaletteItem, CommandPaletteList } from '@astryx-svelte/core';
+	import { CommandPaletteItem, CommandPaletteList } from '@astryx-sv/core';
 </script>
 
 <CommandPaletteList>

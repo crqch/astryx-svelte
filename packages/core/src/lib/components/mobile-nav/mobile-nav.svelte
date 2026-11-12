@@ -62,6 +62,7 @@
 	import { holdScrollbarGutter, type ScrollbarGutterHold } from '../../hooks/scrollbar-gutter.js';
 	import LayerDepthProvider from '../layer/layer-depth-provider.svelte';
 	import { useLayerDismissal } from '../layer/use-layer-dismissal.svelte.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 	import { resolveCloseDelay } from './close-timing.js';
 	import {
 		mobileNavContentAttrs,
@@ -342,34 +343,36 @@
 		nested, and takes an Escape press ahead of the drawer.
 	-->
 	<LayerDepthProvider>
-		<!-- Drawer panel — tabindex so showModal() focuses the drawer, not the close button -->
-		<div tabindex="-1" class={drawerAttrs.class} style={drawerAttrs.style}>
-			<!-- Header — content + close button -->
-			<div class={headerAttrs.class} style={headerAttrs.style}>
-				{#if hasStringHeader}
-					<!--
+		<ModalAnnounceProvider dialogRef={() => dialogEl ?? null} {isOpen}>
+			<!-- Drawer panel — tabindex so showModal() focuses the drawer, not the close button -->
+			<div tabindex="-1" class={drawerAttrs.class} style={drawerAttrs.style}>
+				<!-- Header — content + close button -->
+				<div class={headerAttrs.class} style={headerAttrs.style}>
+					{#if hasStringHeader}
+						<!--
 						The inset rides the `Heading`'s own `xstyle`, as upstream's
 						`<Heading level={2} xstyle={styles.headerText}>` does (#4775). It used
 						to be a wrapper `<span>` here, which put an element in the drawer
 						header that upstream's DOM does not have.
 					-->
-					<Heading level={2} xstyle={mobileNavHeaderTextStyle}>{header as string}</Heading>
-				{:else if header != null}
-					{@render (header as Snippet)()}
-				{/if}
-				<Button
-					variant="ghost"
-					label={t('@astryx.mobileNav.closeNavigation')}
-					icon={closeIcon}
-					onclick={() => onOpenChange(false)}
-					isIconOnly
-				/>
-			</div>
+						<Heading level={2} xstyle={mobileNavHeaderTextStyle}>{header as string}</Heading>
+					{:else if header != null}
+						{@render (header as Snippet)()}
+					{/if}
+					<Button
+						variant="ghost"
+						label={t('@astryx.mobileNav.closeNavigation')}
+						icon={closeIcon}
+						onclick={() => onOpenChange(false)}
+						isIconOnly
+					/>
+				</div>
 
-			<!-- Scrollable content -->
-			<div class={contentAttrs.class} style={contentAttrs.style}>
-				{@render children()}
+				<!-- Scrollable content -->
+				<div class={contentAttrs.class} style={contentAttrs.style}>
+					{@render children()}
+				</div>
 			</div>
-		</div>
+		</ModalAnnounceProvider>
 	</LayerDepthProvider>
 </dialog>

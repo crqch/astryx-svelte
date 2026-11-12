@@ -136,6 +136,8 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import { pressHoldsDragProps } from '../../private-attributes/press-holds-drag.stylex.js';
 	import {
 		switchContainerAttrs,
 		switchFieldAttrs,
@@ -269,6 +271,10 @@
 		}
 	}
 
+	// The row is the pressable: the input, the track and the label all sit
+	// inside it, and the pressed arms read the row's scope marker.
+	const pressable = usePressFeedback();
+
 	const fieldTheme = $derived(
 		themeProps('switch-field', {
 			labelPosition: labelPosition !== 'end' ? labelPosition : undefined,
@@ -279,7 +285,7 @@
 	const containerAttrs = $derived(
 		switchContainerAttrs(labelSpacing === 'spread', isDisabled, isLabelHidden)
 	);
-	const wrapperAttrs = $derived(switchWrapperAttrs(size));
+	const wrapperAttrs = $derived(switchWrapperAttrs(size, !isDisabled && !isBusy));
 	const inputAttrs = $derived(switchInputAttrs(size, isDisabled, isBusy));
 	const trackTheme = $derived(
 		themeProps('switch', {
@@ -383,6 +389,8 @@
 >
 	<div
 		{@attach disabledMessageTooltip.attachInteraction}
+		{...isDisabled ? undefined : pressable}
+		{...pressHoldsDragProps(!isDisabled)}
 		class={containerAttrs.class}
 		style={containerAttrs.style}
 	>

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TextInput } from '@astryx-svelte/core';
+	import { TextInput } from '@astryx-sv/core';
 
 	let value = $state('');
 </script>

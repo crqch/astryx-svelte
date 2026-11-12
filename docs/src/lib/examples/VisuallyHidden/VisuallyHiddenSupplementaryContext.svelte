@@ -7,7 +7,7 @@
 	than stand-ins and nothing retires with the icon registry.
 -->
 <script lang="ts">
-	import { Card, HStack, Icon, Text, VStack, VisuallyHidden } from '@astryx-svelte/core';
+	import { Card, HStack, Icon, Text, VStack, VisuallyHidden } from '@astryx-sv/core';
 
 	const stats = [
 		{ label: 'Revenue', value: '$48.2k', delta: '+12%', direction: 'up' },

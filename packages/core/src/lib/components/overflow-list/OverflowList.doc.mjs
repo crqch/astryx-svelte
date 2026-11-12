@@ -29,6 +29,25 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'List',
+				required: true,
+				description: 'Visible horizontal list container for the currently shown content.'
+			},
+			{
+				name: 'Items',
+				required: true,
+				description:
+					'Caller-supplied items selected for visible display by the current width and count limits.'
+			},
+			{
+				name: 'Overflow indicator',
+				required: false,
+				description:
+					'Optional caller-rendered indicator for items collapsed by width or count limits.'
+			}
+		],
 		description:
 			'A horizontal list that automatically hides items when they exceed the available width. Use OverflowList for breadcrumbs, toolbars, tag lists, or any row that needs to collapse gracefully at smaller sizes.',
 		bestPractices: [
@@ -85,7 +104,7 @@ export default {
 		},
 		{
 			name: 'gap',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description:
 				'Gap between items as a spacing token step (0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10).',
 			default: '2'

@@ -1,8 +1,10 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
-import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
+import { layoutReset } from '../layout/layout-reset.stylex.js';
+import { focusOutlineProps, focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import {
 	colorVars,
+	focusVars,
 	fontWeightVars,
 	radiusVars,
 	spacingVars,
@@ -34,7 +36,8 @@ const styles = stylex.create({
 	root: {
 		display: 'flex',
 		flexDirection: 'column',
-		position: 'relative'
+		position: 'relative',
+		overflow: 'clip'
 	},
 	variantWash: {
 		backgroundColor: colorVars['--color-background-body']
@@ -118,6 +121,24 @@ const styles = stylex.create({
 			':focus': 'none'
 		}
 	},
+	// While main's focus ring shows, main follows the elevated surface's rounded
+	// top-start corner, so the ring keeps the surface's shape instead of drawing
+	// a square corner.
+	mainElevatedCorner: {
+		borderStartStartRadius: {
+			default: null,
+			':focus-visible': radiusVars['--radius-page']
+		}
+	},
+	// While main scrolls its overflowing content it is a keyboard stop, and
+	// keyboard focus on it draws the standard ring, inset so the shell's own
+	// clipping cannot hide it.
+	mainScrollRegionInset: {
+		outlineOffset: {
+			default: '0',
+			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
+		}
+	},
 
 	elevatedBackdrop: {
 		position: 'absolute',
@@ -132,6 +153,11 @@ const styles = stylex.create({
 		flex: 1,
 		minHeight: 0,
 		height: '100%'
+	},
+	// Keeps the parent and main's position stable across breakpoints outside the
+	// elevated desktop layout; the wrapper generates no layout box.
+	contentWrapper: {
+		display: 'contents'
 	},
 	contentBgSurface: {
 		backgroundColor: colorVars['--color-background-surface']
@@ -163,6 +189,38 @@ const styles = stylex.create({
 		position: 'sticky',
 		top: 0,
 		zIndex: 1
+	},
+	// The insets are zero unless the page sets `viewport-fit=cover`. The header
+	// background goes under the status bar and to the screen sides, as a UIKit
+	// bar does.
+	headerSafeAreaTop: {
+		paddingBlockStart: 'env(safe-area-inset-top, 0px)'
+	},
+	// The insets are physical sides, so a right-to-left context swaps them on
+	// the inline sides.
+	headerSafeAreaSides: {
+		paddingInlineStart: {
+			default: 'env(safe-area-inset-left, 0px)',
+			':is([dir="rtl"] *)': 'env(safe-area-inset-right, 0px)'
+		},
+		paddingInlineEnd: {
+			default: 'env(safe-area-inset-right, 0px)',
+			':is([dir="rtl"] *)': 'env(safe-area-inset-left, 0px)'
+		}
+	},
+	// In `auto`, the banner's wrapper and the phone top bar both stick. Below a
+	// banner, the bar sticks under the top inset, so its items stay clear of the
+	// status bar.
+	headerStickyBelowTopInset: {
+		top: 'env(safe-area-inset-top, 0px)'
+	},
+	// Main adds the bottom inset to the padding that LayoutContent publishes for
+	// `contentPadding`. The published value excludes the inset, so a bleed child
+	// subtracts only `contentPadding`. Main is border-box, so a child that fills
+	// it ends above the inset.
+	mainSafeAreaEnd: {
+		paddingBlockEnd:
+			'calc(var(--container-padding-block-end, 0px) + env(safe-area-inset-bottom, 0px))'
 	},
 	// Sticky sideNav for auto height mode — sticks within the wrapper.
 	// This div replaces the panel as the direct flex child of the middle
@@ -230,6 +288,9 @@ export function appShellRootAttrs(
 ): SvelteStyleAttrs {
 	return sx(
 		styles.root,
+		// A layout root (FR18): nothing an ancestor Layout, Card or Section
+		// publishes reaches the shell (component:Layout FR8).
+		layoutReset,
 		variant === 'wash'
 			? styles.variantWash
 			: variant === 'surface'
@@ -264,9 +325,33 @@ export function appShellBannerAttrs(navAreaStyle: StyleArg): SvelteStyleAttrs {
 	return sx(styles.banner, navAreaStyle);
 }
 
-/** The header wrapper — tinted, and sticky in `auto` height mode. */
+/** The header wrapper — tinted, sticky in `auto` height mode, and padded for the safe area. */
 export function appShellHeaderAttrs(navAreaStyle: StyleArg, isAuto: boolean): SvelteStyleAttrs {
-	return sx(navAreaStyle, isAuto && styles.headerSticky);
+	return sx(
+		navAreaStyle,
+		isAuto && styles.headerSticky,
+		styles.headerSafeAreaSides,
+		styles.headerSafeAreaTop
+	);
+}
+
+/**
+ * The sidenav-only phone top bar. Under a banner the banner's wrapper pads the
+ * top inset, so this bar takes only the side insets and instead sticks below the
+ * top inset in `auto` mode.
+ */
+export function appShellAutoTopBarAttrs(
+	navAreaStyle: StyleArg,
+	isAuto: boolean,
+	hasHeaderContent: boolean
+): SvelteStyleAttrs {
+	return sx(
+		navAreaStyle,
+		isAuto && styles.headerSticky,
+		styles.headerSafeAreaSides,
+		!hasHeaderContent && styles.headerSafeAreaTop,
+		isAuto && hasHeaderContent && styles.headerStickyBelowTopInset
+	);
 }
 
 /** The sticky wrapper the side panel sits in under `auto` height mode. */
@@ -286,6 +371,31 @@ export function appShellSideNavPanelStyle(
 /** The relative wrapper holding the rounded backdrop and the real content. */
 export function appShellElevatedContentWrapperAttrs(): SvelteStyleAttrs {
 	return sx(styles.elevatedContentWrapper);
+}
+
+/** The layout-neutral wrapper outside the elevated desktop layout. */
+export function appShellContentWrapperAttrs(): SvelteStyleAttrs {
+	return sx(styles.contentWrapper);
+}
+
+/**
+ * The `xstyle` array handed to the side `LayoutContent`: the content background,
+ * the main focus-ring treatment (a keyboard scroll region gets the standard ring
+ * inset, a programmatic target suppresses it), and the bottom safe-area inset.
+ */
+export function appShellMainStyle(
+	contentAreaStyle: StyleArg,
+	drawsMainFocusRing: boolean,
+	shouldElevateWithCorner: boolean
+): StyleArg {
+	return [
+		contentAreaStyle,
+		drawsMainFocusRing && shouldElevateWithCorner && styles.mainElevatedCorner,
+		drawsMainFocusRing
+			? [focusOutlineStyles.focusVisible, styles.mainScrollRegionInset]
+			: styles.mainFocusTarget,
+		styles.mainSafeAreaEnd
+	];
 }
 
 /** The rounded, inert surface painted behind the content in `elevated`. */

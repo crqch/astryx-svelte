@@ -4,6 +4,74 @@
 	import type { BaseProps } from '../../base-props.js';
 	import type { LinkComponentType } from '../link/types.js';
 	import type { AvatarShape, AvatarSize } from './avatar.stylex.js';
+	import { firstCharacter } from '../../utils/characters.js';
+
+	/**
+	 * A character that can stand for a word in initials: a letter, a digit, or an
+	 * emoji. Punctuation and other symbols, such as `(`, `"` or `-`, cannot.
+	 *
+	 * Built at runtime, not written as a literal: for targets without property
+	 * escapes, or when no browserslist is set, Babel's
+	 * transform-unicode-property-regex rewrites a `\p{…}` literal, and the copy
+	 * bundled with Next.js lacks the Unicode data it needs, so a source build
+	 * fails with "Unknown property". A literal is safe once Next's bundled Babel
+	 * ships that data.
+	 */
+	const INITIAL_CHARACTER = new RegExp(
+		'[\\p{L}\\p{N}\\p{Extended_Pictographic}\\p{Regional_Indicator}]',
+		'u'
+	);
+
+	/**
+	 * The first character of a word that can stand for it in initials, skipping
+	 * leading punctuation, or '' when the word has none (a lone `-` or `()`).
+	 */
+	function initialCharacter(word: string): string {
+		const index = word.search(INITIAL_CHARACTER);
+		return index === -1 ? '' : firstCharacter(word.slice(index));
+	}
+
+	/** The text as a CSS string literal, with quotes and backslashes escaped. */
+	function cssString(text: string): string {
+		return `"${text.replace(/[\\"]/g, (char) => `\\${char}`).replace(/\n/g, '\\a ')}"`;
+	}
+
+	/**
+	 * Generates initials from a name string: the first letter, digit or emoji of
+	 * the first and last words. Words with none of those, such as a lone `-`, are
+	 * skipped, and leading punctuation within a word is ignored. Returns '' when
+	 * no word yields an initial.
+	 *
+	 * @example
+	 * ```
+	 * getInitials('John Doe') // 'JD'
+	 * getInitials('Alice') // 'A'
+	 * getInitials('Northwind Workbench (automation)') // 'NA'
+	 * ```
+	 */
+	function getInitials(name: string): string {
+		const initials = name
+			.trim()
+			.split(/\s+/)
+			.map(initialCharacter)
+			.filter((initial) => initial !== '');
+		if (initials.length === 0) {
+			return '';
+		}
+		if (initials.length === 1) {
+			return initials[0].toUpperCase();
+		}
+		return (initials[0] + initials[initials.length - 1]).toUpperCase();
+	}
+
+	/**
+	 * The string when it carries something, `undefined` when it is absent or
+	 * blank. An empty accessible name is meaningless, so a blank reads as
+	 * absent, the way Icon treats `label=""`.
+	 */
+	function meaningful(value: unknown): string | undefined {
+		return typeof value === 'string' && value.trim() !== '' ? value : undefined;
+	}
 
 	export interface AvatarProps extends BaseProps<HTMLDivElement> {
 		/** Accessible name and hover text. Falls back to `name`. */
@@ -83,7 +151,6 @@
 
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
-	import { firstCharacter } from '../../utils/characters.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
@@ -147,10 +214,13 @@
 	// A whitespace-only string carries no identity. Without this it produces no
 	// initials (getInitials trims to nothing) and no default icon (a space is
 	// truthy), leaving an empty plate behind a blank accessible name.
-	const meaningfulName = $derived(name?.trim() ? name : undefined);
-	const meaningfulAlt = $derived(alt?.trim() ? alt : undefined);
-	const showInitials = $derived(!showImage && !showFallbackImage && !!meaningfulName);
-	const showIcon = $derived(!showImage && !showFallbackImage && !meaningfulName);
+	const meaningfulName = $derived(meaningful(name));
+	const meaningfulAlt = $derived(meaningful(alt));
+	// A name made only of punctuation ("—", "()") still names the avatar, but
+	// yields no initials; it falls back to the default icon, not an empty plate.
+	const initialsText = $derived(meaningfulName ? getInitials(meaningfulName) : '');
+	const showInitials = $derived(!showImage && !showFallbackImage && initialsText !== '');
+	const showIcon = $derived(!showImage && !showFallbackImage && initialsText === '');
 
 	// The status element's accessible label, handed up by `AvatarStatusDot`
 	// rather than read off it — see `setAvatarStatusLabelSink`.
@@ -177,9 +247,32 @@
 	);
 	const isDecorative = $derived(!accessibleName);
 
+	// A consumer's own ARIA wins over the derived values, exactly as upstream's
+	// `{...a11yProps} {...props}` ordering makes it: the spread is written first
+	// and the explicit attribute after it in the template would otherwise
+	// overwrite a consumer `aria-label`, `role` or `aria-hidden`.
+	const consumerAriaLabel = $derived(rest['aria-label'] as string | undefined);
+	const consumerRole = $derived(rest.role as string | undefined);
+	const consumerAriaHidden = $derived(
+		rest['aria-hidden'] as boolean | 'true' | 'false' | undefined
+	);
+	const staticAriaLabel = $derived(
+		consumerAriaLabel !== undefined ? consumerAriaLabel : isDecorative ? undefined : accessibleName
+	);
+	const staticAriaHidden = $derived(
+		consumerAriaHidden !== undefined ? consumerAriaHidden : isDecorative ? true : undefined
+	);
+	const staticRole = $derived(consumerRole ?? (isDecorative ? 'presentation' : 'img'));
+	// An `<a>`/`<button>` root carries its own role and must not be hidden, so
+	// only the name transfers there — and the consumer's name still wins.
+	const interactiveAriaLabel = $derived(
+		consumerAriaLabel !== undefined ? consumerAriaLabel : accessibleName
+	);
+
 	// A group sets the size *and* the shape for every avatar inside it, overriding
 	// both props — a facepile stays uniform whatever its members ask for.
 	const group = useAvatarGroup();
+	const isInGroup = $derived(group != null);
 	const resolvedSize = $derived(group?.().size ?? size);
 	const resolvedShape = $derived(group?.().shape ?? shape);
 	const numericSize = $derived(resolveSize(resolvedSize));
@@ -236,18 +329,26 @@
 			: (rest['aria-describedby'] as string | undefined)
 	);
 
-	// An interactive control with no accessible name is an unacceptable control
-	// name. `useDevWarning` is the shared guardrail: it warns once per mount
-	// rather than on every render, and compiles out of production builds.
+	// An interactive control needs an identity of its own. A status label is not
+	// one: it composes into the accessible name, so `<Avatar href status={<dot
+	// label="Online" />} />` resolves a name that reads as legitimate and says
+	// nothing about where the link points at. Only `alt`/`name` count, or a
+	// consumer's own `aria-label`/`aria-labelledby` escape hatch, which wins
+	// over the derived props above.
 	//
-	// Upstream's `Avatar.tsx` was the last site in the package still writing a
-	// bare, ungated `console.warn` — kept here verbatim while that was true, and
-	// moved onto the shared hook the moment 0.4.2 moved upstream's (#5030).
+	// `useDevWarning` is the shared guardrail: it warns once per mount rather
+	// than on every render, and compiles out of production builds. Upstream's
+	// `Avatar.tsx` was the last site in the package still writing a bare,
+	// ungated `console.warn` — kept here verbatim while that was true, and moved
+	// onto the shared hook the moment 0.4.2 moved upstream's (#5030).
+	const consumerName = $derived(
+		meaningful(rest['aria-label']) ?? meaningful(rest['aria-labelledby'])
+	);
 	useDevWarning(
 		'Avatar',
 		'an interactive avatar (with `href` or `onclick`) needs a meaningful ' +
 			'accessible name. Pass `alt` or `name`.',
-		() => isInteractive && !accessibleName
+		() => isInteractive && !nameLabel && consumerName == null
 	);
 
 	const wrapper = $derived(
@@ -270,8 +371,8 @@
 
 	const content = avatarContentAttrs();
 	const image = avatarImageAttrs();
-	const initials = $derived(avatarInitialsAttrs(numericSize));
-	const icon = avatarIconAttrs();
+	const initials = $derived(avatarInitialsAttrs(numericSize, !isInGroup, cssString(initialsText)));
+	const icon = $derived(avatarIconAttrs(!isInGroup));
 	const statusAttrs = $derived(avatarStatusAttrs(numericSize, resolvedShape));
 	const theme = $derived(themeProps('avatar', { size: resolvedSize, shape: resolvedShape }));
 	// The fallback surface (initials + default icon) is its own theme target as
@@ -293,29 +394,12 @@
 		rel,
 		class: cx(theme.class, wrapper.class, className),
 		style: mergeStyle(wrapper.style, styleProp as string | undefined),
-		'aria-label': accessibleName,
+		'aria-label': interactiveAriaLabel,
 		'aria-describedby': describedBy,
 		'data-avatar-item': '',
 		onclick,
 		[createAttachmentKey()]: tooltipHook.attachTrigger
 	});
-
-	/**
-	 * First letter of the first word, plus the first of the last.
-	 *
-	 * `charAt(0)` returns one UTF-16 **code unit**, which splits any character
-	 * outside the BMP down the middle — an emoji or a multi-codepoint grapheme
-	 * rendered as a lone surrogate. `firstCharacter` segments by grapheme
-	 * instead, falling back to code points where `Intl.Segmenter` is
-	 * unavailable. It was local to this component until upstream 0.4.5 extracted
-	 * it to `utils/characters`, where three other consumers share it.
-	 */
-	function getInitials(value: string): string {
-		const words = value.trim().split(/\s+/);
-		if (words.length === 0) return '';
-		if (words.length === 1) return firstCharacter(words[0]).toUpperCase();
-		return (firstCharacter(words[0]) + firstCharacter(words[words.length - 1])).toUpperCase();
-	}
 </script>
 
 <!--
@@ -345,9 +429,13 @@
 				onerror={() => (erroredFallbackSrc = fallbackSrc)}
 			/>
 		{:else if showInitials}
-			<div class={cx(fallbackTheme.class, initials.class)} style={initials.style}>
-				{getInitials(meaningfulName as string)}
-			</div>
+			<!--
+				Empty on purpose: the initials are generated content on `::before`,
+				not a text node. Visible initials that the name does not contain
+				fail WCAG 2.5.3 Label in Name on an interactive avatar, and the
+				root's `aria-label` already names the person.
+			-->
+			<div class={cx(fallbackTheme.class, initials.class)} style={initials.style}></div>
 		{:else if showIcon}
 			<div class={cx(fallbackTheme.class, icon.class)} style={icon.style}>
 				<svg
@@ -405,7 +493,7 @@
 		type="button"
 		class={cx(theme.class, wrapper.class, className)}
 		style={mergeStyle(wrapper.style, styleProp as string | undefined)}
-		aria-label={accessibleName}
+		aria-label={interactiveAriaLabel}
 		aria-describedby={describedBy}
 		data-avatar-item=""
 		{onclick}
@@ -427,9 +515,9 @@
 		{@attach tooltipHook.attachTrigger}
 		class={cx(theme.class, wrapper.class, className)}
 		style={mergeStyle(wrapper.style, styleProp as string | undefined)}
-		role={isDecorative ? 'presentation' : 'img'}
-		aria-label={isDecorative ? undefined : accessibleName}
-		aria-hidden={isDecorative || undefined}
+		role={staticRole}
+		aria-label={staticAriaLabel}
+		aria-hidden={staticAriaHidden}
 		aria-describedby={describedBy}
 		tabindex={showTooltip && !group ? 0 : undefined}
 	>

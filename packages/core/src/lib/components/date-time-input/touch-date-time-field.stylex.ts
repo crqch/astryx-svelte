@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import {
 	colorVars,
@@ -82,9 +83,12 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			// A coarse pointer means a touch device, where a sub-16px font makes
-			// mobile Safari zoom the viewport on focus.
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			// The 16px floor is iOS-only: iOS Safari zooms the page when a focused
+			// control sits under 16px, and only iOS WebKit implements
+			// -webkit-touch-callout to key the coarse-pointer floor to it.
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -127,7 +131,8 @@ const styles = stylex.create({
 		inlineSize: '100%',
 		minInlineSize: 0,
 		paddingInline: spacingVars['--spacing-4'],
-		paddingBlockStart: spacingVars['--spacing-6'],
+		// The sheet keeps the band under its grab bar.
+		paddingBlockStart: 0,
 		paddingBlockEnd: spacingVars['--spacing-4']
 	},
 	touchSurface: {
@@ -282,6 +287,7 @@ export function touchDateTimeDateWrapperAttrs(
 		sizeStyles[size],
 		styles.touchDateWrapper,
 		isEffectivelyDisabled && inputWrapperStyles.disabled,
+		isEffectivelyDisabled && inputDisabledFocusStyles.withinRing,
 		statusType && inputStatusBorderStyles[statusType],
 		statusType && !isEffectivelyDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType]
@@ -299,6 +305,7 @@ export function touchDateTimeTimeWrapperAttrs(
 		sizeStyles[size],
 		styles.touchTimeWrapper,
 		isEffectivelyDisabled && inputWrapperStyles.disabled,
+		isEffectivelyDisabled && inputDisabledFocusStyles.withinRing,
 		statusType && inputStatusBorderStyles[statusType],
 		statusType && !isEffectivelyDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType]

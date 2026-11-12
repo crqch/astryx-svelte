@@ -44,6 +44,13 @@
 		 */
 		panelState: BottomSheetPanelState;
 		height: BottomSheetHeightValue | number | string;
+		/** Existing host name, reused for the keyboard scrolling group. */
+		label: string;
+		/**
+		 * Content padding on the spacing scale. Omitted, the content box reads the
+		 * theme's bottom-sheet padding, then `--spacing-4` (Dialog's default).
+		 */
+		padding?: SpacingStep;
 		children: Snippet;
 		snapPoints?: ReadonlyArray<BottomSheetSnapPointValue>;
 		isSwipeDismissAllowed?: boolean;
@@ -71,7 +78,13 @@
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { spacingStepToToken } from '../../internal/padding.stylex.js';
+	import type { SpacingStep } from '../../internal/types.js';
+	import type { SpacingToken } from '../../internal/container.stylex.js';
+	import LayerContentBoundary from '../layer/layer-content-boundary.svelte';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useScrollableArea } from '../../hooks/use-scrollable-area.svelte.js';
 	import { isValidSnapPoint, resolveSnapPoints } from './snap-offsets.js';
 	import { useMobileKeyboard } from './use-mobile-keyboard.svelte.js';
 	import { useSheetGestures } from './use-sheet-gestures.svelte.js';
@@ -80,9 +93,10 @@
 		HEIGHT_BUDGETS,
 		MOBILE_KEYBOARD_BOTTOM_CLEARANCE,
 		OVERSCROLL_PADDING,
+		REDUCED_MOTION_COARSE_QUERY,
 		bottomSheetBodyAttrs,
+		bottomSheetContentAttrs,
 		bottomSheetHandleBarAttrs,
-		bottomSheetHandlePillAttrs,
 		bottomSheetPanelAttrs
 	} from './bottom-sheet-panel.stylex.js';
 
@@ -100,6 +114,8 @@
 	let {
 		panelState,
 		height,
+		label,
+		padding,
 		children,
 		snapPoints,
 		class: className,
@@ -133,6 +149,7 @@
 	const isRetained = $derived(panelState.kind === 'retained');
 	const isInactive = $derived(isRetained || panelState.kind === 'exiting');
 	const isClosing = $derived(panelState.kind === 'exiting');
+	const isEntrySettled = $derived(panelState.kind === 'open' && !panelState.entering);
 	const isFading = $derived(
 		isRetained && panelState.kind === 'retained' && panelState.motion === 'fading'
 	);
@@ -218,6 +235,25 @@
 		sheet: () => element
 	});
 
+	// The body and its content box are a shared scrollable area: the body is the
+	// viewport (overflow, overscroll and keyboard reachability move onto it) and
+	// the content box inside it carries the padding. `stickyContainment: 'always'`
+	// keeps the body a Sticky boundary while it fits, as it was before the shared
+	// scroll adoption.
+	const scrollArea = useScrollableArea(() => ({
+		axis: 'both',
+		keyboardAccess: { owner: 'contentOrViewport', label },
+		overscroll: 'contain',
+		stickyContainment: 'always'
+	}));
+
+	// Under reduced motion a coarse pointer cross-fades the exit in place rather
+	// than travelling. A touch drag's dismissal on a fine pointer is the same
+	// cross-fade upstream, but the gesture hook here does not report that drag's
+	// exit, so this port keeps the base exit on that branch.
+	const isCoarseCrossFade = useMediaQuery(() => REDUCED_MOTION_COARSE_QUERY);
+	const isCrossFade = $derived(isCoarseCrossFade.matches);
+
 	// Reports `null` on teardown as well, which is the half of upstream's ref
 	// callback a bare effect drops: React calls `setElement(null)` when the panel
 	// unmounts, and a switcher learns that its sheet has gone only from that call.
@@ -261,13 +297,21 @@
 			pendingMotionComplete = current;
 			return;
 		}
-		return waitForTransition(sheet, current === 'fading' ? 'opacity' : 'transform', () => {
-			if (startedMotion === current) {
-				onMotionComplete?.(current);
-			} else {
-				pendingMotionComplete = current;
+		// Under the reduced-motion cross-fade an exit fades where it is, and its
+		// dialog closes only after the fade, so it waits on opacity. The entrance
+		// still waits on its instant transform.
+		const crossFadeMotion = isCrossFade && current === 'exiting';
+		return waitForTransition(
+			sheet,
+			current === 'fading' || crossFadeMotion ? 'opacity' : 'transform',
+			() => {
+				if (startedMotion === current) {
+					onMotionComplete?.(current);
+				} else {
+					pendingMotionComplete = current;
+				}
 			}
-		});
+		);
 	});
 
 	// The snap is transform-only; the layout height reconciles when it lands.
@@ -383,8 +427,10 @@
 	const panelAttrs = $derived(
 		bottomSheetPanelAttrs(
 			isClosing,
+			isCrossFade,
 			isFading,
 			isInactive,
+			isEntrySettled,
 			height === 'hug',
 			height !== 'hug',
 			xstyle
@@ -392,8 +438,28 @@
 	);
 	const theme = themeProps('bottom-sheet');
 	const handleBarAttrs = bottomSheetHandleBarAttrs();
-	const handlePillAttrs = bottomSheetHandlePillAttrs();
 	const bodyAttrs = $derived(bottomSheetBodyAttrs(height === 'tall'));
+	const effectivePadding = $derived(padding ?? 4);
+	const usesThemePadding = $derived(padding == null);
+	const paddingToken = $derived(spacingStepToToken[effectivePadding] as SpacingToken);
+	const contentAttrs = $derived(
+		bottomSheetContentAttrs(height === 'tall', usesThemePadding, effectivePadding, paddingToken)
+	);
+	const bodyProps = $derived(
+		scrollArea.getViewportProps({
+			...gestures.bodyProps,
+			class: bodyAttrs.class,
+			style: mergeStyle(
+				bodyAttrs.style,
+				gestures.scrollPreservationInset > 0
+					? `padding-block-end: ${gestures.scrollPreservationInset}px`
+					: undefined
+			)
+		})
+	);
+	const contentProps = $derived(
+		scrollArea.getContentProps({ class: contentAttrs.class, style: contentAttrs.style })
+	);
 
 	/** The panelState-dependent half of the inline style, as upstream's spread is. */
 	const stateStyle = $derived(
@@ -414,7 +480,11 @@
 	);
 
 	const inlineStyle = $derived(
-		[`--_sheet-budget: ${budget}`, ...stateStyle.filter(Boolean)].join('; ')
+		[
+			`--_sheet-budget: ${budget}`,
+			`--_sheet-reserve: ${OVERSCROLL_PADDING}px`,
+			...stateStyle.filter(Boolean)
+		].join('; ')
 	);
 </script>
 
@@ -438,19 +508,12 @@
 		{...gestures.handleProps}
 		style={mergeStyle(handleBarAttrs.style, gestures.handleProps.style)}
 		aria-hidden="true"
-	>
-		<div class={handlePillAttrs.class} style={handlePillAttrs.style}></div>
-	</div>
-	<div
-		class={bodyAttrs.class}
-		style={mergeStyle(
-			bodyAttrs.style,
-			gestures.scrollPreservationInset > 0
-				? `padding-block-end: ${gestures.scrollPreservationInset}px`
-				: undefined
-		)}
-		{...gestures.bodyProps}
-	>
-		{@render children()}
+	></div>
+	<div {...bodyProps}>
+		<div {...contentProps}>
+			<LayerContentBoundary>
+				{@render children()}
+			</LayerContentBoundary>
+		</div>
 	</div>
 </div>

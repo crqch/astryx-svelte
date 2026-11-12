@@ -25,7 +25,16 @@ export default {
 		targets: [
 			{
 				className: 'astryx-item',
-				visualProps: ['density', 'align']
+				visualProps: ['density', 'align'],
+				states: ['highlighted', 'selected', 'disabled']
+			},
+			{
+				className: 'astryx-item-swipe-panel',
+				visualProps: ['side']
+			},
+			{
+				className: 'astryx-item-swipe-action',
+				visualProps: ['variant']
 			}
 		],
 		vars: [
@@ -41,6 +50,19 @@ export default {
 				description: 'Companion to --_item-label-color for the secondary description line.',
 				default: 'var(--color-text-secondary)',
 				private: true
+			},
+			{
+				name: '--_item-inset-inline',
+				description:
+					'Inline inset of the row. Item derives its paddingInline from this variable, and List reads it to place rows for its edge treatments (edge="flush", "outset", and "bleed"). Set paddingInline on `item` in a theme and both stay in sync.',
+				default: 'var(--spacing-2) (var(--spacing-3) for density="spacious")',
+				private: true
+			}
+		],
+		derived: [
+			{
+				property: 'paddingInline',
+				vars: ['--_item-inset-inline']
 			}
 		]
 	},
@@ -66,7 +88,12 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Use align="start" when start or end content is taller than a single line of text.'
+					'Use align="first-line" when a wrapping label sits beside a small mark (a status dot, a radio, a timestamp) that belongs to its first line. Use align="start" to line up the tops of a tall slot and the text.'
+			},
+			{
+				guidance: true,
+				description:
+					'Give a swipe action a second home in the row (a menu or a button in endContent): the swipe is a touch accelerator, and a verb reachable only by swipe is unreachable by keyboard and by mouse.'
 			},
 			{
 				guidance: false,
@@ -151,14 +178,16 @@ export default {
 		},
 		{
 			name: 'as',
-			type: "'div' | 'li' | 'span'",
-			description: 'HTML element to render as the root.',
+			type: "'div' | 'li' | 'span' | LinkComponentType",
+			description:
+				"What the root renders as: an HTML element, or a component for a caller that needs the root to be something else. A menu row that navigates passes the application's link component here, so the row's root IS the anchor. Give a component only when the row carries a role, and only when no interactive node sits in startContent or endContent.",
 			default: "'div'"
 		},
 		{
 			name: 'align',
-			type: "'start' | 'center'",
-			description: 'Vertical alignment of start/end content slots.',
+			type: "'start' | 'center' | 'first-line'",
+			description:
+				"Vertical alignment of start/end content slots. 'center' centers each slot on the whole text block; 'start' lines up slot tops with the text's top; 'first-line' centers each slot on the label's first line, so a small mark stays level with the first line of a wrapped label. A slot taller than that line moves the text down. The `item` theme target reflects the value as `align`.",
 			default: "'center'"
 		},
 		{
@@ -199,7 +228,8 @@ export default {
 		{
 			name: 'href',
 			type: 'string',
-			description: 'Link URL. Makes the item a link via an invisible anchor element.'
+			description:
+				'Link URL. Makes the item a link via an invisible anchor element. A row whose root is already a link component (see `as`) carries the address on that root instead, and no invisible anchor is rendered.'
 		},
 		{
 			name: 'target',
@@ -232,14 +262,38 @@ export default {
 			default: 'false'
 		},
 		{
+			name: 'swipeActions',
+			type: 'ItemSwipeActions',
+			description:
+				"Swipe actions for touch: the verbs a sideways drag uncovers on each side, outermost last, each `{id?, label, icon?, onActivate, isDisabled?, variant?: 'neutral' | 'accent' | 'destructive', hasRemoval?}`. `leading` is uncovered by a drag toward the inline end, `trailing` toward the inline start. A mouse never starts the drag and a mostly vertical drag stays the scroller's. The gesture is a touch accelerator and never a row's only path to a verb: a verb reachable only by swipe is unreachable by keyboard and by mouse, so every entry must also be reachable through the row's own content. Served on a row whose role permits interactive descendants (a listitem, a row with no role) and not on an option, a menu item, or a row that is the enlarged target of a native radio. The element containing the rows clips in the inline axis with overflow-inline: clip — List does; any other host does it once. `hasRemoval` only says the row holds out after the action fires instead of springing back. The gesture and its panels are loaded on demand the first time a row has swipe actions, so a row without them ships none of it."
+		},
+		{
+			name: 'swipeBehavior',
+			type: "'reveal' | 'commit'",
+			description:
+				'What a swipe does. `reveal` rests the row open with every entry a real button and fires the outermost on a long drag or a fling; `commit` slides the row out and fires the outermost on release, with nothing resting and a presentational panel. `commit` fits one entry per side.',
+			default: "'reveal'"
+		},
+		{
 			name: 'ref',
-			type: 'HTMLDivElement | null',
-			description: 'Ref forwarded to the root element.'
+			type: 'HTMLElement | null',
+			description: 'Ref forwarded to the root element, whose type follows `as`.'
 		},
 		{
 			name: 'xstyle',
 			type: 'StyleArg',
-			description: 'StyleX styles for layout customization. Must be a stylex.create() value.'
+			description:
+				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}.'
+		},
+		{
+			name: 'class',
+			type: 'ClassValue | null',
+			description: 'CSS class name(s) for the root element.'
+		},
+		{
+			name: 'style',
+			type: 'string | null',
+			description: 'Inline styles for the root element.'
 		},
 		{
 			name: 'data-testid',

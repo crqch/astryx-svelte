@@ -44,7 +44,8 @@ export default {
 		{
 			name: 'hasAutoFocus',
 			type: 'boolean',
-			description: 'Whether to automatically focus the first focusable element when opened.',
+			description:
+				'Whether to focus the first genuine content control when opened. Dialogs with none fall back to the labeled surface; the generated close control is excluded from initial focus.',
 			default: 'true'
 		},
 		{
@@ -67,7 +68,7 @@ export default {
 		},
 		{
 			name: 'role',
-			type: "'none' | 'dialog'",
+			type: "'dialog' | 'none'",
 			description:
 				'ARIA role on the content wrapper. Use "dialog" for genuine dialog content; use "none" for listbox/menu popups whose own content role should be exposed and whose trigger keeps DOM focus.',
 			default: "'dialog'"
@@ -84,6 +85,18 @@ export default {
 			type: 'boolean',
 			description: 'Whether to apply the default popover surface background, radius, and shadow.',
 			default: 'true'
+		},
+		{
+			name: 'padding',
+			type: '0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10',
+			description:
+				'Inner padding of the painted surface on the spacing scale (0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10). Omit it and the hook paints no padding of its own; Popover passes 3 by default and 0 for a flush surface.'
+		},
+		{
+			name: 'surfaceTarget',
+			type: 'string',
+			description:
+				'Optional component-owned refinement target on the painted surface, without the astryx- prefix. Use and document one when a direct hook composition needs distinct theme reachability.'
 		}
 	],
 	returns: [
@@ -94,7 +107,7 @@ export default {
 		},
 		{
 			name: 'contentRef',
-			type: 'HTMLDivElement | null',
+			type: 'HTMLElement | null',
 			description: 'Ref for the popover content container used by focus trapping.'
 		},
 		{
@@ -143,7 +156,7 @@ export default {
 	],
 	usage: {
 		description:
-			'Headless hook for click-triggered popovers with focus trapping. Combines useLayer with useFocusTrap, auto-focus, light dismiss, Escape handling, and an optional hidden close button for accessible dialog-like popover behavior. Use for custom interactive floating content that needs keyboard navigation.',
+			'Headless hook for click-triggered popovers with focus trapping. Combines useLayer with useFocusTrap, auto-focus, light dismiss, Escape handling, and an optional hidden close button for accessible dialog-like popover behavior. Every painted surface emits the canonical popover target. A custom composition needing a distinct stable seam should pass and document its own surfaceTarget.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -156,6 +169,15 @@ export default {
 					'Prefer the Popover component for standard trigger-content pairs; use the hook for custom trigger patterns.'
 			},
 			{
+				guidance: true,
+				description: 'Use popover as the broad canonical surface target.'
+			},
+			{
+				guidance: true,
+				description:
+					'When a custom composition needs its own theme refinement, pass and document an owned surfaceTarget such as selector-popup. It refines the Popover surface rather than creating another anatomy part.'
+			},
+			{
 				guidance: false,
 				description:
 					'Use for non-interactive hover previews: use useHoverCard or useTooltip instead.'
@@ -164,6 +186,6 @@ export default {
 	},
 	relatedComponents: ['Popover', 'DropdownMenu', 'HoverCard'],
 	relatedHooks: ['useLayer', 'useFocusTrap', 'useHoverCard', 'useTooltip'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

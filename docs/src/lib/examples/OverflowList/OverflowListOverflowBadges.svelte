@@ -3,8 +3,8 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Card, OverflowList } from '@astryx-svelte/core';
-	import type { BadgeProps } from '@astryx-svelte/core';
+	import { Badge, Card, OverflowList } from '@astryx-sv/core';
+	import type { BadgeProps } from '@astryx-sv/core';
 
 	/**
 	 * Upstream passes the badges as `children`; this port takes `items` plus an

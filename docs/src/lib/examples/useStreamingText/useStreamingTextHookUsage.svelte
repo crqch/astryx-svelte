@@ -8,7 +8,7 @@
 	`useMediaQuery`). Same three arguments, same order, same values.
 -->
 <script lang="ts">
-	import { Card, Text, useStreamingText, VStack } from '@astryx-svelte/core';
+	import { Card, Text, useStreamingText, VStack } from '@astryx-sv/core';
 
 	const response = 'Astryx hooks keep behavior reusable while components keep visuals consistent.';
 

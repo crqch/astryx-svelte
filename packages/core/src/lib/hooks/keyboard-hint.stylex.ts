@@ -23,11 +23,8 @@ const styles = stylex.create({
 		position: 'fixed',
 		inset: 'auto',
 		margin: 0,
-		// `border: 'none'` emits no class at all — StyleX drops it on both sides,
-		// so there is no rule for it in upstream's compiled CSS either. It is
-		// transcribed for source parity and is inert; rewriting it as
-		// `borderWidth`/`borderStyle` would invent classes upstream does not have.
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 
 		// Surface
 		backgroundColor: colorVars['--color-background-popover'],
@@ -51,9 +48,11 @@ const styles = stylex.create({
 		},
 		transitionProperty: 'opacity, display, overlay',
 		transitionDuration: '150ms',
-		transitionBehavior: 'allow-discrete',
-
-		// Don't capture pointer events (hint floats above content)
+		transitionBehavior: 'allow-discrete'
+	},
+	// A hint that only teaches floats above the content without taking its
+	// pointer events.
+	passive: {
 		pointerEvents: 'none'
 	},
 	keys: {
@@ -67,12 +66,12 @@ const styles = stylex.create({
 });
 
 /**
- * The popover surface's `xstyle`. Upstream passes `styles.hint` straight into
- * `layer.render`, so this stays a style object rather than finished attributes
- * — `<Layer>` composes it with its own base styles, and a finished class string
- * cannot take part in that merge.
+ * The popover surface's `xstyle`. Upstream passes the hint and passive styles
+ * to `layer.render` as one array, so this stays a style object rather than
+ * finished attributes — `<Layer>` composes it with its own base styles, and a
+ * finished class string cannot take part in that merge.
  */
-export const keyboardHintXstyle: StyleArg = styles.hint;
+export const keyboardHintXstyle: StyleArg = [styles.hint, styles.passive];
 
 /** The inline-flex row holding one `<Kbd>` per arrow. */
 export function keyboardHintKeysAttrs(): SvelteStyleAttrs {

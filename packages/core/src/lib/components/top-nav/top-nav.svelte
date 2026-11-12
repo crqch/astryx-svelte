@@ -22,8 +22,9 @@
 		children?: Snippet;
 		/**
 		 * Center content slot — typically tabs, a search box, or primary
-		 * navigation. When provided, the layout switches to a three-column CSS grid
-		 * so the centre stays centred regardless of start/end content widths.
+		 * navigation. When provided, the start and end regions share the free
+		 * width equally so the centre stays at the bar's middle while the three
+		 * regions fit one row; the bar wraps when they do not.
 		 */
 		centerContent?: Snippet;
 		/**
@@ -59,6 +60,7 @@
 		topNavLeftSectionAttrs,
 		topNavMobileBarAttrs,
 		topNavMobileBarEndAttrs,
+		topNavMobileBarHeadingAttrs,
 		topNavRightSectionAttrs,
 		topNavRootAttrs,
 		topNavStartContentAttrs
@@ -70,8 +72,9 @@
 	 *
 	 * Slot-based: `heading`, `startContent`, `centerContent`, `endContent`.
 	 * `children` is an alias for `startContent`, so nav items written as component
-	 * content are not silently dropped. Supplying `centerContent` switches the bar
-	 * from a flex row to a three-column grid.
+	 * content are not silently dropped. Supplying `centerContent` makes the start
+	 * and end regions share the free width equally, keeping the centre at the
+	 * bar's middle while the three regions fit one row.
 	 *
 	 * Three shapes, picked by `TopNavRenderContext`:
 	 * - `'default'`: the full bar.
@@ -125,6 +128,7 @@
 	const mobileBarTheme = themeProps('top-nav', { mode: 'mobile-bar' });
 	const rootAttrs = $derived(topNavRootAttrs(hasCenterContent, xstyle));
 	const mobileBarAttrs = $derived(topNavMobileBarAttrs(xstyle));
+	const mobileBarHeadingAttrs = topNavMobileBarHeadingAttrs();
 	const leftSectionAttrs = topNavLeftSectionAttrs();
 	const headingSlotAttrs = topNavHeadingSlotAttrs();
 	const startContentAttrs = topNavStartContentAttrs();
@@ -150,7 +154,9 @@
 		{...rest}
 	>
 		{#if heading}
-			<div class={headingSlotAttrs.class} style={headingSlotAttrs.style}>{@render heading()}</div>
+			<div class={mobileBarHeadingAttrs.class} style={mobileBarHeadingAttrs.style}>
+				{@render heading()}
+			</div>
 		{/if}
 		<div class={mobileBarEndAttrs.class} style={mobileBarEndAttrs.style}>
 			{#if endContent}{@render endContent()}{/if}

@@ -16,7 +16,8 @@ export default {
 		'linear',
 		'determinate',
 		'indeterminate',
-		'meter'
+		'meter',
+		'linearprogress'
 	],
 	category: 'Feedback & Status',
 	theming: {
@@ -35,25 +36,6 @@ export default {
 			{
 				className: 'astryx-progress-bar-mark',
 				visualProps: ['variant', 'placement']
-			},
-			{
-				className: 'astryx-progressbar',
-				visualProps: ['variant'],
-				deprecatedFor: 'progress-bar'
-			},
-			{
-				className: 'astryx-progressbar-fill',
-				visualProps: ['variant'],
-				deprecatedFor: 'progress-bar-fill'
-			},
-			{
-				className: 'astryx-progressbar-track',
-				deprecatedFor: 'progress-bar-track'
-			},
-			{
-				className: 'astryx-progressbar-mark',
-				visualProps: ['variant', 'placement'],
-				deprecatedFor: 'progress-bar-mark'
 			}
 		],
 		vars: [
@@ -84,8 +66,41 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Progress bar',
+				required: true,
+				description: 'Container arranging the label row and progress track.'
+			},
+			{
+				name: 'Label',
+				required: true,
+				description:
+					'Text naming the operation, optionally hidden visually while remaining accessible.'
+			},
+			{
+				name: 'Value text',
+				required: false,
+				description: 'Formatted determinate value shown beside the label when requested.'
+			},
+			{
+				name: 'Track',
+				required: true,
+				description: 'Remaining-progress rail that carries the progressbar semantics.'
+			},
+			{
+				name: 'Fill',
+				required: true,
+				description: 'Painted segment showing completed progress or indeterminate movement.'
+			},
+			{
+				name: 'Mark',
+				required: false,
+				description: 'Labeled target tick positioned on a determinate track.'
+			}
+		],
 		description:
-			"A horizontal bar showing the completion progress of a task. Use it for operations where the duration is known, or as an animated indicator when progress can't be calculated. Supports semantic color variants, value labels, and custom formatting.",
+			"A horizontal bar showing the completion progress of a task. Use it for operations where the duration is known, or as an animated indicator when progress can't be calculated. Supports semantic color variants, value labels, and custom formatting. Under a finger a new value animates as on iOS: linearly, in proportion to how far it moves (a full track takes one second at the theme's default tempo), and the fill keeps a minimum visible length above zero.",
 		bestPractices: [
 			{
 				guidance: true,
@@ -164,7 +179,8 @@ export default {
 		{
 			name: 'isIndeterminate',
 			type: 'boolean',
-			description: 'Animated loading indicator for unknown progress.',
+			description:
+				'Animated loading indicator for unknown progress. Under reduced motion it pulses in place instead of sliding.',
 			default: 'false'
 		},
 		{

@@ -1,6 +1,6 @@
 /**
  * @file Keeps the documented framework version in sync with the peer
- * dependency range declared by `@astryx-svelte/core` (upstream issue #4575:
+ * dependency range declared by `@astryx-sv/core` (upstream issue #4575:
  * users must be able to discover the framework requirement without reading
  * package.json).
  *
@@ -45,7 +45,7 @@ describe('documented Svelte version matches the core peer dependency', () => {
 	const svelteRange = pkg.peerDependencies?.svelte;
 	if (typeof svelteRange !== 'string') {
 		throw new Error(
-			'@astryx-svelte/core no longer declares a svelte peer dependency; ' +
+			'@astryx-sv/core no longer declares a svelte peer dependency; ' +
 				`${SURFACES}, then teach this test the new contract`
 		);
 	}
@@ -97,7 +97,7 @@ describe('documented Svelte version matches the core peer dependency', () => {
 		expect(readme, SURFACES).toMatch(namesTheMajor);
 	});
 
-	it(`@astryx-svelte/core README names Svelte ${major}`, () => {
+	it(`@astryx-sv/core README names Svelte ${major}`, () => {
 		const readme = fs.readFileSync(path.join(coreDir, 'README.md'), 'utf-8');
 		expect(readme, SURFACES).toMatch(namesTheMajor);
 	});

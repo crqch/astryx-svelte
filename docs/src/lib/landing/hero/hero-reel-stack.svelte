@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
+	import { Theme } from '@astryx-sv/core';
 	import { effectiveMode, useHeroReel } from './hero-reel-context.svelte.js';
 	import HeroFloatingCards from './hero-floating-cards.svelte';
 

@@ -49,10 +49,6 @@ export default {
 			{
 				className: 'astryx-table-header-cell',
 				visualProps: ['density']
-			},
-			{
-				className: 'astryx-base-table',
-				deprecatedFor: 'table'
 			}
 		]
 	},
@@ -78,7 +74,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Set explicit width on every column using proportional() or pixel(). proportional(1) gives equal flex distribution with a 120px minimum that prevents columns from collapsing on narrow viewports. Omitting width skips the minimum.'
+					'Omit width for equal flexible columns with a compact 60px readability floor. Give one column its own floor with proportional(1, {minWidth}), weight columns with proportional(n), and fix widths with pixel(); the Table scroll region activates when the combined floors no longer fit.'
 			},
 			{
 				guidance: true,
@@ -98,39 +94,100 @@ export default {
 			{
 				guidance: false,
 				description:
-					'Omit width on text-heavy columns; without an explicit proportional() width they have no minimum and can squish to near-zero on mobile.'
+					'Rely on the 60px omitted-width floor when a text-heavy column needs more room; set proportional(1, {minWidth}) on that column instead.'
 			}
 		],
 		anatomy: [
 			{
-				name: 'Column Header',
+				name: 'Table',
 				required: true,
-				description: 'Displays titles, sorting controls, and bulk selection.'
+				description: 'Semantic table element that groups the table sections, rows, and cells.'
 			},
 			{
-				name: 'Body Rows',
+				name: 'Scroll region',
 				required: true,
-				description: 'Rows with consistent data structure.'
+				description:
+					'Outer region that scrolls horizontally when columns overflow. Fixed-height virtualization also enables block scrolling; the region enters keyboard order while either applicable axis overflows.'
 			},
 			{
-				name: 'Footer',
+				name: 'Header section',
 				required: false,
-				description: 'Displays summary or totals.'
+				description:
+					'Column-heading section generated when data-driven columns are present or supplied with TableHeader in children mode.'
 			},
 			{
-				name: 'Top Bar',
+				name: 'Column header cell',
 				required: false,
-				description: 'Contains title, toolbar, and filters.'
+				description:
+					'Cell that identifies one column and may contain sorting or bulk-selection controls.'
 			},
 			{
-				name: 'Bottom Bar',
+				name: 'Sort control',
 				required: false,
-				description: 'Contains pagination controls.'
+				description:
+					"Button that wraps a sortable column label and changes that column's sort direction."
 			},
 			{
-				name: 'Support Panels',
+				name: 'Sort indicator glyph',
 				required: false,
-				description: 'Displays row details in a side panel.'
+				description: 'Directional symbol rendered by Icon inside a Sort control.'
+			},
+			{
+				name: 'Sort priority',
+				required: false,
+				description: 'Number shown for a sorted column when multi-column sorting is active.'
+			},
+			{
+				name: 'Selection control',
+				required: false,
+				description:
+					'CheckboxInput rendered in the header and selectable body rows by the selection plugin.'
+			},
+			{
+				name: 'Body section',
+				required: true,
+				description:
+					'Section containing data rows or the current empty state; data-driven mode renders it automatically.'
+			},
+			{
+				name: 'Row',
+				required: false,
+				description:
+					'Repeated TableRow that groups cells in a standard header, body, or footer row.'
+			},
+			{
+				name: 'Cell',
+				required: false,
+				description:
+					'TableCell containing one value or caller-provided content in a standard body or footer row.'
+			},
+			{
+				name: 'Default empty state',
+				required: false,
+				description:
+					'Compact EmptyState shown for an empty data array unless it is replaced or disabled.'
+			},
+			{
+				name: 'Expansion control',
+				required: false,
+				description: 'Button in a leading cell that expands or collapses one expandable row.'
+			},
+			{
+				name: 'Expansion glyph',
+				required: false,
+				description: 'Directional symbol rendered by Icon inside an Expansion control.'
+			},
+			{
+				name: 'Expanded detail panel',
+				required: false,
+				description:
+					'Detail row and spanning cell rendered below an expanded row around caller-provided content.'
+			},
+			{
+				name: 'Footer section',
+				required: false,
+				description:
+					'Optional summary or totals section supplied with TableFooter in children mode.'
 			}
 		]
 	},
@@ -180,13 +237,13 @@ export default {
 			name: 'columns',
 			type: 'TableColumn<T>[]',
 			description:
-				'Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryx-svelte/core`. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for flex distribution.'
+				'Column definitions: each column has {key, header, width?, align?, renderCell?}. The `header` field sets the column heading text. If omitted, columns are auto-generated from data object keys. The `width` field is typed as `ColumnWidth` (not a number); use `proportional(n)` or `pixel(n)` helpers imported from `@astryx-sv/core`. Omitting `width` keeps an equal flexible share with a compact 60px readability floor. To give one column a different floor, set `width: proportional(1, {minWidth: 80})`; its `minWidth` replaces the 60px floor for that column. Example: `width: pixel(120)` for 120px fixed, `width: proportional(1)` for a flexible column with a 120px default minimum.'
 		},
 		{
 			name: 'idKey',
 			type: '(keyof T & string) | ((item: T) => string | number)',
 			description:
-				'Row key for React reconciliation. Pass a property name string or a function. Falls back to row index if omitted.'
+				'Canonical row identity: a property name projects valid strings and finite numbers to strings; a function retains string/number type. Optional legacy tables fall back to index. Virtualization requires explicit unique valid keys.'
 		},
 		{
 			name: 'density',
@@ -225,6 +282,12 @@ export default {
 			description:
 				"How body cell text behaves when it exceeds the column width. 'wrap' lets text wrap and the row grow taller; 'truncate' clips with an ellipsis (default-rendered cells show a tooltip on hover when truncated). Header cells always truncate.",
 			default: "'wrap'"
+		},
+		{
+			name: 'virtualization',
+			type: 'TableVirtualizationCapability',
+			description:
+				"Geometry-only capability from useTableRowsVirtualization({rowHeight, initialViewportHeight}), both positive finite CSS pixels; the Table scrolls inside the height its parent gives it, and initialViewportHeight only sizes the first window. Give the Table's parent a height, fixed or relative, or a flex child, so windowing can bound the rows; with no height every row renders. Pass complete flat data and an explicit idKey. Default text truncates; custom renderers, wrapping, structural plugins, incompatible offsets, invalid identity or unrepresentable geometry use full rendering. Logical row positions include the header."
 		},
 		{
 			name: 'plugins',

@@ -38,7 +38,15 @@ export function waitForTransition(
 	let done = false;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	const handleTransitionEnd = (event: TransitionEvent) => {
-		if (event.target === element && event.propertyName === propertyName) {
+		// A real browser fires `transitioncancel` for the motion that the new
+		// state interrupted — an entrance cut short by a close, for instance.
+		// That is not the exit finishing; the exit's own event, or the
+		// computed-duration backstop below, ends the wait.
+		if (
+			event.type === 'transitionend' &&
+			event.target === element &&
+			event.propertyName === propertyName
+		) {
 			finish();
 		}
 	};

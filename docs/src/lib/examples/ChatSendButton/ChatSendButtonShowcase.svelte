@@ -8,7 +8,7 @@
 	(port/todo.md).
 -->
 <script lang="ts">
-	import { ChatSendButton, Icon, Stack } from '@astryx-svelte/core';
+	import { ChatSendButton, Icon, Stack } from '@astryx-sv/core';
 </script>
 
 {#snippet sparklesIcon()}<Icon icon="wrench" size="sm" />{/snippet}

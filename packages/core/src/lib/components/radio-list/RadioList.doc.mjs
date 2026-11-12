@@ -38,17 +38,6 @@ export default {
 			{
 				className: 'astryx-radio-indicator-dot',
 				visualProps: ['size']
-			},
-			{
-				className: 'astryx-radio',
-				visualProps: ['size'],
-				states: ['checked', 'disabled'],
-				deprecatedFor: 'radio-indicator'
-			},
-			{
-				className: 'astryx-radio-dot',
-				visualProps: ['size'],
-				deprecatedFor: 'radio-indicator-dot'
 			}
 		]
 	},
@@ -200,10 +189,36 @@ export default {
 				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value: not an inline style object like style={{}}.'
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

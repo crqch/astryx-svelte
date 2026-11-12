@@ -34,6 +34,8 @@
 	} from './radio-list-item.stylex.js';
 	import { useIndicator } from '../indicator/use-indicator.svelte.js';
 	import { useIndicatorFocusRing } from '../../hooks/use-indicator-focus-ring.svelte.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import { pressBoxProps } from '../../private-attributes/press-box.stylex.js';
 
 	/**
 	 * A single radio within a `RadioList`. The visible circle is decorative; the
@@ -80,8 +82,13 @@
 			disabled: isDisabled ? 'disabled' : null
 		})
 	);
+	// Item marks itself as a pressable surface (the row delegates to the radio,
+	// so it is interactive); naming the row here as well keeps the overlay's
+	// pressed arm, which reads the row's scope marker, reachable by the touch
+	// press controller.
+	const pressable = usePressFeedback();
 	const rowXstyle = $derived(radioListItemRowXstyle(isDisabled, xstyle));
-	const wrapperAttrs = $derived(radioWrapperAttrs(size));
+	const wrapperAttrs = $derived(radioWrapperAttrs(size, isDisabled));
 	const inputAttrs = $derived(radioInputAttrs(size, isDisabled));
 	const indicatorSlotAttrs = radioIndicatorSlotAttrs();
 
@@ -147,6 +154,7 @@
 		`<input>` inside this wrapper, and the plain events do not bubble.
 	-->
 	<div
+		{...isDisabled ? undefined : pressBoxProps}
 		class={wrapperAttrs.class}
 		style={wrapperAttrs.style}
 		onfocusin={focusProps.onFocus}
@@ -195,6 +203,7 @@
 {/snippet}
 
 <Item
+	{...isDisabled ? undefined : pressable}
 	{...itemRest}
 	startContent={mediaContent}
 	interactiveRef={() => radioInput}

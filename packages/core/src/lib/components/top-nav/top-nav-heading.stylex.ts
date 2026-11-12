@@ -31,11 +31,16 @@ import {
  * different rule.
  */
 const styles = stylex.create({
+	// The text track can shrink to zero. The logo and the chevron row keep
+	// their width.
 	root: {
-		display: 'flex',
+		display: 'grid',
+		gridAutoFlow: 'column',
+		justifyContent: 'start',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
 		minHeight: spacingVars['--spacing-8'],
+		minWidth: 0,
 		paddingInlineStart: {
 			default: spacingVars['--spacing-2'],
 			':has(.astryx-nav-icon)': 0
@@ -46,6 +51,29 @@ const styles = stylex.create({
 		textDecoration: 'none',
 		color: colorVars['--color-text-primary'],
 		cursor: 'default'
+	},
+	// The text track takes the free space, so end content sits at the inline end.
+	columnsWithLogo: {
+		gridTemplateColumns: 'auto minmax(0, 1fr)'
+	},
+	columnsText: {
+		gridTemplateColumns: 'minmax(0, 1fr)'
+	},
+	// Linked lines wrap, so the text track keeps its longest word: a link is
+	// never clipped to nothing, and no hidden words grow the bar.
+	columnsWithLogoAndLinks: {
+		gridTemplateColumns: 'auto minmax(min-content, 1fr)'
+	},
+	columnsWithLinks: {
+		gridTemplateColumns: 'minmax(min-content, 1fr)'
+	},
+	// The chevron box plus the gap before it. The track stops there, so a
+	// crowded bar cannot cover the chevron.
+	columnsWithLogoAndMenu: {
+		gridTemplateColumns: `auto minmax(calc(${spacingVars['--spacing-7']} + ${spacingVars['--spacing-1']}), 1fr)`
+	},
+	columnsWithMenu: {
+		gridTemplateColumns: `minmax(calc(${spacingVars['--spacing-7']} + ${spacingVars['--spacing-1']}), 1fr)`
 	},
 	interactive: {
 		cursor: {
@@ -131,6 +159,13 @@ const styles = stylex.create({
 		textOverflow: 'ellipsis',
 		whiteSpace: 'nowrap'
 	},
+	// Clip the link itself. The column stays overflow visible, so the link's
+	// own focus ring is not cut off.
+	linkedLine: {
+		minWidth: 0,
+		maxWidth: '100%',
+		overflow: 'hidden'
+	},
 	chevron: {
 		flexShrink: 0,
 		display: 'flex',
@@ -165,7 +200,8 @@ const styles = stylex.create({
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
 		width: '100%',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		backgroundColor: 'transparent',
 		fontFamily: 'inherit',
 		fontSize: 'inherit',
@@ -209,14 +245,33 @@ const styles = stylex.create({
  */
 export const topNavHeadingPopoverOverlap = styles.popoverOverlap;
 
+/** The column track for a heading with a logo and a text column. */
+export const topNavHeadingColumnsWithLogo = styles.columnsWithLogo;
+/** The column track for a heading with text only. */
+export const topNavHeadingColumnsText = styles.columnsText;
+/** The column track for linked lines with a logo. */
+export const topNavHeadingColumnsWithLogoAndLinks = styles.columnsWithLogoAndLinks;
+/** The column track for linked lines without a logo. */
+export const topNavHeadingColumnsWithLinks = styles.columnsWithLinks;
+/** The column track for a heading with a logo and a menu trigger. */
+export const topNavHeadingColumnsWithLogoAndMenu = styles.columnsWithLogoAndMenu;
+/** The column track for a heading with a menu trigger and no logo. */
+export const topNavHeadingColumnsWithMenu = styles.columnsWithMenu;
+
+/** The clip on a linked heading line inside a static heading row. */
+export const topNavHeadingLinkedLineStyle: StyleArg = styles.linkedLine;
+
 /** The heading root, static: no menu, no links. */
-export function topNavHeadingRootAttrs(xstyle: StyleArg): SvelteStyleAttrs {
-	return sx(styles.root, xstyle);
+export function topNavHeadingRootAttrs(xstyle: StyleArg, columns?: StyleArg): SvelteStyleAttrs {
+	return sx(styles.root, columns, xstyle);
 }
 
 /** The heading root when the whole block is a link or a popover trigger. */
-export function topNavHeadingTriggerRootAttrs(xstyle: StyleArg): SvelteStyleAttrs {
-	return sx(styles.root, styles.menuTrigger, xstyle);
+export function topNavHeadingTriggerRootAttrs(
+	xstyle: StyleArg,
+	columns?: StyleArg
+): SvelteStyleAttrs {
+	return sx(styles.root, columns, styles.menuTrigger, xstyle);
 }
 
 /** The logo slot. */

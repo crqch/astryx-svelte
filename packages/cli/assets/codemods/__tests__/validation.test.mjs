@@ -68,13 +68,13 @@ describe('validateOutput', () => {
 
 	it('catches prototype pollution that produces unparseable output', () => {
 		const source = [
-			"import {lineHeightVars} from '@astryx-svelte/core/tokens';",
+			"import {lineHeightVars} from '@astryx-sv/core/tokens';",
 			'const x = someValue.toString();',
 			''
 		].join('\n');
 		// Buggy codemod replaces the toString identifier with the native fn string.
 		const result = [
-			"import {typeScaleVars} from '@astryx-svelte/core/tokens';",
+			"import {typeScaleVars} from '@astryx-sv/core/tokens';",
 			'const x = someValue.function toString() { [native code] }();',
 			''
 		].join('\n');

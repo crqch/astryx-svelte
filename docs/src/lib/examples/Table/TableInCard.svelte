@@ -3,14 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import {
-		Card,
-		Heading,
-		Table,
-		VStack,
-		proportional,
-		type TableColumn
-	} from '@astryx-svelte/core';
+	import { Card, Heading, Table, VStack, proportional, type TableColumn } from '@astryx-sv/core';
 
 	interface User extends Record<string, unknown> {
 		id: string;

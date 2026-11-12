@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { Code, Text, VStack } from '@astryx-svelte/core';
+	import { Code, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * What a crashed preview shows — the `failed` branch of the stage's

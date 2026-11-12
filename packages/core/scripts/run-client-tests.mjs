@@ -20,7 +20,7 @@
  * leakage between chunk boundaries is no longer exercised, and a chunk pays
  * ~15 s of browser and Vite start-up. The thing to restore is a single run;
  * until then a chunked pass is the only measurement of this project that means
- * anything, and it is what CI, the release gate and `pnpm -F …/core test` all
+ * anything, and it is what CI, the release gate and `bun run --filter …/core test` all
  * use.
  *
  * **The reconciliation is the point.** A tally summed from per-chunk logs is
@@ -31,7 +31,7 @@
  *
  * @input  packages/core/src/tests/*.svelte.test.ts
  * @output exit 0 with a reconciled total, or exit 1 naming the failing chunk
- * @position `pnpm -F @astryx-svelte/core test`; CI and .github/workflows/release.yml
+ * @position `bun run --filter @astryx-sv/core test`; CI and .github/workflows/release.yml
  */
 
 import * as fs from 'node:fs';
@@ -98,7 +98,7 @@ const RETRIES = Number(process.env.CLIENT_CHUNK_RETRIES ?? 2);
  * 2 cores / 4 GB (GitHub's own docs said 8 GB until github/docs#28019 corrected
  * it, so 8 is the number to distrust here).
  *
- * **The isolated cache is a memory trade**, and one `pnpm verify` was blamed on
+ * **The isolated cache is a memory trade**, and one `bun run verify` was blamed on
  * it wrongly. That run died with `memory allocation of 34816 bytes failed` and a
  * `0xC0000409` chunk crash, having passed 18/18 standalone on the same commit
  * minutes earlier, and the note here used to read "it has been seen to lose."
@@ -154,7 +154,7 @@ if (files.length === 0) {
  * collide at project init, and the warning has been read as being about two runs
  * *started deliberately*. It is not: a run that hangs stays live and holds the
  * project, so the second run is the one you meant to start. That is what
- * happened here — a `pnpm verify` collided with two forgotten runs, failed, and
+ * happened here — a `bun run verify` collided with two forgotten runs, failed, and
  * was written up as a memory regression in an unrelated commit.
  *
  * A lock turns that into one line at start-up instead of a bad diagnosis an hour
@@ -201,10 +201,39 @@ if (!process.env.CLIENT_CHUNK_NO_LOCK) {
 	});
 }
 
-const chunks = [];
-for (let i = 0; i < files.length; i += SIZE) chunks.push(files.slice(i, i + SIZE));
+/**
+ * CI shards. The chunk list is divided by index (`index % SHARDS === SHARD - 1`)
+ * so every chunk keeps its composition and the heavy suites are spread across
+ * runners. Each shard reconciles its own files; the CI matrix's aggregate `ci`
+ * job requires every shard to pass, which is what covers the whole suite.
+ */
+const SHARDS = Number(process.env.CLIENT_CHUNK_SHARDS ?? 1);
+const SHARD = Number(process.env.CLIENT_CHUNK_SHARD ?? 1);
+if (
+	!Number.isInteger(SHARDS) ||
+	SHARDS < 1 ||
+	!Number.isInteger(SHARD) ||
+	SHARD < 1 ||
+	SHARD > SHARDS
+) {
+	console.error(
+		`Invalid client shard: CLIENT_CHUNK_SHARD=${SHARD}, CLIENT_CHUNK_SHARDS=${SHARDS}.`
+	);
+	process.exit(1);
+}
 
-console.log(`  client suite: ${files.length} files in ${chunks.length} chunks of up to ${SIZE}\n`);
+const allChunks = [];
+for (let i = 0; i < files.length; i += SIZE) allChunks.push(files.slice(i, i + SIZE));
+
+const runChunks = allChunks
+	.map((chunk, index) => ({ chunk, index }))
+	.filter(({ index }) => index % SHARDS === SHARD - 1);
+
+console.log(
+	`  client suite: ${files.length} files in ${allChunks.length} chunks of up to ${SIZE}` +
+		(SHARDS > 1 ? `; shard ${SHARD}/${SHARDS} runs ${runChunks.length}` : '') +
+		'\n'
+);
 
 let ranFiles = 0;
 let ranCases = 0;
@@ -255,7 +284,7 @@ const retried = [];
  * failing. Two such trees — 18 processes and 1.05 GB between them, six vitest
  * processes and six headless shells — were found alive 16 and 7 hours after the
  * runs that spawned them, and both were still holding this project while a
- * later `pnpm verify` ran against it. That verify failed, and the failure was
+ * later `bun run verify` ran against it. That verify failed, and the failure was
  * read as a memory regression in the isolated-cache change; the orphans both
  * predate that commit. The lesson is the one this repo keeps relearning about
  * concurrent vitest on this project, arriving from a direction nobody was
@@ -377,7 +406,7 @@ const serial = CONCURRENCY <= 1;
  * @param {string[]} chunk
  */
 async function settleChunk(index, chunk) {
-	const label = `chunk ${index + 1}/${chunks.length}`;
+	const label = `chunk ${index + 1}/${allChunks.length}`;
 	const args = [vitestBin, '--run', '--project=client', ...chunk, ...process.argv.slice(2)];
 	/** @type {string[]} */
 	const retries = [];
@@ -448,14 +477,15 @@ async function settleChunk(index, chunk) {
  * heavy suites can run twice as long as a light one), and slicing would leave
  * workers idle waiting for the slowest slice to drain.
  */
-const results = new Array(chunks.length);
+const results = new Array(runChunks.length);
 let cursor = 0;
 
 async function worker() {
 	for (;;) {
 		const index = cursor++;
-		if (index >= chunks.length) return;
-		results[index] = await settleChunk(index, chunks[index]);
+		if (index >= runChunks.length) return;
+		const { chunk, index: globalIndex } = runChunks[index];
+		results[index] = await settleChunk(globalIndex, chunk);
 	}
 }
 
@@ -466,7 +496,7 @@ console.log(
 				', each with its own optimizer cache\n'
 );
 
-await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, worker));
+await Promise.all(Array.from({ length: Math.min(CONCURRENCY, runChunks.length) }, worker));
 
 for (const result of results) {
 	if (result.ok) {
@@ -484,24 +514,29 @@ if (failed.length > 0) {
 		console.error(`  ${label} exited ${code}, over:`);
 		for (const file of chunk) console.error(`      ${file}`);
 	}
+	const shardNote = SHARDS > 1 ? ` in shard ${SHARD}/${SHARDS}` : '';
 	console.error(
-		`\n  ${failed.length} of ${chunks.length} chunk(s) failed. Their output is above,\n` +
+		`\n  ${failed.length} of ${runChunks.length} chunk(s)${shardNote} failed. Their output is above,\n` +
 			`  in place — re-run one with:\n` +
-			`      pnpm -F @astryx-svelte/core exec vitest --run --project=client <file>`
+			`      bunx vitest --run --project=client <file>`
 	);
 	process.exit(1);
 }
 
-if (ranFiles !== files.length) {
+const expectedFiles = runChunks.reduce((total, { chunk }) => total + chunk.length, 0);
+if (ranFiles !== expectedFiles) {
 	console.error(
-		`\n  Reconciliation failed: ${ranFiles} file(s) ran, ${files.length} on disk.\n` +
+		`\n  Reconciliation failed: ${ranFiles} file(s) ran, ${expectedFiles} expected in this run.\n` +
 			`  Every chunk exited 0, so this is a chunk that collected nothing — the\n` +
 			`  case a summed total cannot see.`
 	);
 	process.exit(1);
 }
 
-console.log(`\n  client: ${ranFiles}/${files.length} files, ${ranCases} cases passed, 0 failed`);
+const shardLabel = SHARDS > 1 ? ` shard ${SHARD}/${SHARDS}` : '';
+console.log(
+	`\n  client${shardLabel}: ${ranFiles}/${expectedFiles} files, ${ranCases} cases passed, 0 failed`
+);
 
 // Never a silent retry. A green run that needed one is a different fact from a
 // green run that did not, and the frequency is the measurement that says

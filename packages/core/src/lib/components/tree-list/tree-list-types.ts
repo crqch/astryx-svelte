@@ -1,4 +1,5 @@
 import type { Snippet } from 'svelte';
+import type { StyleArg } from '../../internal/sx.js';
 
 /**
  * Ported from Astryx's `TreeList/TreeListTypes.ts`.
@@ -21,7 +22,7 @@ export type TreeListDensity = 'compact' | 'balanced' | 'spacious';
  * upstream's does:
  *
  * ```ts
- * declare module '@astryx-svelte/core' {
+ * declare module '@astryx-sv/core' {
  *   interface TreeListVariantMap {
  *     dotted: true;
  *   }
@@ -78,4 +79,16 @@ export interface TreeListItemData {
 
 	/** Whether the item is initially expanded. Only meaningful for items with children. */
 	isExpanded?: boolean;
+
+	/** StyleX styles applied to the item's row element. */
+	xstyle?: StyleArg;
+
+	/** Class applied to the item's row element. */
+	className?: string;
+
+	/**
+	 * Inline styles applied to the item's row element. A string — Svelte's
+	 * `style` attribute — rather than React's `CSSProperties` object.
+	 */
+	style?: string;
 }

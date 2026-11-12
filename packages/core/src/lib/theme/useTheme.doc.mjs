@@ -31,7 +31,7 @@ export default {
 		},
 		{
 			name: 'mode',
-			type: "'dark' | 'light'",
+			type: "'light' | 'dark'",
 			description: 'Resolved effective color mode. system mode is resolved to light or dark.'
 		},
 		{
@@ -84,6 +84,6 @@ export default {
 	},
 	relatedComponents: ['Theme'],
 	relatedHooks: ['useMediaQuery'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'Utility'
 };

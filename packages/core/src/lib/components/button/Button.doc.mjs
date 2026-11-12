@@ -82,7 +82,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					"For a dedicated icon-only button, use IconButton. It is a separate component from Button, exported from '@astryx-svelte/core' alongside it."
+					"For a dedicated icon-only button, use IconButton. It is a separate component from Button, exported from '@astryx-sv/core' alongside it."
 			},
 			{
 				guidance: false,
@@ -98,6 +98,11 @@ export default {
 				guidance: false,
 				description:
 					'Use a button for navigation. If it only takes the user to another page, use a link instead. Buttons are for actions like saving, deleting, or submitting.'
+			},
+			{
+				guidance: false,
+				description:
+					"Restyle Button's `::before` (through `xstyle` or a `className` rule) and expect it to hold through a touch press: under a coarse primary pointer, while a press is on or fading, Button paints the press on that pseudo-element (`z-index: -1`, its opacity animated), so your styles merge into the press layer for that moment. At rest Button adds nothing there. Style a child element instead."
 			}
 		],
 		anatomy: [
@@ -183,7 +188,7 @@ export default {
 			name: 'isLoading',
 			type: 'boolean',
 			description:
-				'Shows a loading spinner and disables interaction. Announces "Loading" via a live region.',
+				'Shows a loading spinner and blocks re-activation while staying focusable (aria-busy + aria-disabled, not native disabled, so keyboard focus is never dropped mid-action). Announces "Loading" via a live region.',
 			default: 'false'
 		},
 		{
@@ -197,13 +202,14 @@ export default {
 			name: 'isDisabled',
 			type: 'boolean',
 			description:
-				'Disables the button. When a tooltip is present, uses aria-disabled instead of native disabled so the button stays focusable.',
+				'Disables the button. Uses aria-disabled instead of native disabled so the button stays focusable.',
 			default: 'false'
 		},
 		{
 			name: 'icon',
 			type: 'Snippet',
-			description: 'Icon element rendered before the label text.'
+			description:
+				'Icon element rendered before the label text. An Astryx Icon with no explicit size defaults to sm for sm/md buttons and md for lg buttons.'
 		},
 		{
 			name: 'isIconOnly',
@@ -216,7 +222,7 @@ export default {
 			name: 'width',
 			type: 'string | number',
 			description:
-				"Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content."
+				"Width of the button. Numbers are treated as pixels, strings are used as-is (e.g., '100%' for a full-width button). By default the button sizes to its content, never grows past its container, and truncates its label with an ellipsis when a row is too narrow; icon-only buttons stay square."
 		},
 		{
 			name: 'children',
@@ -249,7 +255,7 @@ export default {
 			name: 'href',
 			type: 'string',
 			description:
-				'When provided, renders the button as a link element (<a> or custom link component).'
+				'When provided, renders the button as a link element (<a> or custom link component). The destination follows the shared navigation rule described on the Link `href` prop.'
 		},
 		{
 			name: 'as',

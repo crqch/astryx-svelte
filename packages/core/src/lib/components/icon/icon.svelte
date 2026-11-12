@@ -1,11 +1,11 @@
 <script lang="ts" module>
 	import type { SVGAttributes } from 'svelte/elements';
 	import type { StyleArg } from '../../internal/sx.js';
-	import type { IconName, IconType } from './icon-registry.js';
+	import type { IconName, IconType, NamespacedIconName } from './icon-registry.js';
 	import type { IconColor, IconSize } from './icon.stylex.js';
 
 	export interface IconProps extends Omit<SVGAttributes<SVGSVGElement>, 'color'> {
-		icon: IconName | IconType;
+		icon: IconName | NamespacedIconName | IconType;
 		/** @default 'inherit' */
 		color?: IconColor;
 		/**

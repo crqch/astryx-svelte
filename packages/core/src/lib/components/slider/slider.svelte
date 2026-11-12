@@ -197,12 +197,6 @@
 		return cssLength(percent, THUMB_INSET - (percent / 100) * THUMB_SIZE);
 	}
 
-	/** Distance between two inset positions; the inset itself cancels out. */
-	function insetSpan(fromPercent: number, toPercent: number): string {
-		const delta = toPercent - fromPercent;
-		return cssLength(delta, -(delta / 100) * THUMB_SIZE);
-	}
-
 	/** Inverse of `insetPosition`: an offset from the box start back to 0–1. */
 	function travelFraction(offset: number, size: number): number {
 		const travel = size - THUMB_SIZE;
@@ -216,15 +210,28 @@
 </script>
 
 <script lang="ts">
+	import { flushSync } from 'svelte';
+	import type { Attachment } from 'svelte/attachments';
 	import { isRtlElement } from '../../hooks/is-rtl-element.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { slider as UIKIT_SLIDER } from '../../motion/uikit/slider.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
 	import Field from '../field/field.svelte';
-	import Tooltip from '../tooltip/tooltip.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
+	import SliderValueTooltip from './slider-value-tooltip.svelte';
+	import type { SliderTouchModel, SliderTouchParts } from './slider-touch-controller.js';
+	import { useSliderTouch } from './use-slider-touch.svelte.js';
 	import {
+		FILL_END,
+		FILL_START,
+		HIT_INSET,
+		THUMB_PROGRESS,
+		sliderFillClipAttrs,
+		sliderFillMoverAttrs,
 		sliderFilledTrackAttrs,
 		sliderMarkAttrs,
 		sliderMarkLabelAttrs,
@@ -233,7 +240,8 @@
 		sliderTextValueAttrs,
 		sliderThumbAttrs,
 		sliderTrackAttrs,
-		sliderTrackContainerAttrs
+		sliderTrackContainerAttrs,
+		sliderTravelBoxAttrs
 	} from './slider.stylex.js';
 
 	/**
@@ -290,6 +298,13 @@
 	);
 	const isHorizontal = $derived(orientation === 'horizontal');
 
+	// The touch presentation: thumb touch targets show only under a coarse
+	// primary pointer. Upstream routes this through `useTouchPresentation`,
+	// whose `isTouch` half is exactly this media query; the shared resolver
+	// itself is not ported.
+	const touchPresentation = useMediaQuery(() => TOUCH_QUERY);
+	const hasTouchTargets = $derived(touchPresentation.matches && !isDisabled);
+
 	// Upstream mints three ids with three `useId` calls plus a fourth inside
 	// `useTooltip`. `$props.id()` may be called once per component, so the
 	// counterpart is one base id with derived suffixes.
@@ -302,6 +317,20 @@
 	const requiredID = `${uid}-required`;
 
 	let trackEl = $state<HTMLDivElement | null>(null);
+	let fillMoverEl = $state<HTMLDivElement | null>(null);
+	let fillEl = $state<HTMLDivElement | null>(null);
+	/**
+	 * Each thumb's value-tooltip anchor, by thumb index: where layout puts the
+	 * anchor at the rendered value. The touch controller holds it while a drag
+	 * runs, so the anchor does not lay out on every move.
+	 */
+	const valueAnchors = new Map<number, { element: HTMLElement; tooltipId: string }>();
+	/**
+	 * The tooltip anchors a drag holds, by thumb index: their place as
+	 * progress (0–1). While held, the owner's renders do not move the anchor,
+	 * so the tooltip can move with the thumb by translate.
+	 */
+	let heldAnchors = $state<ReadonlyMap<number, number>>(new Map());
 
 	// The synchronous drag flag, read by the move/up handlers. Deliberately a
 	// plain `let` rather than `$state`, as upstream's `useRef` is: a move that
@@ -311,7 +340,7 @@
 	let draggingThumb = $state<number | null>(null);
 
 	// Disabled-reason tooltip. This is a *separate* `useTooltip` instance from the
-	// per-thumb value bubble (the `<Tooltip>` below): it anchors to the track
+	// per-thumb value bubble (`SliderValueTooltip` below): it anchors to the track
 	// container and fires on hover/focus of the whole control. Disabled controls
 	// swallow pointer events, so the thumb stays perceivable via aria-disabled
 	// while the pointer/keyboard handlers early-return on isDisabled.
@@ -391,14 +420,21 @@
 		return Math.abs(newValue - v0) <= Math.abs(newValue - v1) ? 0 : 1;
 	}
 
-	function updateValue(thumbIndex: number, newVal: number): void {
+	function updateValue(
+		thumbIndex: number,
+		newVal: number,
+		snap = true,
+		// The other thumb's values to start from, when one event moves both
+		// (a drag handed from one coincident thumb to the other).
+		from: ReadonlyArray<number> = values
+	): void {
 		if (isDisabled) {
 			return;
 		}
-		const clamped = clamp(snapToStep(newVal, min, step), min, max);
+		const clamped = clamp(snap ? snapToStep(newVal, min, step) : newVal, min, max);
 
 		if (isRange) {
-			const currentValues = [...values] as [number, number];
+			const currentValues = [...from] as [number, number];
 			currentValues[thumbIndex] = clamped;
 
 			// Enforce minStepsBetweenThumbs
@@ -419,6 +455,37 @@
 		}
 	}
 
+	/** The value a thumb takes for `raw`: snapped, clamped and kept apart. */
+	function constrainValue(thumbIndex: number, raw: number): number {
+		const clamped = clamp(snapToStep(raw, min, step), min, max);
+		if (!isRange) {
+			return clamped;
+		}
+		const minGap = minStepsBetweenThumbs * step;
+		const [v0, v1] = values;
+		return thumbIndex === 0
+			? clamp(Math.min(clamped, v1 - minGap), min, max)
+			: clamp(Math.max(clamped, v0 + minGap), min, max);
+	}
+
+	/** The full value list after `thumbIndex` takes `clamped`, gap enforced. */
+	function valuesWith(thumbIndex: number, clamped: number, from = values): number[] {
+		if (!isRange) {
+			return [clamped];
+		}
+		const next = [...from] as [number, number];
+		next[thumbIndex] = clamped;
+		const minGap = minStepsBetweenThumbs * step;
+		if (thumbIndex === 0) {
+			next[0] = Math.min(next[0], next[1] - minGap);
+		} else {
+			next[1] = Math.max(next[1], next[0] + minGap);
+		}
+		next[0] = clamp(next[0], min, max);
+		next[1] = clamp(next[1], min, max);
+		return next;
+	}
+
 	function fireChangeEnd(newValues?: number[]): void {
 		const currentValues = newValues ?? values;
 		if (isRange) {
@@ -430,6 +497,19 @@
 
 	function handlePointerDown(e: PointerEvent): void {
 		if (isDisabled) {
+			return;
+		}
+		// A press on a thumb belongs to the slider's gestures (useSliderTouch),
+		// which pan it for every pointer. The thumb still takes focus from any
+		// press. A finger's or a pen's tap on the track sets the value when it
+		// lifts, through the track tap recognizer. So only a mouse press on the
+		// track goes on.
+		const pressedThumb = (e.target as Element).closest<HTMLElement>('[role="slider"]');
+		if (pressedThumb != null) {
+			pressedThumb.focus();
+			return;
+		}
+		if (e.pointerType === 'touch' || e.pointerType === 'pen') {
 			return;
 		}
 		e.preventDefault();
@@ -526,63 +606,176 @@
 		}
 	}
 
+	/**
+	 * The touch presentation's value model, read fresh by `useSliderTouch` on
+	 * every render. Upstream builds the same object each render; here the
+	 * getters close over the component's reactive state.
+	 */
+	let committedValues: number[] | null = null;
+
+	function touchModel(): SliderTouchModel {
+		return {
+			min,
+			max,
+			isRange,
+			isHorizontal,
+			isDisabled,
+			thumbSize: THUMB_SIZE,
+			values: () => values,
+			// The value updateValue would report for this thumb.
+			constrain: (index, raw) => constrainValue(index, raw),
+			bounds: (index) => {
+				if (!isRange) {
+					return [min, max];
+				}
+				const minGap = minStepsBetweenThumbs * step;
+				const [v0, v1] = values;
+				return index === 0
+					? [min, clamp(v1 - minGap, min, max)]
+					: [clamp(v0 + minGap, min, max), max];
+			},
+			change: (index, next, from) => updateValue(index, next, true, from),
+			// A finger paints the thumb pressed and opens its value tooltip.
+			// `handlePointerDown` already focused it.
+			press: (index) => {
+				draggingThumb = index;
+				// When a thumb of this slider holds focus, a drag handed to the
+				// other thumb takes the focus along. Every press on a thumb
+				// focuses it.
+				const thumbs = trackEl?.querySelectorAll<HTMLElement>('[role="slider"]');
+				const active = trackEl?.ownerDocument.activeElement;
+				if (index != null && thumbs != null && active != null) {
+					const list = Array.from(thumbs);
+					if (list.includes(active as HTMLElement) && list[index] !== active) {
+						list[index]?.focus();
+					}
+				}
+			},
+			// The touch interaction ended, in the handler that ended it: the lift,
+			// a cancel or the coast's last frame. The owner renders the last value
+			// now, from that same handler. Then the controller can hand the parts
+			// back to the stylesheet, and onChangeEnd carries the rendered value.
+			commit: (index, next) => {
+				flushSync(() => {
+					if (next !== null) {
+						updateValue(index, next);
+					}
+					draggingThumb = null;
+				});
+				committedValues = next !== null ? valuesWith(index, constrainValue(index, next)) : null;
+			},
+			reportEnd: () => {
+				const final = committedValues;
+				committedValues = null;
+				fireChangeEnd(final ?? undefined);
+			},
+			// A held anchor renders at its held place, so a render during the drag
+			// writes nothing on it. In Chromium, any style change on an element in
+			// anchor positioning lays it out.
+			holdAnchor: (index) => {
+				const anchor = valueAnchors.get(index)?.element;
+				const progress = parseFloat(anchor?.style.getPropertyValue(THUMB_PROGRESS) ?? '');
+				if (anchor == null || !Number.isFinite(progress)) {
+					return null;
+				}
+				heldAnchors = new Map(heldAnchors).set(index, progress);
+				return progress;
+			},
+			// From the controller's hand-back, after the owner rendered the last
+			// value. The anchors take their final place in this render, before the
+			// next frame.
+			releaseAnchors: (indices) => {
+				flushSync(() => {
+					const next = new Map(heldAnchors);
+					for (const index of indices) {
+						next.delete(index);
+					}
+					heldAnchors = next;
+				});
+			},
+			// A tap on the track, from useSliderTouch. It takes a mark's value on
+			// a mark, else the point along the travel. It moves the thumb a track
+			// press moves.
+			valueAt: (x, y) => {
+				const mark = trackEl?.ownerDocument
+					.elementFromPoint?.(x, y)
+					?.closest<HTMLElement>('[data-mark-value]');
+				return mark != null ? Number(mark.dataset.markValue) : getValueFromPosition(x, y);
+			},
+			thumbFor: (value) => getClosestThumb(value)
+		};
+	}
+
+	/** Records or clears a thumb's value-tooltip anchor, by index. */
+	function registerAnchor(
+		index: number,
+		anchor: { element: HTMLElement; tooltipId: string } | null
+	): void {
+		if (anchor == null) {
+			valueAnchors.delete(index);
+		} else {
+			valueAnchors.set(index, anchor);
+		}
+	}
+
 	function displayValue(val: number): string {
 		return formatValue ? formatValue(val) : String(val);
 	}
 
 	/**
-	 * The thumb's offset, as **style directives** rather than a `style` string.
+	 * The thumb's place and the fill's ends are **style directives**, not a
+	 * `style` string.
 	 *
-	 * This is load-bearing, not a stylistic choice. Svelte applies a changed
-	 * `style` *attribute* by assigning `cssText`, which replaces the whole
-	 * declaration block; a style directive goes through `setProperty`, which is
-	 * what React does with the style *object* upstream passes here. It matters
-	 * because the thumb is a `Tooltip` trigger, and `useLayer`'s `attachTrigger`
-	 * writes the CSS `anchor-name` onto this element's inline style imperatively.
-	 * With a string write, the first value change — one arrow key, one pointermove
-	 * of a drag — would erase that anchor name, and nothing puts it back: the
-	 * value bubble would detach and pin to the viewport corner for the rest of the
-	 * component's life. Upstream is immune because React writes style objects
-	 * per-property.
+	 * Svelte applies a changed `style` *attribute* by assigning `cssText`, which
+	 * replaces the whole declaration block; a style directive goes through
+	 * `setProperty`, which is what React does with the style *object* upstream
+	 * passes here. It matters on the value-tooltip anchor: `useLayer`'s
+	 * `attachPosition` writes the CSS `anchor-name` onto that element's inline
+	 * style imperatively, so a string write on the first value change would erase
+	 * it and the bubble would detach for the rest of the component's life.
 	 */
-	// Horizontal positioning is **logical**, as upstream's is
-	// (`{insetInlineStart: …}` at `Slider.tsx:742`, `:832`, `:964`). It has to be:
-	// `thumbHorizontal` carries no positional inset on either edge, so this inline
-	// style is the sole source of the thumb's position, and the stylex block
-	// already ports the RTL half of the pair by flipping `transform` to
-	// `translate(50%, -50%)` under `[dir="rtl"]`. A physical `left` here would
-	// mirror the centring without mirroring the offset — and would disagree with
-	// `handlePointerDown`, which measures the fraction from the right edge in RTL.
-	// The *vertical* `left: 50%` stays physical: it is a centring constant, and
-	// upstream writes it physically too.
-	const thumbInlineStart = $derived((val: number) =>
-		isHorizontal ? insetPosition(getPercent(val, min, max)) : null
-	);
-	const thumbLeft = $derived(() => (isHorizontal ? null : '50%'));
-	const thumbBottom = $derived((val: number) =>
-		isHorizontal ? null : insetPosition(getPercent(val, min, max))
-	);
+	const progressOf = (val: number): number => getPercent(val, min, max) / 100;
+
+	// The filled range's ends as progress: it ends at the thumb centers, so it
+	// uses the same inset travel as the thumbs (see `fillClip`).
+	const fillStart = $derived(isRange ? progressOf(values[0]) : 0);
+	const fillEnd = $derived(progressOf(values[isRange ? 1 : 0]));
+	const fillVars = $derived(`${FILL_START}:${fillStart};${FILL_END}:${fillEnd}`);
 
 	function markPositionStyle(markValue: number): string {
 		const pos = insetPosition(getPercent(markValue, min, max));
 		return isHorizontal ? `inset-inline-start:${pos}` : `bottom:${pos}`;
 	}
 
-	// Filled track position — ends at the thumb centre, so it uses the same
-	// inset mapping as the thumb.
-	const filledStyle = $derived.by(() => {
-		if (isRange) {
-			const p0 = getPercent(values[0], min, max);
-			const p1 = getPercent(values[1], min, max);
-			return isHorizontal
-				? `inset-inline-start:${insetPosition(p0)};width:${insetSpan(p0, p1)}`
-				: `bottom:${insetPosition(p0)};height:${insetSpan(p0, p1)}`;
+	/**
+	 * A thumb's touch-target insets under a finger: the thumb's own `::before`
+	 * grows to UISlider's 48pt around it. A range's two targets never reach
+	 * into each other — on the side facing the other thumb the growth stops at
+	 * half the gap, so a finger takes the nearer thumb. Container units measure
+	 * the travel, so the gap needs no layout read.
+	 */
+	function thumbHitInsets(thumbIndex: number): Record<string, string> {
+		const hitGrowth = (UIKIT_SLIDER.thumbHitTarget - THUMB_SIZE) / 2;
+		const full = `${-hitGrowth}px`;
+		let facing = full;
+		if (isRange && max > min) {
+			const spread = (values[1] - values[0]) / (max - min);
+			const travel = isHorizontal ? '100cqi' : '100cqb';
+			facing = `calc(-1 * clamp(0px, (${spread} * (${travel} - ${THUMB_SIZE}px) - ${THUMB_SIZE}px) / 2, ${hitGrowth}px))`;
 		}
-		const p = getPercent(values[0], min, max);
-		return isHorizontal
-			? `inset-inline-start:0%;width:${insetPosition(p)}`
-			: `bottom:0%;height:${insetPosition(p)}`;
-	});
+		// Values grow toward the inline end, and upward on a vertical slider.
+		const towardLower = isRange && thumbIndex === 1 ? facing : full;
+		const towardUpper = isRange && thumbIndex === 0 ? facing : full;
+		const [top, bottom, inlineStart, inlineEnd] = isHorizontal
+			? [full, full, towardLower, towardUpper]
+			: [towardUpper, towardLower, full, full];
+		return {
+			[HIT_INSET.top]: top,
+			[HIT_INSET.bottom]: bottom,
+			[HIT_INSET.inlineStart]: inlineStart,
+			[HIT_INSET.inlineEnd]: inlineEnd
+		};
+	}
 
 	// Suppress the per-thumb value bubble while the disabled-message tooltip is
 	// showing, so a disabled slider surfaces the *reason* on hover/focus rather
@@ -590,22 +783,55 @@
 	const useValueTooltip = $derived(valueDisplay === 'tooltip' && !showsDisabledMessage);
 	const tooltipPlacement = $derived(isHorizontal ? 'above' : 'start');
 
+	// UISlider's touch tracking. It attaches while the slider is enabled and
+	// re-attaches when the thumbs mount or move (a value-tooltip wrapper change).
+	useSliderTouch({
+		isEnabled: () => !isDisabled,
+		getModel: touchModel,
+		getParts: (): SliderTouchParts | null => {
+			const control = trackEl;
+			if (control == null) {
+				return null;
+			}
+			const thumbs = Array.from(control.querySelectorAll<HTMLElement>('[role="slider"]'));
+			return {
+				control,
+				thumbs,
+				fillMover: fillMoverEl,
+				fill: fillEl,
+				tooltips: thumbs.map((_, index) => {
+					const anchor = valueAnchors.get(index);
+					return anchor == null ? null : control.ownerDocument.getElementById(anchor.tooltipId);
+				})
+			};
+		},
+		getThumbCount: () => values.length,
+		getThumbsWrapped: () => useValueTooltip,
+		getIsHorizontal: () => isHorizontal
+	});
+
 	const rowTheme = $derived(
 		themeProps('slider', { orientation, disabled: isDisabled ? 'disabled' : null })
 	);
 	const rowAttrs = sliderRowAttrs();
+	// The control target sits on the track container, as upstream's does
+	// (`themeProps('slider-control')`), not on the row.
+	const controlTheme = $derived(
+		themeProps('slider-control', { orientation, disabled: isDisabled ? 'disabled' : null })
+	);
 	const trackContainerAttrs = $derived(sliderTrackContainerAttrs(isHorizontal, isDisabled));
+	const travelBoxAttrs = sliderTravelBoxAttrs();
 	const trackTheme = $derived(themeProps('slider-track', { orientation }));
 	const trackAttrs = $derived(sliderTrackAttrs(isHorizontal));
-	const filledTrackAttrs = $derived(sliderFilledTrackAttrs(isHorizontal));
+	const fillClipAttrs = $derived(sliderFillClipAttrs(isHorizontal));
+	const fillMoverAttrs = $derived(sliderFillMoverAttrs(isHorizontal, isRange));
+	const filledTrackAttrs = $derived(sliderFilledTrackAttrs(isHorizontal, isRange));
 	const marksContainerAttrs = $derived(sliderMarksContainerAttrs(isHorizontal));
-	const markAttrs = $derived(sliderMarkAttrs(isHorizontal));
 	const markLabelAttrs = $derived(sliderMarkLabelAttrs(isHorizontal));
 	const textValueAttrs = sliderTextValueAttrs();
 	const thumbTheme = $derived(
 		themeProps('slider-thumb', { orientation, disabled: isDisabled ? 'disabled' : null })
 	);
-	const thumbAttrs = $derived(sliderThumbAttrs(isHorizontal, isDisabled));
 
 	const fieldStatus = $derived(
 		status
@@ -618,7 +844,11 @@
 	);
 </script>
 
-{#snippet thumb(thumbIndex: number)}
+{#snippet thumb(
+	thumbIndex: number,
+	interaction: Attachment<HTMLElement> | undefined,
+	tooltipDescribedBy: string | undefined
+)}
 	<!--
 		ARIA bounds must agree with the movement clamping in `updateValue`: in range
 		mode a thumb cannot cross its sibling (minus the `minStepsBetweenThumbs`
@@ -629,6 +859,15 @@
 	{@const minGap = minStepsBetweenThumbs * step}
 	{@const ariaValueMin = isRange && thumbIndex === 1 ? clamp(values[0] + minGap, min, max) : min}
 	{@const ariaValueMax = isRange && thumbIndex === 0 ? clamp(values[1] - minGap, min, max) : max}
+	{@const thumbAttrs = sliderThumbAttrs(
+		isHorizontal,
+		isDisabled,
+		draggingThumb === thumbIndex,
+		hasTouchTargets
+	)}
+	{@const hit = hasTouchTargets ? thumbHitInsets(thumbIndex) : null}
+	{@const describedBy =
+		[ariaDescribedBy, tooltipDescribedBy].filter(Boolean).join(' ') || undefined}
 	<div
 		id={!isRange ? id : undefined}
 		role="slider"
@@ -641,15 +880,18 @@
 		aria-invalid={status?.type === 'error' ? 'true' : undefined}
 		aria-label={isRange ? (thumbIndex === 0 ? 'Minimum value' : 'Maximum value') : undefined}
 		aria-labelledby={!isRange ? labelID : undefined}
-		aria-describedby={ariaDescribedBy}
+		aria-describedby={describedBy}
 		{...thumbTheme}
 		tabindex={isDisabled && !showsDisabledMessage ? -1 : 0}
 		onkeydown={(e) => handleKeyDown(thumbIndex, e)}
+		{@attach interaction}
 		class={cx(thumbTheme.class, thumbAttrs.class)}
 		style={thumbAttrs.style}
-		style:inset-inline-start={thumbInlineStart(values[thumbIndex])}
-		style:left={thumbLeft()}
-		style:bottom={thumbBottom(values[thumbIndex])}
+		style:--_slider-progress={progressOf(values[thumbIndex])}
+		style:--_slider-hit-top={hit?.[HIT_INSET.top]}
+		style:--_slider-hit-bottom={hit?.[HIT_INSET.bottom]}
+		style:--_slider-hit-start={hit?.[HIT_INSET.inlineStart]}
+		style:--_slider-hit-end={hit?.[HIT_INSET.inlineEnd]}
 	></div>
 {/snippet}
 
@@ -687,78 +929,101 @@
 		<div
 			bind:this={trackEl}
 			{@attach disabledMessageTooltip.attachTrigger}
+			{...controlTheme}
 			role={isRange ? 'group' : undefined}
 			aria-labelledby={isRange ? labelID : undefined}
 			onpointerdown={handlePointerDown}
 			onpointermove={handlePointerMove}
 			onpointerup={handlePointerUp}
 			onpointercancel={handlePointerUp}
-			class={trackContainerAttrs.class}
+			class={cx(controlTheme.class, trackContainerAttrs.class)}
 			style={trackContainerAttrs.style}
 		>
-			<!-- Background track -->
-			<div
-				aria-hidden="true"
-				{...trackTheme}
-				class={cx(trackTheme.class, trackAttrs.class)}
-				style={trackAttrs.style}
-			></div>
+			<div class={travelBoxAttrs.class} style={travelBoxAttrs.style}>
+				<!-- Background track -->
+				<div
+					aria-hidden="true"
+					{...trackTheme}
+					class={cx(trackTheme.class, trackAttrs.class)}
+					style={trackAttrs.style}
+				></div>
 
-			<!-- Filled track -->
-			<div
-				aria-hidden="true"
-				class={filledTrackAttrs.class}
-				style={mergeStyle(filledTrackAttrs.style, filledStyle)}
-			></div>
-
-			<!-- Marks -->
-			{#if marks}
-				<div aria-hidden="true" class={marksContainerAttrs.class} style={marksContainerAttrs.style}>
-					<!--
-						Keyed by index, not by `mark.value` as upstream is: React only
-						warns on a duplicate key where Svelte throws, and marks carry no
-						focus, input state or transitions, so positional identity produces
-						byte-identical DOM. The convention `Carousel`/`OverflowList` follow.
-					-->
-					{#each marks as mark, i (i)}
-						<div>
-							<div
-								data-testid="slider-mark"
-								data-mark-value={mark.value}
-								class={markAttrs.class}
-								style={mergeStyle(markAttrs.style, markPositionStyle(mark.value))}
-							></div>
-							{#if mark.label}
-								<span
-									data-testid="slider-mark-label"
-									data-mark-value={mark.value}
-									class={markLabelAttrs.class}
-									style={mergeStyle(markLabelAttrs.style, markPositionStyle(mark.value))}
-								>
-									{mark.label}
-								</span>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Thumbs — upstream keys by `thumbIndex`, i.e. positionally. -->
-			{#each values as _, i (i)}
-				{#if useValueTooltip}
-					<Tooltip
-						content={displayValue(values[i])}
-						placement={tooltipPlacement}
-						delay={0}
-						focusTrigger="always"
-						isOpen={draggingThumb === i ? true : undefined}
+				<!-- Filled track: a full-length bar inside two clips, moved by translate -->
+				<div aria-hidden="true" class={fillClipAttrs.class} style={fillClipAttrs.style}>
+					<div
+						bind:this={fillMoverEl}
+						class={fillMoverAttrs.class}
+						style={mergeStyle(fillMoverAttrs.style, fillVars)}
 					>
-						{@render thumb(i)}
-					</Tooltip>
-				{:else}
-					{@render thumb(i)}
+						<div
+							bind:this={fillEl}
+							class={filledTrackAttrs.class}
+							style={mergeStyle(filledTrackAttrs.style, fillVars)}
+						></div>
+					</div>
+				</div>
+
+				<!-- Marks -->
+				{#if marks}
+					<div
+						aria-hidden="true"
+						class={marksContainerAttrs.class}
+						style={marksContainerAttrs.style}
+					>
+						<!--
+							Keyed by index, not by `mark.value` as upstream is: React only
+							warns on a duplicate key where Svelte throws, and marks carry no
+							focus, input state or transitions, so positional identity produces
+							byte-identical DOM. The convention `Carousel`/`OverflowList` follow.
+						-->
+						{#each marks as mark, i (i)}
+							{@const isFilled = isRange
+								? mark.value >= values[0] && mark.value <= values[1]
+								: mark.value <= values[0]}
+							{@const markAttrs = sliderMarkAttrs(isHorizontal, isFilled)}
+							<div>
+								<div
+									data-testid="slider-mark"
+									data-mark-value={mark.value}
+									class={markAttrs.class}
+									style={mergeStyle(markAttrs.style, markPositionStyle(mark.value))}
+								></div>
+								{#if mark.label}
+									<span
+										data-testid="slider-mark-label"
+										data-mark-value={mark.value}
+										class={markLabelAttrs.class}
+										style={mergeStyle(markLabelAttrs.style, markPositionStyle(mark.value))}
+									>
+										{mark.label}
+									</span>
+								{/if}
+							</div>
+						{/each}
+					</div>
 				{/if}
-			{/each}
+
+				<!-- Thumbs — upstream keys by `thumbIndex`, i.e. positionally. -->
+				{#each values as _, i (i)}
+					{#if useValueTooltip}
+						<SliderValueTooltip
+							content={displayValue(values[i])}
+							placement={tooltipPlacement}
+							isOpen={draggingThumb === i ? true : undefined}
+							{isHorizontal}
+							progress={heldAnchors.get(i) ?? progressOf(values[i])}
+							index={i}
+							{registerAnchor}
+						>
+							{#snippet thumbTrigger(interaction: Attachment<HTMLElement>, describedBy: string)}
+								{@render thumb(i, interaction, describedBy)}
+							{/snippet}
+						</SliderValueTooltip>
+					{:else}
+						{@render thumb(i, undefined, undefined)}
+					{/if}
+				{/each}
+			</div>
 		</div>
 
 		{#if valueDisplay === 'text'}

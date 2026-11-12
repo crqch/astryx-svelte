@@ -73,7 +73,7 @@ export function templateCopy(match, { targetPath, cwd, overwrite = false }) {
 
 	// Refuse to clobber an existing file unless the caller opts in. The CLI has
 	// its own pre-flight collision message, but the API is a public surface
-	// (@astryx-svelte/cli/api) and must enforce this itself — same guard the peer
+	// (@astryx-sv/cli/api) and must enforce this itself — same guard the peer
 	// theme/add write-leaf applies.
 	if (!overwrite && fs.existsSync(outputFilePath)) {
 		const rel = path.relative(cwd, outputFilePath) || outputFilePath;

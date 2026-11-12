@@ -1,4 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
+import { reducedMotionFadeConsts } from '../../motion/reduced-motion.stylex.js';
 import { durationVars, easeVars, spacingVars } from '../../styles/tokens.stylex.js';
 
 /**
@@ -71,8 +72,24 @@ const enterStartRtl = stylex.keyframes({
 	to: { opacity: 1, transform: 'translateX(0) scale(1)' }
 });
 
+// Reduce Motion under a finger: the same entrance without its travel. A touch
+// presentation substitutes a cross-fade for motion, never a jump.
+// The fade's curve rides in its first keyframe, so the published class type
+// of `animationTimingFunction` stays the theme ease's.
+const fadeIn = stylex.keyframes({
+	from: { opacity: 0, animationTimingFunction: reducedMotionFadeConsts.easing },
+	to: { opacity: 1 }
+});
+
+// No theme value lengthens the Reduce Motion fade, so its values are constants.
+// The media keys stay literal: StyleX gives an imported at-rule key a later
+// priority layer (see reducedMotionKeys).
 const animationBase = {
-	animationDuration: durationVars['--duration-fast-max'],
+	animationDuration: {
+		default: durationVars['--duration-fast-max'],
+		'@media (prefers-reduced-motion: reduce) and (pointer: coarse)':
+			reducedMotionFadeConsts.duration
+	},
 	animationTimingFunction: easeVars['--ease-standard'],
 	animationFillMode: 'backwards' as const
 };
@@ -80,22 +97,26 @@ const animationBase = {
 /**
  * Keyed by `LayerPlacement` for lookup as `layerAnimations[placement]`.
  *
- * Each entry disables its keyframe animation under
- * `prefers-reduced-motion: reduce` so the layer appears instantly instead of
- * translating/scaling in (infra-6).
+ * Under `prefers-reduced-motion: reduce` each entry drops its travel and
+ * scale. Under a finger (the primary pointer is coarse) the layer fades in,
+ * opacity only, in 200 ms on easeInOut: on a touch screen Reduce Motion
+ * replaces motion with a cross-fade rather than a jump; under any other
+ * pointer it appears at once.
  */
 export const layerAnimations = stylex.create({
 	below: {
 		animationName: {
 			default: enterBelow,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': fadeIn
 		},
 		...animationBase
 	},
 	above: {
 		animationName: {
 			default: enterAbove,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': fadeIn
 		},
 		...animationBase
 	},
@@ -103,7 +124,8 @@ export const layerAnimations = stylex.create({
 		animationName: {
 			default: enterEnd,
 			':is([dir="rtl"] *)': enterEndRtl,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': fadeIn
 		},
 		...animationBase
 	},
@@ -111,7 +133,8 @@ export const layerAnimations = stylex.create({
 		animationName: {
 			default: enterStart,
 			':is([dir="rtl"] *)': enterStartRtl,
-			'@media (prefers-reduced-motion: reduce)': 'none'
+			'@media (prefers-reduced-motion: reduce) and (not (pointer: coarse))': 'none',
+			'@media (prefers-reduced-motion: reduce) and (pointer: coarse)': fadeIn
 		},
 		...animationBase
 	}

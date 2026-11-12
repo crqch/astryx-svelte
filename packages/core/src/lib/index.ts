@@ -148,6 +148,8 @@ export { default as ContextMenuSubMenu } from './components/dropdown-menu/dropdo
 export { default as Dialog } from './components/dialog/dialog.svelte';
 export { default as DialogHeader } from './components/dialog/dialog-header.svelte';
 export { default as Divider } from './components/divider/divider.svelte';
+export { default as Drawer } from './components/drawer/drawer.svelte';
+export { default as DrawerHeader } from './components/drawer/drawer-header.svelte';
 export { default as DropdownMenu } from './components/dropdown-menu/dropdown-menu.svelte';
 export { default as DropdownMenuCheckboxItem } from './components/dropdown-menu/dropdown-menu-checkbox-item.svelte';
 export { default as DropdownMenuItem } from './components/dropdown-menu/dropdown-menu-item.svelte';
@@ -176,6 +178,7 @@ export { default as IconButton } from './components/icon-button/icon-button.svel
 export { default as ImperativeAlertDialogLayer } from './components/alert-dialog/imperative-alert-dialog-layer.svelte';
 export { default as ImperativeDialogLayer } from './components/dialog/imperative-dialog-layer.svelte';
 export { default as InputClearButton } from './components/field/input-clear-button.svelte';
+export { default as InfoTip } from './components/info-tip/info-tip.svelte';
 export { default as InputGroup } from './components/input-group/input-group.svelte';
 export { default as InputGroupText } from './components/input-group/input-group-text.svelte';
 export { default as Item } from './components/item/item.svelte';
@@ -200,6 +203,12 @@ export { default as LinkProvider } from './components/link/link-provider.svelte'
 export { default as List } from './components/list/list.svelte';
 export { default as Markdown } from './components/markdown/markdown.svelte';
 export { default as ListItem } from './components/list/list-item.svelte';
+export { createReorderable } from './reorderable/create-reorderable.js';
+export type {
+	Reorderable,
+	ReorderableOptions,
+	ReorderMove
+} from './reorderable/create-reorderable.js';
 export { default as MediaTheme } from './theme/media-theme.svelte';
 // `SyntaxTheme` is surfaced at the root for the same reason `MediaTheme` is —
 // both are theme *components*, and upstream's root `export * from './theme'`
@@ -241,6 +250,7 @@ export { default as RadioList } from './components/radio-list/radio-list.svelte'
 export { default as RadioListItem } from './components/radio-list/radio-list-item.svelte';
 export { default as ResizeHandle } from './components/resizable/resize-handle.svelte';
 export { default as Section } from './components/section/section.svelte';
+export { default as ScrollableArea } from './components/scrollable-area/scrollable-area.svelte';
 export { default as SegmentedControl } from './components/segmented-control/segmented-control.svelte';
 export { default as SegmentedControlItem } from './components/segmented-control/segmented-control-item.svelte';
 export { default as SelectableCard } from './components/selectable-card/selectable-card.svelte';
@@ -309,10 +319,12 @@ export type { ThemeMode } from './theme/types.js';
 // and so names no return type anywhere in the package. Ours wraps the value in a
 // getter object for reactivity, which is a port artifact — the interface stays
 // module-public and off both barrels rather than inventing published surface.
+export { useScrollableArea } from './hooks/use-scrollable-area.svelte.js';
 export { useTheme, useThemeName } from './theme/use-theme.svelte.js';
 export type { UseThemeReturn } from './theme/use-theme.svelte.js';
 export { default as Thumbnail } from './components/thumbnail/thumbnail.svelte';
 export { default as TimeInput } from './components/time-input/time-input.svelte';
+export { default as Timer } from './components/timer/timer.svelte';
 export { default as Timestamp } from './components/timestamp/timestamp.svelte';
 // `Toast` is exported for inline rendering in previews and documentation, and
 // `ToastViewport` for LayerProvider integration — upstream's stated reasons.
@@ -434,6 +446,7 @@ export type { CardProps } from './components/card/card.svelte';
 export type {
 	DateInputFormat,
 	DateInputNativePicker,
+	DateInputPresentation,
 	DateInputProps,
 	DateInputStatus,
 	DateInputStatusType
@@ -451,6 +464,8 @@ export type { DateRangeInputSize } from './components/date-range-input/date-rang
 export type {
 	DateTimeInputProps,
 	DateTimeInputHourFormat,
+	DateTimeInputNativePicker,
+	DateTimeInputPresentation,
 	DateTimeInputStatus,
 	DateTimeInputStatusType,
 	DateTimeInputTimeIncrement,
@@ -462,6 +477,8 @@ export type { DateTimeInputSize } from './components/date-time-input/date-time-i
 // `handleRef` target), the `CalendarHandle`/`TokenizerHandle` arrangement.
 export type { CarouselHandle, CarouselProps } from './components/carousel/carousel.svelte';
 export type { CarouselGap } from './components/carousel/carousel.stylex.js';
+export { useSnapPaging } from './components/snap-paging/index.js';
+export type { SnapPaging, SnapPagingOptions } from './components/snap-paging/index.js';
 export type { ClickableCardProps } from './components/clickable-card/clickable-card.svelte';
 export type { CenterProps } from './components/center/center.svelte';
 export type {
@@ -592,6 +609,7 @@ export type {
 export { default as ContextMenuDivider } from './components/dropdown-menu/dropdown-menu-divider.svelte';
 export type { CollapsibleGroupProps } from './components/collapsible/collapsible-group.svelte';
 export type { CollapsibleGroupDensity } from './components/collapsible/collapsible-group-context.svelte.js';
+export type { CollapsibleChevronPosition } from './components/collapsible/collapsible-group-context.svelte.js';
 export {
 	useCollapsible,
 	type CollapsibleConfig,
@@ -606,16 +624,22 @@ export type {
 } from './components/dialog/dialog.svelte';
 export type { DialogPosition } from './components/dialog/dialog.stylex.js';
 export type { DialogHeaderProps } from './components/dialog/dialog-header.svelte';
+export type { DrawerProps } from './components/drawer/drawer.svelte';
+export type { DrawerHeaderProps } from './components/drawer/drawer-header.svelte';
 export type { DividerProps } from './components/divider/divider.svelte';
 export type {
 	DropdownMenuProps,
-	DropdownMenuButtonProps
+	DropdownMenuButtonProps,
+	DropdownMenuPresentation
 } from './components/dropdown-menu/dropdown-menu.svelte';
 export type { DropdownMenuItemProps } from './components/dropdown-menu/dropdown-menu-item.svelte';
 export type { DropdownMenuCheckboxItemProps } from './components/dropdown-menu/dropdown-menu-checkbox-item.svelte';
 export type { DropdownMenuRadioGroupProps } from './components/dropdown-menu/dropdown-menu-radio-group.svelte';
 export type { DropdownMenuRadioItemProps } from './components/dropdown-menu/dropdown-menu-radio-item.svelte';
-export type { DropdownMenuSubMenuProps } from './components/dropdown-menu/dropdown-menu-sub-menu.svelte';
+export type {
+	DropdownMenuSubMenuProps,
+	DropdownMenuSubMenuPresentation
+} from './components/dropdown-menu/dropdown-menu-sub-menu.svelte';
 export type {
 	DropdownMenuOption,
 	DropdownMenuItemData,
@@ -635,6 +659,13 @@ export type {
 	FieldStatusInput,
 	FieldStatusType
 } from './components/field/field.svelte';
+export type {
+	FieldContainerStyleProps,
+	FieldControlStyleProps,
+	FieldInputBaseProps,
+	FieldInputForbiddenStyleProp,
+	FieldPartStyleProps
+} from './components/field/field-parts.js';
 export type { FieldLabelProps } from './components/field/field-label.svelte';
 export type { FieldStatusProps } from './components/field-status/field-status.svelte';
 // No `FileInputMode`: upstream inlines the `'dropzone' | 'input'` union in
@@ -657,10 +688,17 @@ export type { ImperativeAlertDialogLayerProps } from './components/alert-dialog/
 export type { ImperativeDialogLayerProps } from './components/dialog/imperative-dialog-layer.svelte';
 // `InputClearButtonProps` is deliberately absent: upstream's `Field/index.ts`
 // exports the component but keeps its props type module-local, so we do too.
+export type { InfoTipProps, InfoTipSize } from './components/info-tip/info-tip.svelte';
 export type { InputGroupProps } from './components/input-group/input-group.svelte';
 export type { InputGroupSize } from './components/input-group/input-group.stylex.js';
 export type { InputGroupTextProps } from './components/input-group/input-group-text.svelte';
 export type { ItemProps } from './components/item/item.svelte';
+export type {
+	ItemSwipeAction,
+	ItemSwipeActions,
+	ItemSwipeActionVariant,
+	ItemSwipeBehavior
+} from './components/item/item.svelte';
 export type { ItemAlign, ItemDensity } from './components/item/item.stylex.js';
 export type { KbdProps } from './components/kbd/kbd.svelte';
 // `ContextRenderProps` and `FixedRenderProps` are upstream's own names for the
@@ -695,13 +733,14 @@ export type {
 	UseLinkifyOptions
 } from './components/link/use-linkify.js';
 export type { ListProps } from './components/list/list.svelte';
+export type { ListItemProps } from './components/list/list-item.svelte';
 // `ListStyle` is upstream's public alias for the internal `ListMarkerStyle`;
 // `ListContext` itself stays module-private, as upstream keeps it.
 export type {
 	ListDensity,
+	ListEdge,
 	ListMarkerStyle as ListStyle
 } from './components/list/list-context.svelte.js';
-export type { ListItemProps } from './components/list/list-item.svelte';
 // Markdown. Upstream's `Markdown/index.ts` publishes the component, its four
 // types, and the four parser entry points; `trimStreamingArtifacts` is
 // deliberately absent from it (it reaches consumers only through the
@@ -714,6 +753,14 @@ export type {
 	MarkdownInlinePlugin,
 	MarkdownSource
 } from './components/markdown/markdown-types.js';
+// Upstream ships these on the `@astryxdesign/core/Markdown/plugins` subpath.
+// This port has no per-component subpaths (port/debts.md), so its names live on
+// the root barrel. `MarkdownPluginEntry` appears on `MarkdownProps.plugins` and
+// therefore belongs to the published surface even though the generic
+// `createMarkdownPlugin()` protocol is not ported yet.
+export { createMarkdownHeadingLinks } from './components/markdown/plugins/heading-links.js';
+export type { MarkdownHeadingLinksOptions } from './components/markdown/plugins/heading-links.js';
+export type { MarkdownPluginEntry } from './components/markdown/plugins/protocol.js';
 export {
 	parseMarkdown,
 	parseMarkdownIncremental,
@@ -724,6 +771,7 @@ export type {
 	BlockNode,
 	InlineNode,
 	ListItemNode,
+	SourceRange,
 	TableCellNode,
 	TableAlignment,
 	IncrementalState as IncrementalParseState
@@ -738,6 +786,7 @@ export type { MoreMenuProps } from './components/more-menu/more-menu.svelte';
 // hook's option and return types stay module-private — upstream's `hooks.ts`
 // declares both without `export`.
 export type {
+	MultiSelectorPresentation,
 	MultiSelectorProps,
 	MultiSelectorStatusType
 } from './components/multi-selector/multi-selector.svelte';
@@ -745,6 +794,7 @@ export type { MultiSelectorSize } from './components/multi-selector/multi-select
 export type {
 	MultiSelectorOptionType,
 	MultiSelectorOptionData,
+	MultiSelectorSelectedItem,
 	MultiSelectorDivider,
 	MultiSelectorSection,
 	MultiSelectorStatus
@@ -798,7 +848,11 @@ export type {
 // `PopoverLayer` has no upstream counterpart name — `usePopover.render` is a
 // function, not a component. A Svelte hook cannot return markup, so it is public
 // here, the same move `HoverCardLayer`/`TooltipLayer` made.
-export type { PopoverProps, PopoverTriggerRenderProps } from './components/popover/popover.svelte';
+export type {
+	PopoverPresentation,
+	PopoverProps,
+	PopoverTriggerRenderProps
+} from './components/popover/popover.svelte';
 export type { PopoverLayerProps } from './components/popover/popover-layer.svelte';
 export type {
 	ProgressBarMark,
@@ -817,6 +871,21 @@ export {
 } from './components/radio-list/radio-list-context.svelte.js';
 export type { ResizeHandleProps } from './components/resizable/resize-handle.svelte';
 export type { SectionProps } from './components/section/section.svelte';
+export type {
+	ScrollableAreaProps,
+	ScrollableAreaStickyContainment
+} from './components/scrollable-area/scrollable-area.svelte';
+export type {
+	ScrollAxis,
+	ScrollAxisState,
+	ScrollKeyboardAccess,
+	ScrollOverscroll,
+	ScrollStickyContainment,
+	ScrollableAreaState,
+	ScrollableElementProps,
+	UseScrollableAreaOptions,
+	UseScrollableAreaResult
+} from './hooks/use-scrollable-area.svelte.js';
 export type { SegmentedControlProps } from './components/segmented-control/segmented-control.svelte';
 export type { SegmentedControlItemProps } from './components/segmented-control/segmented-control-item.svelte';
 export type {
@@ -830,6 +899,7 @@ export type { SelectableCardProps } from './components/selectable-card/selectabl
 // in `SelectorOption.tsx`, the same standing `SyntaxThemeProps` has — so it is
 // exported from the component module but not re-exported here.
 export type {
+	SelectorPresentation,
 	SelectorProps,
 	SelectorStatus,
 	SelectorStatusType
@@ -871,17 +941,22 @@ export type { SpinnerProps } from './components/spinner/spinner.svelte';
 export type { StackAlignment, StackProps } from './components/stack/stack.svelte';
 export type { StackItemProps } from './components/stack/stack-item.svelte';
 export type { StatusDotProps } from './components/status-dot/status-dot.svelte';
-// Upstream's `Stepper/index.ts` publishes exactly these seven names.
-// `StepDensity` and `StepperDensity` are module-public upstream and
-// barrel-absent, so they stay unpublished here too — the `focusableSelector`
+// Upstream's `Stepper/index.ts` publishes the components, `useStepperContext`,
+// and these types. `StepDensity` and `StepperDensity` are module-public upstream
+// and barrel-absent, so they stay unpublished here too — the `focusableSelector`
 // rule.
-export type { StepperProps } from './components/stepper/stepper.svelte';
+export type {
+	StepperCollapsedVariant,
+	StepperHorizontalOptions,
+	StepperProps
+} from './components/stepper/stepper.svelte';
 export type { StepProps, StepIndicatorPreset } from './components/stepper/step.svelte';
 export type { StepStatus } from './components/stepper/step-status.js';
 export type {
 	StepperContextValue,
 	StepperOrientation,
-	StepperIndicatorPosition
+	StepperIndicatorPosition,
+	StepperRegistrationOptions
 } from './components/stepper/stepper-context.svelte.js';
 export type {
 	SwitchProps,
@@ -923,6 +998,8 @@ export type { TableHeaderCellProps } from './components/table/table-header-cell.
 export type { TableHeaderProps } from './components/table/table-header.svelte';
 export type { TableBodyProps } from './components/table/table-body.svelte';
 export type { TableFooterProps } from './components/table/table-footer.svelte';
+export { default as TableSelectionToolbar } from './components/table/table-selection-toolbar.svelte';
+export type { TableSelectionToolbarProps } from './components/table/table-selection-toolbar.svelte';
 export { TableContext, type TableContextValue } from './components/table/table-context.svelte.js';
 export { resolveContextActions } from './components/table/table-context-menu.svelte';
 export {
@@ -945,6 +1022,7 @@ export {
 } from './components/table/plugins/selection/use-table-selection.js';
 export {
 	useTableSelectionState,
+	type TableSelectionState,
 	type UseTableSelectionStateConfig,
 	type UseTableSelectionStateResult
 } from './components/table/plugins/selection/use-table-selection-state.svelte.js';
@@ -1050,6 +1128,7 @@ export { useTableFilterState } from './components/table/plugins/filtering/use-ta
 // auditable against upstream's `PowerSearch/index.ts` line by line.
 export { default as PowerSearch } from './components/power-search/power-search.svelte';
 export type {
+	PowerSearchPresentation,
 	PowerSearchProps,
 	PowerSearchSize
 } from './components/power-search/power-search.svelte';
@@ -1167,6 +1246,7 @@ export type {
 	TimeInputStatusType
 } from './components/time-input/time-input.svelte';
 export type { TimeInputSize } from './components/time-input/time-input.stylex.js';
+export type { TimerFormat, TimerProps } from './components/timer/timer.svelte';
 export type { TimestampProps } from './components/timestamp/timestamp.svelte';
 export type { ToastProps } from './components/toast/toast.svelte';
 export type { ToastViewportProps } from './components/toast/toast-viewport.svelte';
@@ -1197,6 +1277,7 @@ export type { TokenProps } from './components/token/token.svelte';
 export type {
 	TokenizerProps,
 	TokenizerOverflowBehavior,
+	TokenizerPresentation,
 	TokenizerChange,
 	TokenizerHandle,
 	TokenizerStatus,
@@ -1232,6 +1313,12 @@ export type { SearchableItem, SearchSource } from './components/typeahead/types.
 export type { CreateStaticSourceOptions } from './components/typeahead/create-static-source.js';
 export type { BaseTypeaheadProps } from './components/typeahead/base-typeahead.svelte';
 export type {
+	BaseTypeaheadDialogMenuInfo,
+	BaseTypeaheadHandle,
+	BaseTypeaheadListboxMenuInfo,
+	BaseTypeaheadMenu
+} from './components/typeahead/base-typeahead.svelte';
+export type {
 	TypeaheadProps,
 	TypeaheadStatus,
 	TypeaheadStatusType
@@ -1264,7 +1351,7 @@ export type {
 	ButtonVariant,
 	ButtonVariantMap
 } from './components/button/button.stylex.js';
-export type { CardVariant } from './components/card/card.stylex.js';
+export type { CardVariant, CardVariantMap } from './components/card/card.stylex.js';
 export type { CenterAxis } from './components/center/center.stylex.js';
 // No `CodeBlockSize`/`CodeBlockContainer` here: upstream inlines both unions in
 // `CodeBlockProps` and publishes no named type for either, unlike `Code`'s
@@ -1409,6 +1496,7 @@ export {
 	resetIcons,
 	type ExtendedIconName,
 	type IconName,
+	type NamespacedIconName,
 	type IconRegistry,
 	type IconRegistrySource,
 	type IconType
@@ -1466,6 +1554,7 @@ export {
 } from './components/outline/use-outline-from-dom.svelte.js';
 // Landed with batch 11's markdown parser, which is what they were deferred on.
 export { parseOutlineFromMarkdown } from './components/outline/parse-outline-from-markdown.js';
+export type { ParseOutlineFromMarkdownOptions } from './components/outline/parse-outline-from-markdown.js';
 export {
 	useOutlineFromMarkdown,
 	type OutlineFromMarkdownState
@@ -1488,11 +1577,14 @@ export type {
 	OverlayShowOn
 } from './components/overlay/overlay-scrim.stylex.js';
 export {
+	percent,
 	useResizable,
 	type ResizableConfig,
+	type ResizablePercentSize,
 	type ResizableProps,
 	type ResizableRegion,
 	type ResizableRegionConfig,
+	type ResizableSize,
 	type UseResizableMultiConfig,
 	type UseResizableSingleConfig
 } from './components/resizable/use-resizable.svelte.js';
@@ -1518,6 +1610,7 @@ export type {
 export type {
 	BuiltinTextColor,
 	BuiltinTextType,
+	CustomTextTypes,
 	TextColor,
 	TextColorMap,
 	TextDisplay,
@@ -1609,16 +1702,16 @@ export {
 } from './interactive-role-context.svelte.js';
 
 // Hooks — re-exported at the root as upstream's index does, and available on
-// their own as `@astryx-svelte/core/hooks`.
+// their own as `@astryx-sv/core/hooks`.
 export * from './hooks/index.js';
 
 // Pure helpers — re-exported at the root as upstream's index does
 // (`export * from './utils'`), and available on their own as
-// `@astryx-svelte/core/utils`.
+// `@astryx-sv/core/utils`.
 export * from './utils/index.js';
 
 // i18n — re-exported at the root as upstream's index does (`export * from './i18n'`),
-// and available on its own as `@astryx-svelte/core/i18n`.
+// and available on its own as `@astryx-sv/core/i18n`.
 export {
 	InternationalizationContext,
 	InternationalizationProvider,
@@ -1627,6 +1720,7 @@ export {
 	useDirection,
 	useLocale,
 	useTranslator,
+	type CalendarSystem,
 	type InternationalizationProviderProps,
 	type Catalog,
 	type InternationalizationContextValue,

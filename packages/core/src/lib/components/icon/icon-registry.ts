@@ -57,10 +57,19 @@ export type IconName =
 	| 'eyeSlash'
 	| 'viewColumns'
 	| 'copy'
+	| 'upload'
 	| 'checkDouble'
 	| 'wrench'
 	| 'stop'
 	| 'microphone';
+
+/**
+ * A namespaced icon key: `<namespace>:<name>`, the form a component or library
+ * owns rather than a built-in name. Accepted anywhere a built-in name is,
+ * including `<Icon icon>`, so a namespaced glyph keeps `size`, `color` and
+ * `xstyle`.
+ */
+export type NamespacedIconName = `${string}:${string}`;
 
 /**
  * A semantic icon name — either one of the built-in {@link IconName}s or an
@@ -161,7 +170,7 @@ function getThemeIconOverrides(source: IconRegistrySource): Partial<IconRegistry
  * with {@link getExtendedIcon}.
  *
  * @example
- * import { registerIcons } from '@astryx-svelte/core';
+ * import { registerIcons } from '@astryx-sv/core';
  * import { brandIcons } from './brand-icons.svelte';
  * registerIcons(brandIcons);
  *

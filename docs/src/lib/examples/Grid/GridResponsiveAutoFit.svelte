@@ -13,7 +13,7 @@
 		Text,
 		useResizable,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const teams = [
 		{ name: 'Design Systems', members: 8 },

@@ -8,7 +8,7 @@
  * the base doc.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsZh = {
 	description: 'Astryx 核心设计原则和规则。',
 	sections: [

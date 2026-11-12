@@ -1,6 +1,6 @@
 /**
  * Public type surface for file-based codemod authoring (exported from
- * `@astryx-svelte/cli/codemod` and `@astryx-svelte/cli/authoring`).
+ * `@astryx-sv/cli/codemod` and `@astryx-sv/cli/authoring`).
  *
  * Authors write a plain object against {@link AstryxCodemodDef} /
  * {@link AstryxConfigCodemodDef} and default-export it with a `type`

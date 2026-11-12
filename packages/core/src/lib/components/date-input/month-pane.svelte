@@ -1,7 +1,9 @@
 <script lang="ts" module>
 	import type { DayOfWeek, ISODateString, PlainDate } from '../../utils/date-types.js';
+	import type { MonthModel } from './month-geometry.js';
 
 	export interface MonthPaneProps {
+		monthModel: MonthModel;
 		monthIndex: number;
 		insetInlineStart: number;
 		inlineSize: number;
@@ -20,13 +22,17 @@
 	import { useCalendarDays } from '../calendar/use-calendar-days.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import {
-		DATE_FORMAT_MONTH_YEAR,
+		calendarYearMonthOf,
+		formatCalendarDate,
+		formatCalendarMonthLabel,
+		isInCalendarMonth
+	} from '../../utils/calendar-system.js';
+	import {
 		DATE_FORMAT_WITH_WEEKDAY,
-		plainDateFormat,
+		plainDateFormatDayNumber,
 		plainDateIsEqual,
 		plainDateToISO
 	} from '../../utils/plain-date.js';
-	import { fromMonthIndex } from './month-geometry.js';
 	import {
 		monthCellAttrs,
 		monthDayAttrs,
@@ -45,6 +51,7 @@
 	 * so each day instead carries its weekday in its accessible name.
 	 */
 	let {
+		monthModel,
 		monthIndex,
 		insetInlineStart,
 		inlineSize,
@@ -59,44 +66,33 @@
 	}: MonthPaneProps = $props();
 
 	const locale = useLocale();
-	const parts = $derived(fromMonthIndex(monthIndex));
+	const calendar = $derived(monthModel.calendar);
+	const month = $derived(monthModel.monthAt(monthIndex));
+	const yearMonth = $derived(calendarYearMonthOf(calendar, month));
 
 	const grid = useCalendarDays(() => ({
-		year: parts.year,
-		month: parts.month,
+		year: yearMonth.year,
+		month: yearMonth.month,
+		calendar,
 		weekStartsOn,
 		// Always six rows: a variable grid would make pane heights differ, and
 		// with them every snap offset below this month.
 		hasVariableRowCount: false
 	}));
 
-	const monthLabel = $derived(
-		plainDateFormat(
-			{ year: parts.year, month: parts.month, day: 1 },
-			DATE_FORMAT_MONTH_YEAR,
-			locale()
-		)
-	);
+	const monthLabel = $derived(formatCalendarMonthLabel(calendar, month, locale()));
 
 	// Exactly one day per pane is tab-reachable, so Tab moves through the
 	// picker rather than through 42 buttons: the focused day if the keyboard
 	// owns one, else the selection, else the first of the month.
 	const tabbableISO = $derived.by(() => {
-		if (
-			focusedDate != null &&
-			focusedDate.year === parts.year &&
-			focusedDate.month === parts.month
-		) {
+		if (focusedDate != null && isInCalendarMonth(focusedDate, month)) {
 			return plainDateToISO(focusedDate);
 		}
-		if (
-			selectedDate != null &&
-			selectedDate.year === parts.year &&
-			selectedDate.month === parts.month
-		) {
+		if (selectedDate != null && isInCalendarMonth(selectedDate, month)) {
 			return plainDateToISO(selectedDate);
 		}
-		return plainDateToISO({ year: parts.year, month: parts.month, day: 1 });
+		return plainDateToISO(month.start);
 	});
 
 	const paneAttrs = $derived(monthPaneAttrs(insetInlineStart, inlineSize));
@@ -137,7 +133,7 @@
 						type="button"
 						data-date={day.iso}
 						tabindex={day.iso === tabbableISO ? 0 : -1}
-						aria-label={plainDateFormat(day.date, DATE_FORMAT_WITH_WEEKDAY, locale())}
+						aria-label={formatCalendarDate(calendar, day.date, DATE_FORMAT_WITH_WEEKDAY, locale())}
 						aria-disabled={isDisabled || undefined}
 						aria-current={isToday ? 'date' : undefined}
 						onclick={() => {
@@ -150,7 +146,9 @@
 						class={dayAttrs.class}
 						style={dayAttrs.style}
 					>
-						<span class={puckAttrs.class} style={puckAttrs.style}>{day.dayNumber}</span>
+						<span class={puckAttrs.class} style={puckAttrs.style}
+							>{plainDateFormatDayNumber(day.dayNumber, locale())}</span
+						>
 					</button>
 				</div>
 			{/each}

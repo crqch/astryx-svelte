@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Stack, Text, Thumbnail } from '@astryx-svelte/core';
+	import { Stack, Text, Thumbnail } from '@astryx-sv/core';
 	import { GOLDEN_SUNSET, MISTY_VALLEY, NIGHT_FOREST, SNOWY_PEAKS } from './thumbnail-images.js';
 
 	const ATTACHMENTS = [

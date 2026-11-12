@@ -69,7 +69,7 @@
 		pixel,
 		proportional,
 		type TableColumn
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ArrowDownIcon, ArrowPathIcon, ArrowUpIcon } from '@fvilers/heroicons-svelte/24/outline';
 	import { StopIcon } from '@fvilers/heroicons-svelte/24/solid';
 

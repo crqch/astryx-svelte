@@ -8,6 +8,8 @@ node_modules
 dist
 .svelte-kit
 .vercel
+.wrangler
+.dev.vars
 # Adapter output, anchored. A bare `build` matches a directory of that name at
 # ANY depth, and the CLI has two of them — `packages/cli/api/build/` (the page
 # composition assistant) and `packages/cli/api/theme/build/` (the theme
@@ -27,16 +29,10 @@ dist
 # exactly the reason `/build` above is: unanchored, `reference/` matches a
 # directory of that name at ANY depth, and the CLI has one — the `reference`
 # doctype at `packages/cli/authoring/doctypes/reference/`, upstream's own path.
-# Three source files were silently untracked by it, `pnpm -r check` passed
+# Three source files were silently untracked by it, the gate passed
 # locally because they were on disk, and CI failed on every run with 22 errors
 # in files no diff had touched.
 /reference/
-
-# A second lockfile. `package.json` pins `packageManager: pnpm@10.14.0`, and the
-# repo's own docs tell contributors to use pnpm; a committed bun.lock would give
-# CI and newcomers a second, silently divergent dependency graph to resolve
-# against. The file is left on disk — only ignored.
-bun.lock
 
 # Comparison screenshots and scratch from porting sessions. Ports are verified by
 # putting our render beside upstream's, which leaves PNGs at the root; none of

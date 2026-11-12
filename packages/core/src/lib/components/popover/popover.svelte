@@ -1,8 +1,16 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { Attachment } from 'svelte/attachments';
+	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	import type { BaseProps } from '../../base-props.js';
 	import type { LayerAlignment, LayerPlacement } from '../layer/use-layer.svelte.js';
+
+	/**
+	 * The surface a Popover presents its content on: anchored to the trigger, in
+	 * a BottomSheet, or adaptive (a BottomSheet on a compact touch screen, the
+	 * popover elsewhere).
+	 */
+	export type PopoverPresentation = AdaptivePresentation;
 
 	/**
 	 * Props passed to the render-prop `trigger` snippet for explicit trigger
@@ -153,6 +161,27 @@
 		 */
 		hasEscapeDismiss?: boolean;
 
+		/**
+		 * The surface that holds the content. `'popover'` anchors it to the
+		 * trigger. `'bottom-sheet'` presents it in a modal BottomSheet, labeled by
+		 * `label`. `'adaptive'` presents the BottomSheet on a compact touch screen
+		 * (a coarse pointer on a screen the theme counts as compact: narrower than
+		 * its `md` width point or shorter than 500px, so a phone in either
+		 * orientation) and the anchored popover elsewhere, which is what iOS does
+		 * with a popover by default.
+		 *
+		 * In a sheet, `placement`, `alignment`, `width`, `role`, `isModal` and
+		 * `hasAutoFocus` do not apply (the sheet is a modal dialog with its own
+		 * focus handling); `xstyle`, `class` and `style` style the sheet's panel,
+		 * as they style the anchored surface. The sheet always light-dismisses (a
+		 * tap outside it or a swipe down closes it, whatever `hasLightDismiss`
+		 * says), Escape follows `hasEscapeDismiss`, and the fallback close stays
+		 * hidden as on the anchored surface. The surface is chosen when the
+		 * popover opens and kept until it closes.
+		 * @default 'popover'
+		 */
+		presentation?: PopoverPresentation;
+
 		/** Test ID for the popover container. */
 		'data-testid'?: string;
 	}
@@ -162,6 +191,7 @@
 	import { untrack } from 'svelte';
 	import type { Attachment as AttachmentType } from 'svelte/attachments';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { spacingVars } from '../../styles/tokens.stylex.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { devWarn } from '../../utils/dev-warning.js';
 	import PopoverAnchor from './popover-anchor.svelte';
@@ -171,11 +201,21 @@
 		popoverContentAttrs,
 		popoverLayerXstyle
 	} from './popover.stylex.js';
-	import { usePopover } from './use-popover.svelte.js';
+	import { usePopoverInternal } from './use-popover.svelte.js';
+	import { usePopoverSurfaceMotion } from './use-popover-surface-motion.svelte.js';
+	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
+	import { usePresentationHold } from '../layer/presentation-hold.svelte.js';
+	import { PopoverBottomSheet, preloadPopoverBottomSheet } from './lazy-popover-bottom-sheet.js';
 
 	/**
 	 * A click-triggered popover for interactive content anchored to a trigger,
 	 * ported from Astryx's `Popover/Popover.tsx`.
+	 *
+	 * `presentation` chooses the surface with the vocabulary DropdownMenu and
+	 * Selector use: the anchored popover (the default), a BottomSheet, or
+	 * `adaptive` — a BottomSheet on a compact touch screen and the popover
+	 * elsewhere (the shared adaptive presentation policy). The surface is chosen
+	 * when the popover opens; whichever is open stays until it closes.
 	 *
 	 * Implements the button + dialog ARIA pattern. The trigger must contain a
 	 * `<button>` or `[role="button"]`; the popover finds it and applies handlers
@@ -220,6 +260,7 @@
 		hasAutoFocus,
 		hasLightDismiss = true,
 		hasEscapeDismiss = true,
+		presentation = 'popover',
 		xstyle,
 		class: className,
 		style,
@@ -227,6 +268,21 @@
 	}: PopoverProps = $props();
 
 	const id = $props.id();
+
+	const surfaceMotion = usePopoverSurfaceMotion();
+	// The element the popover is anchored to, whichever way it was attached:
+	// the touch presentation grows the popover out of it. Upstream's
+	// `anchorElementRef`.
+	let anchorElement: HTMLElement | null = null;
+
+	// Runs as the popover opens, before it paints. Upstream's
+	// `presentSurfaceRef`. The surface is the content div `usePopover` hands
+	// back; the layer element is the popover around it.
+	function presentSurface(): void {
+		const surface = popover.contentRef;
+		const layer = surface?.closest<HTMLElement>('[popover]') ?? null;
+		surfaceMotion.present(layer, anchorElement, surface);
+	}
 
 	const BUTTON_SELECTOR = 'button, [role="button"]';
 
@@ -246,7 +302,16 @@
 	// trigger click from immediately re-opening it. Upstream's `lastHideTimeRef`.
 	let lastHideTime = 0;
 
-	const popover = usePopover(() => ({
+	// The surface `presentation` resolves to now. Only `'adaptive'` reads the
+	// theme's compact definition and subscribes to its query; a fixed
+	// presentation holds no media listener.
+	const adaptivePresentation = useAdaptivePresentation(() => presentation);
+	const resolvedPresentation = $derived(adaptivePresentation.resolved);
+	let isSheetOpenState = $state(false);
+	// The trigger's own name, which labels a sheet that has no `label` (DEC-8).
+	let triggerText = $state('');
+
+	const popover = usePopoverInternal(() => ({
 		id,
 		dialogLabel: label,
 		role,
@@ -256,21 +321,122 @@
 		hasCloseButton,
 		closeButtonLabel,
 		hasAutoFocus,
-		onShow: () => onOpenChange?.(true),
+		onShow: () => {
+			presentSurface();
+			onOpenChange?.(true);
+		},
 		onHide: () => {
 			lastHideTime = Date.now();
 			onOpenChange?.(false);
-		}
+		},
+		onCloseStart: surfaceMotion.closeStart
 	}));
 
+	// A controlled popover opens on the surface its presentation resolves to as
+	// it opens, and keeps that surface until it closes: a phone rotated past the
+	// compact width while the sheet is open keeps its sheet. The hold is taken
+	// before the DOM update that opens the surface, so the open surface is known
+	// in the same flush that opens it, and let go as the controlled state turns
+	// off.
+	const surfaceHold = usePresentationHold<'popover' | 'bottom-sheet'>(() => ({
+		isOpen: isControlled && isOpen === true,
+		presentation: popover.isOpen ? 'popover' : resolvedPresentation
+	}));
+	const controlledSurface = $derived(surfaceHold.presentation);
+	const isSheetOpen = $derived(
+		isControlled ? isOpen === true && controlledSurface === 'bottom-sheet' : isSheetOpenState
+	);
+
+	// The sheet, held from the render that opens it until its dialog has closed.
+	// While held it stays mounted through its exit, so the exit plays out and its
+	// dialog hands focus back to the trigger (component:Popover AR4).
+	const sheetHold = usePresentationHold<true>(() => ({
+		isOpen: isSheetOpen,
+		presentation: true
+	}));
+	const hasSheetBeenOpen = $derived(sheetHold.isHeld);
+	const releaseSheet = sheetHold.release;
+
+	// One presentation at a time (architecture:component-style-authoring INV7):
+	// the sheet is mounted, in place of the anchored layer, while it is the
+	// surface an opening would choose and the anchored popover is not the open
+	// one, while it is open, and through its exit after it was. Closed, it holds
+	// the content as the anchored layer does, so state kept in the content (a
+	// ticked box, typed text) survives a reopen.
+	const isSheetMounted = $derived(
+		isSheetOpen || hasSheetBeenOpen || (resolvedPresentation === 'bottom-sheet' && !popover.isOpen)
+	);
+	const isAnySurfaceOpen = $derived(popover.isOpen || isSheetOpen);
+	const sheetId = $derived(`${popover.id}-sheet`);
+
+	let sheetPanelEl = $state<HTMLDivElement | null>(null);
+
+	$effect.pre(() => {
+		if (isControlled && isOpen !== true && surfaceHold.isHeld) {
+			surfaceHold.release();
+		}
+	});
+
+	// The sheet's <dialog> has closed: its exit is over, so the retained sheet
+	// may leave the tree. A dialog that is already closed means the same thing.
+	$effect(() => {
+		if (isSheetOpen || !hasSheetBeenOpen) {
+			return;
+		}
+		const dialog = sheetPanelEl?.closest('dialog');
+		if (dialog == null || !dialog.open) {
+			releaseSheet();
+			return;
+		}
+		const handleClose = () => releaseSheet();
+		dialog.addEventListener('close', handleClose);
+		return () => dialog.removeEventListener('close', handleClose);
+	});
+
+	// An open on a compact touch screen shows the sheet at once: preload as soon
+	// as the sheet can be the surface, with nothing rendered. The sheet is a
+	// static import here, so the call is the hook upstream's effect needs.
+	$effect(() => {
+		if (resolvedPresentation === 'bottom-sheet') {
+			preloadPopoverBottomSheet();
+		}
+	});
+
+	/** The trigger's own name: its `aria-label`, else its text. */
+	function readTriggerText(trigger: HTMLElement): string {
+		return trigger.getAttribute('aria-label')?.trim() || trigger.textContent?.trim() || '';
+	}
+
+	const setSheetOpen = (next: boolean): void => {
+		if (!isControlled) {
+			isSheetOpenState = next;
+		}
+		onOpenChange?.(next);
+	};
+
 	// Shared click handler for the trigger button.
-	function handleTriggerClick(): void {
-		if (!isEnabled) {
+	function handleTriggerClick(event?: Event): void {
+		// An aria-disabled trigger stays focusable but opens nothing
+		// (spec:AST-085 FR2), even for a click dispatched straight on it.
+		const trigger = event?.currentTarget;
+		if (
+			!isEnabled ||
+			(trigger instanceof Element && trigger.getAttribute('aria-disabled') === 'true')
+		) {
 			return;
 		}
 		// If the popover was just closed by light dismiss (clicking outside), the
 		// trigger click fires in the same event — skip re-opening.
 		if (Date.now() - lastHideTime < 50) {
+			return;
+		}
+		// Opening chooses the surface; an open popover closes as a popover.
+		if (isSheetOpen || (!popover.isOpen && resolvedPresentation === 'bottom-sheet')) {
+			const opener = trigger instanceof HTMLElement ? trigger : renderTriggerElement;
+			if (opener != null) {
+				triggerText = readTriggerText(opener);
+			}
+			setSheetOpen(!isSheetOpen);
 			return;
 		}
 		popover.toggle();
@@ -281,29 +447,35 @@
 	function handleTriggerKeyDown(e: KeyboardEvent): void {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
-			handleTriggerClick();
+			handleTriggerClick(e);
 		}
 	}
 
-	// The found trigger button — the `aria-expanded` effect syncs it. In
-	// automatic mode the anchor attachment sets it; in sibling mode the effect does.
+	// The found trigger button — the ARIA effect syncs it. In automatic mode the
+	// anchor attachment sets it; in sibling mode the effect does.
 	let triggerButton = $state<HTMLElement | null>(null);
+	// The render-prop trigger element. Upstream's `renderTriggerRef`, read when a
+	// trigger click carries no `currentTarget`.
+	let renderTriggerElement: HTMLElement | null = null;
 
 	/**
-	 * Bind static ARIA + event handlers to a trigger button. `aria-haspopup` and
-	 * `aria-expanded` are handled by the reactive effect below, not here — see the
-	 * component comment. Neither may be read in this function: it runs inside an
-	 * attachment, and `popover.triggerProps` reads `isOpen`, which would re-run the
-	 * whole attachment (rebinding listeners) on every open and close.
+	 * Bind static ARIA + event handlers to a trigger button. `aria-haspopup`,
+	 * `aria-expanded` and `aria-controls` are handled by the reactive effect
+	 * below, not here — see the component comment. They may not be read in this
+	 * function: it runs inside an attachment, and those values read `isOpen` and
+	 * the presentation, which would re-run the whole attachment (rebinding
+	 * listeners) on every open, close and presentation change.
 	 */
 	function wireTriggerButton(button: HTMLElement): () => void {
-		button.setAttribute('aria-controls', popover.id);
 		button.addEventListener('click', handleTriggerClick);
 		const needsKeyDown = button.tagName !== 'BUTTON' && button.getAttribute('role') === 'button';
 		if (needsKeyDown) {
 			button.addEventListener('keydown', handleTriggerKeyDown);
 		}
 		triggerButton = button;
+		// The trigger's text is in the DOM the caller rendered, read as the
+		// trigger attaches; it names a sheet that has no `label` (DEC-8).
+		triggerText = readTriggerText(button);
 
 		return () => {
 			button.removeAttribute('aria-haspopup');
@@ -323,6 +495,7 @@
 	// inside for ARIA + handlers. Upstream's children-mode layout effect.
 	const attachAnchor: AttachmentType<HTMLElement> = (wrapper) => {
 		const detachAnchor = popover.attachTrigger(wrapper);
+		anchorElement = wrapper;
 
 		const button = findTriggerButton(wrapper);
 		if (!button) {
@@ -336,7 +509,29 @@
 
 		const detachButton = wireTriggerButton(button);
 		return () => {
+			if (anchorElement === wrapper) {
+				anchorElement = null;
+			}
 			detachButton();
+			detachAnchor?.();
+		};
+	};
+
+	// Render-prop mode: the caller owns the element, so its attachment also
+	// records it for a trigger click that carries no `currentTarget`. Upstream's
+	// `setRenderTrigger`.
+	const attachRenderTrigger: AttachmentType<HTMLElement> = (element) => {
+		renderTriggerElement = element;
+		anchorElement = element;
+		triggerText = readTriggerText(element);
+		const detachAnchor = popover.attachTrigger(element);
+		return () => {
+			if (renderTriggerElement === element) {
+				renderTriggerElement = null;
+			}
+			if (anchorElement === element) {
+				anchorElement = null;
+			}
 			detachAnchor?.();
 		};
 	};
@@ -361,39 +556,53 @@
 			}
 
 			// Anchor positioning on the anchorRef element itself.
+			anchorElement = el;
 			const detachAnchor = popover.attachTrigger(el);
 			const detachButton = wireTriggerButton(button);
 			return () => {
+				if (anchorElement === el) {
+					anchorElement = null;
+				}
 				detachButton();
 				detachAnchor?.();
 			};
 		});
 	});
 
-	// `aria-haspopup` follows `role` and `aria-expanded` follows `isOpen`, once a
-	// trigger button is wired. Upstream re-runs its whole attach on every render
-	// and re-stamps both from `popover.triggerProps`; here the static ARIA and the
-	// listeners bind once in `wireTriggerButton` and only these two follow.
+	// The trigger's ARIA follows the open surface, once a trigger button is
+	// wired. The sheet is a dialog whatever the popover's `role`; while it is
+	// the mounted surface the trigger controls its panel, not the hidden layer.
+	// Upstream re-runs its whole attach on every render and re-stamps all three;
+	// here the listeners bind once in `wireTriggerButton` and only these follow.
 	$effect(() => {
 		const button = triggerButton;
-		const { 'aria-haspopup': hasPopup, 'aria-expanded': open } = popover.triggerProps;
+		const hasPopup = isSheetMounted ? 'dialog' : popover.triggerProps['aria-haspopup'];
+		const expanded = isAnySurfaceOpen;
+		const controls = isSheetMounted ? sheetId : popover.id;
 		if (button) {
 			button.setAttribute('aria-haspopup', hasPopup);
-			button.setAttribute('aria-expanded', String(open));
+			button.setAttribute('aria-expanded', String(expanded));
+			button.setAttribute('aria-controls', controls);
 		}
 	});
 
-	// Sync controlled state.
+	// Sync controlled state. The sheet follows the controlled state in its
+	// derived `isSheetOpen`; only the anchored surface has an imperative API.
 	$effect(() => {
 		if (!isControlled) {
 			return;
 		}
 		const open = isOpen;
+		const surface = controlledSurface;
 		untrack(() => {
-			if (open && !popover.isOpen) {
+			if (!open) {
+				if (popover.isOpen) {
+					popover.hide();
+				}
+				return;
+			}
+			if (surface === 'popover' && !popover.isOpen) {
 				popover.show();
-			} else if (!open && popover.isOpen) {
-				popover.hide();
 			}
 		});
 	});
@@ -412,7 +621,7 @@
 	const anchorAttrs = popoverAnchorWrapperAttrs();
 	const contentAttrs = $derived(popoverContentAttrs(xstyle));
 	const themeClass = themeProps('popover').class;
-	const layerXstyle = $derived(popoverLayerXstyle(width, placement));
+	const layerXstyle = $derived(popoverLayerXstyle(width));
 
 	// `aria-haspopup` is the literal `'dialog'` here, NOT `popover.triggerProps`'s
 	// role-derived value, and `PopoverTriggerRenderProps` types it as that literal.
@@ -420,11 +629,11 @@
 	// `popover.triggerProps` when it added `role`, and left the render-prop branch
 	// hard-coded. Deliberately not "fixed" here — see the parity rule.
 	const renderTriggerProps = $derived<PopoverTriggerRenderProps>({
-		ref: popover.attachTrigger,
-		onClick: handleTriggerClick,
+		ref: attachRenderTrigger,
+		onClick: () => handleTriggerClick(),
 		'aria-haspopup': 'dialog',
-		'aria-expanded': popover.isOpen,
-		'aria-controls': popover.id
+		'aria-expanded': isAnySurfaceOpen,
+		'aria-controls': isSheetMounted ? sheetId : popover.id
 	});
 </script>
 
@@ -436,12 +645,39 @@
 	{@render trigger?.(renderTriggerProps)}
 {/if}
 
-<PopoverLayer {popover} {placement} {alignment} xstyle={layerXstyle}>
-	<div
+{#if isSheetMounted}
+	<PopoverBottomSheet
+		id={sheetId}
+		isOpen={isSheetOpen}
+		onOpenChange={setSheetOpen}
+		label={label ?? triggerText}
+		{hasEscapeDismiss}
+		hasCloseButton={popover.hasCloseButton}
+		closeButtonLabel={popover.closeButtonLabel}
+		{xstyle}
+		class={className}
+		{style}
 		data-testid={testId}
-		class={cx(themeClass, contentAttrs.class, className)}
-		style={mergeStyle(contentAttrs.style, style)}
+		{@attach (element: HTMLDivElement) => {
+			sheetPanelEl = element;
+		}}
 	>
 		{@render content()}
-	</div>
-</PopoverLayer>
+	</PopoverBottomSheet>
+{:else}
+	<PopoverLayer
+		{popover}
+		{placement}
+		{alignment}
+		offset={spacingVars['--spacing-1']}
+		xstyle={layerXstyle}
+	>
+		<div
+			data-testid={testId}
+			class={cx(themeClass, contentAttrs.class, className)}
+			style={mergeStyle(contentAttrs.style, style)}
+		>
+			{@render content()}
+		</div>
+	</PopoverLayer>
+{/if}

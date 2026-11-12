@@ -2,7 +2,7 @@
  * @file swizzle adapter — the single fs + resolution seam the swizzle leaves
  * share.
  *
- * Both leaves need the consumer's `@astryx-svelte/core` package dir and the list
+ * Both leaves need the consumer's `@astryx-sv/core` package dir and the list
  * of swizzlable component directories: `list` returns the names directly, `copy`
  * uses them for its "component not found" suggestions. Resolving core + listing
  * lives here once so neither leaf re-walks the filesystem. Throws AstryxError
@@ -20,7 +20,7 @@ import { ERROR_CODES } from '../../foundation/response/error-codes.mjs';
 import { AstryxError } from '../error.mjs';
 
 /**
- * Locate `@astryx-svelte/core` for `cwd` and list its swizzlable component
+ * Locate `@astryx-sv/core` for `cwd` and list its swizzlable component
  * directories.
  * @param {string} cwd
  * @returns {{coreDir: string, components: string[]}}
@@ -29,7 +29,7 @@ export function resolveCore(cwd) {
 	const coreDir = findCoreDir(cwd);
 	if (!coreDir) {
 		throw new AstryxError(
-			'Could not find @astryx-svelte/core package. Make sure you are inside the design system monorepo or have @astryx-svelte/core installed.',
+			'Could not find @astryx-sv/core package. Make sure you are inside the design system monorepo or have @astryx-sv/core installed.',
 			[],
 			ERROR_CODES.ERR_CORE_NOT_FOUND
 		);

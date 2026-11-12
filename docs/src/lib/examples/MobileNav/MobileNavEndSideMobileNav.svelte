@@ -8,7 +8,7 @@
 	icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { Button, MobileNav, SideNavItem, SideNavSection } from '@astryx-svelte/core';
+	import { Button, MobileNav, SideNavItem, SideNavSection } from '@astryx-sv/core';
 
 	let isOpen = $state(false);
 </script>

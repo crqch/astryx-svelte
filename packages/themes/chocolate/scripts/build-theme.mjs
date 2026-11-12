@@ -9,7 +9,7 @@ import { chocolateTheme } from '../src/chocolate-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-chocolate',
+	packageName: '@astryx-sv/theme-chocolate',
 	themeExport: 'chocolateTheme',
 	theme: chocolateTheme,
 	// The registry is named, not imported: this script runs under plain Node,

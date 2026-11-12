@@ -2,7 +2,7 @@
 
 **Status:** audit, no code changes
 **Date:** 2026-08-16
-**Scope:** `docs/` (this port's SvelteKit app, live at https://astryx-svelte.rohitk06.in/) against
+**Scope:** `docs/` (this port's SvelteKit app, live at https://astryx.crqch.dev/) against
 `reference/astryx-upstream/apps/docsite/` (Next.js, live at https://astryx.atmeta.com/). Design and
 structure only — component-level fidelity (props, StyleX classes, a11y) is the class/theme/CSS
 oracles' job and is out of scope here except where it changes what a page looks like or contains.

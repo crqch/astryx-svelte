@@ -91,7 +91,7 @@
 		/**
 		 * Per-instance syntax theme override. Shorthand for wrapping this block in
 		 * `<SyntaxTheme theme={...}>` — accepts a preset from
-		 * `@astryx-svelte/core/theme/syntax` or a theme created with
+		 * `@astryx-sv/core/theme/syntax` or a theme created with
 		 * `defineSyntaxTheme()`. Without it, the block uses the theme-level syntax
 		 * colours from the nearest `SyntaxTheme` ancestor or `defineTheme({ syntax })`.
 		 */
@@ -210,17 +210,19 @@
 		codeBlockCollapseChevronIconStyle,
 		codeBlockCollapseGridAttrs,
 		codeBlockCollapseInnerAttrs,
-		codeBlockCopyButtonAbsoluteStyle,
 		codeBlockCopyButtonStyle,
+		codeBlockCornerClusterAttrs,
 		codeBlockHeaderAttrs,
+		codeBlockHeaderControlsAttrs,
 		codeBlockHeaderRowAttrs,
 		codeBlockHeaderTitleAttrs,
 		codeBlockLineAttrs,
 		codeBlockLineChunkAttrs,
 		codeBlockLineContentAttrs,
 		codeBlockRootAttrs,
-		codeBlockScrollContainerAttrs
+		codeBlockViewportAttrs
 	} from './code-block.stylex.js';
+	import { rtlMirrorAttrs } from '../../utils/rtl.stylex.js';
 
 	/**
 	 * Read-only code display with syntax highlighting, line numbers and an
@@ -431,14 +433,19 @@
 			{ legacyNames: ['codeblock'] }
 		)
 	);
-	const rootAttrs = $derived(codeBlockRootAttrs(widthProp, container, xstyle));
+	const rootAttrs = $derived(
+		codeBlockRootAttrs(widthProp, container, hasCopyButton && !showHeader, xstyle)
+	);
 	const headerRowAttrs = $derived(codeBlockHeaderRowAttrs(hasLineNumbers));
 	const headerAttrs = $derived(codeBlockHeaderAttrs(canCollapse));
 	const headerTitleAttrs = codeBlockHeaderTitleAttrs();
+	const headerControlsAttrs = codeBlockHeaderControlsAttrs();
 	const chevronAttrs = codeBlockCollapseChevronAttrs();
+	const chevronMirrorAttrs = rtlMirrorAttrs();
 	const collapseGridAttrs = $derived(codeBlockCollapseGridAttrs(isCollapsed));
 	const collapseInnerAttrs = codeBlockCollapseInnerAttrs();
-	const scrollContainerAttrs = codeBlockScrollContainerAttrs();
+	const viewportAttrs = codeBlockViewportAttrs();
+	const cornerClusterAttrs = $derived(codeBlockCornerClusterAttrs(size));
 	const codeWrapperAttrs = $derived(codeBlockCodeWrapperAttrs(showHeader && !hasLineNumbers));
 	const codeAttrs = $derived(codeBlockCodeAttrs(size, isWrapped, hasLineNumbers, maxLineDigits));
 	const lineChunkAttrs = codeBlockLineChunkAttrs();
@@ -471,7 +478,7 @@
 		tooltip={t('@astryx.codeBlock.copyCode')}
 		label={clipboard.isCopied ? t('@astryx.codeBlock.copied') : t('@astryx.codeBlock.copyCode')}
 		onclick={handleCopyClick}
-		xstyle={[codeBlockCopyButtonStyle, !showHeader && codeBlockCopyButtonAbsoluteStyle]}
+		xstyle={codeBlockCopyButtonStyle}
 		{...copyButtonTheme}
 	>
 		{#snippet icon()}
@@ -557,8 +564,8 @@
 		tabindex={0}
 		role="group"
 		aria-label={languageLabel ?? t('@astryx.codeBlock.code')}
-		class={scrollContainerAttrs.class}
-		style={mergeStyle(scrollContainerAttrs.style, scrollStyle)}
+		class={viewportAttrs.class}
+		style={mergeStyle(viewportAttrs.style, scrollStyle)}
 	>
 		<div class={codeWrapperAttrs.class} style={codeWrapperAttrs.style}>
 			<code bind:this={codeEl} class={codeAttrs.class} style={codeAttrs.style}
@@ -594,7 +601,10 @@
 				{...titleTheme}
 				class={cx(titleTheme.class, headerTitleAttrs.class)}
 				style={headerTitleAttrs.style}
-				>{#if canCollapse}<span class={chevronAttrs.class} style={chevronAttrs.style}>
+				>{#if canCollapse}<span
+						class={cx(chevronAttrs.class, chevronMirrorAttrs.class)}
+						style={mergeStyle(chevronAttrs.style, chevronMirrorAttrs.style)}
+					>
 						<Icon
 							icon="chevronRight"
 							size="xsm"
@@ -607,7 +617,9 @@
 					</span>{/if}{title ?? ''}{title && languageLabel ? ' — ' : ''}{languageLabel ?? ''}</span
 			>
 		</div>
-		{#if hasCopyButton}{@render copyButton()}{/if}
+		{#if hasCopyButton}<div class={headerControlsAttrs.class} style={headerControlsAttrs.style}>
+				{@render copyButton()}
+			</div>{/if}
 	</div>
 {/snippet}
 
@@ -649,7 +661,9 @@
 		{...theme}
 		class={cx(theme.class, rootAttrs.class, className)}
 		style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
-		{...rest}>{#if showHeader}{@render headerRow()}{/if}{#if canCollapse}{@render collapsibleBody()}{:else}{@render codeBody()}{/if}{#if !showHeader && hasCopyButton}{@render copyButton()}{/if}</pre>
+		{...rest}>{#if showHeader}{@render headerRow()}{/if}{#if canCollapse}{@render collapsibleBody()}{:else}{@render codeBody()}{/if}{#if !showHeader && hasCopyButton}<div
+				class={cornerClusterAttrs.class}
+				style={cornerClusterAttrs.style}>{@render copyButton()}</div>{/if}</pre>
 {/snippet}
 
 {#if syntaxTheme}

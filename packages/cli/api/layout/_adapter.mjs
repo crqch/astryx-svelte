@@ -38,7 +38,7 @@ import { Project } from '../../foundation/config/project.mjs';
  * any app-registered local components from `astryx-svelte.config.*`
  * `experimental.xle.components` (imported by name). App components are how XLE
  * reaches domain pieces — the KpiCard/chart/drawer set that the
- * `@astryx-svelte/core` registry can't see.
+ * `@astryx-sv/core` registry can't see.
  *
  * @param {string} cwd
  * @returns {Promise<LayoutBlock[]>}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
+	import { Theme } from '@astryx-sv/core';
 	import AstryxWordmark from '../../shell/astryx-wordmark.svelte';
 	import { effectiveMode, useHeroReel } from './hero-reel-context.svelte.js';
 

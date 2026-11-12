@@ -64,9 +64,7 @@
 	import {
 		chatToolCallNameAttrs,
 		chatToolCallLabelAttrs,
-		chatToolCallStatusCircleAttrs,
 		chatToolCallStatusIconAttrs,
-		chatToolCallStatusInnerAttrs,
 		chatToolCallToggleRowAttrs,
 		chatToolCallChevronExpandedStyle,
 		chatToolCallChevronTransitionStyle,
@@ -100,7 +98,7 @@
 	 */
 	const {
 		calls,
-		label: _customLabel,
+		label: customLabel,
 		isExpanded: controlledExpanded,
 		defaultIsExpanded,
 		onExpandedChange,
@@ -111,11 +109,6 @@
 	}: ChatToolCallsProps = $props();
 
 	const t = useTranslator();
-
-	// `label` is destructured and dropped, exactly as upstream does (it names the
-	// binding `_customLabel` for the same reason). The prop is documented and
-	// published but nothing reads it — the collapsed header shows the latest
-	// call and the expanded one the translated count.
 
 	// `useState(autoDefault)` reads its argument once, so the initialiser runs at
 	// component init and a later `defaultIsExpanded` change is ignored on both
@@ -167,8 +160,6 @@
 	const groupIcon = $derived(chatToolCallsGroupIconAttrs());
 	const groupLabel = $derived(chatToolCallsGroupLabelAttrs());
 	const statusIcon = $derived(chatToolCallStatusIconAttrs(latestStatus));
-	const statusCircle = $derived(chatToolCallStatusCircleAttrs());
-	const statusInner = $derived(chatToolCallStatusInnerAttrs());
 	const nameAttrs = $derived(chatToolCallNameAttrs());
 	const labelAttrs = $derived(chatToolCallLabelAttrs());
 	const countAttrs = $derived(chatToolCallsCountAttrs());
@@ -212,17 +203,14 @@
 					<Icon icon="wrench" size="sm" color="inherit" />
 				</span>
 				<span class={groupLabel.class} style={groupLabel.style}
-					>{t('@astryx.chatToolCalls.groupLabel', { count: calls.length })}</span
+					>{customLabel ?? t('@astryx.chatToolCalls.groupLabel', { count: calls.length })}</span
 				>
 			{:else}
 				<span class={statusIcon.class} style={statusIcon.style}>
 					{#if latestStatus === 'running' || latestStatus === 'pending'}
 						<Spinner size="sm" shade="subtle" />
 					{:else}
-						<span class={statusCircle.class} style={statusCircle.style}></span>
-						<span class={statusInner.class} style={statusInner.style}>
-							<Icon icon={STATUS_ICON_NAMES[latestStatus] ?? 'check'} size="xsm" color="inherit" />
-						</span>
+						<Icon icon={STATUS_ICON_NAMES[latestStatus] ?? 'check'} size="xsm" color="inherit" />
 					{/if}
 				</span>
 				<span class={nameAttrs.class} style={nameAttrs.style}>{latestCall.name}</span>
@@ -250,11 +238,16 @@
 		</div>
 
 		<!-- Expanded: all calls with full metadata -->
-		<div id={contentId} class={groupContent.class} style={groupContent.style}>
+		<div
+			id={contentId}
+			inert={isExpanded ? undefined : true}
+			class={groupContent.class}
+			style={groupContent.style}
+		>
 			<div class={groupContentInner.class} style={groupContentInner.style}>
 				<div class={list.class} style={list.style}>
 					{#each calls as call (toolCallKey(call))}
-						<ChatToolCallRow {call} />
+						<ChatToolCallRow {call} hasClippedFocusRing />
 					{/each}
 				</div>
 			</div>

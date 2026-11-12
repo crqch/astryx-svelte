@@ -6,6 +6,8 @@
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { IconName } from '../icon/icon-registry.js';
 	import type { SearchableItem, SearchSource } from '../typeahead/types.js';
+	import type { BaseTypeaheadHandle, BaseTypeaheadMenu } from '../typeahead/base-typeahead.svelte';
+	import type { AdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
 	// `TokenizerSize` is published from `tokenizer.stylex.ts`, derived from the
 	// size style keys — the arrangement `Typeahead`/`Selector` use.
 	import type { TokenizerSize } from './tokenizer.stylex.js';
@@ -31,6 +33,19 @@
 	export type TokenizerOverflowBehavior = 'none' | 'unfocusedInline' | 'unfocusedLayer';
 
 	/**
+	 * How Tokenizer presents its choices, ported from upstream's
+	 * `TokenizerPresentation` (`AdaptivePresentation`).
+	 * - `'popover'`: the inline combobox with its anchored suggestion menu, on
+	 *   every device.
+	 * - `'bottom-sheet'`: a field showing the selected tokens, whose trigger
+	 *   opens one tall modal sheet. The sheet edits a draft: `onChange` fires
+	 *   once, when Save commits it.
+	 * - `'adaptive'`: the bottom sheet on compact coarse-pointer screens,
+	 *   otherwise the popover.
+	 */
+	export type TokenizerPresentation = AdaptivePresentation;
+
+	/**
 	 * The imperative handle a `Tokenizer` exposes.
 	 *
 	 * Upstream reaches it through a `handleRef` prop and `useImperativeHandle`;
@@ -50,6 +65,13 @@
 		focus(): void;
 		/** Blur the typeahead input. */
 		blur(): void;
+		/**
+		 * Open the menu (see `BaseTypeaheadHandle.open`). The sheet presentation
+		 * ignores it.
+		 */
+		open(): void;
+		/** Close the menu. The sheet presentation ignores it. */
+		close(): void;
 	}
 
 	/**
@@ -181,6 +203,36 @@
 		 */
 		size?: TokenizerSize;
 		/**
+		 * How the field presents its choices.
+		 * - `'popover'`: the inline combobox with its anchored suggestion menu,
+		 *   on every device.
+		 * - `'bottom-sheet'`: a field showing the selected tokens, whose trigger
+		 *   opens one tall modal sheet: a search row on top, full-width checkbox
+		 *   rows that keep their place while the sheet is open, a create row with
+		 *   `hasCreate`, and a footer pinned in every state with a confirmed
+		 *   Clear all and Save. The sheet edits a draft: `onChange` fires once,
+		 *   when Save commits it, and a swipe, scrim or Escape close of a changed
+		 *   draft asks before discarding.
+		 * - `'adaptive'`: the bottom sheet on compact coarse-pointer screens,
+		 *   otherwise the popover. The server render and the hydrating render
+		 *   are the popover.
+		 *
+		 * In the sheet presentation the field's box keeps the inline field's
+		 * box, theming target and focus ring, and holds the trigger, the tokens
+		 * and `endContent`. `renderItem`, `hasClear`, `hasEntriesOnFocus`,
+		 * `menuWidth`, `tokenOverflowBehavior` (the field wraps its tokens), and
+		 * `hasAutoFocus` have no surface to act on there and warn once in
+		 * development.
+		 * @default 'adaptive'
+		 */
+		presentation?: TokenizerPresentation;
+		/**
+		 * Minimum query length before the search source is queried. Below it no
+		 * search runs in the sheet presentation.
+		 * @default 1
+		 */
+		minQueryLength?: number;
+		/**
 		 * Controls how tokens overflow when the container is too narrow.
 		 * - `'none'`: Tokens wrap to multiple lines (default).
 		 * - `'unfocusedInline'`: Single line with "+ N more" when unfocused; expands inline on focus.
@@ -203,6 +255,19 @@
 		hasCreate?: boolean;
 		/** Query change callback. */
 		onChangeQuery?: (query: string) => void;
+		/**
+		 * What the menu shows: the result list, optionally with information around
+		 * it, or content that takes focus. Forwarded to `BaseTypeahead`; see
+		 * `BaseTypeaheadMenu`. The sheet presentation keeps its own sheet and
+		 * ignores it.
+		 */
+		menu?: BaseTypeaheadMenu;
+		/**
+		 * Called when the inline menu opens or closes. It reports changes only;
+		 * drive the menu with the handle's `open()`/`close()`. Not called by the
+		 * sheet presentation.
+		 */
+		onOpenChange?: (isOpen: boolean) => void;
 		// `onfocusin`/`onfocusout` are upstream's `onFocus`/`onBlur` props. React's
 		// synthetic pair *bubbles*, which the native `focus`/`blur` do not — the
 		// correction `useListFocus`, `Toolbar` and `Typeahead` already record — so
@@ -225,18 +290,32 @@
 	import Layer from '../layer/layer.svelte';
 	import { useLayer } from '../layer/use-layer.svelte.js';
 	import OverflowList, { type OverflowItem } from '../overflow-list/overflow-list.svelte';
+	import Spinner from '../spinner/spinner.svelte';
 	import Token from '../token/token.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import BaseTypeahead from '../typeahead/base-typeahead.svelte';
+	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
+	import TokenizerBottomSheet from './tokenizer-bottom-sheet.svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import { useAnnounce } from '../../hooks/use-announce.js';
+	import { useAdaptivePresentation } from '../../hooks/use-adaptive-presentation.svelte.js';
+	import { warnOnce } from '../../utils/dev-warning.js';
+	import { hasInteractiveAncestor } from '../../hooks/use-clickable-container.svelte.js';
+	import { useEndLaneReserve } from './use-end-lane-reserve.svelte.js';
+	import type { SheetDraftChange } from '../../internal/sheet-draft.js';
 	import {
 		tokenizerEndSectionAttrs,
+		tokenizerIdleSpinnerStyle,
 		tokenizerInputAtMaxStyle,
 		tokenizerInputCompactStyle,
 		tokenizerLayerPlaceholderAttrs,
 		tokenizerLayerPopoverStyle,
 		tokenizerOverflowTextAttrs,
+		tokenizerSheetFieldAttrs,
+		tokenizerSheetTokenStyle,
+		tokenizerSheetTriggerAttrs,
+		tokenizerSheetTriggerPlaceholderAttrs,
 		tokenizerStartIconAttrs,
 		tokenizerTokenAttrs,
 		tokenizerTokenStyle,
@@ -296,8 +375,13 @@
 		debounceMs,
 		hasCreate = false,
 		onChangeQuery,
+		menu,
+		onOpenChange,
+		presentation = 'adaptive',
+		minQueryLength = 1,
 		onfocusin: onFocusProp,
 		onfocusout: onBlurProp,
+		onclick: callerOnClick,
 		width,
 		xstyle,
 		class: className,
@@ -323,6 +407,68 @@
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let wrapperEl = $state<HTMLDivElement | null>(null);
 	let layerContentEl = $state<HTMLDivElement | null>(null);
+	let sheetFieldEl = $state<HTMLDivElement | null>(null);
+	let sheetTriggerEl = $state<HTMLButtonElement | null>(null);
+	let sheetLaneEl = $state<HTMLDivElement | null>(null);
+	let baseTypeahead = $state<BaseTypeaheadHandle | null>(null);
+
+	// `adaptive` resolves through the policy the selection controls share. An
+	// open sheet keeps its presentation until it closes: a resolution change
+	// during a task does not replace the open surface.
+	const resolvedPresentation = useAdaptivePresentation(() => presentation);
+	let isSheetOpen = $state(false);
+	// Latched for the sheet's lifetime: a sheet stays presented after it closes
+	// until BottomSheet has run its exit and handed focus back to the trigger.
+	// Without the latch, `adaptive` resolving to `popover` mid-session would
+	// unmount the sheet and the trigger it returns focus to in the same render,
+	// dropping focus to the page body.
+	let isSheetPresented = $state(false);
+	const isSheetPresentation = $derived(
+		isSheetOpen || isSheetPresented || resolvedPresentation.resolved === 'bottom-sheet'
+	);
+	// The sheet's query between presentations: the sheet is in the DOM only
+	// from a press until its exit completes, and a close the field forces keeps
+	// the query. The plain value follows every report; the press snapshots it
+	// into the state the next presentation starts from.
+	let sheetQueryRef = '';
+	let sheetInitialQuery = $state('');
+	// A sheet that was open when the field became disabled stays mounted,
+	// closed, so it runs its exit and hands focus back to the trigger; a field
+	// that is disabled from the start mounts no sheet.
+	let keepsSheetWhileDisabled = $state(false);
+	// svelte-ignore state_referenced_locally
+	let wasDisabled = isDisabled;
+	// Set around a focus move the field makes itself — a presentation swap
+	// handing focus from one control to the other — so the receiving control
+	// does not report it as focus entering from outside.
+	let isHandingOffFocus = false;
+	// Whether the caller has been told focus entered the field in this visit, so
+	// `onBlur` is never reported without its `onFocus`.
+	let hasReportedFocus = false;
+
+	// The end lane's measured reserve. The lane is absolutely positioned and an
+	// out-of-flow box reserves nothing, so the input spends the measurement as
+	// padding while it has no tokens of its own to push the text.
+	const END_LANE_INSET = 'var(--spacing-2)';
+	const { attachLane: attachEndLane, reserveStyle: endLaneReserve } =
+		useEndLaneReserve(END_LANE_INSET);
+
+	// The inline field's search spinner. The source is wrapped below, so the
+	// field knows when a search is in flight without reading BaseTypeahead's
+	// internals; the lane holds the spinner's slot while idle so a search does
+	// not re-wrap the tokens or widen the field.
+	let busyCount = 0;
+	let isLaneBusy = $state(false);
+	function beginBusy(): void {
+		busyCount += 1;
+		isLaneBusy = true;
+	}
+	function endBusy(): void {
+		busyCount = Math.max(0, busyCount - 1);
+		if (busyCount === 0) {
+			isLaneBusy = false;
+		}
+	}
 
 	// Disabled-reason tooltip. Disabled controls swallow pointer events, so the
 	// tooltip listeners attach to the input wrapper and the typeahead input stays
@@ -344,11 +490,21 @@
 	 * reached through `bind:this` rather than a `handleRef` prop.
 	 */
 	export function focus(): void {
-		inputEl?.focus();
+		(isSheetPresentation ? sheetTriggerEl : inputEl)?.focus();
 	}
 
 	export function blur(): void {
-		inputEl?.blur();
+		(isSheetPresentation ? sheetTriggerEl : inputEl)?.blur();
+	}
+
+	/** Opens the inline menu; the sheet presentation ignores it. */
+	export function open(): void {
+		baseTypeahead?.open();
+	}
+
+	/** Closes the inline menu; the sheet presentation ignores it. */
+	export function close(): void {
+		baseTypeahead?.close();
 	}
 
 	// Focus-within state for overflow truncation
@@ -396,7 +552,10 @@
 			layer.show();
 		}
 		if (comingFromOutside) {
-			onFocusProp?.(e as FocusEvent & { currentTarget: EventTarget & HTMLDivElement });
+			if (!isHandingOffFocus) {
+				hasReportedFocus = true;
+				onFocusProp?.(e as FocusEvent & { currentTarget: EventTarget & HTMLDivElement });
+			}
 			// Redirect to the input so the user doesn't have to tab through
 			// every token remove button.
 			if (e.target !== inputEl) {
@@ -449,32 +608,42 @@
 
 		return {
 			search: async (query: string) => {
-				const results = await source.search(query);
-				const filtered = results.filter((item) => !ids.has(item.id));
+				beginBusy();
+				try {
+					const results = await source.search(query);
+					const filtered = results.filter((item) => !ids.has(item.id));
 
-				// Append a "Create: X" synthetic item when hasCreate is true,
-				// the user has typed something, and it doesn't exactly match an
-				// existing result.
-				if (create && query.trim()) {
-					const trimmed = query.trim();
-					const alreadyExists =
-						ids.has(trimmed) ||
-						filtered.some((item) => item.label.toLowerCase() === trimmed.toLowerCase());
-					if (!alreadyExists) {
-						const creatableItem = {
-							id: `${CREATABLE_ID_PREFIX}${trimmed}`,
-							label: `Create "${trimmed}"`,
-							auxiliaryData: { __createdValue: trimmed }
-						} as unknown as T;
-						filtered.push(creatableItem);
+					// Append a "Create: X" synthetic item when hasCreate is true,
+					// the user has typed something, and it doesn't exactly match an
+					// existing result.
+					if (create && query.trim()) {
+						const trimmed = query.trim();
+						const alreadyExists =
+							ids.has(trimmed) ||
+							filtered.some((item) => item.label.toLowerCase() === trimmed.toLowerCase());
+						if (!alreadyExists) {
+							const creatableItem = {
+								id: `${CREATABLE_ID_PREFIX}${trimmed}`,
+								label: `Create "${trimmed}"`,
+								auxiliaryData: { __createdValue: trimmed }
+							} as unknown as T;
+							filtered.push(creatableItem);
+						}
 					}
-				}
 
-				return filtered;
+					return filtered;
+				} finally {
+					endBusy();
+				}
 			},
 			bootstrap: async () => {
-				const results = await source.bootstrap();
-				return results.filter((item) => !ids.has(item.id));
+				beginBusy();
+				try {
+					const results = await source.bootstrap();
+					return results.filter((item) => !ids.has(item.id));
+				} finally {
+					endBusy();
+				}
 			}
 		};
 	});
@@ -562,6 +731,134 @@
 		}
 	}
 
+	// ---- sheet presentation ----
+
+	// `onChange` fires once, when Save commits the draft. A field that is
+	// disabled at Save reports nothing.
+	function handleSheetCommit(items: T[], change: SheetDraftChange<T>): void {
+		if (!isDisabled) {
+			onChange(items, change);
+		}
+	}
+
+	function handleSheetQueryChange(next: string): void {
+		sheetQueryRef = next;
+		onChangeQuery?.(next);
+	}
+
+	function openSheet(): void {
+		if (isDisabled) {
+			return;
+		}
+		// BottomSheet restores focus to whatever opened it. A press on a token or
+		// on empty field space opens through this handler without focusing the
+		// trigger first (only a press on the trigger itself does), so make the
+		// trigger the opener explicitly; otherwise focus would return to the page
+		// body and the presentation latch would never clear.
+		if (document.activeElement !== sheetTriggerEl) {
+			sheetTriggerEl?.focus();
+		}
+		isSheetPresented = true;
+		sheetInitialQuery = sheetQueryRef;
+		isSheetOpen = true;
+	}
+
+	/**
+	 * A caller's `onClick` composes after the field's own open, as upstream
+	 * composes it: a caller observes the click but cannot cancel the field's
+	 * handling.
+	 */
+	function handleSheetTriggerClick(event: MouseEvent): void {
+		openSheet();
+		(callerOnClick as unknown as ((event: MouseEvent) => void) | undefined)?.(event);
+	}
+
+	// A `renderToken` token's own remove control in the sheet field removes at
+	// once, as it does in the inline field. Its control leaves with it, so focus
+	// moves to the trigger.
+	function handleSheetTokenRemove(item: T): void {
+		if (isDisabled) {
+			return;
+		}
+		handleRemove(item);
+		sheetTriggerEl?.focus();
+	}
+
+	// A tap on a token, the placeholder or empty space opens the sheet, as a tap
+	// on the trigger does. The trigger, `endContent` and a custom token's
+	// controls handle their own clicks.
+	function handleSheetFieldClick(event: MouseEvent & { currentTarget: HTMLDivElement }): void {
+		const trigger = sheetTriggerEl;
+		const target = event.target;
+		if (trigger == null || !(target instanceof Element)) {
+			return;
+		}
+		if (
+			trigger.contains(target) ||
+			sheetLaneEl?.contains(target) ||
+			hasInteractiveAncestor(target, event.currentTarget)
+		) {
+			return;
+		}
+		trigger.click();
+	}
+
+	// The caller's onFocus and onBlur report focus entering and leaving the
+	// whole box, as for the inline wrapper. A move between the trigger,
+	// `endContent` and a custom token's controls stays inside the field.
+	function handleSheetFieldFocus(event: FocusEvent & { currentTarget: HTMLDivElement }): void {
+		const isReturningFromSheet =
+			event.target === sheetTriggerEl && !isSheetOpen && isSheetPresented;
+		if (isReturningFromSheet) {
+			isSheetPresented = false;
+		}
+		const relatedTarget = event.relatedTarget;
+		if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) {
+			return;
+		}
+		// Focus that returns from the field's own sheet, or that a presentation
+		// swap hands over, does not enter from outside.
+		const isInsideTheField = (isReturningFromSheet && hasReportedFocus) || isHandingOffFocus;
+		if (!isInsideTheField) {
+			hasReportedFocus = true;
+			onFocusProp?.(event);
+		}
+	}
+
+	function handleSheetFieldBlur(event: FocusEvent & { currentTarget: HTMLDivElement }): void {
+		// Focus moving into the sheet, or to another control in the box, is
+		// still the field's. Only a blur to somewhere else reports.
+		const relatedTarget = event.relatedTarget;
+		if (
+			isSheetOpen ||
+			(relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget))
+		) {
+			return;
+		}
+		hasReportedFocus = false;
+		onBlurProp?.(event);
+	}
+
+	// A field that becomes disabled cannot keep its sheet open, and must not
+	// reopen it when re-enabled. Adjusted before the DOM is patched, so no frame
+	// shows both.
+	$effect.pre(() => {
+		if (isDisabled === wasDisabled) {
+			return;
+		}
+		wasDisabled = isDisabled;
+		if (isDisabled && isSheetOpen) {
+			isSheetOpen = false;
+			keepsSheetWhileDisabled = true;
+		}
+		if (!isDisabled) {
+			keepsSheetWhileDisabled = false;
+		}
+	});
+
+	// Focus that returns from the field's own sheet clears the presentation
+	// latch above, so the sheet unmounts only after its exit has completed.
+
 	const ariaDescribedBy = $derived(
 		[
 			description ? descriptionId : null,
@@ -574,18 +871,92 @@
 
 	// Captures the `<input>` `BaseTypeahead` renders — the counterpart to
 	// upstream's `ref={inputRef}`, travelling through the rest props the base
-	// spreads onto it.
-	const captureInput = (el: Element): void => {
+	// spreads onto it. A presentation swap that removes the focused control
+	// hands focus here from the effect below, once the branch has patched.
+	const captureInput = (el: Element): (() => void) => {
 		inputEl = el as HTMLInputElement;
+		return () => {
+			inputEl = null;
+		};
 	};
 
-	const inputXStyle = $derived(
+	function attachInlineWrapper(el: HTMLElement): () => void {
+		wrapperEl = el as HTMLDivElement;
+		return () => {
+			wrapperEl = null;
+		};
+	}
+
+	function attachSheetField(el: HTMLDivElement): () => void {
+		sheetFieldEl = el;
+		return () => {
+			sheetFieldEl = null;
+		};
+	}
+
+	function attachSheetTrigger(el: HTMLButtonElement): () => void {
+		sheetTriggerEl = el;
+		return () => {
+			sheetTriggerEl = null;
+		};
+	}
+
+	// A presentation swap removes the focused control. The new presentation's
+	// control takes the focus over once the DOM has settled, so focus never
+	// lands on the page body. The pre-effect reads the branch that is about to
+	// be removed — its nodes are still in the document there — because an
+	// attachment cleanup can run after focus has already dropped to the body.
+	// svelte-ignore state_referenced_locally
+	let previousSheetPresentation = isSheetPresentation;
+	// Set before the branch is patched, so a blur caused by the swap cannot
+	// clear it. Consumed after the patch by the focus move below.
+	let focusWasInRemovedBranch = false;
+	$effect.pre(() => {
+		const current = isSheetPresentation;
+		if (current === previousSheetPresentation) {
+			return;
+		}
+		const active = document.activeElement;
+		const oldRoot = previousSheetPresentation ? sheetFieldEl : wrapperEl;
+		focusWasInRemovedBranch =
+			active != null && active !== document.body && oldRoot?.contains(active) === true;
+	});
+	$effect(() => {
+		const current = isSheetPresentation;
+		if (current === previousSheetPresentation) {
+			return;
+		}
+		previousSheetPresentation = current;
+		if (!focusWasInRemovedBranch) {
+			return;
+		}
+		focusWasInRemovedBranch = false;
+		const target = current ? sheetTriggerEl : inputEl;
+		if (target == null) {
+			return;
+		}
+		isHandingOffFocus = true;
+		target.focus();
+		isHandingOffFocus = false;
+	});
+
+	const hasClearButton = $derived(hasClear && value.length > 0 && !isDisabled);
+	const hasStaticEndLane = $derived(Boolean(endContent || hasClearButton));
+	// Wherever a search can run beside tokens: enabled and below maxEntries.
+	const hasBusySlot = $derived(value.length > 0 && !isDisabled && !isAtMax);
+	const showsEndLane = $derived(isLaneBusy || hasBusySlot || hasStaticEndLane);
+
+	const inputXStyle = $derived([
 		isAtMax || isTruncated
 			? tokenizerInputAtMaxStyle
 			: value.length > 0
 				? tokenizerInputCompactStyle
-				: undefined
-	);
+				: undefined,
+		// With tokens, wrapperWithTokens reserves the lane for every row. This
+		// rule is only for an empty Tokenizer; it still resolves to zero until
+		// the lane publishes a width.
+		!(isAtMax || isTruncated || value.length > 0) && endLaneReserve
+	]);
 
 	// Self-authored position styles (`positioning="custom"` below): explicit
 	// anchor() insets pin the expanded layer over the field itself. `left` is
@@ -614,6 +985,86 @@
 	const endSectionAttrs = $derived(tokenizerEndSectionAttrs(size));
 	const overflowTextAttrs = tokenizerOverflowTextAttrs();
 	const tokenAttrs = tokenizerTokenAttrs();
+	const sheetFieldAttrs = $derived(
+		tokenizerSheetFieldAttrs(size, status?.type, value.length > 0, isDisabled)
+	);
+	const sheetTriggerAttrs = $derived(tokenizerSheetTriggerAttrs(value.length > 0, endLaneReserve));
+	const sheetPlaceholderAttrs = $derived(tokenizerSheetTriggerPlaceholderAttrs(isDisabled));
+	const sheetTokenStyle = $derived(tokenizerSheetTokenStyle(isDisabled));
+	// The sheet's trigger is a button, while the rest bag is typed for the
+	// inline input (`BaseProps<HTMLDivElement>`); upstream casts it the same way.
+	const sheetTriggerRest = $derived(rest as unknown as HTMLButtonAttributes);
+
+	// The trigger's accessible description names the selected tokens: the
+	// button's children are tokens whose own content assistive technology
+	// leaves out of a button's name.
+	const triggerTokensId = `${uid}-trigger-tokens`;
+	const tokenElementId = (itemId: string): string =>
+		`${triggerTokensId}-${encodeURIComponent(itemId)}`;
+	const triggerDescribedBy = $derived(
+		[
+			ariaDescribedBy,
+			value.length > 0 ? triggerTokensId : null,
+			...value.map((item) => tokenElementId(item.id))
+		]
+			.filter(Boolean)
+			.join(' ') || undefined
+	);
+
+	// A busy start is announced once, through the shared polite channel; the
+	// settle re-arms it. The spinner itself stays decorative.
+	let announcedLaneBusy = false;
+	$effect(() => {
+		if (!isLaneBusy) {
+			announcedLaneBusy = false;
+			return;
+		}
+		if (announcedLaneBusy) {
+			return;
+		}
+		const frame = requestAnimationFrame(() => {
+			announcedLaneBusy = true;
+			announce(t('@astryx.typeahead.loading'));
+		});
+		return () => cancelAnimationFrame(frame);
+	});
+
+	// Props that describe the inline combobox have no surface in the sheet
+	// presentation. Say so once in development rather than dropping them
+	// silently.
+	const inertSheetProps = $derived(
+		isSheetPresentation
+			? (
+					[
+						['renderItem', renderItem],
+						['hasClear', hasClear || undefined],
+						['hasEntriesOnFocus', hasEntriesOnFocus || undefined],
+						['menuWidth', menuWidth],
+						['menu', menu],
+						['onOpenChange', onOpenChange],
+						['tokenOverflowBehavior', tokenOverflowBehavior],
+						['hasAutoFocus', hasAutoFocus || undefined]
+					] as const
+				)
+					.filter(([, entry]) => entry !== undefined && entry !== 'none')
+					.map(([name]) => name)
+			: []
+	);
+	const inertSheetPropsKey = $derived(inertSheetProps.join(','));
+	$effect(() => {
+		if (inertSheetPropsKey === '') {
+			return;
+		}
+		warnOnce(
+			`tokenizer:sheet-inert:${inertSheetPropsKey}`,
+			'Tokenizer',
+			`\`${inertSheetProps.join('`, `')}\` ${
+				inertSheetProps.length === 1 ? 'has' : 'have'
+			} no surface in the bottom-sheet presentation and ${
+				inertSheetProps.length === 1 ? 'is' : 'are'
+			} not rendered there. Pass \`presentation="popover"\` to keep the inline field on every device.`
+		);
+	});
 </script>
 
 {#snippet startIconSlot()}
@@ -670,6 +1121,7 @@
 	-->
 	<div
 		bind:this={wrapperEl}
+		{@attach attachInlineWrapper}
 		{@attach disabledMessageTooltip.attachTrigger}
 		role="group"
 		aria-label={label}
@@ -700,6 +1152,7 @@
 			{/each}
 		{/if}
 		<BaseTypeahead
+			bind:this={baseTypeahead}
 			{@attach captureInput}
 			searchSource={isAtMax ? emptySource : filteredSource}
 			value={null}
@@ -716,6 +1169,8 @@
 			{inputId}
 			{ariaDescribedBy}
 			{onChangeQuery}
+			{menu}
+			{onOpenChange}
 			{debounceMs}
 			onKeyDown={handleKeyDown}
 			anchorEl={wrapperEl}
@@ -723,10 +1178,27 @@
 			{inputXStyle}
 		/>
 		{@render hiddenInputs()}
-		{#if endContent || (hasClear && value.length > 0 && !isDisabled)}
-			<div class={endSectionAttrs.class} style={endSectionAttrs.style}>
+		{#if showsEndLane}
+			<div {@attach attachEndLane} class={endSectionAttrs.class} style={endSectionAttrs.style}>
+				{#if isLaneBusy || hasBusySlot}
+					<!--
+						Named, never live: the tokenizer announces its search. The
+						spinner stays mounted while idle, unrendered, not animating
+						and out of the accessibility tree, so the lane keeps its
+						measured width across a search.
+					-->
+					{#key isLaneBusy}
+						<Spinner
+							size="sm"
+							role="img"
+							aria-label={t('@astryx.typeahead.loading')}
+							aria-hidden={isLaneBusy ? undefined : true}
+							xstyle={isLaneBusy ? undefined : tokenizerIdleSpinnerStyle}
+						/>
+					{/key}
+				{/if}
 				{#if endContent}{@render endContent()}{/if}
-				{#if hasClear && value.length > 0 && !isDisabled}
+				{#if hasClearButton}
 					<InputClearButton
 						label={t('@astryx.tokenizer.clearAll')}
 						onclick={(e) => {
@@ -740,8 +1212,112 @@
 	</div>
 {/snippet}
 
+{#snippet sheetContent()}
+	<!--
+		The sheet presentation's field: the inline field's own control box. A
+		button cannot contain controls, so the trigger, the tokens and the end
+		lane are siblings in this box; `endContent` and a custom token can then
+		hold their own controls.
+	-->
+	<div
+		{@attach attachSheetField}
+		{@attach disabledMessageTooltip.attachTrigger}
+		onclick={handleSheetFieldClick}
+		onfocusin={handleSheetFieldFocus}
+		onfocusout={handleSheetFieldBlur}
+		{...theme}
+		class={cx(theme.class, sheetFieldAttrs.class)}
+		style={sheetFieldAttrs.style}
+	>
+		{#if startIcon}
+			<span class={startIconAttrs.class} style={startIconAttrs.style}>
+				{@render startIconSlot()}
+			</span>
+		{/if}
+		<button
+			{...sheetTriggerRest}
+			{@attach attachSheetTrigger}
+			type="button"
+			id={inputId}
+			aria-haspopup="dialog"
+			aria-expanded={isSheetOpen}
+			aria-disabled={isDisabled || undefined}
+			aria-describedby={triggerDescribedBy}
+			data-testid={testId}
+			onclick={handleSheetTriggerClick}
+			class={sheetTriggerAttrs.class}
+			style={sheetTriggerAttrs.style}
+		>
+			{#if value.length === 0}
+				<span class={sheetPlaceholderAttrs.class} style={sheetPlaceholderAttrs.style}>
+					{placeholder ?? ''}
+				</span>
+			{/if}
+		</button>
+		{#each value as item (item.id)}
+			{#if renderToken}
+				<span class={tokenAttrs.class} style={tokenAttrs.style}>
+					{@render renderToken(item, () => handleSheetTokenRemove(item))}
+				</span>
+			{:else}
+				<Token label={item.label} {size} {isDisabled} xstyle={sheetTokenStyle} />
+			{/if}
+		{/each}
+		{#if endContent}
+			<div
+				bind:this={sheetLaneEl}
+				{@attach attachEndLane}
+				class={endSectionAttrs.class}
+				style={endSectionAttrs.style}
+			>
+				{@render endContent()}
+			</div>
+		{/if}
+	</div>
+	{#if value.length > 0}
+		<VisuallyHidden id={triggerTokensId}>
+			{t('@astryx.tokenizer.selectedCount', { count: value.length })}
+		</VisuallyHidden>
+	{/if}
+	<!--
+		The trigger's description names each token by id. A default Token drops
+		its `id` in this port, so every item gets a hidden label copy rather than
+		only a custom one; the referenced id then always resolves.
+	-->
+	{#each value as item (item.id)}
+		<span id={tokenElementId(item.id)} hidden>{item.label}</span>
+	{/each}
+	{@render hiddenInputs()}
+	<!--
+		Mounted from the press until the sheet's exit has completed and focus is
+		back on the trigger: at rest the field renders its trigger alone.
+	-->
+	{#if (isSheetOpen || isSheetPresented) && (!isDisabled || keepsSheetWhileDisabled)}
+		<TokenizerBottomSheet
+			isOpen={isSheetOpen}
+			onOpenChange={(open) => {
+				isSheetOpen = open;
+			}}
+			initialQuery={sheetInitialQuery}
+			{label}
+			{searchSource}
+			{value}
+			{maxEntries}
+			{hasCreate}
+			maxMenuItems={maxMenuItems ?? 10}
+			{minQueryLength}
+			debounceMs={debounceMs ?? 150}
+			emptySearchText={emptySearchResultsText}
+			onCommit={handleSheetCommit}
+			onChangeQuery={handleSheetQueryChange}
+		/>
+	{/if}
+{/snippet}
+
 {#snippet tokenizerContent()}
-	{#if isLayerMode}
+	{#if isSheetPresentation}
+		{@render sheetContent()}
+	{:else if isLayerMode}
 		<div
 			{@attach attachPlaceholder}
 			onclick={handleWrapperClick}
@@ -776,7 +1352,8 @@
 {/snippet}
 
 <Field
-	{...rest}
+	{...isSheetPresentation ? {} : rest}
+	onclick={isSheetPresentation ? undefined : callerOnClick}
 	{label}
 	{isLabelHidden}
 	{description}

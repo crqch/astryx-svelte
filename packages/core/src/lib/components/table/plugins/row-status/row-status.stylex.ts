@@ -60,6 +60,9 @@ const styles = stylex.create({
 		alignItems: 'center',
 		justifyContent: 'center'
 	},
+	// A custom (non-semantic) colour on an icon: a dynamic style, so the value
+	// lands via a class rather than an inline property.
+	customIcon: (color: string) => ({ color }),
 	dot: (color: string) => ({
 		width: '8px',
 		height: '8px',
@@ -70,8 +73,8 @@ const styles = stylex.create({
 });
 
 /** The centring wrapper around the status dot or icon. */
-export function rowStatusWrapAttrs(): SvelteStyleAttrs {
-	return sx(styles.wrap);
+export function rowStatusWrapAttrs(customIconColor?: string | null): SvelteStyleAttrs {
+	return sx(styles.wrap, customIconColor != null && styles.customIcon(customIconColor));
 }
 
 /** The status dot itself, painted with the resolved colour. */

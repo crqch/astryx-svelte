@@ -104,6 +104,6 @@ export default {
 	},
 	relatedComponents: ['Toolbar', 'TabList', 'SegmentedControl'],
 	relatedHooks: ['useListFocus', 'useGridFocus', 'useTreeFocus'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

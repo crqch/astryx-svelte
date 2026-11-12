@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers template content too.
 -->
 <script lang="ts">
-	import { Layout, LayoutContent, Text } from '@astryx-svelte/core';
+	import { Layout, LayoutContent, Text } from '@astryx-sv/core';
 </script>
 
 {#snippet content()}

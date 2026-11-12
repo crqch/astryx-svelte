@@ -32,6 +32,7 @@ export const SelectionConfigContext = new Context<
  * `null` and every consumer rendering nothing.
  */
 export function useSelectionConfig():
-	(() => UseTableSelectionConfig<Record<string, unknown>>) | null {
+	| (() => UseTableSelectionConfig<Record<string, unknown>>)
+	| null {
 	return SelectionConfigContext.getOr(null);
 }

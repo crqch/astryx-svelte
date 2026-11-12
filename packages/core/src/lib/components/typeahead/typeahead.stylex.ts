@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { groupStyles } from '../input-group/group-styles.stylex.js';
 import { sizeVars, spacingVars } from '../../styles/tokens.stylex.js';
@@ -19,7 +20,12 @@ import { sizeVars, spacingVars } from '../../styles/tokens.stylex.js';
 const styles = stylex.create({
 	wrapper: {
 		position: 'relative',
-		flexWrap: 'wrap',
+		// No `flexWrap`. The shared field base does not wrap and neither does
+		// TextInput; this field only ever holds one token, so there is no second
+		// row to wrap to. It also cannot wrap and keep its end controls in flow:
+		// flex moves an item to a new line rather than shrinking it, so a long
+		// value put the clear button and spinner on a row of their own (a 280px
+		// field grew to 46px tall). Unwrapped, the token ellipsizes instead.
 		gap: spacingVars['--spacing-1'],
 		// Standard padding minus border width to prevent height jump
 		// when a token (28px) is added inside the input
@@ -29,29 +35,82 @@ const styles = stylex.create({
 			':is(:disabled,[aria-disabled="true"])': 'default'
 		}
 	},
-	token: {
-		// Offset token so it sits 3px from the inner edge (4px from outer edge
-		// accounting for 1px border). Default inline padding is 8px, so
-		// -(8px - 3px) = -5px positions token equidistant from left edge as top.
-		margin: `calc(-1 * (${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px))`
+	// The busy indicator and the clear button, at the field's inline end.
+	//
+	// In flow, as a flex child — an in-flow box takes up room, so the input
+	// cannot run underneath it and nothing has to be measured. That is
+	// TextInput's arrangement for the same two controls.
+	//
+	// The `auto` margin keeps them in the corner in the states where the
+	// content lane is not the only flexible item in the row (a start icon, a
+	// grouped row): `auto` gives free space to the margin rather than to a
+	// sibling, so it needs no sibling to exist.
+	endLane: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-1'],
+		marginInlineStart: 'auto'
 	},
-	clearButton: {
-		position: 'absolute',
-		top: `calc((${sizeVars['--size-element-md']} - 20px) / 2 - 1px)`,
-		insetInlineEnd: `calc((${sizeVars['--size-element-md']} - 20px) / 2 - 1px)`,
-		height: '20px'
+	// The field's content lane: the input, and the token painted over it.
+	//
+	// This is the box the value is allowed to occupy, and it is what makes the
+	// end lane's space its own — the lane is an ordinary flex item that ends
+	// exactly where `endLane` begins, so a value bounded by it can never reach
+	// the clear button or the spinner. Before it existed the token was
+	// positioned against the whole field, so a value longer than the input ran
+	// under the end controls and past the field's border (measured 33px of
+	// overlap and 4px outside the border at a 180px field).
+	//
+	// `flex: 1` with `min-width: 0` is TextInput's own arrangement for its
+	// input: the lane takes the free space so the end controls sit in the
+	// corner, and yields all of it when the field is narrow, so a narrow field
+	// never overflows. Stretched, so its padding box matches the field's
+	// content box in the block direction and the token keeps the vertical
+	// placement it has always had.
+	contentLane: {
+		position: 'relative',
+		display: 'flex',
+		alignItems: 'center',
+		alignSelf: 'stretch',
+		flex: 1,
+		minWidth: 0
 	},
-	clearButtonSm: {
-		top: `calc((${sizeVars['--size-element-sm']} - 20px) / 2 - 1px)`,
-		insetInlineEnd: `calc((${sizeVars['--size-element-sm']} - 20px) / 2 - 1px)`
-	},
+	// While a token shows, the input keeps its place in the row and its own
+	// intrinsic width — it is only made invisible and inert. That width is what
+	// sizes the field, exactly as it does for TextInput, so a Typeahead is as
+	// wide with a value as without one. Collapsing it to nothing instead left
+	// the field measuring the token: in any shrink-to-fit parent it snapped to
+	// the value's length (measured 199px to 57px, #5560), and block-level
+	// parents hid it because they fill their container whatever their content
+	// is, which is why no story caught it.
 	inputHidden: {
-		width: 0,
-		minWidth: 0,
-		flex: '0 0 0',
-		padding: 0,
 		opacity: 0,
-		position: 'absolute' as const
+		// The token is painted over this space and owns the pointer; the input
+		// must not swallow clicks meant for it, or for the wrapper's own
+		// click-to-edit.
+		pointerEvents: 'none'
+	},
+	// Painted over the input rather than beside it. In flow the token would add
+	// its own width to the row, which is the same value-dependent sizing from
+	// the other direction — a long value would grow the field.
+	//
+	// Bounded by the content lane at both ends. `fit-content` shrink-wraps the
+	// label but resolves against the space left between the two insets, so a
+	// long value ellipsizes at the lane's edge instead of running under the end
+	// controls; the `auto` end margin is what keeps that pair of insets from
+	// being over-constrained, which would drop the end one and let the token
+	// overflow again. The negative inline start and the zero block start put it
+	// where it has always sat: the lane's padding box is the field's content
+	// box, 3px inside the field's own padding on both axes.
+	tokenOverlay: {
+		position: 'absolute' as const,
+		insetBlockStart: 0,
+		insetInlineStart: `calc(-1 * (${spacingVars['--spacing-1']} - 1px))`,
+		insetInlineEnd: 0,
+		width: 'fit-content',
+		marginBlock: 0,
+		marginInlineStart: 0,
+		marginInlineEnd: 'auto'
 	}
 });
 
@@ -86,18 +145,24 @@ export function typeaheadWrapperAttrs(
 		statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
 		statusType && inputStatusFocusWithinStyles[statusType],
 		isDisabled && inputWrapperStyles.disabled,
+		isDisabled && inputDisabledFocusStyles.nestedRing,
 		inGroup && groupStyles.inGroup,
 		inGroup && xstyle
 	);
 }
 
-/** `xstyle` for the selected-value `Token`. */
-export const typeaheadTokenStyle: StyleArg = styles.token;
+/** The field's content lane: the input, and the token painted over it. */
+export function typeaheadContentLaneAttrs(): SvelteStyleAttrs {
+	return sx(styles.contentLane);
+}
+
+/** The inline-end lane: the busy indicator and the clear button. */
+export function typeaheadEndLaneAttrs(): SvelteStyleAttrs {
+	return sx(styles.endLane);
+}
+
+/** `xstyle` for the selected-value `Token`, painted over the input. */
+export const typeaheadTokenOverlayStyle: StyleArg = styles.tokenOverlay;
 
 /** `xstyle` for the `BaseTypeahead` input while a token is showing. */
 export const typeaheadInputHiddenStyle: StyleArg = styles.inputHidden;
-
-/** `xstyle` for the `InputClearButton`. */
-export function typeaheadClearButtonStyle(isSm: boolean): StyleArg {
-	return [styles.clearButton, isSm && styles.clearButtonSm];
-}

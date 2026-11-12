@@ -99,6 +99,11 @@ export default {
 				description: 'The search results list that appears below the input as the user types.'
 			},
 			{
+				name: 'Spinner',
+				required: false,
+				description: 'Loading indicator shown at the end of the field while a search is in flight.'
+			},
+			{
 				name: 'End content',
 				required: false,
 				description:
@@ -112,6 +117,22 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Tags',
+			placeholder: 'Search...',
+			value: [
+				{
+					id: '1',
+					label: 'Design'
+				},
+				{
+					id: '2',
+					label: 'Engineering'
+				}
+			]
+		}
+	},
 	props: [
 		{
 			name: 'label',
@@ -123,7 +144,7 @@ export default {
 			name: 'searchSource',
 			type: 'SearchSource<T>',
 			description:
-				'Data source providing search and bootstrap methods for populating the dropdown.',
+				'Data source providing search and bootstrap methods. `search(query, context)` may call `context.update(items)` to show matches it already has before it returns; the value it returns is the final list, and every list after the first for a query keeps the shown rows first and adds new rows after them.',
 			required: true
 		},
 		{
@@ -170,7 +191,8 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disables the input and all token interactions.',
+			description:
+				'Disables the input and all token interactions. The input keeps its tab stop: it is announced as disabled (aria-disabled), is read-only, and opens and picks nothing. With tokenOverflowBehavior="unfocusedLayer" and no disabledMessage, the input is natively disabled and out of the tab order.',
 			default: 'false'
 		},
 		{
@@ -183,7 +205,7 @@ export default {
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the tokenizer is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the input focusable via aria-disabled (input stays blocked). Use this instead of wrapping a disabled Tokenizer in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the tokenizer is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the input focusable via aria-disabled (input stays blocked). Use this instead of wrapping a disabled Tokenizer in Tooltip, so the reason is attached to the field itself.'
 		},
 		{
 			name: 'status',
@@ -195,7 +217,7 @@ export default {
 			name: 'statusVariant',
 			type: "'tooltip' | 'attached' | 'detached'",
 			description:
-				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing.',
+				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing; tooltip reveals the message in an info-tip button.',
 			default: "'attached'"
 		},
 		{
@@ -252,9 +274,10 @@ export default {
 			default: '1'
 		},
 		{
-			name: 'emptySearchResultsText',
-			type: 'string',
-			description: 'Text shown when search returns no results.',
+			name: 'emptySearchText',
+			type: 'string | Snippet',
+			description:
+				'Content shown when the query matched nothing. Takes a ReactNode, so the dead end can carry a link or a create row. Announced in a polite live region as the text it renders, read from the DOM; aria-hidden parts stay out of both, and content that renders no text announces nothing. null counts as not given, like undefined, and falls through to the default; pass an empty string to render nothing.',
 			default: "'No results found'"
 		},
 		{
@@ -273,7 +296,7 @@ export default {
 			name: 'debounceMs',
 			type: 'number',
 			description:
-				'Debounce delay in ms before triggering search. Set to 0 for synchronous sources.',
+				'Debounce delay in ms before triggering search. Set to 0 for synchronous sources, and for a source that shows local matches through `context.update` and delays its own server request.',
 			default: '150'
 		},
 		{
@@ -304,7 +327,19 @@ export default {
 			name: 'handleRef',
 			type: 'TokenizerHandle | null',
 			description:
-				'Imperative handle exposing focusInput(), focusFirstToken(), focusLastToken(), clearInput(), and selectAll().'
+				'Imperative handle exposing focus(), blur(), open() and close(). open() and close() drive the inline menu; the sheet presentation ignores them.'
+		},
+		{
+			name: 'menu',
+			type: 'BaseTypeaheadMenu',
+			description:
+				"What the menu shows. role 'listbox' (default) is the result list; its optional render({listbox, query, isBusy, isEmptySearch, close}) places information such as a header or a hint around it, and anything a person acts on stays a result so the arrow keys reach it. role 'dialog' shows render({query, close}) in a dialog named by label that takes focus; Escape, an outside press or close() returns focus to where it was when the menu opened. Astryx owns the layer either way. Switching from listbox to dialog keeps the menu open: call handleRef.open() from onChange. The sheet presentation keeps its own sheet and ignores it."
+		},
+		{
+			name: 'onOpenChange',
+			type: '(isOpen: boolean) => void',
+			description:
+				'Called when the inline menu opens or closes. It reports changes only; drive the menu with handleRef. Not called by the sheet presentation.'
 		},
 		{
 			name: 'width',
@@ -329,10 +364,43 @@ export default {
 			description: 'Fires when focus leaves the tokenizer input.'
 		},
 		{
-			name: 'xstyle',
-			type: 'StyleArg',
+			name: 'containerXstyle',
+			type: 'StyleXStyles',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value; not an inline style object like style={{}}.'
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleXStyles',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
+		},
+		{
+			name: 'presentation',
+			type: "'popover' | 'bottom-sheet' | 'adaptive'",
+			description:
+				'How the field presents its choices. adaptive (the default) uses the bottom sheet on compact touch screens and the popover otherwise, resolved the same way Selector resolves it; the server render and the hydrating render are the popover. popover is the inline combobox with its anchored suggestion menu on every device. bottom-sheet replaces it on every device with a field showing the selected tokens, whose trigger opens one tall modal sheet: a search row on top, full-width checkbox rows that keep their place while the sheet is open, a Create row with hasCreate, and a footer pinned in every state with a confirmed Clear all and Save; the sheet edits a draft, so onChange fires once, when Save commits it, and a swipe, scrim or Escape close of a changed draft asks before discarding. In the sheet presentation the field box holds the trigger, the tokens and endContent, and keeps the box, theming target and focus ring of the inline field; the trigger is the control: ref, id, aria-* and data-* reach it, and ref receives the trigger button there, so type it Ref<HTMLInputElement | HTMLButtonElement>, which the component accepts (TokenizerProps keeps its released input ref type). endContent sits at the inline end of the field and renderToken renders its tokens, as in the inline field; their own controls act without opening the sheet. renderItem, hasClear (the sheet has its own Clear all), hasEntriesOnFocus, menuWidth, menu, onOpenChange, tokenOverflowBehavior (the field wraps its tokens) and hasAutoFocus have no surface in the sheet, and the field warns once in development when they are passed. Pass presentation="popover" to keep the inline field and those props on every device.',
+			default: "'adaptive'"
 		}
 	]
 };

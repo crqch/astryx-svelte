@@ -8,7 +8,7 @@
 	Retires with the icon registry (port/todo.md).
 -->
 <script lang="ts">
-	import { Button, Icon, NavIcon, TopNav, TopNavHeading, TopNavItem } from '@astryx-svelte/core';
+	import { Button, Icon, NavIcon, TopNav, TopNavHeading, TopNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet cubeIcon()}<Icon icon="stop" size="sm" />{/snippet}

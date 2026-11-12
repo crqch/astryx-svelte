@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { HoverCard, Text, VStack } from '@astryx-svelte/core';
+	import { HoverCard, Text, VStack } from '@astryx-sv/core';
 
 	/** Upstream's `content` `CSSProperties` object, as a style string. */
 	const content = 'max-width: 200px';

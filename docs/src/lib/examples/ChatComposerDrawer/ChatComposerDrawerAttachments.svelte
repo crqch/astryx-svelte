@@ -17,7 +17,7 @@
 		Stack,
 		Thumbnail,
 		Token
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const IMAGE_ATTACHMENTS = [
 		{

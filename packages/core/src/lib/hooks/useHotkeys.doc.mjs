@@ -58,6 +58,6 @@ export default {
 	},
 	relatedComponents: ['Kbd'],
 	relatedHooks: ['useListFocus', 'useGridFocus'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'interaction'
 };

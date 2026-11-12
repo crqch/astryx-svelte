@@ -82,6 +82,6 @@ export default {
 		]
 	},
 	relatedComponents: ['Markdown'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'streaming'
 };

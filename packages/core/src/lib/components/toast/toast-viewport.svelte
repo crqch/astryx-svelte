@@ -21,18 +21,19 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import ToastSurface from './toast-surface.svelte';
+	import ToastRow from './toast-row.svelte';
 	import { setToastContext, type ToastContextValue } from './toast-context.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { INTERACTIVE_SELECTORS } from '../../hooks/use-clickable-container.svelte.js';
+	import {
+		moveFocusLeftBehind,
+		noteFocusWithin,
+		type FocusWithin
+	} from '../../utils/focus-return.js';
 	import { mergeStyle } from '../../internal/sx.js';
 	import type { ToastEntry, ToastDismissReason, ToastContent } from './types.js';
-	import {
-		toastViewportAttrs,
-		toastWrapperAttrs,
-		toastWrapperInnerAttrs
-	} from './toast-viewport.stylex.js';
+	import { toastRootOutletAttrs, toastViewportAttrs } from './toast-viewport.stylex.js';
 
 	/**
 	 * Container that renders and manages toast notifications. Place at the root
@@ -120,8 +121,29 @@
 	// render reads them, and the focus-handoff effect must re-run on `toasts`
 	// alone, exactly as its dependency list says.
 	let prevFocus: HTMLElement | null = null;
+	// The element focus last reached inside the viewport, so focus coming back
+	// from it is not treated as an entry from outside.
+	let lastFocusedWithin: EventTarget | null = null;
 	let focusHandoffId: string | null = null;
 	let pendingFocus: string | 'restore' | null = null;
+	// The id of a toast whose overwrite updated a row that held focus. If the
+	// update removed the focused control, the commit hands focus off.
+	let overwriteFocus: { id: string; note: FocusWithin } | null = null;
+	// Where focus was inside a toast whose dismissal hands focus off.
+	let dismissFocusNote: FocusWithin | null = null;
+	/**
+	 * Toasts dispatched since they last rendered, by id: a dismiss() called before
+	 * a toast first renders still finds it (and its onHide).
+	 */
+	const pendingEntries = new Map<string, ToastEntry>();
+	/**
+	 * Rendered entries a repeat has replaced in the current batch: still found by
+	 * a dismissal in the same handler. A toast replaced before it rendered was
+	 * never shown and reports no onHide.
+	 */
+	const replacedEntries = new Map<string, ToastEntry>();
+	/** Ids a row has mounted for, so "replaced before it rendered" is answerable. */
+	const renderedIds = new Set<string>();
 
 	/**
 	 * Collect a focusable control within a toast node, if any. Reuses the
@@ -170,13 +192,12 @@
 	function addToast(entry: ToastEntry): void {
 		const { uniqueID, collisionBehavior = 'overwrite' } = entry.options;
 		const list = untrack(() => toasts);
+		const overwritten = uniqueID
+			? list.find((item) => item.options.uniqueID === uniqueID)
+			: undefined;
 		// Resolve an ignored collision first, so a suppressed toast is neither
-		// shown nor announced.
-		if (
-			uniqueID &&
-			collisionBehavior === 'ignore' &&
-			list.some((item) => item.options.uniqueID === uniqueID)
-		) {
+		// shown nor announced. A leaving toast still holds its uniqueID.
+		if (overwritten && collisionBehavior === 'ignore') {
 			return;
 		}
 		const text = toastText(entry.options.body);
@@ -185,15 +206,55 @@
 			// else to the polite region (role="status") — mirrors `toast.svelte`.
 			announce(text, entry.options.type === 'error' ? 'assertive' : 'polite');
 		}
-		if (uniqueID) {
-			const existing = list.find((item) => item.options.uniqueID === uniqueID);
-			if (existing) {
-				// An ignored collision already returned above; overwrite in place.
-				toasts = list.map((item) => (item.options.uniqueID === uniqueID ? entry : item));
-				return;
+		if (overwritten && renderedIds.has(overwritten.id)) {
+			replacedEntries.set(overwritten.id, overwritten);
+		}
+		// An overwrite of a toast that is not leaving keeps its row, so the card
+		// updates in place and focus inside it stays. A leaving namesake is
+		// replaced by a new row, which enters again.
+		const keepsRow = overwritten != null && !untrack(() => exitingIds.has(overwritten.id));
+		const placed: ToastEntry = keepsRow
+			? { ...entry, rowKey: overwritten.rowKey ?? overwritten.id }
+			: entry;
+		if (keepsRow) {
+			// If the update removes the focused control, the commit hands focus off
+			// as a dismissal does.
+			const note = noteFocusWithin(
+				untrack(() => viewportEl)?.querySelector<HTMLElement>(
+					`[data-toast-id="${overwritten.id}"]`
+				) ?? null
+			);
+			if (note != null) {
+				overwriteFocus = { id: placed.id, note };
 			}
 		}
-		toasts = [...list, entry];
+		const projected = overwritten
+			? list.map((item) => (item === overwritten ? placed : item))
+			: [...list, placed];
+		// `maxVisible={0}` shows every toast (FR7): nothing leaves the window.
+		const firstVisible = maxVisible > 0 ? projected.length - maxVisible : 0;
+		const cutIds = new Set(
+			projected
+				.filter((item, index) => index < firstVisible && untrack(() => exitingIds.has(item.id)))
+				.map((item) => item.id)
+		);
+		for (const id of cutIds) {
+			// A leaving toast that a new one pushes out of the visible window can no
+			// longer finish its exit on screen. It leaves now; waiting for its row
+			// would surface it later as a collapsed empty slot holding the landmark.
+			exitingIds.delete(id);
+			pendingEntries.delete(id);
+		}
+		if (uniqueID) {
+			// An overwrite replaces a toast that has not rendered yet too.
+			for (const [pendingId, pendingEntry] of pendingEntries) {
+				if (pendingEntry.options.uniqueID === uniqueID) {
+					pendingEntries.delete(pendingId);
+				}
+			}
+		}
+		pendingEntries.set(entry.id, placed);
+		toasts = projected.filter((item) => !cutIds.has(item.id));
 	}
 
 	function removeToast(id: string, reason: ToastDismissReason): void {
@@ -204,37 +265,79 @@
 		if (untrack(() => exitingIds.has(id))) {
 			return;
 		}
-		exitingIds.add(id);
-
 		const list = untrack(() => toasts);
-		const entry = list.find((item) => item.id === id);
-		if (entry) {
-			entry.options.onHide?.(reason);
+		const entry =
+			list.find((item) => item.id === id) ?? replacedEntries.get(id) ?? pendingEntries.get(id);
+		if (entry == null) {
+			// Already gone: nothing to hide or report.
+			return;
 		}
+		exitingIds.add(id);
+		entry.options.onHide?.(reason);
 
 		// If focus currently lives inside the toast being dismissed, remember that
 		// its removal must hand focus off to a neighbour (or the element focused
 		// before the user entered the viewport) rather than <body>.
 		const el = untrack(() => viewportEl);
 		const active = document.activeElement;
-		const dismissedNode = el?.querySelector<HTMLElement>(`[data-toast-id="${id}"]`) ?? null;
+		// A toast an overwrite replaced in place no longer owns its row: the
+		// replacement does, so dismissing the replaced toast leaves the row, and
+		// focus in it, to the replacement.
+		const rowKey = entry.rowKey ?? entry.id;
+		const isReplacedInPlace =
+			!list.some((item) => item.id === id) &&
+			list.some((item) => (item.rowKey ?? item.id) === rowKey);
+		const dismissedNode = isReplacedInPlace
+			? null
+			: (el?.querySelector<HTMLElement>(`[data-toast-id="${id}"]`) ?? null);
 		if (dismissedNode && active instanceof Node && dismissedNode.contains(active)) {
 			focusHandoffId = id;
-			// Pick the neighbour to receive focus while the DOM is still intact:
-			// prefer the next toast, then the previous, else restore.
+			dismissFocusNote = noteFocusWithin(dismissedNode);
+			// Pick the toast to receive focus while the DOM is still intact: the
+			// nearest one after it, then before it, that shows once it is gone
+			// (FR10), else restore. The list may already run ahead of the render
+			// within this handler: a toast a repeat replaced has left it, and the
+			// replacement holds its place, so the neighbours are taken around the
+			// replacement, which takes focus only when no neighbour shows.
+			const { uniqueID } = entry.options;
+			const ownIndex = list.findIndex((item) => item.id === id);
+			const placeIndex =
+				ownIndex >= 0 || uniqueID == null
+					? ownIndex
+					: list.findIndex((item) => item.options.uniqueID === uniqueID);
 			const remaining = list.filter((item) => item.id !== id);
-			if (remaining.length > 0) {
-				const dismissedIndex = list.findIndex((item) => item.id === id);
-				const next = list[dismissedIndex + 1] ?? list[dismissedIndex - 1];
-				pendingFocus = next ? next.id : 'restore';
-			} else {
-				pendingFocus = 'restore';
-			}
+			const shown = new Set(maxVisible > 0 ? remaining.slice(-maxVisible) : remaining);
+			const isShown = (item: ToastEntry): boolean => shown.has(item);
+			const replacement = ownIndex < 0 ? list[placeIndex] : undefined;
+			const next =
+				placeIndex < 0
+					? undefined
+					: (list.slice(placeIndex + 1).find(isShown) ??
+						list.slice(0, placeIndex).reverse().find(isShown) ??
+						(replacement != null && isShown(replacement) ? replacement : undefined));
+			pendingFocus = next ? next.id : 'restore';
+		}
+		// A toast this handler has already pushed out of the visible window still
+		// has its row now, but loses it when the batch renders.
+		const index = list.findIndex((item) => item.id === id);
+		const isPushedOut = maxVisible > 0 && index >= 0 && index < list.length - maxVisible;
+		if (dismissedNode == null || isPushedOut) {
+			// No row is mounted for it, or none will be: it is hidden past
+			// `maxVisible`, or it has not rendered yet. Nothing animates out, so it
+			// leaves the list now. Waiting for its row to finish exiting would keep
+			// it forever: when it surfaced, its row would mount already collapsed,
+			// with no transition left to end, and hold a visible slot as an empty
+			// row.
+			exitingIds.delete(id);
+			pendingEntries.delete(id);
+			replacedEntries.delete(id);
+			toasts = list.filter((item) => item.id !== id);
 		}
 	}
 
 	function handleExited(id: string): void {
 		exitingIds.delete(id);
+		pendingEntries.delete(id);
 		toasts = untrack(() => toasts).filter((item) => item.id !== id);
 	}
 
@@ -244,6 +347,39 @@
 
 	const contextValue: ToastContextValue = { addToast, removeToast, findByUniqueID };
 	setToastContext(() => contextValue);
+
+	/**
+	 * Moves focus to a control in the target toast, else in another toast that
+	 * shows (newest first), else back to the element focused before focus entered
+	 * the viewport, so a handoff never drops focus to <body>.
+	 */
+	function handOffFocus(note: FocusWithin | null, targetId: string | null): void {
+		const el = untrack(() => viewportEl);
+		const list = untrack(() => toasts);
+		const rowFor = (id: string): HTMLElement | null =>
+			el?.querySelector<HTMLElement>(`[data-toast-id="${id}"]`) ?? null;
+		const shownIds = list
+			.slice(maxVisible > 0 ? -maxVisible : 0)
+			.map((item) => item.id)
+			.reverse();
+		const candidates =
+			targetId == null ? [] : [targetId, ...shownIds.filter((id) => id !== targetId)];
+		let target: HTMLElement | null = null;
+		for (const id of candidates) {
+			target = getFocusable(rowFor(id));
+			if (target != null) {
+				break;
+			}
+		}
+		const prev = prevFocus;
+		const isReturning = target == null && prev != null && prev.isConnected;
+		if (target == null) {
+			target = isReturning ? prev : el;
+		}
+		if (moveFocusLeftBehind(note, target) && isReturning) {
+			prevFocus = null;
+		}
+	}
 
 	// After a dismissed toast unmounts, hand focus off so it never falls to
 	// <body>. Runs once the toast list no longer contains the dismissed toast.
@@ -260,26 +396,54 @@
 		}
 		focusHandoffId = null;
 		pendingFocus = null;
+		const note = dismissFocusNote;
+		dismissFocusNote = null;
+		handOffFocus(note, target === 'restore' ? null : target);
+	});
 
-		const el = viewportEl;
-		if (target !== 'restore' && el) {
-			const nextNode = el.querySelector<HTMLElement>(`[data-toast-id="${target}"]`);
-			const focusable = getFocusable(nextNode) ?? nextNode;
-			if (focusable) {
-				focusable.focus();
-				return;
+	// After an overwrite updated a row that held focus: focus stays on the same
+	// control, or, if the update removed it, moves as a dismissal hands it off.
+	$effect(() => {
+		void toasts;
+		const overwrite = overwriteFocus;
+		if (overwrite == null) {
+			return;
+		}
+		overwriteFocus = null;
+		handOffFocus(overwrite.note, overwrite.id);
+	});
+
+	// Upstream clears the replaced-entry map on every render: it exists only for
+	// a dismissal in the same handler that replaced the toast. The rendered-id
+	// set is pruned the same way, so it describes the current list rather than
+	// every id the viewport has ever shown.
+	$effect(() => {
+		const list = toasts;
+		replacedEntries.clear();
+		const current = new Set(list.map((item) => item.id));
+		for (const id of renderedIds) {
+			if (!current.has(id)) {
+				renderedIds.delete(id);
 			}
 		}
-		// No remaining toast to receive focus — restore the previously-focused
-		// element if it's still connected, else fall back to the container.
-		const previous = prevFocus;
-		prevFocus = null;
-		if (previous && previous.isConnected) {
-			previous.focus();
-		} else if (el) {
-			el.focus();
-		}
 	});
+
+	/**
+	 * Focus entering from outside, however it came, is where a dismissal of the
+	 * last toast returns it. Focus moving between controls inside a toast is not
+	 * an entry; `lastFocusedWithin` is what tells a return from a control that is
+	 * still logically part of the toast apart from a fresh entry.
+	 */
+	function handleFocusIn(event: FocusEvent): void {
+		const from = event.relatedTarget;
+		const fromWithin =
+			from === lastFocusedWithin ||
+			(from instanceof Node && (event.currentTarget as Node).contains(from));
+		lastFocusedWithin = event.target;
+		if (from instanceof HTMLElement && !fromWithin) {
+			prevFocus = from;
+		}
+	}
 
 	// Show the popover on mount so it enters the top layer.
 	$effect(() => {
@@ -348,12 +512,12 @@
 		return parts.length > 0 ? parts.join(';') : undefined;
 	});
 
-	const viewport = $derived(toastViewportAttrs(position));
-	const wrapperInner = toastWrapperInnerAttrs();
+	const viewport = $derived(toastViewportAttrs(position, hasToasts));
+	const rootOutlet = toastRootOutletAttrs();
 
 	// A stack anchored to the top edge leaves upward, so its swipe-to-dismiss
-	// direction is inverted. Upstream derives the same flag for the wrapper's
-	// stacking styles, which `toastWrapperAttrs` resolves from `position` itself.
+	// direction is inverted. The row resolves the same flag for the wrapper's
+	// stacking styles and its gesture direction.
 	const isReversed = $derived(position === 'topEnd' || position === 'topStart');
 </script>
 
@@ -365,55 +529,21 @@
 	aria-label={hasToasts ? t('@astryx.toast.viewport') : undefined}
 	tabindex={hasToasts ? -1 : undefined}
 	popover={isTopLayer ? 'manual' : undefined}
+	onfocusin={handleFocusIn}
 	class={viewport.class}
 	style={mergeStyle(viewport.style, insetStyle)}
 >
-	{#each visibleToasts as entry (entry.id)}
-		{@const options = entry.options}
-		{@const type = options.type ?? 'info'}
-		{@const isAutoHide = options.isAutoHide ?? (type === 'error' ? false : true)}
-		{@const isExiting = exitingIds.has(entry.id)}
-		{@const wrapper = toastWrapperAttrs(position, isExiting)}
-		<div
-			data-toast-id={entry.id}
-			class={wrapper.class}
-			style={wrapper.style}
-			ontransitionend={(e: TransitionEvent) => {
-				// Upstream conditions the *handler* on `isExiting`
-				// (`ToastViewport.tsx:518`). Svelte evaluates that ternary at **event
-				// time**, not at render time, so writing it that way re-reads the
-				// `{@const isExiting}` above — a derived owned by this `{#each}`
-				// branch, which `handleExited` has just destroyed.
-				//
-				// It runs twice per dismissal: the card's `opacity` and `transform`
-				// transitions end on the same frame as the wrapper's
-				// `grid-template-rows` and bubble to this now-detached node, whose
-				// listener Svelte leaves attached. React never sees them — it
-				// delegates `transitionend` at the root container, which a detached
-				// subtree cannot reach. Each read logged `derived_inert`, and that
-				// warning is not dev-gated: it reached consumers' consoles.
-				//
-				// `exitingIds.has()` is a plain source read — correct after the
-				// branch is gone, and non-tracking because a DOM handler runs outside
-				// any reaction.
-				if (e.propertyName === 'grid-template-rows' && exitingIds.has(entry.id)) {
-					handleExited(entry.id);
-				}
-			}}
-		>
-			<div class={wrapperInner.class} style={wrapperInner.style}>
-				<ToastSurface
-					{type}
-					body={options.body}
-					endContent={options.endContent}
-					{isAutoHide}
-					autoHideDuration={options.autoHideDuration ?? 5000}
-					{isExiting}
-					gestureDirection={isReversed ? -1 : 1}
-					onDismiss={(reason) => removeToast(entry.id, reason)}
-					renderContent={options.renderContent}
-				/>
-			</div>
-		</div>
+	{#each visibleToasts as entry (entry.rowKey ?? entry.id)}
+		<ToastRow
+			{entry}
+			isExiting={exitingIds.has(entry.id)}
+			{isReversed}
+			{exitingIds}
+			onExited={handleExited}
+			onDismiss={removeToast}
+			onRendered={(id) => renderedIds.add(id)}
+		/>
 	{/each}
 </div>
+<!-- The modal host's mount point; empty until that subsystem lands. -->
+<div class={rootOutlet.class} style={rootOutlet.style}></div>

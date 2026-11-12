@@ -1,6 +1,6 @@
 /**
  * @file Colocated tests for the `component` command dispatcher
- * (api/component/component.mjs), run against the real `@astryx-svelte/core`
+ * (api/component/component.mjs), run against the real `@astryx-sv/core`
  * registry. `component` fans out to list/detail(+props/source/showcase/blocks)
  * leaves; this pins the DISPATCH + precedence rules that no other suite covers.
  * Locks behavior so a future refactor of the router cannot silently change

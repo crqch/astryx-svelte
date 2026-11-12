@@ -10,15 +10,15 @@
 	import { getInputARIA } from '../../utils/input-aria.js';
 	import { isFocusDetached } from '../../utils/focus-return.js';
 	import { stableClassName } from '../../internal/naming.js';
-	import { parseDateInput } from '../../utils/date-parser.js';
-	import { formatSharedDate, plainDateFromISO, plainDateToISO } from '../../utils/plain-date.js';
+	import { plainDateToISO } from '../../utils/plain-date.js';
+	import { useTypedDate, typedDateError } from './use-typed-date.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
-	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import Calendar from '../calendar/calendar.svelte';
 	import type { CalendarHandle } from '../calendar/calendar.svelte';
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
+	import type { InputStatus } from '../field/types.js';
 	import Field from '../field/field.svelte';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
@@ -29,6 +29,7 @@
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
+	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
 	import { useResolvedRequired } from '../../hooks/use-resolved-required.svelte.js';
 	import {
 		dateInputAttrs,
@@ -46,8 +47,9 @@
 	 * nested in an `InputGroup`, a bare control that borrows the group's label and
 	 * collapses its border into the row.
 	 *
-	 * Typing is free-form and parsed on every keystroke by `parseDateInput`, which
-	 * is locale-aware (it reads whether the runtime formats day-first). An entry
+	 * Typing is free-form and parsed on every keystroke by the calendar-aware
+	 * typed-date parser, which reads the locale's own field order and month and
+	 * era names. An entry
 	 * that parses *and* passes `min`/`max`/`dateConstraints` commits immediately
 	 * and scrolls the calendar to that month; anything else is held in a pending
 	 * buffer, dims the text, announces itself and reverts on blur. ArrowDown (and
@@ -85,6 +87,11 @@
 		// state the same fact twice, in the file that does not decide it.
 		weekStartsOn,
 		format = 'date_long',
+		calendar: calendarProp,
+		// Surface policy belongs to `DateInput`; destructured only to keep it out
+		// of `...rest`, which reaches the wrapper `<div>`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		width,
 		xstyle,
 		class: className,
@@ -101,7 +108,6 @@
 	});
 
 	const t = useTranslator();
-	const locale = useLocale();
 	const placeholder = $derived(placeholderFromProps ?? t('@astryx.dateInput.placeholder'));
 	const resolveSize = useSize();
 	const size = $derived(resolveSize(sizeProp, 'md'));
@@ -117,6 +123,7 @@
 	const descriptionID = `${uid}-desc`;
 	const statusMessageID = `${uid}-status`;
 	const statusTooltipID = `${uid}-status-tip`;
+	const calendarDescriptionID = `${uid}-calendar-desc`;
 	const popoverID = `${uid}-popover`;
 	const tooltipID = `${uid}-tooltip`;
 
@@ -144,15 +151,55 @@
 		isEnabled: showsDisabledMessage
 	}));
 
+	// Constraint checking for text input validation (reuses the calendar logic).
+	const constraints = useCalendarConstraints(() => ({ min, max, dateConstraints }));
+
+	// Typed dates read and write in the field's calendar; values stay Gregorian.
+	const typedDate = useTypedDate(() => ({
+		source: 'DateInput',
+		calendar: calendarProp,
+		format,
+		min,
+		max,
+		isDateDisabled: constraints.isDateDisabled
+	}));
+
+	// Typed text, or null when the field shows the committed value.
+	let pendingInput = $state<string | null>(null);
+	// Set when Enter or blur keeps rejected text so the person can correct it.
+	let isRejectionCommitted = $state(false);
+	let isFocused = $state(false);
+
+	// A locked field hides the rejection but keeps its state, so the rejection
+	// shows again once the field is editable.
+	const typedResult = $derived(
+		pendingInput !== null && pendingInput.trim() ? typedDate.parse(pendingInput) : null
+	);
+	const typedError = $derived(
+		isDisabled ? null : typedDateError(typedResult, isRejectionCommitted)
+	);
+	const typedErrorMessage = $derived(
+		typedError != null && typedResult != null ? typedDate.errorMessage(typedResult) : null
+	);
+	// Text that stays in the field shows its reason as well as announcing it.
+	const isErrorShown = $derived(
+		typedError === 'nonexistent' ||
+			typedError === 'outOfRange' ||
+			(typedError === 'unreadable' && isRejectionCommitted)
+	);
+	const typedStatus = $derived(
+		isErrorShown && typedErrorMessage != null
+			? ({ type: 'error' as const, message: typedErrorMessage } satisfies InputStatus)
+			: undefined
+	);
+	const fieldStatus = $derived<InputStatus | undefined>(typedStatus ?? status);
+
 	const statusIcon = useInputStatusIcon(() => ({
 		id: statusTooltipID,
-		status,
+		status: fieldStatus,
 		statusVariant,
 		isInGroup: inputGroup != null
 	}));
-
-	// Constraint checking for text input validation (reuses the calendar logic).
-	const constraints = useCalendarConstraints(() => ({ min, max, dateConstraints }));
 
 	const groupValue = $derived(inputGroup ? inputGroup() : null);
 	const aria = $derived(
@@ -160,6 +207,7 @@
 			inputLabelID,
 			[
 				description ? descriptionID : null,
+				typedDate.calendarDescription != null ? calendarDescriptionID : null,
 				// The status message element is rendered by `Field`, which is skipped
 				// inside an `InputGroup` — only reference it when it actually exists.
 				//
@@ -168,7 +216,7 @@
 				// and unlike `TimeInput` this component renders no in-group status
 				// element — so upstream's `aria-describedby` points at nothing inside
 				// a group. Recorded in port/debts.md under Known debts.
-				!inputGroup && statusVariant !== 'tooltip' && status?.message ? statusMessageID : null,
+				!inputGroup && statusVariant !== 'tooltip' && fieldStatus?.message ? statusMessageID : null,
 				// The tooltip variant renders no message box; describe the input by the
 				// tooltip's content instead so the status is still announced.
 				statusIcon.describedBy ?? null,
@@ -178,8 +226,11 @@
 		)
 	);
 
-	// Pending input while the user is typing (null = show the formatted value).
-	let pendingInput = $state<string | null>(null);
+	// A typed rejection that the field status does not announce. Field's own
+	// status element announces the rest.
+	const alertMessage = $derived(
+		!inputGroup && typedStatus != null ? '' : (typedErrorMessage ?? '')
+	);
 
 	/**
 	 * The last value this component itself fired, and the previous `value` prop.
@@ -211,6 +262,7 @@
 					lastFiredValue = undefined;
 					if (pendingInput !== null) {
 						pendingInput = null;
+						isRejectionCommitted = false;
 					}
 				}
 			}
@@ -224,9 +276,7 @@
 	// mapping. Applies ONLY to the committed value, never to in-progress typed
 	// input.
 	function formatCommittedValue(iso: ISODateString): string {
-		return typeof format === 'function'
-			? format(iso)
-			: formatSharedDate(plainDateFromISO(iso), format, locale());
+		return typedDate.formatCommitted(iso);
 	}
 
 	// Display value: the pending text while typing, otherwise the formatted
@@ -240,15 +290,16 @@
 		return current && /^\d{4}-\d{2}-\d{2}$/.test(current) ? formatCommittedValue(current) : '';
 	});
 
-	// Whether the pending text parses — drives the dimmed text, `aria-invalid`
-	// and the live region. A blank pending value is *not* invalid. Note this is
-	// parse-only: a date that parses but fails a constraint is not "invalid" here,
-	// it simply never commits.
-	const isInputValid = $derived(
-		pendingInput === null || !pendingInput.trim()
-			? true
-			: parseDateInput(pendingInput, locale()) !== null
+	// The format hint for an empty focused field, unless the caller supplied a
+	// placeholder, which wins.
+	const formatHint = $derived(
+		placeholderFromProps == null && isFocused && !displayValue ? typedDate.getFormatHint() : null
 	);
+
+	// Whether the typed text is a rejection — drives the dimmed text and
+	// `aria-invalid`. A blank pending value is not invalid, and rejected text
+	// that stays in the field remains invalid until it is corrected.
+	const isInputValid = $derived(typedError == null);
 
 	const popover = usePopover(() => ({
 		id: popoverID,
@@ -302,6 +353,20 @@
 		input?.focus();
 	}
 
+	/**
+	 * Reports a parsed date once. A date the caller already holds, or one this
+	 * typing session already reported, fires nothing; Enter or blur ends the
+	 * session so a retyped date reports again.
+	 */
+	function reportDate(iso: ISODateString): boolean {
+		if (iso === value || iso === lastFiredValue) {
+			return false;
+		}
+		lastFiredValue = iso;
+		fireChange(iso);
+		return true;
+	}
+
 	function handleDateSelect(selectedDate: ISODateString): void {
 		fireChange(selectedDate);
 		pendingInput = null;
@@ -318,15 +383,17 @@
 		}
 		const newValue = (e.target as HTMLInputElement).value;
 		pendingInput = newValue;
+		isRejectionCommitted = false;
 
-		// If the input is valid and passes constraints, update immediately.
-		const parsed = parseDateInput(newValue, locale());
-		if (parsed && plainDateToISO(parsed) !== value && !constraints.isDateDisabled(parsed)) {
-			const parsedISO = plainDateToISO(parsed);
-			lastFiredValue = parsedISO;
-			fireChange(parsedISO);
-			// Navigate the calendar to the parsed date's month.
-			calendar?.navigateTo(parsedISO);
+		// Report a date once more typing cannot change it. A constraint rejection
+		// stays pending until Enter or blur, as upstream's typed entry does.
+		const result = typedDate.parse(newValue);
+		if (result.kind === 'value' && result.isComplete) {
+			const parsedISO = plainDateToISO(result.date);
+			if (reportDate(parsedISO)) {
+				// Navigate the calendar to the parsed date's month.
+				calendar?.navigateTo(parsedISO);
+			}
 		}
 	}
 
@@ -341,17 +408,45 @@
 				fireChange(undefined);
 			}
 			pendingInput = null;
+			isRejectionCommitted = false;
 			return;
 		}
 
-		const parsed = parseDateInput(pendingInput, locale());
-		if (parsed && !constraints.isDateDisabled(parsed)) {
-			const parsedISO = plainDateToISO(parsed);
-			if (parsedISO !== value) {
-				fireChange(parsedISO);
-			}
+		const result = typedDate.parse(pendingInput);
+		if (
+			result.kind === 'incomplete' ||
+			result.kind === 'nonexistent' ||
+			result.kind === 'outOfRange'
+		) {
+			// Keep the text and show why it cannot commit; never finish or adjust
+			// the date.
+			isRejectionCommitted = true;
+			return;
 		}
+		if (result.kind === 'value') {
+			const parsedISO = plainDateToISO(result.date);
+			reportDate(parsedISO);
+		}
+		// A new typing session reports a retyped date again.
+		lastFiredValue = undefined;
 		pendingInput = null;
+		isRejectionCommitted = false;
+	}
+
+	function handleInputFocus(): void {
+		if (isEffectivelyDisabled) {
+			// A disabled/busy field stays focusable (via aria-disabled) so its reason
+			// is discoverable, but it must not present editing affordances — keep the
+			// static placeholder rather than swapping in the format hint.
+			return;
+		}
+		isFocused = true;
+		typedDate.prepare();
+	}
+
+	function handleInputBlur(): void {
+		isFocused = false;
+		commitPendingInput();
 	}
 
 	function handleInputKeyDown(e: KeyboardEvent): void {
@@ -386,12 +481,18 @@
 	const theme = $derived(
 		themeProps('date-input', {
 			size,
-			status: status?.type ?? null,
+			status: fieldStatus?.type ?? null,
 			disabled: isDisabled ? 'disabled' : null
 		})
 	);
 	const wrapperAttrs = $derived(
-		dateInputWrapperAttrs(size, status?.type, isEffectivelyDisabled, inputGroup != null, xstyle)
+		dateInputWrapperAttrs(
+			size,
+			fieldStatus?.type,
+			isEffectivelyDisabled,
+			inputGroup != null,
+			xstyle
+		)
 	);
 	const toggleAttrs = $derived(dateInputIconButtonAttrs(isEffectivelyDisabled));
 	const controlAttrs = $derived(dateInputAttrs(isEffectivelyDisabled, !isInputValid));
@@ -400,6 +501,7 @@
 {#snippet inputWrapper()}
 	<div
 		{...rest}
+		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, className)}
 		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}
@@ -442,17 +544,18 @@
 			role="combobox"
 			value={displayValue}
 			oninput={handleInputChange}
-			onblur={commitPendingInput}
+			onfocus={handleInputFocus}
+			onblur={handleInputBlur}
 			onclick={handleInputClick}
 			onkeydown={handleInputKeyDown}
-			{placeholder}
+			placeholder={formatHint ?? placeholder}
 			disabled={isEffectivelyDisabled && !showsDisabledMessage}
 			aria-disabled={showsDisabledMessage ? 'true' : undefined}
 			readonly={showsDisabledMessage || undefined}
 			aria-labelledby={aria.ariaLabelledBy}
 			aria-describedby={aria.ariaDescribedBy}
 			aria-required={isEffectivelyRequired() ? 'true' : undefined}
-			aria-invalid={status?.type === 'error' || !isInputValid ? 'true' : undefined}
+			aria-invalid={fieldStatus?.type === 'error' || !isInputValid ? 'true' : undefined}
 			aria-busy={isBusy || undefined}
 			aria-expanded={popover.isOpen}
 			aria-haspopup="dialog"
@@ -468,8 +571,11 @@
 			would get no feedback that their entry was rejected (WCAG 3.3.1).
 		-->
 		<VisuallyHidden as="div" role="alert" aria-live="assertive">
-			{!isInputValid ? t('@astryx.dateInput.invalidDate') : ''}
+			{alertMessage}
 		</VisuallyHidden>
+		{#if typedDate.calendarDescription != null}
+			<VisuallyHidden id={calendarDescriptionID}>{typedDate.calendarDescription}</VisuallyHidden>
+		{/if}
 		{#if hasClear && value !== undefined && !isEffectivelyDisabled}
 			<!--
 				The shared clear affordance. It stamps `astryx-input-clear-icon` on the
@@ -491,6 +597,7 @@
 				mode="single"
 				value={optimistic.current}
 				onChange={handleDateSelect}
+				calendar={typedDate.calendar}
 				{min}
 				{max}
 				{dateConstraints}
@@ -516,11 +623,11 @@
 		{isOptional}
 		{isRequired}
 		{isDisabled}
-		status={status
+		status={fieldStatus
 			? {
-					type: status.type,
-					message: status.message,
-					messageID: status.message ? statusMessageID : undefined
+					type: fieldStatus.type,
+					message: fieldStatus.message,
+					messageID: fieldStatus.message ? statusMessageID : undefined
 				}
 			: undefined}
 		{statusVariant}

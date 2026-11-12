@@ -3,6 +3,8 @@
 	import type { SizeValue } from '../../internal/types.js';
 	import type { InputStatus, InputStatusType } from '../field/types.js';
 	import type { DayOfWeek, DayOfWeekName } from '../../utils/date-types.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
+	import type { LegacyNativePicker, PickerPresentation } from '../../utils/input-presentation.js';
 	import type { DateTimeInputSize } from './date-time-input.stylex.js';
 
 	/**
@@ -15,6 +17,12 @@
 	 * else in the library uses it.
 	 */
 	export type ISODateTimeString = string & { readonly __brand: 'ISODateTimeString' };
+
+	/** @deprecated Use `DateTimeInputPresentation` via the `presentation` prop. */
+	export type DateTimeInputNativePicker = LegacyNativePicker;
+
+	/** Which surfaces collect the date and time (`spec:AST-043` FR1; no `text-input` — TimeInput-only). */
+	export type DateTimeInputPresentation = PickerPresentation;
 
 	export type DateTimeInputHourFormat = '12h' | '24h';
 
@@ -102,13 +110,18 @@
 		 */
 		hasSeconds?: boolean;
 		/**
-		 * Hour display format.
-		 * @default '12h'
+		 * Hour display format: '12h' with the locale's day period, or '24h'.
+		 * When unset, follows the `InternationalizationProvider` locale's hour
+		 * cycle (`en-US` 12-hour, `en-GB` 24-hour); a per-user preference rides on
+		 * the locale tag (`en-US-u-hc-h23`).
+		 * @default the locale's hour cycle
 		 */
 		hourFormat?: DateTimeInputHourFormat;
 		/**
-		 * Minutes added or subtracted when stepping the time field with the arrow
-		 * keys. Constrained to a set of sensible increments.
+		 * Minute step for the time field. Astryx's typed field uses it for arrow-key
+		 * stepping. The default value permits the native time picker; a non-default
+		 * value retains the Astryx time field because iOS does not apply native
+		 * `step` as picker cadence. Ignored by the Astryx touch sheet.
 		 * @default 1
 		 */
 		timeIncrement?: DateTimeInputTimeIncrement;
@@ -123,8 +136,12 @@
 		 * the list is a shortcut, not a restriction, so a time between two options
 		 * can still be typed.
 		 *
-		 * Independent of `timeIncrement`, which governs arrow-key stepping. Setting
-		 * both to the same value is the usual choice for scheduling flows.
+		 * Setting this prop retains Astryx's typed/combobox time field even when
+		 * `nativePicker` otherwise selects native controls, because the OS picker
+		 * has no equivalent preset list. The Astryx touch sheet uses wheels
+		 * instead. Independent of `timeIncrement`, which governs arrow-key
+		 * stepping. Setting both to the same value is the usual choice for
+		 * scheduling flows.
 		 */
 		timeOptionInterval?: DateTimeInputTimeOptionInterval;
 		/**
@@ -175,11 +192,88 @@
 		 * @default 0
 		 */
 		weekStartsOn?: DayOfWeek | DayOfWeekName;
+		/**
+		 * The calendar the date segment reads and writes typed dates in, and the
+		 * calendar its popover and bottom sheet show. `value`, `onChange`, `min`,
+		 * and `max` stay Gregorian ISO datetimes. Calendars other than `gregory`,
+		 * `iso8601`, `buddhist`, `roc`, and `japanese` need `Temporal`; without it
+		 * the field shows Gregorian dates.
+		 * @default the InternationalizationProvider's calendar, else 'gregory'
+		 */
+		calendar?: CalendarSystem;
+
+		/**
+		 * When date and time picking are handed to the browser/OS instead of
+		 * Astryx's calendar and time surfaces.
+		 *
+		 * - `'touch'` (default): native date and time inputs on a coarse primary
+		 *   pointer; Astryx's typed fields and popovers otherwise
+		 * - `'always'`: native date and time inputs wherever the browser supports
+		 *   them
+		 * - `'never'`: Astryx's own surfaces everywhere — typed fields on a fine
+		 *   pointer and the coordinated Date/Time bottom sheet on a coarse pointer
+		 *
+		 * Native pickers cannot express `numberOfMonths`, `weekStartsOn`,
+		 * `dateConstraints`, or `timeOptionInterval`. Calendar-only options are
+		 * ignored in native mode and constraints are enforced on commit. The
+		 * native time control is used for the default minute-precision contract;
+		 * requesting `hasSeconds`, a non-default `timeIncrement`, or
+		 * `timeOptionInterval` keeps Astryx's time field because iOS cannot
+		 * represent those behaviors faithfully. `min` / `max` are forwarded to
+		 * each native control as hints and enforced in JavaScript. `hourFormat`
+		 * formats the closed value; the OS picker follows the user's locale.
+		 *
+		 * In a calendar other than `gregory` or `iso8601`, `'touch'` and
+		 * `'always'` use Astryx's popovers on a fine pointer and the bottom sheet
+		 * on a coarse pointer.
+		 *
+		 * @default 'touch'
+		 * @deprecated Use `presentation` (`spec:AST-043` FR3):
+		 * `'touch'` → `'adaptive-native'`, `'always'` → `'native'`,
+		 * `'never'` → `'adaptive-bottom-sheet'`. Still works exactly as released;
+		 * `presentation` wins when both are set.
+		 */
+		nativePicker?: DateTimeInputNativePicker;
+
+		/**
+		 * Which surfaces collect the date and time (`spec:AST-043` FR1). Every
+		 * value opens pickers; the typed-fields-only `'text-input'` belongs to
+		 * `TimeInput`.
+		 *
+		 * - `'popover'`: Astryx's typed fields + popovers on every pointer
+		 * - `'bottom-sheet'`: Astryx's bottom-sheet date/time wheels on every
+		 *   pointer
+		 * - `'native'`: browser/OS date and time pickers on every pointer, with no
+		 *   Astryx fallback (FR2), except in a calendar other than `gregory` or
+		 *   `iso8601`, where it is `'adaptive-bottom-sheet'` and warns in
+		 *   development
+		 * - `'adaptive-bottom-sheet'`: popovers on a fine pointer, bottom sheet on
+		 *   a coarse pointer
+		 * - `'adaptive-native'` (default): popovers on a fine pointer, browser/OS
+		 *   pickers on a coarse pointer, keeping the released per-segment Astryx
+		 *   fallbacks (seconds, non-default `timeIncrement`, `timeOptionInterval`)
+		 *   where a native control cannot express the value (FR2), and the bottom
+		 *   sheet in a calendar other than `gregory` or `iso8601`
+		 *
+		 * @default 'adaptive-native'
+		 */
+		presentation?: DateTimeInputPresentation;
 	}
 </script>
 
 <script lang="ts">
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
+	import { useLocale } from '../../i18n/use-locale.svelte.js';
+	import { isGregorianCalendar } from '../../utils/calendar-system.js';
+	import { warnOnce } from '../../utils/dev-warning.js';
+	import {
+		calendarPickerPresentation,
+		effectivePickerPresentation,
+		resolvePickerPresentation
+	} from '../../utils/input-presentation.js';
+	import { resolveHourFormat } from '../../utils/time-format.js';
 	import PointerDateTimeField from './pointer-date-time-field.svelte';
 	import TouchDateTimeField from './touch-date-time-field.svelte';
 
@@ -191,15 +285,10 @@
 	const TOUCH_POINTER_QUERY = '(pointer: coarse)';
 
 	/**
-	 * A combined date and time picker that keeps the desktop text-entry surface on
-	 * mouse/trackpad devices and uses Astryx's custom bottom-sheet picker on coarse
-	 * pointers.
-	 *
-	 * Unlike `DateInput`, this never hands touch picking to the browser/OS — there
-	 * is no `nativePicker` here and upstream publishes none: the mobile flow has to
-	 * coordinate date and time together, preserve drafted time before a date
-	 * exists, and enforce datetime `min`/`max` across both panels, none of which a
-	 * pair of platform pickers can do.
+	 * A combined date and time picker whose `presentation` prop chooses both
+	 * surfaces (`spec:AST-043`). Native modes use OS-owned date and time controls
+	 * in Astryx field chrome; the deprecated `nativePicker` maps to the same
+	 * surfaces (FR3).
 	 *
 	 * ## Hydration
 	 *
@@ -215,11 +304,65 @@
 	 */
 	const props: DateTimeInputProps = $props();
 
+	useDevWarning(
+		'DateTimeInput',
+		'`nativePicker` is deprecated; use `presentation` instead (`touch` → `adaptive-native`, `always` → `native`, `never` → `adaptive-bottom-sheet`). `presentation` wins when both are set.',
+		() => props.nativePicker !== undefined
+	);
+
 	const isTouch = useMediaQuery(() => TOUCH_POINTER_QUERY);
+	const calendar = useCalendarSystem(() => props.calendar, 'DateTimeInput');
+	const locale = useLocale();
+	const isNativeCalendar = $derived(isGregorianCalendar(calendar()));
+	// The policy is the explicit `presentation`, else the released
+	// `nativePicker`, else adaptive-native. In a calendar the native control
+	// cannot show, both native policies become adaptive-bottom-sheet.
+	const presentation = $derived(
+		calendarPickerPresentation(
+			effectivePickerPresentation(props.presentation, props.nativePicker),
+			isNativeCalendar
+		)
+	);
+	const surface = $derived(resolvePickerPresentation(presentation, isTouch.matches));
+	// Every surface gets the resolved hour format, so typed text, the native
+	// field's resting text, preset times, and the sheet wheels agree.
+	const hourFormat = $derived(resolveHourFormat(locale(), props.hourFormat));
+	// `forced` (`presentation="native"`, FR2) keeps no Astryx fallback. The
+	// deprecated `nativePicker="always"` is `legacy` and keeps the released
+	// per-segment fallbacks. A coarse-pointer adaptive-native row is `adaptive`.
+	const nativeMode = $derived.by((): 'off' | 'adaptive' | 'forced' | 'legacy' => {
+		if (surface !== 'native') {
+			return 'off';
+		}
+		if (presentation !== 'native') {
+			return 'adaptive';
+		}
+		return props.presentation === undefined && props.nativePicker === 'always'
+			? 'legacy'
+			: 'forced';
+	});
+
+	$effect(() => {
+		const calendarShown = calendar();
+		if (props.presentation === 'native' && !isGregorianCalendar(calendarShown)) {
+			warnOnce(
+				`presentation-native-calendar:DateTimeInput:${calendarShown}`,
+				'DateTimeInput',
+				`presentation="native" shows the Astryx picker in the "${calendarShown}" ` +
+					'calendar, because the native date control shows only Gregorian ' +
+					'dates: the popover on a fine pointer and the bottom sheet on a ' +
+					'coarse pointer.'
+			);
+		}
+	});
 </script>
 
-{#if isTouch.matches}
-	<TouchDateTimeField {...props} />
+{#if surface === 'native'}
+	<PointerDateTimeField {...props} calendar={calendar()} {hourFormat} {nativeMode} />
+{:else if surface === 'sheet'}
+	{#key calendar()}
+		<TouchDateTimeField {...props} calendar={calendar()} {hourFormat} />
+	{/key}
 {:else}
-	<PointerDateTimeField {...props} />
+	<PointerDateTimeField {...props} calendar={calendar()} {hourFormat} nativeMode="off" />
 {/if}

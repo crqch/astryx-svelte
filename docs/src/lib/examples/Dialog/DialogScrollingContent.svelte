@@ -21,7 +21,7 @@
 		Text,
 		useImperativeDialog,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const TERMS = [
 		'You agree to use the service only for lawful purposes and in compliance with all applicable laws and regulations in your jurisdiction.',

@@ -58,6 +58,12 @@
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { useLayoutChangeSnapshot } from '../../motion/layout-change-snapshot.svelte.js';
+	import {
+		createResizablePaneLink,
+		regionOfProps,
+		type LayoutEdge
+	} from '../resizable/resizable-pane.js';
 	import { useLayoutArea } from './layout-area-context.svelte.js';
 	import { layoutPanelAttrs } from './layout-panel.stylex.js';
 	import { useLayoutSlots } from './layout-slots-context.svelte.js';
@@ -87,9 +93,43 @@
 
 	// A resizable region drives the width; the prop is ignored while one is set.
 	const effectiveWidth = $derived(resizable ? resizable._size : width);
+	// A collapsed region sizes its panel to 0.
+	const isZeroWidth = $derived(effectiveWidth === 0);
 
 	const area = useLayoutArea();
 	const slots = useLayoutSlots();
+	let panelEl: HTMLDivElement | undefined = $state();
+
+	// The panel lends its element to the region that sizes it, so the region's
+	// handle can draw a rubber band over it, its close slide can measure it,
+	// and its collapse can play an edge reveal. A hand-built `resizable` object
+	// has no region: it lends nothing and never moves.
+	const paneLink = createResizablePaneLink();
+	const paneRegion = $derived(resizable ? regionOfProps(resizable) : undefined);
+	// Without resizable props, a ResizeHandle beside the panel that has a
+	// region's props finds it through the panes lent beside it.
+	const isFoundBeside = $derived(resizable == null);
+	const contentFacingEdge = $derived<LayoutEdge>(area() === 'end' ? 'inline-start' : 'inline-end');
+
+	$effect(() => {
+		const element = panelEl ?? null;
+		const isLent = isFoundBeside || paneRegion != null;
+		const pane = paneLink.attach(isLent ? element : null, isFoundBeside);
+		paneRegion?.attach(pane);
+		return () => {
+			paneLink.attach(null, isFoundBeside);
+			paneRegion?.attach(null);
+		};
+	});
+	// Before the DOM changes in the update that renders width 0, or away from it.
+	useLayoutChangeSnapshot(
+		() => isZeroWidth,
+		(toCollapsed) => paneLink.beforeChange(toCollapsed)
+	);
+	// After every update: the width and edge this one rendered.
+	$effect(() => {
+		paneLink.committed(effectiveWidth, contentFacingEdge);
+	});
 
 	const attrs = $derived(
 		layoutPanelAttrs(
@@ -97,9 +137,10 @@
 				area: area(),
 				slots: slots(),
 				hasDivider,
-				isScrollable,
+				isScrollable: isScrollable && !isZeroWidth,
 				padding,
-				width: effectiveWidth
+				width: effectiveWidth,
+				isZeroWidth
 			},
 			xstyle
 		)
@@ -108,6 +149,7 @@
 </script>
 
 <div
+	bind:this={panelEl}
 	{role}
 	aria-label={label}
 	{...theme}

@@ -9,7 +9,7 @@
 	real name. The values are unchanged.
 -->
 <script lang="ts">
-	import { Stack, TimeInput, type ISOTimeString } from '@astryx-svelte/core';
+	import { Stack, TimeInput, type ISOTimeString } from '@astryx-sv/core';
 
 	let evening = $state<ISOTimeString | undefined>(undefined);
 </script>

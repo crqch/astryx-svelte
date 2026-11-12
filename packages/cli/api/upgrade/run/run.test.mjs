@@ -31,14 +31,14 @@ function seedProject(dir) {
 		JSON.stringify({
 			name: 'x',
 			version: '1.0.0',
-			dependencies: { '@astryx-svelte/core': '0.1.8' }
+			dependencies: { '@astryx-sv/core': '0.1.8' }
 		})
 	);
-	const core = path.join(dir, 'node_modules', '@astryx-svelte', 'core');
+	const core = path.join(dir, 'node_modules', '@astryx-sv', 'core');
 	fs.mkdirSync(core, { recursive: true });
 	fs.writeFileSync(
 		path.join(core, 'package.json'),
-		JSON.stringify({ name: '@astryx-svelte/core', version: '0.1.8' })
+		JSON.stringify({ name: '@astryx-sv/core', version: '0.1.8' })
 	);
 	fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
 	fs.writeFileSync(path.join(dir, 'src', 'index.ts'), 'const x = 1;\n');

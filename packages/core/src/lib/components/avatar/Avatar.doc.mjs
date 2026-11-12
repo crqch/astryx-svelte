@@ -44,7 +44,7 @@ export default {
 			{
 				name: '--_avatar-group-overlap',
 				description:
-					'Negative inline offset applied to every avatar after the first when avatars are stacked in an AvatarGroup. Set from the group size; a more negative value tightens the stack.',
+					'Negative inline offset applied to every avatar stacked in an AvatarGroup; the group pads its start edge by the same amount so the first avatar stays inside it. Set from the group size; a more negative value tightens the stack.',
 				default: 'set at runtime from the group avatar size (px)',
 				private: true
 			},
@@ -117,7 +117,8 @@ export default {
 			{
 				name: 'Initials',
 				required: false,
-				description: 'One or two letters extracted from the name. Shown when no photo is available.'
+				description:
+					'The first letter, digit or emoji of the first and last words of the name; punctuation is skipped. Shown when no photo is available. A name with no letters, digits or emoji shows the default icon instead. Like the photo, the initials are part of the picture: assistive technology reads the name, not the letters.'
 			},
 			{
 				name: 'Default icon',
@@ -155,9 +156,9 @@ export default {
 		},
 		{
 			name: 'size',
-			type: "48 | 32 | 'sm' | 'md' | 'lg' | 20 | 'xl' | 'xsm' | 16 | 24 | 36 | 40 | 60 | 64 | 72 | 96 | 128 | 144 | 180",
+			type: "48 | 32 | 'sm' | 'md' | 'lg' | 40 | 20 | 'xl' | 'xsm' | 24 | 16 | 36 | 60 | 64 | 72 | 96 | 128 | 144 | 180",
 			description:
-				"Avatar size. Use a named size ('xsm' 20px, 'sm' 24px, 'md' 36px, 'lg' 48px, 'xl' 128px) or a numeric pixel value. Avatar shares Icon's abbreviated scale, but its tiers are larger because avatars align with media rather than glyphs. Inside an AvatarGroup the group's size wins and this prop is ignored.",
+				"Avatar size: named sizes are 'xsm' (20px), 'sm' (24px), 'md' (36px), 'lg' (48px), and 'xl' (128px); numeric sizes must be one of the pixel values listed in the type. Inside an AvatarGroup, the group's size always overrides this prop, including when the group uses its default size.",
 			default: "'md'"
 		},
 		{

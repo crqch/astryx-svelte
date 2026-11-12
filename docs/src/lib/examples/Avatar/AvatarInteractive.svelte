@@ -5,7 +5,7 @@
 	`onClick` is `onclick` here, the port's spelling for a DOM-handler prop.
 -->
 <script lang="ts">
-	import { Avatar, Stack, Text } from '@astryx-svelte/core';
+	import { Avatar, Stack, Text } from '@astryx-sv/core';
 </script>
 
 <Stack direction="horizontal" gap={6} vAlign="start">

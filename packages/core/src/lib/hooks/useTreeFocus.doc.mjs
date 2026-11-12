@@ -76,7 +76,7 @@ export default {
 			name: 'options.typeahead',
 			type: 'boolean',
 			description:
-				'Whether typeahead (jump to next item whose text starts with the typed characters) is enabled.',
+				'Whether typeahead (jump to next item whose text starts with the typed characters, ignoring case, accents, the stroked letters đ ł ø ħ ŧ ƀ and Turkish ı/İ in every locale) is enabled.',
 			default: 'true'
 		}
 	],
@@ -130,6 +130,6 @@ export default {
 	},
 	relatedComponents: ['TreeList'],
 	relatedHooks: ['useListFocus', 'useGridFocus', 'useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

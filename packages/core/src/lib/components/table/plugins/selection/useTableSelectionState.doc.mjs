@@ -10,7 +10,7 @@ export default {
 	displayName: 'useTableSelectionState',
 	subComponentOf: 'Table',
 	description:
-		'State management companion for useTableSelection. Handles disabled/selectable row filtering for select-all automatically: disabled rows are frozen (preserved across select-all/deselect-all), non-selectable rows are excluded.',
+		'State management companion for useTableSelection. Returns selectionConfig for the behaviour plugin plus selectionState for selection-aware UI such as TableSelectionToolbar. Handles disabled/selectable row filtering for select-all automatically: disabled rows are frozen (preserved across select-all/deselect-all), non-selectable rows are excluded.',
 	keywords: [
 		'table',
 		'datatable',

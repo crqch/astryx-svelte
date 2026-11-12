@@ -60,6 +60,10 @@
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import {
+		getInteractionModality,
+		trackInteractionModality
+	} from '../../utils/interaction-modality.js';
 	import { useCommandPaletteContext } from './command-palette-context.svelte.js';
 	import { useDialogContext } from '../dialog/dialog-context.svelte.js';
 	import {
@@ -94,6 +98,8 @@
 		endContent,
 		onChange,
 		onkeydown,
+		onfocus,
+		onblur,
 		xstyle,
 		class: className,
 		style: styleProp,
@@ -109,6 +115,26 @@
 	const dialogContext = useDialogContext();
 
 	let inputEl = $state<HTMLInputElement | null>(null);
+
+	// `:focus-visible` matches a text input focused by pointer as well (CSS
+	// Selectors 4, verified in Chromium), so it cannot express "keyboard focus"
+	// by itself. Gate the shared ring on how the user last interacted; the CSS
+	// condition stays `:focus-visible`, this only narrows it.
+	let isKeyboardFocus = $state(false);
+
+	$effect(() => {
+		trackInteractionModality();
+	});
+
+	function handleFocus(e: FocusEvent & { currentTarget: HTMLInputElement }): void {
+		isKeyboardFocus = getInteractionModality() === 'keyboard';
+		onfocus?.(e);
+	}
+
+	function handleBlur(e: FocusEvent & { currentTarget: HTMLInputElement }): void {
+		isKeyboardFocus = false;
+		onblur?.(e);
+	}
 
 	// Use context values as fallback
 	const value = $derived(controlledValue ?? ctx?.().search);
@@ -156,7 +182,7 @@
 	const iconAttrs = $derived(commandPaletteInputIconAttrs());
 	const endAttrs = $derived(commandPaletteInputEndAttrs());
 	const spinnerAttrs = $derived(commandPaletteInputSpinnerAttrs());
-	const inputAttrs = $derived(commandPaletteInputAttrs());
+	const inputAttrs = $derived(commandPaletteInputAttrs(isKeyboardFocus));
 </script>
 
 <div {...theme} class={cx(theme.class, wrapperAttrs.class)} style={wrapperAttrs.style}>
@@ -188,6 +214,8 @@
 		data-autofocus={effectiveAutoFocus || undefined}
 		oninput={handleInput}
 		onkeydown={handleKeyDown}
+		onfocus={handleFocus}
+		onblur={handleBlur}
 		class={cx(inputAttrs.class, className)}
 		style={mergeStyle(inputAttrs.style, styleProp as string | undefined)}
 	/>

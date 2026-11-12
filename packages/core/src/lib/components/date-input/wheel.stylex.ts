@@ -37,23 +37,38 @@ const ITEM_BLOCK_SIZE = dateInputTouchSizes.wheelItemSize;
  * at the top — which is what a `view()` timeline over the `cover` range means,
  * and why this reads as a cylinder rotating under the finger.
  */
-const falloff = stylex.keyframes({
+const tip = stylex.keyframes({
+	'0%': { transform: 'rotateX(52deg) scale(0.86)' },
+	'50%': { transform: 'rotateX(0deg) scale(1)' },
+	'100%': { transform: 'rotateX(-52deg) scale(0.86)' }
+});
+
+/**
+ * Colour keeps every row at WCAG AA, which an opacity fade does not. The ends
+ * stop halfway to the secondary text colour, because that colour alone falls
+ * below AA in two shipped themes.
+ */
+const fade = stylex.keyframes({
 	'0%': {
-		opacity: 0.3,
-		transform: 'rotateX(52deg) scale(0.86)'
+		color: `color-mix(in oklab, ${colorVars['--color-text-primary']}, ${colorVars['--color-text-secondary']})`
 	},
-	'50%': {
-		opacity: 1,
-		transform: 'rotateX(0deg) scale(1)'
-	},
+	'50%': { color: colorVars['--color-text-primary'] },
 	'100%': {
-		opacity: 0.3,
-		transform: 'rotateX(-52deg) scale(0.86)'
+		color: `color-mix(in oklab, ${colorVars['--color-text-primary']}, ${colorVars['--color-text-secondary']})`
 	}
 });
 
-/** Motion-free equivalent: the depth cue survives as opacity alone. */
-const fadeOnly = stylex.keyframes({
+/**
+ * A disabled row keeps its disabled colour and fades by opacity instead: WCAG
+ * 1.4.3 exempts inactive components from the contrast minimum.
+ */
+const tipAndDim = stylex.keyframes({
+	'0%': { opacity: 0.3, transform: 'rotateX(52deg) scale(0.86)' },
+	'50%': { opacity: 1, transform: 'rotateX(0deg) scale(1)' },
+	'100%': { opacity: 0.3, transform: 'rotateX(-52deg) scale(0.86)' }
+});
+
+const dim = stylex.keyframes({
 	'0%': { opacity: 0.3 },
 	'50%': { opacity: 1 },
 	'100%': { opacity: 0.3 }
@@ -86,7 +101,10 @@ const styles = stylex.create({
 		transformStyle: 'preserve-3d',
 		scrollbarWidth: 'none',
 		outline: 'none',
-		touchAction: 'pan-y'
+		// Vertical pans scroll the wheel; a two-finger pinch stays the page's, so
+		// the page can still zoom over an open picker (WCAG 1.4.4), as it does
+		// over the menus and listboxes.
+		touchAction: 'pan-y pinch-zoom'
 	},
 	item: {
 		display: 'flex',
@@ -134,15 +152,14 @@ const styles = stylex.create({
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
 		// The wheel look. Held behind @supports so browsers without scroll-driven
-		// animations get a plain, fully legible list instead of these keyframes
-		// playing themselves out once on the document timeline. Under reduced
-		// motion the same timeline drives opacity only — the depth cue survives,
-		// the tipping does not.
+		// animations get a plain list instead of these keyframes playing
+		// themselves out once on the document timeline. Under reduced motion, the
+		// colour fade on the row keeps the depth cue.
 		animationName: {
 			default: null,
 			'@supports (animation-timeline: view())': {
-				default: falloff,
-				'@media (prefers-reduced-motion: reduce)': fadeOnly
+				default: tip,
+				'@media (prefers-reduced-motion: reduce)': 'none'
 			}
 		},
 		animationTimeline: 'view(y)',
@@ -151,6 +168,31 @@ const styles = stylex.create({
 		animationDuration: 'auto',
 		animationTimingFunction: 'linear',
 		backfaceVisibility: 'hidden'
+	},
+	itemInnerDisabled: {
+		animationName: {
+			default: null,
+			'@supports (animation-timeline: view())': {
+				default: tipAndDim,
+				'@media (prefers-reduced-motion: reduce)': dim
+			}
+		}
+	},
+	/**
+	 * The colour fade, on the row and not the tipped inner element: colour does
+	 * not move a snap area. An animated colour outranks the selected and
+	 * disabled colours, so those rows do not take this fade.
+	 */
+	itemFade: {
+		animationName: {
+			default: null,
+			'@supports (animation-timeline: view())': fade
+		},
+		animationTimeline: 'view(y)',
+		animationRange: 'cover 0% cover 100%',
+		animationFillMode: 'both',
+		animationDuration: 'auto',
+		animationTimingFunction: 'linear'
 	},
 	itemActive: {
 		color: colorVars['--color-text-accent'],
@@ -197,15 +239,21 @@ export function wheelScrollerAttrs(): SvelteStyleAttrs {
 }
 
 /**
- * One `role="option"` row. The order is upstream's four-entry lookup table:
- * `item`, then the active highlight, then the disabled treatment — so a
- * disabled row that also happens to be active reads as disabled.
+ * One `role="option"` row. The order is upstream's lookup table: `item`, then
+ * the colour fade on a row that is neither active nor disabled, then the active
+ * highlight, then the disabled treatment — so a disabled row that also happens
+ * to be active reads as disabled.
  */
 export function wheelItemAttrs(isActive: boolean, isDisabled: boolean): SvelteStyleAttrs {
-	return sx(styles.item, isActive && styles.itemActive, isDisabled && styles.itemDisabled);
+	return sx(
+		styles.item,
+		!isActive && !isDisabled && styles.itemFade,
+		isActive && styles.itemActive,
+		isDisabled && styles.itemDisabled
+	);
 }
 
 /** The inner span the scroll-driven falloff rides on. */
-export function wheelItemInnerAttrs(): SvelteStyleAttrs {
-	return sx(styles.itemInner);
+export function wheelItemInnerAttrs(isDisabled: boolean): SvelteStyleAttrs {
+	return sx(styles.itemInner, isDisabled && styles.itemInnerDisabled);
 }

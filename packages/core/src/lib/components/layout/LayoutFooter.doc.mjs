@@ -10,20 +10,26 @@ export default {
 	displayName: 'Layout Footer',
 	subComponentOf: 'Layout',
 	description: 'Bottom bar for action bars, pagination, and status bars.',
-	keywords: [
-		'layout',
-		'container',
-		'content',
-		'flex',
-		'box',
-		'wrapper',
-		'scaffold',
-		'page',
-		'shell'
-	],
+	keywords: ['layout', 'container', 'content', 'flex', 'box', 'wrapper', 'page', 'regions'],
 	group: 'Layout',
 	category: 'Layout',
 	isHiddenFromOverview: true,
+	playground: {
+		defaults: {
+			children: 'Footer content: status bar or actions',
+			hasDivider: true
+		},
+		wrapper: {
+			component: 'Layout',
+			props: {
+				content: {
+					__element: 'LayoutContent',
+					props: {},
+					children: 'Main content area'
+				}
+			}
+		}
+	},
 	props: [
 		{
 			name: 'children',
@@ -33,7 +39,8 @@ export default {
 		{
 			name: 'hasDivider',
 			type: 'boolean',
-			description: 'Border at top edge.',
+			description:
+				"Border at top edge. When unset, the parent Layout's defaultHasDividers decides.",
 			default: 'false'
 		},
 		{
@@ -47,9 +54,20 @@ export default {
 			description: 'Accessible label for the landmark element.'
 		},
 		{
+			name: 'padding',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			description:
+				'Internal padding on every edge, using the spacing scale. Replaces the inset from the layout; 0 is full bleed.'
+		},
+		{
 			name: 'role',
 			type: 'AriaRole',
 			description: 'ARIA landmark role.'
+		},
+		{
+			name: 'ref',
+			type: 'HTMLDivElement | null',
+			description: 'Ref forwarded to the footer element.'
 		}
 	]
 };

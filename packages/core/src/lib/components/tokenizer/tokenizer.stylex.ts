@@ -6,6 +6,7 @@ import {
 	inputStatusHoverShadowStyles,
 	inputWrapperStyles
 } from '../field/input-styles.stylex.js';
+import { inputDisabledFocusStyles } from '../field/input-disabled-focus.stylex.js';
 import type { InputStatusType } from '../field/types.js';
 import { colorVars, sizeVars, spacingVars, typeScaleVars } from '../../styles/tokens.stylex.js';
 
@@ -15,6 +16,13 @@ import { colorVars, sizeVars, spacingVars, typeScaleVars } from '../../styles/to
  * (`styles`/`sizeStyles`/`endSectionSizeStyles`/`truncatedSizeStyles`/
  * `layerPlaceholderSizeStyles`) are upstream's, so none is renamed.
  */
+
+// How far the end lane sits from the field's inline-end border, named once
+// because the input's reserve is derived from the same value.
+const TOKEN_ROW_INSET = `calc(${spacingVars['--spacing-1']} - 1px)`;
+// Kept in sync with useEndLaneReserve: wrapperWithTokens reads the custom
+// property directly, to keep token rows and the input short of the lane.
+const END_LANE_RESERVE_VAR = '--_tokenizer-end-lane-reserve';
 
 const styles = stylex.create({
 	wrapper: {
@@ -32,19 +40,30 @@ const styles = stylex.create({
 		// (radius-1: 4px) sits concentric with wrapper border-radius
 		// (radius-2: 8px) when inset = radius-2 - radius-1 - border
 		// = 8 - 4 - 1 = 3px.
-		paddingBlock: `calc(${spacingVars['--spacing-1']} - 1px)`,
-		paddingInline: `calc(${spacingVars['--spacing-1']} - 1px)`,
+		paddingBlock: TOKEN_ROW_INSET,
+		paddingInline: TOKEN_ROW_INSET,
+		// The end lane is out of flow, so tokens would wrap under it. Every row
+		// stops short of the measured lane instead; with no lane the variable
+		// is absent and this is the ordinary inset.
+		paddingInlineEnd: `calc(${TOKEN_ROW_INSET} + var(${END_LANE_RESERVE_VAR}, 0px))`,
 		// Row gap must match paddingBlock so wrapped rows look evenly spaced.
-		rowGap: `calc(${spacingVars['--spacing-1']} - 1px)`
+		rowGap: TOKEN_ROW_INSET
 	},
 	startIconWithTokens: {
 		// Restore the default 8px inline-start inset when tokens are present,
 		// since wrapperWithTokens reduces padding to 3px for border concentricity.
-		marginInlineStart: `calc(${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px)`
+		marginInlineStart: `calc(${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px)`,
+		position: 'relative',
+		zIndex: 1
 	},
 	token: {
 		display: 'flex',
-		flexShrink: 0
+		flexShrink: 0,
+		// A renderToken wrapper sizes to its content; cap it at the row so the
+		// pill inside truncates instead of running past the field.
+		maxWidth: '100%',
+		position: 'relative',
+		zIndex: 1
 	},
 	endSection: {
 		position: 'absolute',
@@ -55,7 +74,16 @@ const styles = stylex.create({
 		display: 'flex',
 		alignItems: 'center',
 		gap: spacingVars['--spacing-2'],
-		flexShrink: 0
+		flexShrink: 0,
+		zIndex: 1
+	},
+	idleSpinner: {
+		// Hides the Spinner's own box too, which a theme may paint, and covers
+		// engines without content-visibility. Both keep the box's size.
+		visibility: 'hidden',
+		// Skips the ring's rendering, and with it the infinite arc animation,
+		// while the root keeps its own explicit, themed width and height.
+		contentVisibility: 'hidden'
 	},
 	inputAtMax: {
 		width: 0,
@@ -66,12 +94,36 @@ const styles = stylex.create({
 		position: 'absolute'
 	},
 	inputCompact: {
-		minWidth: '40px',
-		flex: '1 1 40px',
+		position: 'relative',
+		boxSizing: 'border-box',
+		zIndex: 0,
+		// The input follows the last token in flow, so a focused empty input's
+		// caret sits where typed text will start. Empty, it asks only for that
+		// inset, and only while focused and editable: blurred or read-only (a
+		// disabled field with a disabledMessage stays focusable), it claims no
+		// room at all, not even the column gap, so it never grows the field a
+		// blank row. Typing restores the full editing width, which may wrap.
+		minWidth: {
+			default: '40px',
+			':placeholder-shown': 0
+		},
+		flex: {
+			default: '1 1 40px',
+			':placeholder-shown': '1 1 0px'
+		},
 		width: 0,
+		marginInlineStart: {
+			default: 0,
+			':placeholder-shown:is(:not(:focus), :read-only)': `calc(-1 * ${spacingVars['--spacing-1']})`
+		},
 		// Restore normal text inset when input follows tokens, since the
 		// wrapper padding is reduced for border concentricity.
-		paddingInlineStart: `calc(${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px)`
+		paddingInlineStart: {
+			default: `calc(${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px)`,
+			':placeholder-shown:is(:not(:focus), :read-only)': 0
+		},
+		// wrapperWithTokens already keeps the in-flow input short of the lane.
+		paddingInlineEnd: 0
 	},
 	truncatedWrapper: {
 		flexWrap: 'nowrap',
@@ -89,6 +141,87 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-supporting-size'],
 		color: colorVars['--color-text-secondary'],
 		paddingInline: spacingVars['--spacing-1']
+	},
+	// The sheet presentation's field: the inline field's own control box. A
+	// button cannot contain controls, so the trigger, the tokens and the end lane
+	// are siblings in this box. `endContent` and a custom token can then hold their
+	// own controls. There is no input to type into, so the cursor says "press".
+	sheetField: {
+		width: '100%',
+		cursor: {
+			default: 'pointer',
+			':is(:disabled,[aria-disabled="true"])': 'default'
+		}
+	},
+	// The box carries no aria-disabled: that would expose a caller's operable
+	// `endContent` as disabled. The trigger carries it, so the box keys its
+	// disabled cursor on the prop.
+	sheetFieldDisabled: {
+		cursor: 'default'
+	},
+	// With tokens, the button covers the box beneath them. A tap on a token or
+	// on empty space then opens the sheet. The box draws the focus ring, so the
+	// button draws none.
+	sheetTrigger: {
+		appearance: 'none',
+		flexGrow: 1,
+		alignSelf: 'stretch',
+		display: 'flex',
+		alignItems: 'center',
+		minWidth: 0,
+		padding: 0,
+		margin: 0,
+		borderWidth: 0,
+		borderStyle: 'none',
+		backgroundColor: 'transparent',
+		fontFamily: 'inherit',
+		fontSize: 'inherit',
+		lineHeight: 'inherit',
+		color: 'inherit',
+		textAlign: 'start',
+		cursor: {
+			default: 'pointer',
+			':is(:disabled,[aria-disabled="true"])': 'default'
+		},
+		outline: 'none'
+	},
+	sheetTriggerWithTokens: {
+		position: 'absolute',
+		inset: 0
+	},
+	// An aria-disabled button gets no system disabled paint in forced colors;
+	// GrayText is the platform's disabled affordance there. Defaults repeat the
+	// base values, since StyleX merges per property.
+	sheetTriggerDisabled: {
+		borderColor: {
+			default: colorVars['--color-border-emphasized'],
+			'@media (forced-colors: active)': 'GrayText'
+		},
+		color: {
+			default: null,
+			'@media (forced-colors: active)': 'GrayText'
+		}
+	},
+	sheetTriggerPlaceholder: {
+		color: colorVars['--color-text-secondary'],
+		// Match the input's text inset so the placeholder sits where the typed
+		// query would.
+		paddingInline: spacingVars['--spacing-1']
+	},
+	sheetTriggerPlaceholderDisabled: {
+		color: {
+			default: colorVars['--color-text-secondary'],
+			'@media (forced-colors: active)': 'GrayText'
+		}
+	},
+	// A Token authors its own color, which forced colors replace with
+	// CanvasText; GrayText marks the tokens of a disabled trigger as disabled.
+	// The default repeats Token's own default color.
+	sheetTokenDisabled: {
+		color: {
+			default: colorVars['--color-text-primary'],
+			'@media (forced-colors: active)': 'GrayText'
+		}
 	}
 });
 
@@ -146,6 +279,7 @@ export function tokenizerWrapperAttrs(
 		isTruncated ? truncatedSizeStyles[size] : sizeStyles[size],
 		isTruncated && styles.truncatedWrapper,
 		isDisabled && inputWrapperStyles.disabled,
+		isDisabled && inputDisabledFocusStyles.nestedRing,
 		statusType && inputStatusBorderStyles[statusType],
 		// `!isDisabled` is upstream's guard (`Tokenizer.tsx:742`), and it is the only
 		// thing that removes the ring — not belt-and-braces over the `disabled` style
@@ -222,3 +356,60 @@ export const tokenizerInputCompactStyle: StyleArg = styles.inputCompact;
 
 /** `xstyle` for the `unfocusedLayer` popover container. */
 export const tokenizerLayerPopoverStyle: StyleArg = styles.layerPopover;
+
+/** `xstyle` for a search Spinner that holds its slot while idle. */
+export const tokenizerIdleSpinnerStyle: StyleArg = styles.idleSpinner;
+
+/**
+ * The sheet presentation's field box: the inline field's control box, kept for
+ * its box, theming target and focus ring, with a press cursor instead of a
+ * text one.
+ */
+export function tokenizerSheetFieldAttrs(
+	size: TokenizerSize,
+	statusType: InputStatusType | undefined,
+	hasTokens: boolean,
+	isDisabled: boolean
+): SvelteStyleAttrs {
+	return sx(
+		inputWrapperStyles.base,
+		inputWrapperStyles.textField,
+		styles.wrapper,
+		styles.sheetField,
+		isDisabled && styles.sheetFieldDisabled,
+		// The field keeps the inline field's height for its size step, as
+		// Selector's bottom-sheet trigger does; the sheet's own rows and search
+		// field carry the touch-sized targets.
+		sizeStyles[size],
+		hasTokens && styles.wrapperWithTokens,
+		isDisabled && inputWrapperStyles.disabled,
+		isDisabled && styles.sheetTriggerDisabled,
+		statusType && inputStatusBorderStyles[statusType],
+		statusType && !isDisabled && inputStatusHoverShadowStyles[statusType],
+		statusType && inputStatusFocusWithinStyles[statusType]
+	);
+}
+
+/** The trigger button inside the sheet field. */
+export function tokenizerSheetTriggerAttrs(
+	hasTokens: boolean,
+	laneReserve: StyleArg
+): SvelteStyleAttrs {
+	return sx(
+		styles.sheetTrigger,
+		hasTokens && styles.sheetTriggerWithTokens,
+		// With no token the placeholder stops short of the end lane, as the
+		// inline input's text does.
+		!hasTokens && laneReserve
+	);
+}
+
+/** The placeholder span inside an empty sheet trigger. */
+export function tokenizerSheetTriggerPlaceholderAttrs(isDisabled: boolean): SvelteStyleAttrs {
+	return sx(styles.sheetTriggerPlaceholder, isDisabled && styles.sheetTriggerPlaceholderDisabled);
+}
+
+/** `xstyle` for a default Token in the sheet field when the field is disabled. */
+export function tokenizerSheetTokenStyle(isDisabled: boolean): StyleArg {
+	return isDisabled ? styles.sheetTokenDisabled : undefined;
+}

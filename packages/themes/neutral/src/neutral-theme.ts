@@ -32,38 +32,44 @@
  * parameter for the full reasoning.
  */
 
-import { defineSyntaxTheme, defineTheme } from '@astryx-svelte/core/theme/define';
+import { defineSyntaxTheme, defineTheme } from '@astryx-sv/core/theme/define';
 
 /**
- * Neutral syntax palette — the OKLCH T30 (light) / T80 (dark) stops of the
- * categorical ramps, i.e. the same colours the `--color-icon-*` tokens use.
+ * Neutral syntax palette — ported from upstream 0.7.13's resolved values, whose
+ * source draws each slot from the categorical ramp stops. The five diff row
+ * slots are included: upstream's `defineSyntaxTheme` fills unset ones from the
+ * theme's own punctuation, and those defaults are what the oracle compares.
  */
 const neutralSyntax = defineSyntaxTheme({
-	name: 'xds-neutral',
+	name: 'astryx-neutral',
 	tokens: {
-		keyword: ['#700084', '#efa8ff'], // purple T30/T80
-		string: ['#005600', '#a6d2a2'], // green (sat T30 / pastel T80)
-		comment: ['#737373', '#a3a3a3'], // neutral
-		number: ['#6e3500', '#ffb37f'], // orange
-		function: ['#00458c', '#a0caff'], // blue T30/T80 H=255
-		type: ['#700084', '#efa8ff'], // purple
-		variable: ['#171717', '#e5e5e5'], // near-black / near-white
-		operator: ['#737373', '#a3a3a3'], // neutral
-		constant: ['#6e3500', '#ffb37f'], // orange
-		tag: ['#89001a', '#ffaeaa'], // red
-		attribute: ['#584400', '#eec12f'], // yellow
-		property: ['#005348', '#83dac9'], // teal
-		punctuation: ['#6e6e6e', '#a0a0a0'], // neutral, 4.89:1 / 7.57:1
-		background: ['#fafafa', '#0a0a0a']
+		keyword: 'light-dark(#6b187c, #efa8ff)',
+		string: 'light-dark(#0b5615, #a4d6a3)',
+		comment: 'light-dark(#525252, #b9b9b9)',
+		number: 'light-dark(#733100, #ffb37e)',
+		function: 'light-dark(#00458c, #a1caff)',
+		type: 'light-dark(#6b187c, #efa8ff)',
+		variable: 'light-dark(#111111, #e2e2e2)',
+		operator: 'light-dark(#525252, #b9b9b9)',
+		constant: 'light-dark(#733100, #ffb37e)',
+		tag: 'light-dark(#8a0011, #ffaea7)',
+		attribute: 'light-dark(#584400, #eec448)',
+		property: 'light-dark(#005348, #90d7c8)',
+		punctuation: 'light-dark(#525252, #b9b9b9)',
+		background: 'light-dark(#ffffff, #111111)',
+		added: 'color-mix(in srgb, var(--color-success-muted) 25%, transparent)',
+		removed: 'color-mix(in srgb, var(--color-error-muted) 25%, transparent)',
+		'diff-header': 'transparent',
+		'added-marker': 'var(--color-syntax-punctuation)',
+		'removed-marker': 'var(--color-syntax-punctuation)'
 	}
 });
 
 export const neutralTheme = defineTheme({
 	name: 'neutral',
 
-	// Figtree across body, heading and display (display inherits heading.family);
-	// monospace stays the platform default for code. Scale base=14, ratio=1.2,
-	// with bold h3/h4 for subsection hierarchy.
+	// Figtree across body, heading and display; monospace stays the platform
+	// default for code. Scale base=14, ratio=1.2, with bold h3/h4.
 	typography: {
 		scale: { base: 14, ratio: 1.2 },
 		body: {
@@ -83,269 +89,184 @@ export const neutralTheme = defineTheme({
 		}
 	},
 
-	// Snappier than default, matching shadcn/Tailwind conventions. Produces
-	// fast 95/125/165ms and medium 225/300/400ms.
+	// Touch + narrow: floor the base at 16px and re-derive the ratio so Display 1
+	// keeps its desktop size (ratio' = 1.2 * (14/16)^(1/6)).
+	adaptations: {
+		widthBreakpoints: {
+			sm: 640,
+			md: 768,
+			lg: 1024,
+			xl: 1280,
+			'2xl': 1536
+		},
+		rules: [
+			{
+				when: {
+					pointer: 'coarse',
+					width: {
+						below: 'lg'
+					}
+				},
+				value: {
+					typography: {
+						scale: {
+							base: 16,
+							ratio: 1.1736
+						}
+					}
+				}
+			}
+		]
+	},
+
+	// Snappier than default, matching shadcn/Tailwind conventions.
 	motion: { fast: 125, medium: 300, slow: 700, ratio: 0.75 },
 
 	syntax: neutralSyntax,
 
+	localTokens: {
+		'--astryx-theme-neutral-color-status-fill-accent': 'light-dark(#0074e2, #6d9cfe)'
+	},
+
 	tokens: {
-		// ====================================================================
-		// Backgrounds — Figma-style flat with a single lifted surface.
-		//
-		// Dark mode collapses card/popover/muted to body T10; they lift purely
-		// via shadow and inset highlight. Surface is the exception, tonally
-		// lighter than body (T15) so interactive components sitting on the
-		// canvas have a differentiated foreground.
-		//
-		//   surface T15 #262626   body T10 #1b1b1b   card/popover/muted T10
-		//
-		// Light mode keeps the standard ladder — white surfaces float on a
-		// tinted body and shadows do most of the lifting.
-		// ====================================================================
 		'--color-background-surface': ['#ffffff', '#262626'],
 		'--color-background-body': ['#f1f1f1', '#1b1b1b'],
 		'--color-background-card': ['#ffffff', '#1b1b1b'],
 		'--color-background-popover': ['#ffffff', '#1b1b1b'],
 		'--color-background-muted': ['#f1f1f1', '#1b1b1b'],
-
-		// Accent + neutral surface tints
-		'--color-accent': ['#262626', '#ebebeb'],
-		'--color-accent-muted': ['#f1f1f1', '#262626'],
-		'--color-neutral': ['#0000000F', '#FFFFFF1A'],
-
-		// Overlays (modal scrims, hover/pressed tints)
+		'--color-accent': ['#1b1b1b', '#f1f1f1'],
+		'--color-accent-muted': ['#d4d4d4', '#474747'],
+		'--color-neutral': ['#0000000F', '#ffffff1A'],
 		'--color-overlay': ['#00000080', '#000000CC'],
-		'--color-overlay-hover': ['#0000000D', '#FFFFFF0D'],
-		'--color-overlay-pressed': ['#0000001A', '#FFFFFF1A'],
-
-		// Text
-		'--color-text-primary': ['#171717', '#fafafa'],
-		// #737373 on the light surface is ~4.4:1 — below WCAG 1.4.3's 4.5:1 for body
-		// text. Upstream tone-bumped it at 0.3.0 when it started asserting generated
-		// text-on-surface pairs at >= 4.5:1. Dark is unchanged and already passed.
-		'--color-text-secondary': ['#525252', '#a3a3a3'],
-		'--color-text-disabled': ['#a3a3a3', '#525252'],
-		'--color-text-accent': ['#262626', '#ebebeb'],
+		'--color-overlay-hover': ['#0000000D', '#ffffff0D'],
+		'--color-overlay-pressed': ['#0000001A', '#ffffff1A'],
+		'--color-text-primary': ['#000000', '#ffffff'],
+		'--color-text-secondary': ['#474747', '#9e9e9e'],
+		'--color-text-disabled': ['#919191', '#525252'],
+		'--color-text-accent': ['#1b1b1b', '#f1f1f1'],
 		'--color-on-dark': '#ffffff',
-		'--color-on-light': '#171717',
-		// The neutral accent is near-black in light, near-white in dark.
-		'--color-on-accent': ['#ffffff', '#171717'],
-		'--color-on-success': ['#ffffff', '#171717'],
-		'--color-on-error': ['#ffffff', '#171717'],
-		'--color-on-warning': '#171717',
-
-		// Icon
-		'--color-icon-accent': ['#262626', '#ebebeb'],
-		'--color-icon-primary': ['#171717', '#fafafa'],
-		'--color-icon-secondary': ['#737373', '#a3a3a3'],
-		'--color-icon-disabled': ['#a3a3a3', '#525252'],
-
-		// ====================================================================
-		// Status / sentiment.
-		//
-		//   Light: pastel T90 banner background + dark T30/T40 text and icon.
-		//   Dark : tinted T20 background + light pastel T80 text — inverted
-		//          from light, avoiding locked pastels glowing on a dark body.
-		//
-		//   --color-X       saturated text/icon stop
-		//   --color-X-muted muted background stop; dark mode uses a hue-tinted
-		//                   alpha overlay (24% = '3D' suffix) so the surface
-		//                   composites onto whatever sits behind it rather than
-		//                   reading as a hard coloured panel.
-		// ====================================================================
-		'--color-success': ['#007004', '#9fe59b'],
-		'--color-error': ['#a50c25', '#ffc6c1'],
-		'--color-warning': ['#745b00', '#fdcf4f'],
-		'--color-success-muted': ['#c5e5c0', '#84c9803D'],
-		'--color-error-muted': ['#facecb', '#ff9e973D'],
-		'--color-warning-muted': ['#f8da9d', '#deb4333D'],
-
-		// Border
-		'--color-border': ['#00000014', '#FFFFFF1A'],
+		'--color-on-light': '#111111',
+		'--color-on-accent': ['#ffffff', '#111111'],
+		'--color-on-success': ['#ffffff', '#111111'],
+		'--color-on-error': ['#ffffff', '#111111'],
+		'--color-on-warning': '#111111',
+		'--color-info': ['#0074e2', '#6d9cfe'],
+		'--color-info-muted': ['#b9d7ff', '#88bcff3D'],
+		'--color-on-info': ['#ffffff', '#111111'],
+		'--color-text-info': ['#0067ce', '#a1caff'],
+		'--color-text-success': ['#2f7d33', '#90ca90'],
+		'--color-text-warning': ['#836700', '#eec448'],
+		'--color-text-error': ['#c0262c', '#ffaea7'],
+		'--color-on-info-muted': ['#003978', '#a1caff'],
+		'--color-on-success-muted': ['#00490b', '#90ca90'],
+		'--color-on-warning-muted': ['#4b3900', '#eec448'],
+		'--color-on-error-muted': ['#76000c', '#ffaea7'],
+		'--color-icon-accent': ['#1b1b1b', '#f1f1f1'],
+		'--color-icon-primary': ['#000000', '#ffffff'],
+		'--color-icon-secondary': ['#6a6a6a', '#9e9e9e'],
+		'--color-icon-disabled': ['#919191', '#525252'],
+		'--color-success': ['#198100', '#64af4c'],
+		'--color-warning': '#ffce2f',
+		'--color-error': ['#c9303a', '#ff705d'],
+		'--color-success-muted': ['#bce0bb', '#90ca903D'],
+		'--color-error-muted': ['#ffc4be', '#ff98903D'],
+		'--color-warning-muted': ['#fae19e', '#e2b6233D'],
+		'--color-border': ['#00000014', '#ffffff1A'],
 		'--color-border-emphasized': ['#d4d4d4', '#525252'],
-
-		// Effects
-		'--color-skeleton': ['#ebebeb', '#525252'],
+		'--color-skeleton': ['#f1f1f1', '#525252'],
 		'--color-shadow': ['#0000001A', '#0000004D'],
-		'--color-tint-hover': ['black', 'white'],
-
-		// ====================================================================
-		// Categorical hues.
-		//
-		// Light mode uses pastel surfaces with dark coloured text; dark mode
-		// inverts to a hue-tinted alpha overlay surface with light pastel text.
-		// Per-token tone: bg light T87–T90 / dark T70 @ 24% alpha; border
-		// light T80 / dark T60; icon light T30 / dark T70; text light T30 /
-		// dark T80.
-		//
-		// Dark slots are HCT-derived from each source hex via the canonical
-		// dark-ramp transform (chroma × 0.85, +5 tone-lift taper).
-		// ====================================================================
-
-		// Red H=22 — source #eb183a
-		'--color-background-red': ['#facecb', '#ff9e973D'],
-		'--color-border-red': ['#e6bab8', '#ff6f6c'],
-		'--color-icon-red': ['#89001a', '#ff9e97'],
-		'--color-text-red': ['#89001a', '#ffc6c1'],
-
-		// Orange H=55 — source #d57113
-		'--color-background-orange': ['#fad0b5', '#ffa2583D'],
-		'--color-border-orange': ['#e6bda2', '#e2883e'],
-		'--color-icon-orange': ['#6e3500', '#ffa258'],
-		'--color-text-orange': ['#6e3500', '#ffc9a2'],
-
-		// Yellow H=90 — source #f8c723.
-		// Light mode pulls L down one step and C to its identity floor, because
-		// yellow sits at the green-cyan luminance peak and otherwise reads
-		// louder than the other status hues at the same canonical L.
-		'--color-background-yellow': ['#f8da9d', '#deb4333D'],
-		'--color-border-yellow': ['#e4c279', '#c0990e'],
-		'--color-icon-yellow': ['#584400', '#deb433'],
-		'--color-text-yellow': ['#584400', '#fdcf4f'],
-
-		// Green H=144 — source #358a3a
-		'--color-background-green': ['#c5e5c0', '#84c9803D'],
-		'--color-border-green': ['#b2d1ac', '#69ad67'],
-		'--color-icon-green': ['#0c5700', '#84c980'],
-		'--color-text-green': ['#0c5700', '#9fe59b'],
-
-		// Teal H=180 — source #0c7365.
-		// Light pastel sits a step darker with less chroma than the other hues
-		// to compensate for the green-cyan luminance overshoot.
-		'--color-background-teal': ['#a5e3d6', '#7ec6b83D'],
-		'--color-border-teal': ['#94d6c8', '#63ab9d'],
-		'--color-icon-teal': ['#005348', '#7ec6b8'],
-		'--color-text-teal': ['#005348', '#99e2d3'],
-
-		// Cyan H=215 — source #0c6f82. Same overshoot compensation as teal.
-		'--color-background-cyan': ['#a3e0ef', '#83c2d43D'],
-		'--color-border-cyan': ['#91d3e3', '#67a7b8'],
-		'--color-icon-cyan': ['#00505f', '#83c2d4'],
-		'--color-text-cyan': ['#00505f', '#9edef0'],
-
-		// Blue H=255 — source #0074e2.
-		// T50 #0074e2 is reserved for the filled info badge, progress bar and
-		// inset hover.
-		'--color-background-blue': ['#c4ddfb', '#9eb7ff3D'],
-		'--color-border-blue': ['#b1c9e7', '#6d9cfe'],
-		'--color-icon-blue': ['#00458c', '#9eb7ff'],
-		'--color-text-blue': ['#00458c', '#c7d3ff'],
-
-		// Purple H=320 — source #980fb2
-		'--color-background-purple': ['#eccef3', '#f297ff3D'],
-		'--color-border-purple': ['#d8bbdf', '#dd74f0'],
-		'--color-icon-purple': ['#700084', '#f297ff'],
-		'--color-text-purple': ['#700084', '#fac1ff'],
-
-		// Pink H=355 — source #b10e69
-		'--color-background-pink': ['#fccadc', '#ff99c33D'],
-		'--color-border-pink': ['#e7b7c8', '#f273aa'],
-		'--color-icon-pink': ['#83004b', '#ff99c3'],
-		'--color-text-pink': ['#83004b', '#ffc3da'],
-
-		// Gray (categorical neutral, chroma 0).
-		// Dark mode reuses --color-neutral, a 10% white wash, rather than a
-		// solid T15 which was indistinguishable from --color-background-muted.
-		'--color-background-gray': ['#e5e5e5', 'var(--color-neutral)'],
+		'--color-tint-hover': ['#000000', '#ffffff'],
+		'--color-background-red': ['#ffc4be', '#5b2b28'],
+		'--color-border-red': ['#ffaea7', '#fa6762'],
+		'--color-icon-red': ['#76000c', '#ff9890'],
+		'--color-text-red': ['#76000c', '#ffaea7'],
+		'--color-background-orange': ['#ffc7a1', '#503424'],
+		'--color-border-orange': ['#ffc7a1', '#df843f'],
+		'--color-icon-orange': ['#622700', '#ff9e55'],
+		'--color-text-orange': ['#622700', '#ffb37e'],
+		'--color-background-yellow': ['#fae19e', '#453a1c'],
+		'--color-border-yellow': ['#e3c36c', '#c29900'],
+		'--color-icon-yellow': ['#4b3900', '#e2b623'],
+		'--color-text-yellow': ['#4b3900', '#eec448'],
+		'--color-background-green': ['#bce0bb', '#2b422b'],
+		'--color-border-green': ['#aad4a9', '#6ab26b'],
+		'--color-icon-green': ['#00490b', '#90ca90'],
+		'--color-text-green': ['#00490b', '#90ca90'],
+		'--color-background-teal': ['#a9e2d6', '#28413c'],
+		'--color-border-teal': ['#90d7c8', '#4fb1a0'],
+		'--color-icon-teal': ['#00463d', '#81c9bb'],
+		'--color-text-teal': ['#00463d', '#90d7c8'],
+		'--color-background-cyan': ['#9ae2f4', '#274046'],
+		'--color-border-cyan': ['#85d5e9', '#49adc4'],
+		'--color-icon-cyan': ['#004351', '#71c7dd'],
+		'--color-text-cyan': ['#004351', '#85d5e9'],
+		'--color-background-blue': ['#b9d7ff', '#253c5a'],
+		'--color-border-blue': ['#a1caff', '#5aa0f8'],
+		'--color-icon-blue': ['#003978', '#88bcff'],
+		'--color-text-blue': ['#003978', '#a1caff'],
+		'--color-background-purple': ['#f7d5ff', '#4a2f51'],
+		'--color-border-purple': ['#f3bfff', '#d885eb'],
+		'--color-icon-purple': ['#5c0e6c', '#e496f6'],
+		'--color-text-purple': ['#5c0e6c', '#eaacf8'],
+		'--color-background-pink': ['#ffc0d7', '#572b3d'],
+		'--color-border-pink': ['#ffc0d7', '#fc78b1'],
+		'--color-icon-pink': ['#70003f', '#fd92bd'],
+		'--color-text-pink': ['#70003f', '#ffa9ca'],
+		'--color-background-gray': ['#e2e2e2', '#303030'],
 		'--color-border-gray': ['#d4d4d4', '#262626'],
-		'--color-icon-gray': ['#525252', '#a3a3a3'],
-		'--color-text-gray': ['#262626', '#e5e5e5'],
-
-		// ====================================================================
-		// Radius — slightly larger than the defaults.
-		//
-		// `--radius-none` and `--radius-full` are always fixed and must never be
-		// scaled by a theme (see `defineTheme`'s radius config docs) — 0 and
-		// 9999px respectively, matching core's own defaults. Upstream shipped
-		// `0.25rem` here through 0.3.0 and corrected it at 0.4.1.
-		// ====================================================================
+		'--color-icon-gray': ['#474747', '#9e9e9e'],
+		'--color-text-gray': ['#1b1b1b', '#d4d4d4'],
 		'--radius-none': '0px',
 		'--radius-inner': '0.375rem',
 		'--radius-element': '0.625rem',
 		'--radius-container': '0.75rem',
 		'--radius-page': '1.75rem',
 		'--radius-full': '9999px',
-
-		// ====================================================================
-		// Shadows.
-		//
-		// Light mode keeps subtle drops — light surfaces need no rim highlight.
-		// Dark mode deepens the drops and adds an all-round 1px white inset
-		// ("Figma-style bezel") mimicking ambient light catching the surface
-		// rim, which drop shadows alone cannot achieve against a dark canvas.
-		// The inset uses light-dark(transparent, …) so light mode is untouched.
-		// ====================================================================
 		'--shadow-low':
-			'0 2px 4px light-dark(oklch(0 0 0 / 5%), oklch(0 0 0 / 25%)), ' +
-			'0 4px 8px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 40%)), ' +
-			'inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 8%))',
+			'0 2px 4px light-dark(oklch(0 0 0 / 5%), oklch(0 0 0 / 25%)), 0 4px 8px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 40%)), inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 8%))',
 		'--shadow-med':
-			'0 2px 4px light-dark(oklch(0 0 0 / 5%), oklch(0 0 0 / 35%)), ' +
-			'0 4px 12px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 50%)), ' +
-			'inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 12%))',
+			'0 2px 4px light-dark(oklch(0 0 0 / 5%), oklch(0 0 0 / 35%)), 0 4px 12px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 50%)), inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 12%))',
 		'--shadow-high':
-			'0 4px 6px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 50%)), ' +
-			'0 12px 24px light-dark(oklch(0 0 0 / 15%), oklch(0 0 0 / 70%)), ' +
-			'inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 15%))',
+			'0 4px 6px light-dark(oklch(0 0 0 / 10%), oklch(0 0 0 / 50%)), 0 12px 24px light-dark(oklch(0 0 0 / 15%), oklch(0 0 0 / 70%)), inset 0 0 0 1px light-dark(transparent, oklch(1 0 0 / 15%))',
 		'--shadow-inset-hover': 'inset 0px 0px 0px 2px #0074e24D',
 		'--shadow-inset-selected': 'inset 0px 0px 0px 2px #0074e280',
-		'--shadow-inset-success': 'inset 0px 0px 0px 2px #1981004D',
-		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #ffce2f4D',
-		'--shadow-inset-error': 'inset 0px 0px 0px 2px #e33f4a4D'
+		'--shadow-inset-success': 'inset 0px 0px 0px 2px #2f7d334D',
+		'--shadow-inset-warning': 'inset 0px 0px 0px 2px #f8d36a4D',
+		'--shadow-inset-error': 'inset 0px 0px 0px 2px #de47454D'
 	},
 
 	components: {
-		// Destructive uses the OKLCH red filled treatment.
-		button: {
-			'variant:destructive': {
-				backgroundColor: 'var(--color-error-muted)', // locked pastel red bg
-				color: 'var(--color-error)' // locked T30 red, matching banner/input error text
+		item: {
+			selected: {
+				'--color-text-secondary': 'light-dark(#474747, #c6c6c6)'
 			}
 		},
-
-		// ================================================================
-		// Badge.
-		//
-		// Semantic variants are filled at the saturated stop with contrasting
-		// text; text contrast locks the background tone, so these stay put in
-		// both modes rather than inverting like pastel surfaces. Dark mode
-		// uses the T60 stop with DARK text — T60 with white fails AA-large
-		// (~2.7:1), while T60 with dark hits 6.6–7:1 and tames vibration.
-		//
-		// Categorical variants reference the per-hue tokens, so they track the
-		// palette automatically.
-		// ================================================================
+		'tree-list-item': {
+			selected: {
+				'--color-text-secondary': 'light-dark(#474747, #c6c6c6)'
+			}
+		},
+		'file-input': {
+			'mode:dropzone': {
+				'--color-text-secondary': 'light-dark(#474747, #c6c6c6)'
+			}
+		},
+		citation: {
+			'variant:number': {
+				'--color-text-secondary': 'light-dark(#474747, #c6c6c6)'
+			}
+		},
+		button: {
+			'variant:destructive': {
+				backgroundColor: 'var(--color-error-muted)',
+				color: 'var(--color-on-error-muted)'
+			}
+		},
 		badge: {
-			'variant:info': {
-				backgroundColor: 'light-dark(#0074e2, #6d9cfe)',
-				color: 'light-dark(#ffffff, #171717)'
-			},
 			'variant:neutral': {
-				// Mirrors the gray categorical badge, sourced from the gray hue
-				// tokens so one token change updates both variants.
 				backgroundColor: 'var(--color-background-gray)',
 				color: 'var(--color-text-gray)'
 			},
-			'variant:success': {
-				backgroundColor: 'light-dark(#198100, #64af4c)',
-				color: 'light-dark(#ffffff, #171717)'
-			},
-			'variant:warning': {
-				// Yellow keeps the same hex in both modes — chroma reduction is
-				// barely visible at T85, and dark-on-yellow does not vibrate.
-				backgroundColor: '#ffce2f',
-				color: '#171717'
-			},
-			'variant:error': {
-				// Light is the T58 stop, not the saturated T55 #e33f4a: that one
-				// pairs with white at 4.14:1, and a 12px/500 label wants AA's
-				// 4.5 rather than the 3:1 large-text allowance. One step down
-				// holds the hue and reaches 5.29:1. Dark is unchanged at 6.60:1.
-				backgroundColor: 'light-dark(#c9303a, #ff705d)',
-				color: 'light-dark(#ffffff, #171717)'
-			},
-
 			'variant:red': {
 				backgroundColor: 'var(--color-background-red)',
 				color: 'var(--color-text-red)'
@@ -387,101 +308,47 @@ export const neutralTheme = defineTheme({
 				color: 'var(--color-text-gray)'
 			}
 		},
-
-		// ================================================================
-		// StatusDot — fills reuse the filled semantic badge stops so a dot and
-		// its badge read as one status language. The component defaults map to
-		// raw semantic tokens, which in light mode are dark T30/T40 stops meant
-		// to sit as text on a pastel surface; as a solid dot they read muddy.
-		//
-		// `neutral` is deliberately not overridden: the neutral badge background
-		// is a near-invisible light gray, fine as a large pill but unreadable as
-		// an 8px dot, so it keeps the component default's visible mid-gray.
-		// ================================================================
-		statusdot: {
-			'variant:success': { backgroundColor: 'light-dark(#198100, #64af4c)' },
-			'variant:warning': { backgroundColor: '#ffce2f' },
-			'variant:error': { backgroundColor: 'light-dark(#c9303a, #ff705d)' },
-			// StatusDot "accent" is the info/attention colour, so it pairs with
-			// the info badge rather than --color-accent (near-black #262626).
-			'variant:accent': { backgroundColor: 'light-dark(#0074e2, #6d9cfe)' }
-		},
-
-		// ================================================================
-		// Banner — a hue-tinted surface with coloured text and icon. `info`
-		// retints by *redirecting* --color-accent-muted, which is what the
-		// header already paints with; the older shape painted the background
-		// directly and then forced the token transparent so the two would not
-		// stack, which is two declarations doing one declaration's work.
-		// Status overrides reference --color-text-{hue} so text stays in sync
-		// with the palette anchors.
-		// ================================================================
-		banner: {
-			'status:info': {
-				'--color-accent-muted': 'var(--color-background-blue)',
-				'--color-text-primary': 'var(--color-text-blue)',
-				'--color-text-secondary': 'var(--color-text-blue)',
-				'--color-accent': 'var(--color-text-blue)'
-			},
-			// success/warning/error backgrounds already come from
-			// --color-{X}-muted, which carries the right light and dark values;
-			// only the text and icon need redirecting to the coloured stop.
-			'status:success': {
-				'--color-text-primary': 'var(--color-text-green)',
-				'--color-text-secondary': 'var(--color-text-green)',
-				'--color-success': 'var(--color-text-green)'
-			},
-			'status:warning': {
-				'--color-text-primary': 'var(--color-text-yellow)',
-				'--color-text-secondary': 'var(--color-text-yellow)',
-				'--color-warning': 'var(--color-text-yellow)'
-			},
-			'status:error': {
-				'--color-text-primary': 'var(--color-text-red)',
-				'--color-text-secondary': 'var(--color-text-red)',
-				'--color-error': 'var(--color-text-red)'
+		'segmented-control': {
+			base: {
+				padding: 'var(--spacing-1)'
 			}
 		},
-
-		// TextInput needs no per-status overrides: the global
-		// --color-{success,error,warning} tokens already clear AA non-text 3:1
-		// against both surfaces they touch (the input surface and the status
-		// message bubble) in both modes.
-
-		// ================================================================
-		// Switch — the off-state track uses the same lifted neutral surface as
-		// the progress bar track, so both "channel-on-body" components share
-		// one visual language: a defined channel rather than a wash.
-		// ================================================================
+		'segmented-control-item': {
+			base: {
+				'--color-text-secondary': 'light-dark(#474747, #c6c6c6)'
+			},
+			'size:sm': {
+				height: 'calc(var(--size-element-sm) - 8px)'
+			},
+			'size:md': {
+				height: 'calc(var(--size-element-md) - 8px)'
+			},
+			'size:lg': {
+				height: 'calc(var(--size-element-lg) - 8px)'
+			},
+			selected: {
+				boxShadow: 'none'
+			}
+		},
 		switch: {
 			base: {
 				'--color-background-gray': 'var(--color-border-emphasized)'
 			}
 		},
-
-		progressbar: {
+		'progress-bar': {
 			base: {
-				// The default track uses --color-background-muted; redirect it so
-				// the track reads clearly darker than the body rather than
-				// blending in.
 				'--color-background-muted': 'var(--color-border-emphasized)'
-			},
-			// Vivid stops match the filled semantic badge colours.
-			'variant:accent': { '--color-accent': '#0074e2' },
-			'variant:success': { '--color-success': '#198100' },
-			'variant:warning': { '--color-warning': '#ffce2f' },
-			'variant:error': { '--color-error': '#c9303a' }
+			}
 		},
-
-		// Tighter padding via the public container padding tokens.
 		card: {
-			base: { padding: 'var(--spacing-3)' }
+			base: {
+				padding: 'var(--spacing-3)'
+			}
 		},
 		section: {
-			base: { padding: 'var(--spacing-3)' }
+			base: {
+				padding: 'var(--spacing-3)'
+			}
 		}
-
-		// Heading and text overrides are generated by typography.scale; the
-		// bold h3/h4 weights come from typography.heading.weights above.
 	}
 });

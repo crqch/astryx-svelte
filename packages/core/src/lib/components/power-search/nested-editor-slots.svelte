@@ -59,6 +59,7 @@
 		value: string | undefined;
 		onChange: (operatorKey: string) => void;
 		isReadOnly: boolean;
+		hasRootOperatorPicker: boolean;
 	}
 
 	export { subFilterRow, addFilterButton, removeFilterButton, nestedRootLabel };
@@ -99,7 +100,7 @@
 {#snippet nestedRootLabel(arg: RootLabelArg | (() => RootLabelArg))}
 	{@const a = unwrapSlotArg(arg)}
 	<div {...editPopoverNestedRootLabelAttrs()}>
-		{#if a.operatorOptions.length > 1}
+		{#if a.hasRootOperatorPicker && a.operatorOptions.length > 1}
 			<div {...editPopoverOperatorSelectorAttrs()}>
 				<Selector
 					label={a.groupOperatorLabel}

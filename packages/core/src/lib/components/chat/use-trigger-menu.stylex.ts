@@ -11,11 +11,9 @@ import {
 /**
  * Ported from the `styles` block in Astryx's `Chat/useTriggerMenu.tsx`.
  *
- * `border: 'none'` on `item` is upstream's and is kept verbatim even though
- * StyleX silently drops the shorthand and emits no rule — `reset.css`'s
- * universal `border-width: 0; border-style: solid` is what actually clears it,
- * on both sides. Removing the declaration would make our source disagree with
- * upstream's for no change in output.
+ * `item` clears its border with `borderWidth: 0` and `borderStyle: 'none'`.
+ * StyleX drops the `border` shorthand, so the two longhands are what emit the
+ * rules the compiled sheet carries.
  */
 const styles = stylex.create({
 	dropdown: {
@@ -27,10 +25,6 @@ const styles = stylex.create({
 	},
 	popoverSurface: {
 		minWidth: '180px'
-	},
-	popoverGap: {
-		marginBlockStart: spacingVars['--spacing-1'],
-		marginBlockEnd: spacingVars['--spacing-1']
 	},
 	item: {
 		boxSizing: 'border-box',
@@ -45,7 +39,8 @@ const styles = stylex.create({
 		},
 		outline: 'none',
 		backgroundColor: 'transparent',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		textAlign: 'start' as const,
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: typeScaleVars['--text-body-size'],
@@ -110,4 +105,7 @@ export function triggerMenuGroupHeadingAttrs(): SvelteStyleAttrs {
 }
 
 /** The `xstyle` upstream hands to `popover.render` for the positioned surface. */
-export const triggerMenuPopoverStyle: StyleArg[] = [styles.popoverSurface, styles.popoverGap];
+export const triggerMenuPopoverStyle: StyleArg = styles.popoverSurface;
+
+/** The clearance upstream passes to `popover.render`'s `offset`. */
+export const triggerMenuPopoverOffset = spacingVars['--spacing-1'];

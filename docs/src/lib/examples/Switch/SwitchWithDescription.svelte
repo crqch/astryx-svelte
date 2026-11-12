@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Switch } from '@astryx-svelte/core';
+	import { Switch } from '@astryx-sv/core';
 
 	let value = $state(false);
 </script>

@@ -12,7 +12,7 @@
 //     deleted between eslint's enumeration and its read failed the run on a
 //     path that no longer existed. So the tree is checked before anything runs.
 //
-// `--fast` skips `pnpm -r test` (the browser suite alone is ~4,500 cases in
+// `--fast` skips `bun run --filter '*' test` (the browser suite alone is ~4,500 cases in
 // real Chromium) and runs `status.mjs` in its default, non-`--full` tier
 // instead. It exists so a developer can gate a commit locally without paying
 // for what CI pays for. It is not a substitute for the full gate — the
@@ -23,10 +23,10 @@
 // running its server project, both fidelity oracles, every other package's
 // tests, and the full-tier status generation. Unlike `--fast`, this *is* a
 // legitimate stand-in for the unflagged run when something else is covering
-// the browser suite: CI's `lib` job runs `pnpm verify --no-client` in
+// the browser suite: CI's `lib` job runs `bun run verify --no-client` in
 // parallel with a `client` job that runs nothing but the browser suite (see
-// ci.yml), so the two jobs together do exactly what an unflagged `pnpm
-// verify` does, just concurrently instead of serially.
+// ci.yml), so the two jobs together do exactly what an unflagged
+// `bun run verify` does, just concurrently instead of serially.
 
 import { execFileSync } from 'node:child_process';
 import { runStage } from './lib/run-stage.mjs';
@@ -57,29 +57,37 @@ if (scratch.length > 0) {
 // `--no-docs` is the sibling of `--no-client`: the `docs` CI job already runs
 // docs' own build, check, lint and test in parallel, so routing them through
 // here too made the `lib` job redo an entire other job's work sequentially.
-// Locally, with no sibling job to lean on, `pnpm verify` still covers docs.
-const docsFilter = noDocs ? ['--filter=!docs'] : [];
+// Locally, with no sibling job to lean on, `bun run verify` still covers docs.
+//
+// Bun's workspace filter is scoped by package name, not by directory, so the
+// docs exclusion is expressed positively: `@astryx-sv/*` matches every
+// publishable package and never the private docs app.
+const workspaceFilter = noDocs ? '@astryx-sv/*' : '*';
 
 const stages = [
-	runStage('build', 'pnpm', ['-r', ...docsFilter, 'build']),
-	runStage('check', 'pnpm', ['-r', ...docsFilter, 'check']),
-	runStage('lint', 'pnpm', ['-r', ...docsFilter, 'lint']),
-	// `pnpm -r lint` runs prettier inside each package, so the repo root and
-	// `port/*.md` were never checked — cheap to run, so it stays in both modes.
-	runStage('lint:root', 'pnpm', ['lint:root'])
+	runStage('build', 'bun', ['run', noDocs ? 'build:packages' : 'build']),
+	runStage('check', 'bun', ['run', '--filter', workspaceFilter, 'check']),
+	runStage('lint', 'bun', ['run', '--filter', workspaceFilter, 'lint']),
+	// Package lint scripts format their own trees, so the repo root and
+	// `port/*.md` are never checked there — cheap to run, so it stays in both
+	// modes.
+	runStage('lint:root', 'bun', ['run', 'lint:root'])
 ];
 if (!fast) {
 	if (noClient) {
-		// Everything `pnpm -r test` runs except core's `test:client` — that
-		// piece runs in the sibling `client` CI job instead. `test:node` is
-		// core's server project plus both fidelity oracles; the second stage
-		// is every other workspace package's own `test` script.
+		// Everything `bun run --filter '*' test` runs except core's
+		// `test:client` — that piece runs in the sibling `client` CI job
+		// instead. `test:node` is core's server project plus both fidelity
+		// oracles; the second stage is every other workspace package's own
+		// `test` script.
+		const restFilters = ['--filter', '@astryx-sv/cli', '--filter', '@astryx-sv/theme-*'];
+		if (!noDocs) restFilters.push('--filter', 'docs');
 		stages.push(
-			runStage('test:node', 'pnpm', ['-F', '@astryx-svelte/core', 'test:node']),
-			runStage('test:rest', 'pnpm', ['-r', '--filter=!@astryx-svelte/core', ...docsFilter, 'test'])
+			runStage('test:node', 'bun', ['run', '--filter', '@astryx-sv/core', 'test:node']),
+			runStage('test:rest', 'bun', ['run', ...restFilters, 'test'])
 		);
 	} else {
-		stages.push(runStage('test', 'pnpm', ['-r', 'test']));
+		stages.push(runStage('test', 'bun', ['run', '--filter', '*', 'test']));
 	}
 }
 // Always the fast tier, at every mode. `--full` runs the class oracle, the CSS
@@ -87,9 +95,9 @@ if (!fast) {
 // the gate results were moved out of the committed file, it produces a
 // **byte-identical** `port/status.md`. Every one of those five is already run
 // by the test stages above, so calling it here was the same work twice for a
-// file that does not change. `node scripts/status.mjs --full` is still there
+// file that does not change. `bun scripts/status.mjs --full` is still there
 // when you want the gate log; the drift gate does not need it.
-stages.push(runStage('status', 'node', ['scripts/status.mjs']));
+stages.push(runStage('status', 'bun', ['scripts/status.mjs']));
 
 // The drift gate. `status.mjs` has just rewritten the file; if that changed
 // anything, a committed claim no longer matches the tree.

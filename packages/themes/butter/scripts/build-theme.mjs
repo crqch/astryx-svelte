@@ -9,7 +9,7 @@ import { butterPalettes, butterTheme } from '../src/butter-theme.ts';
 
 await buildThemePackage({
 	packageDir: join(dirname(fileURLToPath(import.meta.url)), '..'),
-	packageName: '@astryx-svelte/theme-butter',
+	packageName: '@astryx-sv/theme-butter',
 	themeExport: 'butterTheme',
 	theme: butterTheme,
 	// Upstream's `source.ts` publishes the raw ramps alongside the theme, so this

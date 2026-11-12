@@ -65,11 +65,11 @@ export default {
 			default: 'true'
 		},
 		{
-			name: 'options.isRtl',
+			name: 'options.hasPaging',
 			type: 'boolean',
 			description:
-				'Whether the list is in a right-to-left context. When true, ArrowLeft/ArrowRight are swapped for horizontal navigation so it follows visual direction. When omitted, auto-detected from the container computed direction on keydown.',
-			default: "undefined (auto-detect from the container's computed direction)"
+				'Whether PageDown/PageUp page through a scrolling list: PageDown moves to the last enabled item fully visible in the container, and pressed there again one viewport further; PageUp mirrors it. Neither wraps; in a list that does not scroll they act as End/Home.',
+			default: 'false'
 		},
 		{
 			name: 'options.hasRovingTabIndex',
@@ -158,6 +158,6 @@ export default {
 	},
 	relatedComponents: ['TabMenu', 'Toolbar'],
 	relatedHooks: ['useGridFocus', 'useFocusTrap'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'focus'
 };

@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	import type { PartialFilter } from './types.js';
 	import type { InternalConfig } from './use-internal-config.svelte.js';
+	import type { StyleArg } from '../../internal/sx.js';
 
 	export interface NestedEditorProps {
 		config: InternalConfig;
@@ -10,6 +11,9 @@
 		onPartialFilterChange: (filter: PartialFilter) => void;
 		maxMenuItems?: number;
 		isReadOnly: boolean;
+		/** Whether the root row offers the group-operator picker. The sheet value step owns it. */
+		hasRootOperatorPicker?: boolean;
+		xstyle?: StyleArg;
 	}
 </script>
 
@@ -76,7 +80,9 @@
 		onOperatorChange,
 		onPartialFilterChange,
 		maxMenuItems,
-		isReadOnly
+		isReadOnly,
+		hasRootOperatorPicker = true,
+		xstyle
 	}: NestedEditorProps = $props();
 
 	const t = useTranslator();
@@ -250,7 +256,8 @@
 			groupFallbackLabel: t('@astryx.powersearch.editor.group'),
 			value: partialFilter.operator,
 			onChange: onOperatorChange,
-			isReadOnly
+			isReadOnly,
+			hasRootOperatorPicker
 		}));
 
 		return [
@@ -264,4 +271,4 @@
 	});
 </script>
 
-<TreeList {items} density="balanced" />
+<TreeList {items} density="balanced" {xstyle} />

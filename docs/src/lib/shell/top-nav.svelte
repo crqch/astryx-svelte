@@ -9,7 +9,7 @@
 		TopNavItem,
 		useAppShellMobile,
 		useTopNavRenderMode
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { page } from '$app/state';
 	import { NAV_ITEMS, REPO_URL, isActive } from './nav-items.js';
 	import { homeHref, topicHref } from './links.js';

@@ -31,12 +31,6 @@ export default {
 			},
 			{
 				className: 'astryx-text-area-counter'
-			},
-			{
-				className: 'astryx-textarea',
-				visualProps: ['size', 'status'],
-				states: ['disabled', 'readonly'],
-				deprecatedFor: 'text-area'
 			}
 		],
 		vars: [
@@ -57,6 +51,70 @@ export default {
 		]
 	},
 	usage: {
+		anatomy: [
+			{
+				name: 'Label',
+				required: true,
+				description: 'Text identifying the multi-line field.'
+			},
+			{
+				name: 'Description',
+				required: false,
+				description: 'Helper text between the label and the input.'
+			},
+			{
+				name: 'Input container',
+				required: true,
+				description: 'Painted boundary containing the text area and its overlays.'
+			},
+			{
+				name: 'Text area',
+				required: true,
+				description: 'Multi-line control that displays and edits the value.'
+			},
+			{
+				name: 'Placeholder',
+				required: false,
+				description: 'Hint text shown inside the empty text area.'
+			},
+			{
+				name: 'Start icon',
+				required: false,
+				description:
+					'Astryx Icon rendered at the start when startIcon is a semantic name or icon component.'
+			},
+			{
+				name: 'Custom start content',
+				required: false,
+				description: 'Caller-provided ReactNode rendered at the start instead of an Astryx Icon.'
+			},
+			{
+				name: 'Spinner',
+				required: false,
+				description: 'Loading indicator shown at the end of the input container.'
+			},
+			{
+				name: 'Status icon',
+				required: false,
+				description: 'Error, warning, or success icon shown inside the input.'
+			},
+			{
+				name: 'Character counter',
+				required: false,
+				description: 'Current and maximum character counts shown inside the input container.'
+			},
+			{
+				name: 'Field status message',
+				required: false,
+				description:
+					'Attached or detached error, warning, or success message associated with the field.'
+			},
+			{
+				name: 'Tooltip status message',
+				required: false,
+				description: 'Tooltip surface presenting the status message for the tooltip variant.'
+			}
+		],
 		description:
 			'TextArea is a multi-line text input for collecting longer-form content like comments, descriptions, or messages. Use it when the expected input spans multiple lines. For shorter, single-line values, use TextInput.',
 		bestPractices: [
@@ -69,6 +127,11 @@ export default {
 				guidance: true,
 				description:
 					'Set maxLength with a character counter when there is a defined limit; it helps users stay within bounds before they submit.'
+			},
+			{
+				guidance: true,
+				description:
+					'Keep Return a line break in a multi-line field. Relabel it with enterKeyHint (send, done) only when your own Enter handling does what the label says.'
 			},
 			{
 				guidance: true,
@@ -98,7 +161,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					"Don't wrap a disabled TextArea in Tooltip to explain why it's disabled; disabled controls swallow the hover events the wrapper needs. Use the disabledMessage prop instead."
+					"Don't wrap a disabled TextArea in Tooltip to explain why it's disabled. Use the disabledMessage prop, which attaches the reason to the field itself."
 			}
 		]
 	},
@@ -166,14 +229,14 @@ export default {
 			name: 'isReadOnly',
 			type: 'boolean',
 			description:
-				'Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and stays in the tab order. isDisabled takes precedence when both are set.',
+				'Makes the textarea read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only textarea is not dimmed and keeps its form value. isDisabled takes precedence when both are set.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the textarea is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the textarea focusable via aria-disabled (the field becomes read-only). Use this instead of wrapping a disabled TextArea in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the textarea is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the textarea focusable via aria-disabled (the field becomes read-only). Use this instead of wrapping a disabled TextArea in Tooltip, so the reason is attached to the field itself.'
 		},
 		{
 			name: 'isLoading',
@@ -268,10 +331,66 @@ export default {
 			description: 'Callback fired when the textarea loses focus.'
 		},
 		{
-			name: 'xstyle',
+			name: 'autoComplete',
+			type: 'string',
+			description:
+				'The native autocomplete attribute, forwarded to the textarea unchanged. Does not affect the controlled value.'
+		},
+		{
+			name: 'enterKeyHint',
+			type: "'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send'",
+			description:
+				'What the Return key of a touch keyboard says (the native `enterkeyhint`). iOS gives `done`, `go`, `next`, `search` and `send` their own key (a glyph on iOS 26: a checkmark, an arrow, a chevron, a magnifier, an up arrow); `enter` and `previous` keep the plain Return key. Chrome on Android (Gboard) gives every value its own key; with no hint a TextArea keeps Return. It only labels the key: what Enter does stays with your handlers.'
+		},
+		{
+			name: 'inputMode',
+			type: "'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'",
+			description:
+				'Which touch keyboard the field asks for (the native `inputmode`) without changing what it accepts: `numeric` brings up the number pad, `decimal` the decimal pad, `tel` the phone pad, `search` the web-search keyboard (whose Return key reads Go on iOS even with `enterKeyHint="search"`).'
+		},
+		{
+			name: 'autoCapitalize',
+			type: "'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'",
+			description:
+				'When a touch keyboard capitalizes as you type (the native `autocapitalize`). Unset, iOS capitalizes sentences. `off` and `none` never capitalize; `on` and `sentences` capitalize each sentence.'
+		},
+		{
+			name: 'hasAutoCorrect',
+			type: 'boolean',
+			description:
+				'Whether a touch keyboard corrects words as you type (the native `autocorrect`). Unset, the browser decides; turn it off for usernames, codes and other values that are not words.'
+		},
+		{
+			name: 'containerXstyle',
 			type: 'StyleArg',
 			description:
-				'StyleX styles for layout customization (margins, positioning, sizing). Must be a stylex.create() value, not an inline style object like style={{}}.'
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

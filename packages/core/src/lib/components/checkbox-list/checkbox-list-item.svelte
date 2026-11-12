@@ -87,6 +87,9 @@
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import CheckboxInput from '../checkbox-input/checkbox-input.svelte';
 	import { useList } from '../list/list-context.svelte.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
+	import { setCheckboxRowPress } from '../checkbox-input/checkbox-row-press-context.svelte.js';
 	import ListItem from '../list/list-item.svelte';
 	import { useCheckboxList } from './checkbox-list-context.svelte.js';
 	import { checkboxListItemXstyle } from './checkbox-list-item.stylex.js';
@@ -244,6 +247,15 @@
 		}
 	};
 	const hasRowInteraction = $derived(isInteractive || onclickProp != null);
+	// Under a finger, a delegating row is the option's only press surface. A
+	// touch anywhere on it presses the row. A fine pointer keeps the box's own
+	// press.
+	const touch = useMediaQuery(() => TOUCH_QUERY);
+	const isTouch = $derived(touch.matches);
+	const rowOwnsPress = $derived(isTouch && hasRowInteraction && !effectiveDisabled);
+	// The checkbox inside the row must not carry a press marker of its own, or
+	// the controller's innermost-wins rule would find it instead of the row.
+	setCheckboxRowPress(() => rowOwnsPress);
 	// A getter, not the element: upstream passes a `RefObject` read at use time,
 	// and `Item`'s `interactiveRef` is this port's getter counterpart.
 	const interactiveRef = $derived(hasRowInteraction ? () => checkboxEl : undefined);
@@ -280,7 +292,7 @@
 	isDisabled={effectiveDisabled}
 	{interactiveRef}
 	aria-busy={isBusy || undefined}
-	xstyle={checkboxListItemXstyle(isSelected, xstyle)}
+	xstyle={checkboxListItemXstyle(isSelected, rowOwnsPress, xstyle)}
 	class={className}
 	style={styleProp}
 	startContent={checkbox}

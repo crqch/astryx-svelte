@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Grid } from '@astryx-svelte/core';
+	import { Card, Grid } from '@astryx-sv/core';
 </script>
 
 <Grid columns={3} gap={2} width={400}>

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { TreeList } from '@astryx-svelte/core';
+	import { TreeList } from '@astryx-sv/core';
 
 	const noop = () => {};
 </script>

@@ -1,7 +1,7 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
 	import type { ClipboardEventHandler, FocusEventHandler, FormEventHandler } from 'svelte/elements';
-	import type { BaseProps } from '../../base-props.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	// `TextAreaSize` is published from `text-area.stylex.ts`, where it is derived
@@ -18,10 +18,12 @@
 	}
 
 	/**
-	 * `BaseProps` is left unparameterised, as upstream leaves it — so `rest` is
-	 * typed as generic HTML attributes and `cols`/`wrap`/`autocomplete` are
-	 * deliberately absent from the public type even though they reach the
-	 * element.
+	 * `FieldInputBaseProps` is left unparameterised, as upstream leaves it — so
+	 * `rest` is typed as generic HTML attributes and
+	 * `cols`/`wrap`/`autocomplete` are deliberately absent from the public type
+	 * even though they reach the element. It carries the Field-composed styling
+	 * contract: no root `xstyle`/`class`/`style`, `container*` for the Field box
+	 * and `control*` for the bordered control box.
 	 *
 	 * The four handlers are omitted so the narrowed redeclarations below can
 	 * replace rather than conflict with them. Upstream needs no such omit: its
@@ -29,7 +31,7 @@
 	 * `HTMLAttributes` declares, so writing them narrows in place.
 	 */
 	export interface TextAreaProps extends Omit<
-		BaseProps<HTMLElement>,
+		FieldInputBaseProps<HTMLElement>,
 		'onchange' | 'oninput' | 'onfocus' | 'onblur' | 'onpaste'
 	> {
 		/** Label text for the field (always rendered for accessibility). */
@@ -172,6 +174,7 @@
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import Icon from '../icon/icon.svelte';
 	import Spinner from '../spinner/spinner.svelte';
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
@@ -237,11 +240,25 @@
 		htmlName,
 		onfocus,
 		onblur,
-		class: className,
-		style: styleProp,
-		xstyle,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		...rest
 	}: TextAreaProps = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout decision reactive.
+	const field = useFieldInputStyling('TextArea', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -430,7 +447,7 @@
 			{ legacyNames: ['textarea'] }
 		)
 	);
-	const wrapperAttrs = $derived(textAreaWrapperAttrs(status?.type, isDisabled, xstyle));
+	const wrapperAttrs = $derived(textAreaWrapperAttrs(status?.type, isDisabled, controlXstyle));
 	const areaAttrs = $derived(
 		textAreaAttrs(
 			size,
@@ -473,13 +490,16 @@
 	{statusVariant}
 	{labelTooltip}
 	{width}
+	xstyle={fieldContainer.xstyle}
+	class={fieldContainer.className}
+	style={fieldContainer.style}
 >
 	<div
 		bind:this={container}
 		{...inputContainer}
 		{...theme}
-		class={cx(theme.class, wrapperAttrs.class, className)}
-		style={mergeStyle(wrapperAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, wrapperAttrs.class, controlClassName)}
+		style={mergeStyle(wrapperAttrs.style, controlStyle)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		{#if startIcon}
@@ -490,7 +510,7 @@
 		     offering it — declining to forward it would drop documented API. -->
 		<!-- svelte-ignore a11y_autofocus -->
 		<textarea
-			{...rest}
+			{...fieldRest}
 			bind:this={textarea}
 			{id}
 			name={isDisabled ? undefined : htmlName}

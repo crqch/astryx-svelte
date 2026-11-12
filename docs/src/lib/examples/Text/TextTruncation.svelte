@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Text } from '@astryx-svelte/core';
+	import { Text } from '@astryx-sv/core';
 
 	const LONG_TEXT =
 		'The design system provides a consistent set of typography tokens, spacing scales, and color palettes that ensure every surface in the product feels cohesive regardless of which team built it.';

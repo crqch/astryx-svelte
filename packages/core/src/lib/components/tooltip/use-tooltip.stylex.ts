@@ -7,7 +7,6 @@ import {
 	typeScaleVars,
 	typographyVars
 } from '../../styles/tokens.stylex.js';
-import type { LayerPlacement } from '../layer/use-layer.svelte.js';
 
 /**
  * The tooltip surface's own styles, from Astryx's `Tooltip/useTooltip.tsx`.
@@ -29,19 +28,6 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-body-size'],
 		lineHeight: typeScaleVars['--text-body-leading']
 	},
-	// Position-based margin styles
-	marginBlock: {
-		marginBlockStart: spacingVars['--spacing-1'],
-		marginBlockEnd: spacingVars['--spacing-1'],
-		marginInlineStart: 0,
-		marginInlineEnd: 0
-	},
-	marginInline: {
-		marginBlockStart: 0,
-		marginBlockEnd: 0,
-		marginInlineStart: spacingVars['--spacing-1'],
-		marginInlineEnd: spacingVars['--spacing-1']
-	},
 	// Content wrapper for padding
 	content: {
 		paddingBlockStart: spacingVars['--spacing-1'],
@@ -54,19 +40,14 @@ const styles = stylex.create({
 });
 
 /**
- * The popover container's `xstyle` — upstream's `popoverXstyle`, the memoised
- * `[styles.container, marginStyle]` pair.
+ * The popover container's `xstyle` — upstream's `popoverXstyle`.
  *
- * The margin gap is chosen from the *hook's* placement, not the one a given
- * render passes: upstream computes `marginStyle` once from the option and only
- * `layerAnimations` follows the per-render placement. That is transcribed
- * rather than tidied, so a `<TooltipLayer placement>` override changes the
- * animation direction and not the gap, exactly as it does upstream.
+ * The gap is the layer's `offset` (0.7.13 moved it out of the surface's own
+ * margins), so nothing here depends on placement; only `layerAnimations`
+ * follows the per-render placement.
  */
-export function tooltipSurfaceXstyle(placement: LayerPlacement): StyleArg {
-	const marginStyle =
-		placement === 'above' || placement === 'below' ? styles.marginBlock : styles.marginInline;
-	return [styles.container, marginStyle];
+export function tooltipSurfaceXstyle(): StyleArg {
+	return styles.container;
 }
 
 /** The inner padding wrapper `renderTooltip` puts around its children. */

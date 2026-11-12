@@ -23,4 +23,4 @@
 	let value = $state<ISODateTimeString | undefined>(initialValue);
 </script>
 
-<DateTimeInput label="Meeting" {value} onChange={(next) => (value = next)} />
+<DateTimeInput label="Meeting" {value} onChange={(next) => (value = next)} nativePicker="never" />

@@ -13,7 +13,7 @@ export default {
 	params: [
 		{
 			name: 'placement',
-			type: "'below' | 'above' | 'end' | 'start'",
+			type: "'end' | 'start' | 'below' | 'above'",
 			description:
 				"Position relative to the trigger. Logical: start/end resolve against the popover's own inherited direction (RTL mirrors in pure CSS).",
 			default: "'above'"
@@ -41,14 +41,14 @@ export default {
 			name: 'focusTrigger',
 			type: "'auto' | 'always' | 'never'",
 			description:
-				'When focus should open the hover card. auto only attaches focus listeners to naturally focusable elements.',
+				'When focus should open the hover card. auto opens when the trigger itself takes focus, or focus lands inside a trigger that is focusable at that moment, so a roving-tabindex member opens when the arrow keys reach it.',
 			default: "'auto'"
 		},
 		{
 			name: 'touchTrigger',
 			type: "'none' | 'auto' | 'tap'",
 			description:
-				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own; tap always opens; none never opens on touch.',
+				'What a tap does where there is no hover. auto opens on tap unless the trigger performs an action of its own (an aria-disabled control performs none); tap always opens; none never opens on touch.',
 			default: "'auto'"
 		},
 		{
@@ -154,6 +154,6 @@ export default {
 	},
 	relatedComponents: ['HoverCard', 'Tooltip', 'Popover'],
 	relatedHooks: ['useLayer', 'useTooltip', 'usePopover'],
-	importPath: '@astryx-svelte/core',
+	importPath: '@astryx-sv/core',
 	category: 'interaction'
 };

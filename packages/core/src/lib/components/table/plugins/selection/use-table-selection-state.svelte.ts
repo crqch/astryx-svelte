@@ -18,6 +18,13 @@ import type { UseTableSelectionConfig } from './use-table-selection.js';
  * - **The two `useRef`s are gone.** `frozenSelectedIDsRef` and
  *   `allSelectableIDsRef` exist only to keep `onSelectAll` referentially stable
  *   while still reading current values; a closure over a `$derived` is both.
+ * - **`selectionState` is one stable object whose members are getters**, rather
+ *   than upstream's `useMemo` returning a new object whenever `selectedKeys`
+ *   changes. Upstream's consumers destructure it, and a plain property here
+ *   would freeze the first count; getters keep the object's identity stable
+ *   (the shape `selectionConfig` already has) while each read still sees the
+ *   current set. Same argument as `useTableSortableState`'s result, with the
+ *   destructuring friendliness of `selectionConfig`.
  *
  * Every `Set` here is a plain one, and `svelte/prefer-svelte-reactivity` is
  * disabled at each site. Two reasons: `selectedKeys` is `Set<string>` in
@@ -73,9 +80,22 @@ export interface UseTableSelectionStateConfig<T extends Record<string, unknown>>
 	setSelectedKeys: (next: Set<string>) => void;
 }
 
+export interface TableSelectionState {
+	/** Complete controlled selection, including keys outside the current view. */
+	readonly selectedKeys: ReadonlySet<string>;
+	/** Number of keys in the complete controlled selection. */
+	readonly selectedCount: number;
+	/** Whether the complete controlled selection contains any keys. */
+	readonly hasSelection: boolean;
+	/** Clear every selected key, including keys outside the current view. */
+	clearSelection: () => void;
+}
+
 export interface UseTableSelectionStateResult<T extends Record<string, unknown>> {
 	/** Ready-to-use config for `useTableSelection`. */
 	selectionConfig: UseTableSelectionConfig<T>;
+	/** Shared state for selection-aware UI outside the behavior plugin. */
+	selectionState: TableSelectionState;
 }
 
 // =============================================================================
@@ -176,5 +196,25 @@ export function useTableSelectionState<T extends Record<string, unknown>>(
 		getIsItemEnabled: (item) => (config().getIsItemEnabled ?? stableTrue)(item)
 	};
 
-	return { selectionConfig };
+	const clearSelection = (): void => {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		config().setSelectedKeys(new Set<string>());
+	};
+
+	// One stable object, live members — see the header. A destructure of this
+	// result keeps working, and so does reading it later.
+	const selectionState: TableSelectionState = {
+		get selectedKeys(): ReadonlySet<string> {
+			return config().selectedKeys;
+		},
+		get selectedCount(): number {
+			return config().selectedKeys.size;
+		},
+		get hasSelection(): boolean {
+			return config().selectedKeys.size > 0;
+		},
+		clearSelection
+	};
+
+	return { selectionConfig, selectionState };
 }

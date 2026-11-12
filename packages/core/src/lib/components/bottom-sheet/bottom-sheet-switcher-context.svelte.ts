@@ -31,7 +31,13 @@ import type { DialogPurpose } from '../dialog/dialog.svelte';
  * - `hidden` — mounted but not shown
  */
 export type BottomSheetSwitcherPhase =
-	'entering' | 'active' | 'covered' | 'aligning' | 'fading' | 'exiting' | 'hidden';
+	| 'entering'
+	| 'active'
+	| 'covered'
+	| 'aligning'
+	| 'fading'
+	| 'exiting'
+	| 'hidden';
 
 /** Reported by a sheet when one of its choreographed transitions finishes. */
 export interface BottomSheetSwitcherTransitionEvent {
@@ -42,6 +48,13 @@ export interface BottomSheetSwitcherTransitionEvent {
 export interface BottomSheetSwitcherContextValue {
 	activeSheet: string | null;
 	hasScrim: boolean;
+	/**
+	 * The one native dialog every step renders inside. Upstream gives each step
+	 * its own dialog and registers it here; this port's switcher owns the
+	 * dialog, so the modal-announcement provider each step mounts reads it from
+	 * here.
+	 */
+	getDialog: () => HTMLDialogElement | null;
 	onActiveSheetChange: (sheetId: string | null) => void;
 	getSheetPhase: (sheetId: string) => BottomSheetSwitcherPhase;
 	getSheetAlignmentOffset: (sheetId: string) => number;

@@ -14,7 +14,12 @@
 	export interface GroupMember {
 		/** @default 'button' */
 		kind?:
-			'button' | 'icon-button' | 'raw' | 'tooltip-wrapped' | 'hover-card-wrapped' | 'dropdown-menu';
+			| 'button'
+			| 'icon-button'
+			| 'raw'
+			| 'tooltip-wrapped'
+			| 'hover-card-wrapped'
+			| 'dropdown-menu';
 		label: string;
 		variant?: ButtonVariant;
 		href?: string;

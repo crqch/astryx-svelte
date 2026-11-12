@@ -10,15 +10,17 @@ import FruitFixture, { type FruitValue } from './fixtures/complex-selector-fruit
 import ShellFixture from './fixtures/complex-selector-shell.svelte';
 
 /**
- * Astryx's `ComplexSelector/ComplexSelector.test.tsx`, ported case for case —
- * **all 12 upstream cases at the 0.5.0 pin**, none dropped and none added. There is no
- * ref-callback and no `displayName` case in the file, so nothing is React-only.
+ * Astryx's `ComplexSelector/ComplexSelector.test.tsx`, ported case for case,
+ * none dropped and none added; the shortfall against the pin lives in
+ * `port/status.md`. There is no ref-callback and no `displayName` case in the
+ * file, so nothing is React-only.
  *
- * (At v0.4.2 this was 6. The six added at 0.4.5 cover the `ghost` variant, the
- * `startIcon` slot, `alignment`, and the imperative handle — including the
- * re-open guard, which is the one with a real failure behind it: light dismiss
- * fires on pointerdown and the trigger's click lands after, so without the guard
- * the pair reads as close-then-open and the surface never shuts.)
+ * The cases added at 0.4.5 cover the `ghost` variant, the `startIcon` slot,
+ * `alignment`, and the imperative handle — including the re-open guard, which
+ * is the one with a real failure behind it: light dismiss fires on pointerdown
+ * and the trigger's click lands after, so without the guard the pair reads as
+ * close-then-open and the surface never shuts. The trigger is queried by
+ * `combobox`, which is its role upstream and here.
  *
  * Runs in the **client (real Chromium)** project, for the reason
  * `selector.svelte.test.ts` and `popover.svelte.test.ts` do: the popup opens
@@ -73,12 +75,12 @@ describe('ComplexSelector', () => {
 			props: { value: APPLE_RIPE, onChange }
 		});
 
-		await userEvent.click(screen.getByRole('button', { name: 'Fruit blend', exact: true }));
+		await userEvent.click(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }));
 		await userEvent.click(screen.getByRole('gridcell', { name: 'Banana Juicy', exact: true }));
 
 		expect(onChange).toHaveBeenCalledWith({ fruit: 'Banana', ripeness: 'Juicy' });
 		await expect
-			.element(screen.getByRole('button', { name: 'Fruit blend', exact: true }))
+			.element(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }))
 			.toHaveAttribute('aria-expanded', 'false');
 	});
 
@@ -86,7 +88,7 @@ describe('ComplexSelector', () => {
 		const screen = await render(FruitFixture, {
 			props: { value: APPLE_RIPE, onChange: () => {} }
 		});
-		await userEvent.click(screen.getByRole('button', { name: 'Fruit blend', exact: true }));
+		await userEvent.click(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }));
 		const popup = screen.container.querySelector('[popover]') as HTMLElement;
 		expect(popup).not.toBeNull();
 		// Both edges, not just the leading one: the trailing edge is what faces
@@ -101,7 +103,9 @@ describe('ComplexSelector', () => {
 		// laid out.
 		const blockStart = popup.style.getPropertyValue('--x-marginBlockStart');
 		expect(blockStart).not.toBe('');
-		expect(popup.style.getPropertyValue('--x-marginBlockEnd')).toBe(blockStart);
+		// Only the edge facing the trigger carries the clearance; the far edge
+		// rides the viewport gutter as a class, so it has no inline variable.
+		expect(popup.style.getPropertyValue('--x-marginBlockEnd')).toBe('');
 	});
 
 	it('runs changeAction through the provided onChange helper', async () => {
@@ -112,7 +116,7 @@ describe('ComplexSelector', () => {
 			props: { value: APPLE_RIPE, onChange, changeAction }
 		});
 
-		await userEvent.click(screen.getByRole('button', { name: 'Fruit blend', exact: true }));
+		await userEvent.click(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }));
 		await userEvent.click(screen.getByRole('gridcell', { name: 'Banana Crisp', exact: true }));
 
 		expect(onChange).toHaveBeenCalledWith({ fruit: 'Banana', ripeness: 'Crisp' });
@@ -127,7 +131,7 @@ describe('ComplexSelector', () => {
 	it('passes a close helper to composed content', async () => {
 		const screen = await render(CloseFixture);
 
-		const trigger = screen.getByRole('button', { name: 'Fruit blend', exact: true });
+		const trigger = screen.getByRole('combobox', { name: 'Fruit blend', exact: true });
 		await userEvent.click(trigger);
 		await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
 
@@ -146,7 +150,7 @@ describe('ComplexSelector popup theme target', () => {
 				children: doneContent
 			}
 		});
-		await userEvent.click(screen.getByRole('button', { name: 'Fruit blend', exact: true }));
+		await userEvent.click(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }));
 
 		const popup = screen.container.querySelector('.astryx-complex-selector-popup') as HTMLElement;
 		expect(popup).not.toBeNull();
@@ -157,7 +161,10 @@ describe('ComplexSelector popup theme target', () => {
 		// that inner box cannot paint the popup's background or radius, which is
 		// what a theme reaches for this class to do.
 		expect(popup).toHaveAttribute('role', 'dialog');
-		expect(popup).toHaveClass('astryx-popover-surface');
+		// 0.7.13 removed the private `astryx-popover-surface` class; the shared
+		// surface is the `popover` theme target, and the component-specific
+		// target is the class this test queried by.
+		expect(popup).not.toHaveClass('astryx-popover-surface');
 		expect(popup.querySelector('[id]')).not.toBeNull();
 		expect(popup).toContainElement(
 			screen.getByRole('button', { name: 'Done', exact: true }).element() as HTMLElement
@@ -179,7 +186,7 @@ describe('ComplexSelector popup theme target', () => {
 				children: doneContent
 			}
 		});
-		await userEvent.click(screen.getByRole('button', { name: 'Fruit blend', exact: true }));
+		await userEvent.click(screen.getByRole('combobox', { name: 'Fruit blend', exact: true }));
 
 		expect(screen.container.querySelector('.astryx-complex-selector-popup')).not.toBeNull();
 	});
@@ -237,7 +244,7 @@ describe('ComplexSelector popup theme target', () => {
 		it('exposes imperative open, close, toggle, and isOpen via bind:this', async () => {
 			const screen = await render(ShellFixture);
 			const handle = screen.component.handle()!;
-			const trigger = screen.getByRole('button', { name: 'View options', exact: true });
+			const trigger = screen.getByRole('combobox', { name: 'View options', exact: true });
 
 			await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
 			expect(handle.isOpen()).toBe(false);
@@ -260,7 +267,7 @@ describe('ComplexSelector popup theme target', () => {
 		it('does not open via the imperative handle when disabled', async () => {
 			const screen = await render(ShellFixture, { props: { isDisabled: true } });
 			const handle = screen.component.handle()!;
-			const trigger = screen.getByRole('button', { name: 'View options', exact: true });
+			const trigger = screen.getByRole('combobox', { name: 'View options', exact: true });
 
 			handle.open();
 			handle.toggle();
@@ -271,7 +278,7 @@ describe('ComplexSelector popup theme target', () => {
 		it('does not reopen from the trigger click that follows light dismiss', async () => {
 			const screen = await render(ShellFixture);
 			const handle = screen.component.handle()!;
-			const trigger = screen.getByRole('button', { name: 'View options', exact: true });
+			const trigger = screen.getByRole('combobox', { name: 'View options', exact: true });
 
 			await userEvent.click(trigger);
 			await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
@@ -285,6 +292,64 @@ describe('ComplexSelector popup theme target', () => {
 			await userEvent.click(trigger);
 			await expect.element(trigger).toHaveAttribute('aria-expanded', 'false');
 			expect(handle.isOpen()).toBe(false);
+		});
+	});
+
+	/**
+	 * `ComplexSelector/ComplexSelector.fr10.test.tsx`'s field-part cases, at the
+	 * surface this port added: the `container*` props reach the Field box and the
+	 * `control*` props reach the bordered control box around the trigger. The
+	 * type-level `expectFieldInputProps` case has no runtime counterpart; the
+	 * props are declared through `FieldInputBaseProps` in the component's public
+	 * type.
+	 */
+	describe('field parts (FR10)', () => {
+		it('puts control* on the themed control box around the trigger, not on the trigger or the popup', async () => {
+			const screen = await render(ComplexSelector, {
+				props: {
+					label: 'Fruit blend',
+					value: 'Apple',
+					triggerLabel: 'Apple',
+					controlClassName: 'fr10-control',
+					containerClassName: 'fr10-container',
+					children: doneContent
+				}
+			});
+			const trigger = screen.getByRole('combobox', { name: 'Fruit blend', exact: true });
+			const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+			expect(controlBox).not.toBeNull();
+			expect(controlBox).toHaveClass('astryx-complex-selector');
+			expect(controlBox).toContainElement(trigger.element() as HTMLElement);
+			expect(trigger.element()).not.toHaveClass('fr10-control');
+			expect(screen.container.querySelectorAll('.fr10-control')).toHaveLength(1);
+			expect(screen.container.querySelectorAll('.fr10-container')).toHaveLength(1);
+			// The container class reaches the Field box that wraps the label and
+			// the control, not the popup or the trigger.
+			const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+			expect(fieldBox).toContainElement(controlBox);
+
+			await userEvent.click(trigger);
+			await expect.element(trigger).toHaveAttribute('aria-expanded', 'true');
+			expect(screen.getByRole('dialog').element()).not.toHaveClass('fr10-control');
+		});
+
+		it('applies controlStyle and containerStyle to their boxes', async () => {
+			const screen = await render(ComplexSelector, {
+				props: {
+					label: 'Fruit blend',
+					value: 'Apple',
+					triggerLabel: 'Apple',
+					controlClassName: 'fr10-control',
+					controlStyle: 'outline-color: red',
+					containerClassName: 'fr10-container',
+					containerStyle: 'gap: 3px',
+					children: doneContent
+				}
+			});
+			const controlBox = screen.container.querySelector('.fr10-control') as HTMLElement;
+			expect(controlBox.getAttribute('style')).toContain('outline-color: red');
+			const fieldBox = screen.container.querySelector('.fr10-container') as HTMLElement;
+			expect(fieldBox.getAttribute('style')).toContain('gap: 3px');
 		});
 	});
 });

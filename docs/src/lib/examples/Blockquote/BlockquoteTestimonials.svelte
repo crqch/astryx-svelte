@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Blockquote, Card, Grid, GridSpan } from '@astryx-svelte/core';
+	import { Blockquote, Card, Grid, GridSpan } from '@astryx-sv/core';
 </script>
 
 <Grid columns={2} gap={3} style="max-width: 600px">

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { CommandPalette, Text, createStaticSource } from '@astryx-svelte/core';
+	import { CommandPalette, Text, createStaticSource } from '@astryx-sv/core';
 
 	const emptySource = createStaticSource([]);
 </script>

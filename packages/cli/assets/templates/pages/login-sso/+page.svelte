@@ -24,7 +24,7 @@
 		Text,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { ShieldCheckIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	// -------------------------------------------------------------------------

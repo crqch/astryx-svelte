@@ -19,7 +19,7 @@
 </script>
 
 <script lang="ts">
-	import { Avatar, AvatarGroup, Divider, HStack, Link, Text } from '@astryx-svelte/core';
+	import { Avatar, AvatarGroup, Divider, HStack, Link, Text } from '@astryx-sv/core';
 	import { resolveAuthor } from '../../content/blog/authors.js';
 
 	/**

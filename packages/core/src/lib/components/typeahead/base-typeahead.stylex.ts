@@ -1,6 +1,8 @@
 import * as stylex from '@stylexjs/stylex';
 import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { layerViewportInset } from '../layer/layer-viewport-inset.stylex.js';
 import {
+	borderVars,
 	colorVars,
 	fontWeightVars,
 	radiusVars,
@@ -26,7 +28,9 @@ const styles = stylex.create({
 		fontFamily: typographyVars['--font-family-body'],
 		fontSize: {
 			default: typeScaleVars['--text-body-size'],
-			'@media (pointer: coarse)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			'@media (pointer: coarse)': {
+				'@supports (-webkit-touch-callout: none)': `max(1rem, ${typeScaleVars['--text-body-size']})`
+			}
 		},
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-primary'],
@@ -41,12 +45,26 @@ const styles = stylex.create({
 	},
 	dropdown: {
 		boxSizing: 'border-box',
-		maxHeight: '300px',
+		// Matches the room-below cap (300 px), and is no taller than its layer's
+		// block-size cap either, which folds in the software keyboard: the list
+		// ends above the keyboard with the layer.
+		maxHeight: stylex.firstThatWorks(
+			`min(300px, ${layerViewportInset.maxBlockSize})`,
+			`min(300px, ${layerViewportInset.maxBlockSizeFallback})`
+		),
 		overflowY: 'auto',
 		padding: spacingVars['--spacing-1']
 	},
 	popover: {
-		minWidth: 'anchor-size(width)'
+		boxSizing: 'border-box',
+		// The menu prefers the input's width and renders an explicit menuWidth at
+		// its size, both clamped to the layer runtime's viewport cap rather than
+		// to the room beside the input.
+		minWidth: stylex.firstThatWorks(
+			`min(anchor-size(width), ${layerViewportInset.maxInlineSize})`,
+			`min(anchor-size(width), ${layerViewportInset.maxInlineSizeFallback})`,
+			'anchor-size(width)'
+		)
 	},
 	popoverGap: {
 		marginBlockStart: spacingVars['--spacing-1'],
@@ -81,11 +99,26 @@ const styles = stylex.create({
 		},
 		outline: 'none',
 		backgroundColor: 'transparent',
-		border: 'none',
+		borderWidth: 0,
+		borderStyle: 'none',
 		textAlign: 'start'
 	},
 	itemHighlighted: {
-		backgroundColor: colorVars['--color-overlay-hover']
+		backgroundColor: colorVars['--color-overlay-hover'],
+		// Forced-colors mode has no background paint to carry the highlight, so
+		// the row draws its outline instead.
+		outlineColor: {
+			default: null,
+			'@media (forced-colors: active)': 'Highlight'
+		},
+		outlineStyle: {
+			default: null,
+			'@media (forced-colors: active)': 'solid'
+		},
+		outlineWidth: {
+			default: null,
+			'@media (forced-colors: active)': borderVars['--border-width']
+		}
 	},
 	itemSelected: {
 		fontWeight: fontWeightVars['--font-weight-medium']
@@ -93,7 +126,14 @@ const styles = stylex.create({
 	itemContent: {
 		display: 'flex',
 		flex: 1,
-		minWidth: 0
+		minWidth: 0,
+		overflow: 'hidden'
+	},
+	// The default `TypeaheadItem` renderer fills its row; a caller's `renderItem`
+	// owns its own sizing.
+	defaultItem: {
+		minWidth: 0,
+		width: '100%'
 	},
 	emptyState: {
 		padding: spacingVars['--spacing-3'],
@@ -105,6 +145,7 @@ const styles = stylex.create({
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
+		flexShrink: 0,
 		padding: spacingVars['--spacing-1']
 	}
 });
@@ -182,6 +223,13 @@ export function baseTypeaheadGroupHeadingAttrs(): SvelteStyleAttrs {
 export function baseTypeaheadItemContentAttrs(): SvelteStyleAttrs {
 	return sx(styles.itemContent);
 }
+
+/**
+ * `xstyle` for the default `TypeaheadItem` row. Upstream passes it as the
+ * item's `xstyle`, so the fallback renderer fills the row while a caller's own
+ * `renderItem` keeps its sizing.
+ */
+export const baseTypeaheadDefaultItemStyle: StyleArg = styles.defaultItem;
 
 /** The "No results found" row. */
 export function baseTypeaheadEmptyStateAttrs(): SvelteStyleAttrs {

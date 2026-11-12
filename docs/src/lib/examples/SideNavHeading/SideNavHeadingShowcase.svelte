@@ -11,7 +11,7 @@
 	nothing, exactly as React's `{null}` child does.
 -->
 <script lang="ts">
-	import { HStack, SideNav, SideNavHeading } from '@astryx-svelte/core';
+	import { HStack, SideNav, SideNavHeading } from '@astryx-sv/core';
 </script>
 
 {#snippet appIcon()}

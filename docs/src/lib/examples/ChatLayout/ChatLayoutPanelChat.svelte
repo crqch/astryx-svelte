@@ -16,7 +16,7 @@
 		ChatMessageList,
 		ChatSystemMessage,
 		Markdown
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 
 	const panel =
 		'width: 450px; height: 600px; border-radius: 8px; overflow: hidden; border: 1px solid var(--color-border)';

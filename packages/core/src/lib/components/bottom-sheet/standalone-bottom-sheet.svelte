@@ -6,9 +6,13 @@
 	import type { StandaloneBottomSheetProps } from './bottom-sheet.svelte';
 	import { bottomSheetDialogAttrs, bottomSheetPositionerAttrs } from './bottom-sheet.stylex.js';
 	import { focusPanel } from './focus-panel.js';
+	import { setBottomSheetEscape, useBottomSheetEscape } from './bottom-sheet-escape.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import { focusForLastInput } from '../../utils/focus-return.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
+	import { trackInteractionModality } from '../../utils/interaction-modality.js';
+	import ModalAnnounceProvider from '../../hooks/modal-announce-provider.svelte';
 
 	/**
 	 * Ported from the private `StandaloneBottomSheet` in Astryx's
@@ -31,6 +35,7 @@
 		height = 'capped',
 		snapPoints,
 		hasScrim = true,
+		finalFocusRef,
 		purpose = 'info',
 		xstyle,
 		...rest
@@ -38,18 +43,60 @@
 
 	let dialogEl = $state<HTMLDialogElement>();
 
+	// A sheet opened inside a popover's sheet starts from Escape on, whatever
+	// the popover's own `hasEscapeDismiss` says. Read the enclosing policy
+	// before replacing it for this sheet's content.
+	const escapeContext = useBottomSheetEscape();
+	const isEscapeAllowed = $derived(escapeContext?.isEscapeAllowed ?? true);
+	setBottomSheetEscape(() => true);
+
 	// Plain `let`s, mirroring upstream's refs: the panel element the hosts focus
 	// into, and the element focused when the sheet opened, for restoration on
 	// close. Nothing renders from either.
 	let panelEl: HTMLDivElement | null = null;
 	let triggerEl: HTMLElement | null = null;
+	// Whether focus was inside the sheet when its close began. A non-modal sheet
+	// leaves the page interactive, so it returns focus to its opener only if the
+	// person was still in the sheet; a modal sheet always does.
+	let hadFocusAtClose = false;
+
+	// The returned focus shows its ring only after keyboard input. Tracking is
+	// global and once-per-document; this effect exists so a sheet in the page
+	// starts it, exactly as the other overlay components do.
+	$effect(() => {
+		trackInteractionModality();
+	});
+
+	// Read with the close, before the exiting dialog goes inert and blurs what
+	// the person had focused. `$effect.pre` runs before Svelte applies the
+	// attribute that would move focus.
+	$effect.pre(() => {
+		if (!isOpen && dialogEl != null) {
+			hadFocusAtClose = dialogEl.contains(document.activeElement);
+		}
+	});
 
 	// Seeded from the initial prop, as upstream's `useState(isOpen)` is: a sheet
 	// mounted already-open is presented from the first frame.
 	// svelte-ignore state_referenced_locally
 	let isPresented = $state(isOpen);
+	// A sheet that was present on load opens settled, with no rise or fade-in;
+	// later opens animate. Upstream's `useSettledOpen`; the latch ends on the
+	// first close, so nothing after it inherits the settled scrim.
+	// svelte-ignore state_referenced_locally
+	let opensSettled = $state(isOpen);
+
+	$effect(() => {
+		if (!isOpen) {
+			opensSettled = false;
+		}
+	});
 
 	const shouldPresent = $derived(isOpen || isPresented);
+	const isEntrySettled = $derived(opensSettled && isOpen);
+	// The sheet holds focus until its exit motion completes — `handleMotionComplete`
+	// returns it to the opener — so the whole exit takes no pointer input.
+	const isExitHoldingFocus = $derived(!isOpen && isPresented);
 	const panelState = $derived<BottomSheetPanelState>(
 		isOpen
 			? { kind: 'open', entering: false }
@@ -59,7 +106,7 @@
 	);
 
 	function dismissOnEscape(): void {
-		if (purpose !== 'required') {
+		if (purpose !== 'required' && isEscapeAllowed) {
 			onOpenChange(false);
 		}
 	}
@@ -100,8 +147,11 @@
 		isPresented = true;
 		dialog.style.setProperty('--_sheet-scrim-opacity', '1');
 		if (!dialog.open) {
+			// Captured before either presentation call: `show()` can move focus to
+			// the first control, and a non-modal sheet still returns focus to
+			// whatever opened it when the person is still inside at close.
+			triggerEl ??= document.activeElement as HTMLElement | null;
 			if (hasScrim) {
-				triggerEl = document.activeElement as HTMLElement | null;
 				dialog.showModal();
 			} else {
 				dialog.show();
@@ -127,7 +177,16 @@
 				dialogEl.close();
 			}
 			isPresented = false;
-			triggerEl?.focus();
+			// The sheet's exit has settled, so the element it held can take focus
+			// back. An explicit target wins over the opener — an adaptive
+			// presentation's trigger may not be the focused element that opened
+			// the sheet. A non-modal sheet returns focus only when the person was
+			// still in it: the page behind stayed live, so focus taken elsewhere
+			// stays there.
+			const focusTarget = finalFocusRef?.() ?? (hasScrim || hadFocusAtClose ? triggerEl : null);
+			if (focusTarget != null) {
+				focusForLastInput(focusTarget, { preventScroll: true });
+			}
 			triggerEl = null;
 		});
 	}
@@ -141,6 +200,11 @@
 	);
 
 	function handleCancel(event: Event): void {
+		// A `cancel` that bubbles up from inside is not a close request: a file
+		// input fires it when its picker is dismissed, so it is left alone.
+		if (event.target !== event.currentTarget) {
+			return;
+		}
 		// No IME guard here: `cancel` is a plain Event carrying no composition
 		// state, and `handleKeyDown` claims a composing Escape before the browser
 		// can raise the close request that would arrive here.
@@ -172,7 +236,10 @@
 	}
 
 	const dialogAttrs = $derived(
-		bottomSheetDialogAttrs(shouldPresent, hasScrim, !isOpen && isPresented)
+		bottomSheetDialogAttrs(shouldPresent, hasScrim, !isOpen && isPresented, undefined, {
+			isEntrySettled,
+			isExitHoldingFocus
+		})
 	);
 	const positionerAttrs = bottomSheetPositionerAttrs(false, false);
 </script>
@@ -190,22 +257,25 @@
 	onclick={handleClick}
 	onkeydown={handleKeyDown}
 >
-	<div class={positionerAttrs.class} style={positionerAttrs.style}>
-		<BottomSheetPanel
-			{...rest}
-			{panelState}
-			{height}
-			{snapPoints}
-			{xstyle}
-			{children}
-			isSwipeDismissAllowed={purpose === 'info'}
-			isPageScrollLocked={shouldPresent && hasScrim}
-			onDismiss={dismissOnLightInteraction}
-			onScrimOpacity={handleScrimOpacity}
-			onElementChange={handlePanelElementChange}
-			onMotionComplete={handleMotionComplete}
-		/>
-	</div>
+	<ModalAnnounceProvider dialogRef={() => dialogEl ?? null} isOpen={isOpen && hasScrim}>
+		<div class={positionerAttrs.class} style={positionerAttrs.style}>
+			<BottomSheetPanel
+				{...rest}
+				{panelState}
+				{height}
+				{label}
+				{snapPoints}
+				{xstyle}
+				{children}
+				isSwipeDismissAllowed={purpose === 'info'}
+				isPageScrollLocked={shouldPresent && hasScrim}
+				onDismiss={dismissOnLightInteraction}
+				onScrimOpacity={handleScrimOpacity}
+				onElementChange={handlePanelElementChange}
+				onMotionComplete={handleMotionComplete}
+			/>
+		</div>
+	</ModalAnnounceProvider>
 	<!-- A modal sheet's `::backdrop` already answers Safari's edge sampler. -->
 	{#if !hasScrim}
 		<BottomSheetEdgeTint />

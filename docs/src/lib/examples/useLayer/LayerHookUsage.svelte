@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Button, Card, Center, Layer, Text, useLayer, VStack } from '@astryx-svelte/core';
+	import { Button, Card, Center, Layer, Text, useLayer, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Upstream's `layer.render(node, {placement, alignment})` is the `<Layer>`

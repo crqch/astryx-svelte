@@ -5,6 +5,74 @@
 	import type { BaseTypeaheadSize } from './base-typeahead.stylex.js';
 	import type { SearchableItem, SearchSource } from './types.js';
 
+	/** What a listbox-role menu's `render` receives. */
+	export interface BaseTypeaheadListboxMenuInfo {
+		/** The result list. Render it once; the arrow keys move through it. */
+		listbox: Snippet;
+		/** The query in the input. */
+		query: string;
+		/** Whether a search or focus load is running. */
+		isBusy: boolean;
+		/** Whether the search for the query completed with no results. */
+		isEmptySearch: boolean;
+		/** Closes the menu. */
+		close: () => void;
+	}
+
+	/** What a dialog-role menu's `render` receives. */
+	export interface BaseTypeaheadDialogMenuInfo {
+		/** The query in the input. */
+		query: string;
+		/** Closes the menu and returns focus to where it was when it opened. */
+		close: () => void;
+	}
+
+	/**
+	 * What the typeahead's menu shows. The component owns the menu's layer: its
+	 * position, top layer, outside press, Escape, focus return, and the ARIA that
+	 * ties it to the input. The caller only fills it.
+	 *
+	 * - `listbox`: the result list, with focus kept in the input. `render` may
+	 *   put information around the list, such as a header or a hint. Anything a
+	 *   person acts on goes in the list as a result, so the arrow keys reach it.
+	 * - `dialog`: content that takes focus, named by `label`. Switching from
+	 *   `listbox` to `dialog` keeps the menu open on the same anchor.
+	 *
+	 * Upstream's `render` is a function returning `ReactNode`; here it is a
+	 * `Snippet` and its `listbox` member is a snippet too — Svelte cannot hand a
+	 * rendered node through a plain object.
+	 */
+	export type BaseTypeaheadMenu =
+		| {
+				role: 'listbox';
+				render?: Snippet<[BaseTypeaheadListboxMenuInfo]>;
+		  }
+		| {
+				role: 'dialog';
+				/** The dialog's accessible name. */
+				label: string;
+				render: Snippet<[BaseTypeaheadDialogMenuInfo]>;
+		  };
+
+	/**
+	 * The imperative handle upstream exposes through `BaseTypeahead`'s
+	 * `handleRef`.
+	 *
+	 * Svelte's counterpart is the component instance, so these are instance
+	 * exports reached with `bind:this` rather than a `handleRef` prop — the
+	 * arrangement `Tokenizer`, `Calendar` and `ChatComposerInput` use.
+	 */
+	export interface BaseTypeaheadHandle {
+		/**
+		 * Opens the menu. A dialog-role menu opens at once; a listbox-role menu
+		 * shows its results, loading them first if needed. Called from `onChange`,
+		 * it keeps the menu open through the pick.
+		 */
+		open(): void;
+		/** Closes the menu. */
+		close(): void;
+	}
+
 	/**
 	 * `onchange` is omitted so the component's own `onChange` is not shadowed by
 	 * the native handler arriving through the rest spread — the hole `NumberInput`
@@ -14,17 +82,17 @@
 	 * in the surface would let a caller pass one that typechecks and is then
 	 * silently shadowed.
 	 *
-	 * `oninput`/`onfocus`/`onblur`/`onpointerdown` are omitted for the same reason,
-	 * and it matters more here than upstream: upstream drops *every* rest prop, so
-	 * nothing is advertised-and-then-ignored, whereas this port makes the rest
-	 * spread load-bearing on the `<input>` (it is the seam replacing upstream's
-	 * `ref`). A handler arriving through it would reasonably be expected to fire,
-	 * and these four are set explicitly after the spread. `NumberInput` and
-	 * `TextInput` close exactly this hole.
+	 * `oninput`/`onfocus`/`onblur`/`onpointerdown`/`onclick` are omitted for the
+	 * same reason, and it matters more here than upstream: upstream drops *every*
+	 * rest prop, so nothing is advertised-and-then-ignored, whereas this port
+	 * makes the rest spread load-bearing on the `<input>` (it is the seam
+	 * replacing upstream's `ref`). A handler arriving through it would reasonably
+	 * be expected to fire, and these five are set explicitly after the spread.
+	 * `NumberInput` and `TextInput` close exactly this hole.
 	 */
 	export interface BaseTypeaheadProps<T extends SearchableItem> extends Omit<
 		BaseProps<HTMLInputElement>,
-		'onchange' | 'onkeydown' | 'oninput' | 'onfocus' | 'onblur' | 'onpointerdown'
+		'onchange' | 'onclick' | 'onkeydown' | 'oninput' | 'onfocus' | 'onblur' | 'onpointerdown'
 	> {
 		/** Search source providing items. */
 		searchSource: SearchSource<T>;
@@ -46,6 +114,12 @@
 		 * @default 10
 		 */
 		maxMenuItems?: number;
+		/**
+		 * Minimum query length before the search source is queried. Below it no
+		 * search runs and the menu stays closed.
+		 * @default 1
+		 */
+		minQueryLength?: number;
 		/** Fixed dropdown width in pixels. Never shrinks below the anchor width. */
 		menuWidth?: number;
 		/**
@@ -76,6 +150,12 @@
 		onChangeQuery?: (query: string) => void;
 		/** Callback when the dropdown opens or closes. */
 		onOpenChange?: (isOpen: boolean) => void;
+		/**
+		 * What the menu shows: the result list (`role: 'listbox'`, the default),
+		 * optionally with information around it, or content that takes focus
+		 * (`role: 'dialog'`). See {@link BaseTypeaheadMenu}.
+		 */
+		menu?: BaseTypeaheadMenu;
 		/**
 		 * Debounce delay in ms before triggering search after typing.
 		 * Set to 0 for synchronous/local search sources that don't need debouncing.
@@ -119,20 +199,28 @@
 </script>
 
 <script lang="ts" generics="T extends SearchableItem">
+	import { untrack } from 'svelte';
 	import { getKey } from '../../utils/get-key.js';
 	import { groupItems } from '../../utils/group-items.js';
+	import { characterCount } from '../../utils/characters.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	// Imported from the module, not the barrel: upstream keeps `isImeKeyEvent`
 	// out of `hooks/index.ts` too, and its consumers reach it directly.
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Icon from '../icon/icon.svelte';
+	import Spinner from '../spinner/spinner.svelte';
 	import PopoverLayer from '../popover/popover-layer.svelte';
 	import { usePopover } from '../popover/use-popover.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { FOCUSABLE_SELECTOR } from '../../internal/focusable-selector.js';
+	import { warnOnce } from '../../utils/dev-warning.js';
+	import { useBusyIndicatorLane } from './busy-indicator-lane.svelte.js';
+	import { useTrailingKeyDown } from './trailing-key-down.svelte.js';
 	import TypeaheadItem from './typeahead-item.svelte';
 	import {
+		baseTypeaheadDefaultItemStyle,
 		baseTypeaheadDropdownAttrs,
 		baseTypeaheadEmptyStateAttrs,
 		baseTypeaheadGroupHeadingAttrs,
@@ -165,6 +253,7 @@
 		placeholder: placeholderFromProps,
 		hasEntriesOnFocus = false,
 		maxMenuItems = 10,
+		minQueryLength = 1,
 		menuWidth,
 		emptySearchResultsText: emptySearchResultsTextFromProps,
 		isDisabled = false,
@@ -172,6 +261,7 @@
 		hasAutoFocus = false,
 		onChangeQuery,
 		onOpenChange,
+		menu,
 		inputId: externalInputId,
 		ariaDescribedBy,
 		ariaLabelledBy,
@@ -213,6 +303,68 @@
 	let highlightedIndex = $state(-1);
 	let isLoading = $state(false);
 	let hasSearched = $state(false);
+	// True for the one highlight change a pointer movement produced, so the
+	// scroll effect can skip it: scrolling under a stationary pointer moves the
+	// next row beneath it, which re-highlights and scrolls again.
+	let highlightFromPointer = false;
+	// The query the last search was actually started for. Until it matches the
+	// input, the cached answer belongs to the old query, so an empty result set
+	// is not this query's outcome yet (upstream's `isSearchPending`).
+	let lastSearchedQuery = $state('');
+
+	const isDialogMenu = $derived(menu?.role === 'dialog');
+	const dialogMenu = $derived(menu?.role === 'dialog' ? menu : null);
+	const listboxMenu = $derived(menu?.role === 'listbox' ? menu : null);
+	const isSearchPending = $derived(isLoading || query !== lastSearchedQuery);
+	const isEmptySearch = $derived(results.length === 0 && hasSearched && !isSearchPending);
+
+	/**
+	 * A query typed but still shorter than the caller's threshold. An empty
+	 * query is not "below the minimum" — it is the untouched state, and
+	 * `hasEntriesOnFocus` owns what happens there.
+	 */
+	function isBelowMinQueryLength(value: string): boolean {
+		const length = characterCount(value);
+		return length > 0 && length < minQueryLength;
+	}
+
+	// Set when `open()` runs, so the open is handled after the commit and reads
+	// the menu the caller rendered in the same event (a pick that switches a
+	// listbox to a dialog, say).
+	let openRequest = $state(0);
+	let handledOpenRequest = 0;
+	// The element focused when `open()` ran. The open runs after the commit, and
+	// a click's own handlers can move focus before it, so the menu returns focus
+	// here rather than to whatever happened to be focused at close.
+	let openerAtRequest: HTMLElement | null = null;
+	// Set by a pick that called `open()`; the open after the commit then reloads
+	// a listbox or lets a dialog take focus.
+	let pickKeptOpen = false;
+
+	// Report the busy state to a wrapper that has taken the indicator over.
+	//
+	// A context, not a prop: `BaseTypeaheadProps` is re-exported from the
+	// package entry point, so a handoff named on it would ship as public API
+	// and pin an internal detail between the wrappers and their base. The
+	// wrapper provides the lane; the base is the only thing that knows a search
+	// has started. Without one, the base renders its own indicator below.
+	//
+	// Edge-triggered: a redundant `false` on every keystroke below a query
+	// threshold reports nothing.
+	const getBusyLane = useBusyIndicatorLane();
+	const busyLane = getBusyLane?.() ?? null;
+	function setLoading(next: boolean): void {
+		if (isLoading === next) {
+			return;
+		}
+		isLoading = next;
+		busyLane?.onBusyChange(next);
+	}
+
+	// The consumer key handler a wrapper passes through trailing context. It
+	// runs after this component's own handling, so it observes every key
+	// without being able to cancel navigation, selection, or token editing.
+	const getTrailingKeyDown = useTrailingKeyDown();
 
 	// Track active pointer to defer popover.show() past click events. With
 	// popover="auto", showing the popover between pointerdown and pointerup/click
@@ -233,34 +385,189 @@
 
 	const popover = usePopover(() => ({
 		id: popoverId,
-		onShow: () => onOpenChange?.(true),
-		onHide: () => {
-			onOpenChange?.(false);
-			highlightedIndex = -1;
-			searchSource.cancel?.();
-		},
+		onShow: handleLayerShow,
+		onHide: handleLayerHide,
 		hasLightDismiss: true,
 		hasCloseButton: false,
-		hasAutoFocus: false,
-		// The popup's own role="listbox" is the exposed semantics; the input keeps
-		// DOM focus, so wrapping it in a modal dialog would misrepresent it.
-		role: 'none' as const
+		// A listbox-role menu keeps DOM focus in the input and the popup's own
+		// role="listbox" is the exposed semantics. A dialog-role menu takes focus
+		// and is the named dialog, returning it on close.
+		hasAutoFocus: isDialogMenu,
+		role: isDialogMenu ? ('dialog' as const) : ('none' as const),
+		dialogLabel: menu?.role === 'dialog' ? menu.label : undefined
 	}));
 
+	function handleLayerShow(): void {
+		onOpenChange?.(true);
+	}
+
+	function handleLayerHide(): void {
+		const wasDialog = isDialogMenu;
+		const opener = openerAtRequest;
+		openerAtRequest = null;
+		onOpenChange?.(false);
+		highlightedIndex = -1;
+		searchSource.cancel?.();
+		if (wasDialog) {
+			// The layer's own focus trap restores the element it captured when it
+			// activated; this is upstream's opener instead, recorded by `open()`.
+			const target = opener?.isConnected ? opener : inputEl;
+			target?.focus();
+		}
+	}
+
+	/** The menu's popover element, if the layer is mounted. */
+	function menuLayer(): HTMLElement | null {
+		return document.getElementById(popoverId);
+	}
+
 	/**
-	 * Show the layer, deferring past the active click if a pointer is down.
-	 * Without this, `popover="auto"` light-dismiss immediately closes the dropdown
-	 * when it opens between pointerdown and pointerup/click.
+	 * Record where a dialog should return focus. Upstream prefers the control a
+	 * press started on (`pressedOpener`, which this port has not adopted); without
+	 * it this reads the element focused when `open()` ran — unless that is inside
+	 * the menu that is about to be replaced.
+	 */
+	function captureOpener(): void {
+		const active = document.activeElement;
+		openerAtRequest =
+			active instanceof HTMLElement && !menuLayer()?.contains(active) ? active : null;
+	}
+
+	/** Focus the dialog's first control after the menu content has rendered. */
+	function focusDialog(): void {
+		requestAnimationFrame(() => {
+			const root = popover.contentRef ?? menuLayer();
+			const target = root?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+			(target ?? inputEl)?.focus();
+		});
+	}
+
+	/**
+	 * Show the layer for a listbox-role menu, deferring past the active click if a
+	 * pointer is down. Without this, `popover="auto"` light-dismiss immediately
+	 * closes the dropdown when it opens between pointerdown and pointerup/click.
 	 */
 	function showLayer(): void {
+		if (isDisabled || isDialogMenu) {
+			return;
+		}
 		if (pointerActive) {
-			document.addEventListener('click', () => requestAnimationFrame(() => popover.show()), {
-				once: true
-			});
+			document.addEventListener(
+				'click',
+				(event) => {
+					// Only this press's own click on the input should complete the
+					// deferred show. A click anywhere else is an outside press and
+					// must not reopen the layer it just dismissed.
+					if (!inputEl?.contains(event.target as Node | null)) {
+						return;
+					}
+					requestAnimationFrame(() => {
+						if (!isDisabled && !isDialogMenu) {
+							popover.show();
+						}
+					});
+				},
+				{ once: true }
+			);
 		} else {
 			popover.show();
 		}
 	}
+
+	/** Upstream's `hideList`: a dialog-role menu is only closed by its handle. */
+	function hideList(): void {
+		if (!isDialogMenu) {
+			popover.hide();
+		}
+	}
+
+	/** The handle's listbox open: show current results, or load them. */
+	function openListbox(): void {
+		const isBelowMinLength = isBelowMinQueryLength(query);
+		if (results.length > 0 && resultsGen === searchGen) {
+			showLayer();
+		} else if (query.length > 0 && !isBelowMinLength) {
+			void performSearch(query);
+		} else if (hasEntriesOnFocus && !isBelowMinLength) {
+			void performBootstrap();
+		}
+	}
+
+	/**
+	 * The imperative handle's `open()`, reached through `bind:this`. It records
+	 * the opener and requests the open; the effect below runs after the commit,
+	 * so it reads the menu the caller rendered in the same event.
+	 */
+	export function open(): void {
+		captureOpener();
+		openRequest += 1;
+	}
+
+	/** The imperative handle's `close()`, reached through `bind:this`. */
+	export function close(): void {
+		popover.hide();
+	}
+
+	// Handle a requested open after the commit that requested it. A pick that
+	// called `open()` stays open: a listbox reloads its focus entries (or
+	// closes), and a dialog is already on screen so it takes focus.
+	$effect(() => {
+		const request = openRequest;
+		if (request === handledOpenRequest) {
+			return;
+		}
+		handledOpenRequest = request;
+		const isAfterPick = pickKeptOpen;
+		pickKeptOpen = false;
+		if (isDisabled) {
+			openerAtRequest = null;
+			return;
+		}
+		if (isAfterPick && !isDialogMenu) {
+			inputEl?.focus();
+			if (hasEntriesOnFocus) {
+				void performBootstrap();
+			} else {
+				popover.hide();
+			}
+			return;
+		}
+		if (popover.isOpen) {
+			if (isDialogMenu) {
+				focusDialog();
+			}
+			return;
+		}
+		if (isDialogMenu) {
+			popover.show();
+		} else {
+			openListbox();
+		}
+	});
+
+	// A listbox menu's content outside the result list is information only:
+	// anything a person acts on must be a result, so the arrow keys reach it.
+	$effect(() => {
+		if (!popover.isOpen || menu?.role !== 'listbox' || menu.render == null) {
+			return;
+		}
+		const list = document.getElementById(listboxId);
+		const layer = list?.closest<HTMLElement>('[popover]');
+		if (list == null || layer == null) {
+			return;
+		}
+		const outsideList = Array.from(layer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+			(element) => !list.contains(element)
+		);
+		if (outsideList.length > 0) {
+			warnOnce(
+				'base-typeahead:menu-control-outside-list',
+				'BaseTypeahead',
+				'A listbox menu renders a control outside the result list. The arrow ' +
+					'keys cannot reach it: make it a result in the list instead.'
+			);
+		}
+	});
 
 	// Set up the anchor on the provided element or fall back to the input itself.
 	// Upstream's effect calls `popover.triggerRef(el)` and `triggerRef(null)` on
@@ -279,11 +586,20 @@
 		// response for an older query fails the gen check below instead of
 		// overwriting the newer results.
 		const gen = ++searchGen;
-		isLoading = true;
+		setLoading(true);
 		hasSearched = true;
+		lastSearchedQuery = searchQuery;
 		try {
 			const searchResults = await searchSource.search(searchQuery);
 			if (searchGen !== gen) {
+				return;
+			}
+			// A field that became disabled while the request was out opens no
+			// list and reports no outcome: the query was dropped, not answered.
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
+				hasSearched = false;
 				return;
 			}
 			resultsGen = gen;
@@ -313,17 +629,58 @@
 			highlightedIndex = -1;
 		} finally {
 			if (searchGen === gen) {
-				isLoading = false;
+				setLoading(false);
 			}
 		}
 	}
 
 	async function performBootstrap(): Promise<void> {
 		const gen = ++searchGen;
-		isLoading = true;
+		// A synchronous source answers in the same turn: there is no in-flight
+		// state to report, so it commits without starting a loading cycle. A
+		// pending search from before the query was cleared is settled here.
+		let bootstrapResult: T[] | Promise<T[]>;
 		try {
-			const bootstrapResults = await searchSource.bootstrap();
+			bootstrapResult = searchSource.bootstrap();
+		} catch {
 			if (searchGen !== gen) {
+				return;
+			}
+			results = [];
+			highlightedIndex = -1;
+			setLoading(false);
+			return;
+		}
+		if (Array.isArray(bootstrapResult)) {
+			if (searchGen !== gen) {
+				return;
+			}
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
+				setLoading(false);
+				return;
+			}
+			resultsGen = gen;
+			const shown = bootstrapResult.slice(0, maxMenuItems);
+			results = shown;
+			highlightedIndex = shown.length > 0 ? 0 : -1;
+			if (bootstrapResult.length > 0) {
+				showLayer();
+			}
+			setLoading(false);
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const bootstrapResults = await bootstrapResult;
+			if (searchGen !== gen) {
+				return;
+			}
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
 				return;
 			}
 			resultsGen = gen;
@@ -340,7 +697,7 @@
 			results = [];
 		} finally {
 			if (searchGen === gen) {
-				isLoading = false;
+				setLoading(false);
 			}
 		}
 	}
@@ -351,16 +708,25 @@
 
 		if (searchTimeout) {
 			clearTimeout(searchTimeout);
+			searchTimeout = null;
 		}
 
-		if (newQuery.length === 0 && !hasEntriesOnFocus) {
+		// Nothing to search: either the field was emptied, or the query is
+		// still shorter than `minQueryLength`. Both drop stale results and
+		// close the menu — showing the empty state for a query that was never
+		// searched would report "no results" that nobody looked for.
+		if ((newQuery.length === 0 && !hasEntriesOnFocus) || isBelowMinQueryLength(newQuery)) {
 			searchGen++;
 			searchSource.cancel?.();
 			results = [];
 			hasSearched = false;
+			// Bumping the generation abandons any in-flight search, whose own
+			// finally declines to clear the flag — so clear it here or the
+			// field spins forever while the query stays below the threshold.
+			setLoading(false);
 			// Clear any lingering result-count / no-results announcement.
 			announce('');
-			popover.hide();
+			hideList();
 			return;
 		}
 
@@ -384,6 +750,10 @@
 	}
 
 	function handleSelect(item: T): void {
+		// A field that became disabled opens no list and picks nothing.
+		if (isDisabled) {
+			return;
+		}
 		// Bump generation to invalidate any in-flight async searches
 		searchGen++;
 		if (searchTimeout) {
@@ -391,16 +761,24 @@
 			searchTimeout = null;
 		}
 		searchSource.cancel?.();
+		// A caller that opens the menu from `onChange` (to switch it to a dialog,
+		// say) keeps it open through the pick, so it does not flicker.
+		const requestBefore = openRequest;
 		onChange(item);
+		const keepsMenuOpen = openRequest !== requestBefore;
 		query = '';
 		results = [];
 		hasSearched = false;
+		if (keepsMenuOpen) {
+			pickKeptOpen = true;
+			return;
+		}
 		popover.hide();
 		inputEl?.focus();
 	}
 
 	function handleFocus(): void {
-		if (isDisabled) {
+		if (isDisabled || isDialogMenu) {
 			return;
 		}
 		if (hasEntriesOnFocus && results.length === 0 && query.length === 0) {
@@ -417,6 +795,22 @@
 	}
 
 	/**
+	 * A click on the still-focused input reopens a list that was dismissed
+	 * without a blur (Escape, a pick), where no focus event follows. A load
+	 * already in flight owns the open, so the click does not start a second.
+	 */
+	function handleClick(): void {
+		if (isDisabled || isDialogMenu || popover.isOpen || isLoading) {
+			return;
+		}
+		if (hasEntriesOnFocus && results.length === 0 && query.length === 0) {
+			void performBootstrap();
+		} else if (results.length > 0 && resultsGen === searchGen) {
+			showLayer();
+		}
+	}
+
+	/**
 	 * Close the dropdown when focus leaves the input for an element that is
 	 * neither inside the field wrapper (anchor) nor inside the dropdown popover.
 	 * The native `popover="auto"` light-dismiss only fires on outside pointer
@@ -427,7 +821,8 @@
 	 * only closes on a genuine focus-out of the whole field.
 	 */
 	function handleBlur(e: FocusEvent): void {
-		if (!popover.isOpen) {
+		// A dialog-role menu takes focus from the input, so a blur keeps it.
+		if (!popover.isOpen || isDialogMenu) {
 			return;
 		}
 		const next = e.relatedTarget as Node | null;
@@ -458,15 +853,52 @@
 			return;
 		}
 
+		// A focusable-disabled field opens no list and picks nothing; it only
+		// lets a list that was open before it became disabled close.
+		if (isDisabled) {
+			// Enter on a list that is still open picks nothing, and must not
+			// submit an enclosing form either.
+			if (popover.isOpen && e.key === 'Enter') {
+				e.preventDefault();
+			}
+			if (popover.isOpen && (e.key === 'Escape' || e.key === 'Tab')) {
+				if (e.key === 'Escape') {
+					e.preventDefault();
+				}
+				popover.hide();
+			}
+			return;
+		}
+
 		if (!popover.isOpen) {
+			// A dialog-role menu has no options for the input to move through and
+			// only the handle opens it.
+			if (isDialogMenu) {
+				return;
+			}
 			if (e.key === 'ArrowDown' && (hasEntriesOnFocus || query.length > 0)) {
 				e.preventDefault();
+				const isBelowMinLength = isBelowMinQueryLength(query);
 				if (results.length > 0) {
 					popover.show();
 					highlightedIndex = 0;
-				} else if (hasEntriesOnFocus) {
+				} else if (hasEntriesOnFocus && !isBelowMinLength) {
+					// A below-threshold query was never searched; falling back to
+					// bootstrap entries would open suggestions that ignore it.
 					void performBootstrap();
+				} else if (query.length > 0 && !isBelowMinLength) {
+					void performSearch(query);
 				}
+			}
+			return;
+		}
+
+		// A dialog-role menu has no options for the input to move through, so the
+		// input only closes it.
+		if (isDialogMenu) {
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				popover.hide();
 			}
 			return;
 		}
@@ -494,6 +926,12 @@
 				e.preventDefault();
 				popover.hide();
 				break;
+			case 'Tab':
+				// Dismiss here rather than from the blur this press produces:
+				// hiding a top-layer popover during the focusout makes Chrome
+				// abandon the in-flight focus move and drop focus to <body>.
+				popover.hide();
+				break;
 			// Upstream nests two guards in these cases. `popover.isOpen` is dead — the
 			// switch is only reached when it is already true — so it is not
 			// transcribed. `results.length > 0` is *not* dead and is kept: without it
@@ -517,6 +955,24 @@
 		return `${listboxId}-option-${index}`;
 	}
 
+	/**
+	 * Highlight follows pointer movement, not pointer presence: a menu that
+	 * opens or reflows under a resting pointer keeps its keyboard highlight, so
+	 * Enter acts on the option the person was shown.
+	 */
+	function highlightOnHover(index: number): void {
+		if (index === highlightedIndex) {
+			return;
+		}
+		highlightFromPointer = true;
+		highlightedIndex = index;
+	}
+
+	/** Closes the menu from a listbox or dialog render's `close` member. */
+	function closeMenu(): void {
+		popover.hide();
+	}
+
 	// Keep the highlighted option visible during keyboard navigation. The listbox
 	// is a fixed-height scroll container, so without this the virtual cursor walks
 	// off-screen once navigation passes the visible window.
@@ -534,6 +990,10 @@
 		const isOpen = popover.isOpen;
 		const index = highlightedIndex;
 		const count = results.length;
+		if (highlightFromPointer) {
+			highlightFromPointer = false;
+			return;
+		}
 		if (!isOpen || index < 0 || index >= count) {
 			return;
 		}
@@ -559,6 +1019,51 @@
 			}
 			source.cancel?.();
 		};
+	});
+
+	// A replacement source starts a new generation: a response from the source
+	// it replaced must not land in the new source's menu. The busy state and
+	// hasSearched are cleared with it, so a load owned by the old source cannot
+	// leave the field spinning or report "no results" for a query the new
+	// source never ran.
+	let previousSearchSource = $state.raw(untrack(() => searchSource));
+	$effect(() => {
+		const source = searchSource;
+		if (source === previousSearchSource) {
+			return;
+		}
+		previousSearchSource.cancel?.();
+		previousSearchSource = source;
+		searchGen++;
+		resultsGen = 0;
+		results = [];
+		highlightedIndex = -1;
+		hasSearched = false;
+		setLoading(false);
+		announce('');
+		hideList();
+	});
+
+	// A field that becomes disabled stops showing a search as busy, and a
+	// dropped query has no outcome: no empty state. A list already open stays
+	// in the DOM (hidden from the accessibility tree) until it is dismissed.
+	let previousDisabled = $state.raw(untrack(() => isDisabled));
+	$effect(() => {
+		if (isDisabled === previousDisabled) {
+			return;
+		}
+		previousDisabled = isDisabled;
+		if (!isDisabled) {
+			return;
+		}
+		searchGen++;
+		if (searchTimeout) {
+			clearTimeout(searchTimeout);
+			searchTimeout = null;
+		}
+		searchSource.cancel?.();
+		hasSearched = false;
+		setLoading(false);
 	});
 
 	// New at 0.5.0: the dropdown renders `auxiliaryData.group` as named groups,
@@ -596,13 +1101,16 @@
 	type="text"
 	role="combobox"
 	aria-expanded={popover.isOpen}
-	aria-controls={listboxId}
+	aria-controls={isDialogMenu ? popoverId : listboxId}
+	aria-haspopup={isDialogMenu ? 'dialog' : undefined}
 	aria-activedescendant={popover.isOpen &&
+	!isDialogMenu &&
 	highlightedIndex >= 0 &&
 	highlightedIndex < results.length
 		? getItemId(highlightedIndex)
 		: undefined}
 	aria-autocomplete="list"
+	aria-busy={isLoading || undefined}
 	aria-describedby={ariaDescribedBy}
 	aria-labelledby={ariaLabelledBy}
 	aria-disabled={isFocusableDisabled ? 'true' : undefined}
@@ -619,26 +1127,36 @@
 			{ once: true }
 		);
 	}}
+	onclick={handleClick}
 	onfocus={handleFocus}
 	onblur={handleBlur}
-	onkeydown={handleKeyDown}
+	onkeydown={(event) => {
+		handleKeyDown(event);
+		// The consumer handler runs after the built-in handling, so it observes
+		// every key on the input and cannot cancel navigation or selection.
+		getTrailingKeyDown?.()?.(event);
+	}}
 	{placeholder}
 	disabled={isDisabled && !isFocusableDisabled}
 	readonly={isFocusableDisabled || undefined}
 	autofocus={hasAutoFocus}
 	data-autofocus={hasAutoFocus || undefined}
 	autocomplete="off"
+	enterkeyhint="search"
+	autocorrect="off"
 	class={cx(inputAttrs.class, className)}
 	style={mergeStyle(inputAttrs.style, styleProp as string | undefined)}
 />
-{#if isLoading}
-	<span
-		role="status"
-		aria-label={t('@astryx.typeahead.loading')}
-		class={loadingAttrs.class}
-		style={loadingAttrs.style}
-	>
-		<Icon icon="clock" size="sm" color="secondary" />
+{#if isLoading && busyLane == null}
+	<!--
+		The indicator a direct caller gets. In flow, where it has always been,
+		so it reserves its own width and the input's text never runs under it.
+		Typeahead and Tokenizer take the indicator over and paint it in their own
+		inline-end lane instead; this is what renders for everyone else.
+	-->
+	<span class={loadingAttrs.class} style={loadingAttrs.style}>
+		<!-- Named, never live: the typeahead announces its search. -->
+		<Spinner size="sm" role="img" aria-label={t('@astryx.typeahead.loading')} />
 	</span>
 {/if}
 
@@ -648,6 +1166,27 @@
 	alignment="start"
 	xstyle={baseTypeaheadPopoverStyle(menuWidth)}
 >
+	{#if dialogMenu}
+		{@render dialogMenu.render({ query, close: closeMenu })}
+	{:else if listboxMenu?.render}
+		{@render listboxMenu.render({
+			listbox,
+			query,
+			isBusy: isLoading,
+			isEmptySearch,
+			close: closeMenu
+		})}
+	{:else}
+		{@render listbox()}
+	{/if}
+</PopoverLayer>
+
+<!--
+	The result list, rendered once by the default listbox menu or handed to a
+	listbox-role menu's `render` as its `listbox` member. It stays the only
+	`role="listbox"` in either case.
+-->
+{#snippet listbox()}
 	<div
 		id={listboxId}
 		role="listbox"
@@ -679,7 +1218,7 @@
 			{/each}
 		{/if}
 	</div>
-</PopoverLayer>
+{/snippet}
 
 {#snippet options(entries: { item: T; index: number }[])}
 	{#each entries as { item, index } (getKey(item.id, index))}
@@ -701,12 +1240,15 @@
 			aria-selected={isSelected}
 			tabindex={-1}
 			onclick={() => handleSelect(item)}
-			onmouseenter={() => (highlightedIndex = index)}
+			onmousemove={() => highlightOnHover(index)}
 			class={attrs.class}
 			style={attrs.style}
 		>
 			<span class={itemContentAttrs.class} style={itemContentAttrs.style}>
-				{#if renderItem}{@render renderItem(item)}{:else}<TypeaheadItem {item} />{/if}
+				{#if renderItem}{@render renderItem(item)}{:else}<TypeaheadItem
+						{item}
+						xstyle={baseTypeaheadDefaultItemStyle}
+					/>{/if}
 			</span>
 			{#if isSelected}
 				<Icon icon="check" size="sm" color="primary" />

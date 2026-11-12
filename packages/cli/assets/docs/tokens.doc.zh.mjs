@@ -1,4 +1,4 @@
-/** @type {import('@astryx-svelte/cli/authoring').ReferenceTranslationDoc} */
+/** @type {import('@astryx-sv/cli/authoring').ReferenceTranslationDoc} */
 export const docsZh = {
 	description: '间距、颜色、圆角、排版和阴影设计令牌参考。',
 	sections: [

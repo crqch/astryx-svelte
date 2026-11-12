@@ -9,7 +9,7 @@ tags:
   - 'Release'
   - 'StyleX'
   - 'Parity'
-releasePackage: '@astryx-svelte/core'
+releasePackage: '@astryx-sv/core'
 relatedDocs:
   - title: 'Getting started'
     href: '/docs/getting-started'
@@ -27,9 +27,9 @@ components rendered, with correct markup and no styling at all.
 0.3.1 deletes the step.
 
 ```ts
-import { Button } from '@astryx-svelte/core';
-import '@astryx-svelte/core/base.css';
-import '@astryx-svelte/core/astryx.css';
+import { Button } from '@astryx-sv/core';
+import '@astryx-sv/core/base.css';
+import '@astryx-sv/core/astryx.css';
 ```
 
 That is the whole setup now.
@@ -144,7 +144,7 @@ component CSS.
 Either add the stylesheet import:
 
 ```ts
-import '@astryx-svelte/core/astryx.css';
+import '@astryx-sv/core/astryx.css';
 ```
 
 or keep compiling and ask for the new condition:

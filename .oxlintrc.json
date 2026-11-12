@@ -1,0 +1,65 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript"],
+	"jsPlugins": ["./packages/core/oxlint-plugins/index.js"],
+	"categories": {
+		"correctness": "error"
+	},
+	"rules": {
+		"no-undef": "off",
+		"no-unused-vars": [
+			"error",
+			{
+				"argsIgnorePattern": "^_",
+				"varsIgnorePattern": "^_",
+				"caughtErrorsIgnorePattern": "^_"
+			}
+		],
+		"astryx/no-physical-properties": "error"
+	},
+	"globals": {
+		"$state": "readonly",
+		"$derived": "readonly",
+		"$effect": "readonly",
+		"$props": "readonly",
+		"$bindable": "readonly",
+		"$inspect": "readonly",
+		"$host": "readonly"
+	},
+	"env": {
+		"browser": true,
+		"node": true,
+		"es2024": true
+	},
+	"ignorePatterns": [
+		"node_modules/**",
+		"reference/**",
+		"**/dist/**",
+		"**/.svelte-kit/**",
+		"**/.vercel/**",
+		"**/.wrangler/**",
+		"/build/**",
+		"/docs/build/**",
+		"/packages/*/build/**",
+		"docs/static/**",
+		"docs/src/lib/generated/**",
+		"packages/cli/assets/docs/**",
+		"packages/cli/assets/templates/**",
+		"packages/core/src/lib/locales/**",
+		"**/.astryx-*/**"
+	],
+	"overrides": [
+		{
+			"files": ["packages/cli/**"],
+			"rules": {
+				"no-explicit-any": "off"
+			}
+		},
+		{
+			"files": ["packages/cli/**/*.test.mjs", "packages/cli/test-utils/**"],
+			"rules": {
+				"no-console": "off"
+			}
+		}
+	]
+}

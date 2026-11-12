@@ -26,8 +26,17 @@ import { vi } from 'vitest';
 export interface StubMatchMediaOptions {
 	/** Whether the user prefers reduced motion. */
 	reduceMotion?: boolean;
+	/** The primary pointer: `(pointer: coarse)` matches only for `'coarse'`. */
+	pointer?: 'fine' | 'coarse';
 	/** Answer for every other query — width breakpoints, hover, etc. */
 	matches?: boolean;
+}
+
+/** Answer a `pointer` query, or null if it isn't one. */
+function answerPointer(query: string, pointer: 'fine' | 'coarse'): boolean | null {
+	if (query.includes('pointer: coarse')) return pointer === 'coarse';
+	if (query.includes('pointer: fine')) return pointer === 'fine';
+	return null;
 }
 
 /**
@@ -69,12 +78,13 @@ function answerReducedMotion(query: string, reduceMotion: boolean): boolean | nu
  */
 export function stubMatchMedia({
 	reduceMotion = false,
+	pointer = 'fine',
 	matches = true
 }: StubMatchMediaOptions = {}): void {
 	vi.stubGlobal(
 		'matchMedia',
 		vi.fn((query: string) => ({
-			matches: answerReducedMotion(query, reduceMotion) ?? matches,
+			matches: answerReducedMotion(query, reduceMotion) ?? answerPointer(query, pointer) ?? matches,
 			media: query,
 			onchange: null,
 			addEventListener: vi.fn(),

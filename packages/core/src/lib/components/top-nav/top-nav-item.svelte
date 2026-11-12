@@ -68,6 +68,7 @@
 
 <script lang="ts">
 	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useAppShellMobile } from '../app-shell/app-shell-mobile-context.svelte.js';
 	import { useLinkComponent } from '../link/link-context.svelte.js';
@@ -154,6 +155,8 @@
 	// `tabindex`, and the `data-selected`/`data-mode` reflections, all lose to
 	// what the caller passes. Observable, unlike most rest-position residue,
 	// because this element writes six such attributes.
+	// The nav item root is the pressable surface.
+	const pressable = usePressFeedback();
 	const linkProps = $derived({
 		href: isDisabled ? undefined : href,
 		target: isDisabled ? undefined : target,

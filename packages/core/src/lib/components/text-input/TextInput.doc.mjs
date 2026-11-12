@@ -54,6 +54,11 @@ export default {
 					'Add a clear button for search and filter inputs so users can quickly reset without selecting all text.'
 			},
 			{
+				guidance: true,
+				description:
+					'Tell a touch keyboard what the field holds: `type="email"`, `"tel"` or `"url"` for those values, `inputMode="numeric"` for digits that are not a number (a one-time code), `enterKeyHint` for what Return does (Search, Send, Next), and `autoComplete` so AutoFill can fill it.'
+			},
+			{
 				guidance: false,
 				description:
 					"Don't use placeholder text as a replacement for a label; placeholders disappear on focus and are not reliably read by screen readers."
@@ -71,7 +76,7 @@ export default {
 			{
 				guidance: false,
 				description:
-					"Don't wrap a disabled TextInput in Tooltip to explain why it's disabled; disabled controls swallow the hover events the wrapper needs. Use the disabledMessage prop instead."
+					"Don't wrap a disabled TextInput in Tooltip to explain why it's disabled. Use the disabledMessage prop, which attaches the reason to the field itself."
 			}
 		],
 		anatomy: [
@@ -121,7 +126,8 @@ export default {
 		{
 			name: 'type',
 			type: "'text' | 'email' | 'password'",
-			description: 'The HTML input type.',
+			description:
+				'The HTML input type. `email`, `tel` and `url` also bring up the matching touch keyboard (email, phone pad, URL); `search` makes the field a search box (pair it with `enterKeyHint="search"` for a Search key on iOS; Chrome on Android shows one for `type="search"` alone).',
 			default: "'text'"
 		},
 		{
@@ -181,7 +187,8 @@ export default {
 		{
 			name: 'onEnter',
 			type: '() => void',
-			description: 'Callback fired when the user presses the Enter key.'
+			description:
+				'Callback fired when the user presses the Enter key. IME-safe: Enter used to commit a Japanese/Chinese/Korean conversion does not fire it.'
 		},
 		{
 			name: 'onkeydown',
@@ -198,14 +205,14 @@ export default {
 			name: 'isReadOnly',
 			type: 'boolean',
 			description:
-				'Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and stays in the tab order. isDisabled takes precedence when both are set.',
+				'Makes the input read-only: the value is shown at full opacity and still submits with the form, but cannot be edited. Unlike isDisabled, a read-only input is not dimmed and keeps its form value. isDisabled takes precedence when both are set.',
 			default: 'false'
 		},
 		{
 			name: 'disabledMessage',
 			type: 'string',
 			description:
-				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the input focusable via aria-disabled (the field becomes read-only). Use this instead of wrapping a disabled TextInput in Tooltip. Disabled controls swallow the hover events an external Tooltip needs.'
+				'Explains why the input is disabled. With isDisabled, shows a tooltip on hover/keyboard focus and keeps the input focusable via aria-disabled (the field becomes read-only). Use this instead of wrapping a disabled TextInput in Tooltip, so the reason is attached to the field itself.'
 		},
 		{
 			name: 'isLoading',
@@ -264,7 +271,75 @@ export default {
 			name: 'width',
 			type: 'SizeValue',
 			description:
-				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned.'
+				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned. Without a width the field can shrink with its row, so a filter bar never overflows; use `<HStack wrap="wrap">` when the controls should move to a second line instead.'
+		},
+		{
+			name: 'autoComplete',
+			type: 'string',
+			description:
+				'The native autocomplete attribute, forwarded to the input unchanged. Does not affect the controlled value. It is also how AutoFill knows what a field holds: tag sign-in, address and payment fields (`username`, `new-password`, `one-time-code`, `email`, `tel`, `street-address`, …).'
+		},
+		{
+			name: 'enterKeyHint',
+			type: "'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send'",
+			description:
+				'What the Return key of a touch keyboard says (the native `enterkeyhint`). iOS gives `done`, `go`, `next`, `search` and `send` their own key (a glyph on iOS 26: a checkmark, an arrow, a chevron, a magnifier, an up arrow); `enter` and `previous` keep the plain Return key. Chrome on Android (Gboard) gives every value its own key, `enter` and `previous` included; with no hint the key reads Next while another field follows, and a `type="url"` field shows Next instead of `go` while another field follows. It only labels the key: what Enter does stays with your handlers.'
+		},
+		{
+			name: 'inputMode',
+			type: "'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search'",
+			description:
+				'Which touch keyboard the field asks for (the native `inputmode`) without changing what it accepts: `numeric` brings up the number pad, `decimal` the decimal pad, `tel` the phone pad, `search` the web-search keyboard (whose Return key reads Go on iOS even with `enterKeyHint="search"`; Chrome on Android shows the Enter key for `inputMode="search"` alone).'
+		},
+		{
+			name: 'autoCapitalize',
+			type: "'off' | 'none' | 'on' | 'sentences' | 'words' | 'characters'",
+			description:
+				'When a touch keyboard capitalizes as you type (the native `autocapitalize`). Unset, iOS capitalizes sentences, except in a URL field. `off` and `none` never capitalize; `on` and `sentences` capitalize each sentence.'
+		},
+		{
+			name: 'hasAutoCorrect',
+			type: 'boolean',
+			description:
+				'Whether a touch keyboard corrects words as you type (the native `autocorrect`). Unset, the browser decides; turn it off for usernames, codes and other values that are not words.'
+		},
+		{
+			name: 'hasSpellCheck',
+			type: 'boolean',
+			description:
+				'Whether misspelled words are underlined (the native `spellcheck`). Unset, the browser decides.'
+		},
+		{
+			name: 'containerXstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
+		},
+		{
+			name: 'containerClassName',
+			type: 'string',
+			description: 'Class name for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'containerStyle',
+			type: 'string',
+			description: 'Inline styles for the field container. Same targeting as `containerXstyle`.'
+		},
+		{
+			name: 'controlXstyle',
+			type: 'StyleArg',
+			description:
+				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
+		},
+		{
+			name: 'controlClassName',
+			type: 'string',
+			description: 'Class name for the visual control box.'
+		},
+		{
+			name: 'controlStyle',
+			type: 'string',
+			description: 'Inline styles for the visual control box.'
 		}
 	]
 };

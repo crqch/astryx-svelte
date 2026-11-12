@@ -35,21 +35,23 @@ const styles = stylex.create({
 		'--container-padding-block-start': `var(--layout-padding-inner-y, ${spacingVars['--spacing-4']})`,
 		'--container-padding-block-end': `var(--layout-padding-inner-y, ${spacingVars['--spacing-4']})`
 	},
-	// Start panel: outer-x on left edge
+	// An edge on the Layout's boundary takes the Layout-edge inset. Each edge
+	// publishes the padding it applies, so full-bleed children line up with it.
 	startPanel: {
-		paddingInlineStart: `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`
+		paddingInlineStart: `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-inline-start': `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`
 	},
-	// End panel: outer-x on right edge
 	endPanel: {
-		paddingInlineEnd: `var(--layout-padding-outer-x, ${spacingVars['--spacing-4']})`
+		paddingInlineEnd: `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-inline-end': `var(--layout-padding-own-outer-x, var(--layout-padding-outer-x, ${spacingVars['--spacing-4']}))`
 	},
-	// When no header: outer-y on top
 	noHeader: {
-		paddingBlockStart: `var(--layout-padding-outer-y, ${spacingVars['--spacing-4']})`
+		paddingBlockStart: `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-block-start': `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`
 	},
-	// When no footer: outer-y on bottom
 	noFooter: {
-		paddingBlockEnd: `var(--layout-padding-outer-y, ${spacingVars['--spacing-4']})`
+		paddingBlockEnd: `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`,
+		'--container-padding-block-end': `var(--layout-padding-own-outer-y, var(--layout-padding-outer-y, ${spacingVars['--spacing-4']}))`
 	},
 	fullBleed: {
 		paddingInlineStart: 0,
@@ -63,6 +65,12 @@ const styles = stylex.create({
 	},
 	scrollable: {
 		overflow: 'auto'
+	},
+	// At width 0 the padding box is 0 too, so the clip hides every child.
+	zeroWidth: {
+		paddingInlineStart: 0,
+		paddingInlineEnd: 0,
+		overflow: 'clip'
 	},
 	// For start panel: divider on end edge
 	dividerEnd: {
@@ -100,6 +108,7 @@ export interface LayoutPanelAttrsOptions {
 	isScrollable: boolean;
 	padding?: SpacingStep;
 	width?: SizeValue;
+	isZeroWidth: boolean;
 }
 
 export function layoutPanelAttrs(
@@ -109,7 +118,8 @@ export function layoutPanelAttrs(
 		hasDivider,
 		isScrollable,
 		padding,
-		width
+		width,
+		isZeroWidth
 	}: LayoutPanelAttrsOptions,
 	xstyle?: StyleArg
 ): SvelteStyleAttrs {
@@ -119,7 +129,7 @@ export function layoutPanelAttrs(
 	const isZeroPadding = padding === 0;
 
 	// When no divider, collapse spacing for seamless visual flow
-	const shouldCollapseSpacing = !hasDivider && !isZeroPadding && padding == null;
+	const shouldCollapseSpacing = !hasDivider && !isZeroPadding && padding == null && !isZeroWidth;
 
 	// Select divider style based on position
 	const dividerStyle = isStartPanel ? styles.dividerEnd : isEndPanel ? styles.dividerStart : null;
@@ -147,6 +157,7 @@ export function layoutPanelAttrs(
 		padding != null && containerPaddingBlockEndVarStyles[padding],
 		hasDivider && dividerStyle,
 		shouldCollapseSpacing && collapseStyle,
+		isZeroWidth && styles.zeroWidth,
 		xstyle
 	);
 }

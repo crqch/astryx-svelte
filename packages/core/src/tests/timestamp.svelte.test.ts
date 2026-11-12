@@ -968,7 +968,11 @@ describe('Timestamp', () => {
 				props: { value: Date.now() / 1000 - 3600, format: 'relative' }
 			});
 			const card = await awaitCard(screen.container);
-			const rowValue = card.querySelector('dd')?.textContent ?? '';
+			// RESTATED narrowly: upstream reads `dd.textContent`, which React trims
+			// to the row value. Svelte keeps the whitespace inside the copy
+			// button's own live region, so read the value span the `<dd>` carries
+			// when it reserves the action column.
+			const rowValue = card.querySelector('dd > span')?.textContent ?? '';
 			expect(rowValue).toBeTruthy();
 			copyButtonIn(card).click();
 			expect(writeText).toHaveBeenCalledWith(rowValue);
@@ -1114,7 +1118,11 @@ describe('Timestamp', () => {
 				}
 			});
 			const card = await awaitCard(screen.container);
-			const [rowValue] = Array.from(card.querySelectorAll('dd')).map((el) => el.textContent ?? '');
+			// Same narrow restatement as the default card's copy case: the `<dd>`
+			// carries the value in its first span when it reserves an action column.
+			const [rowValue] = Array.from(card.querySelectorAll('dd')).map(
+				(el) => el.querySelector('span')?.textContent ?? el.textContent ?? ''
+			);
 
 			copyButtonIn(card).click();
 			expect(writeText).toHaveBeenCalledWith(rowValue);
@@ -1404,5 +1412,84 @@ describe('Timestamp', () => {
 				line.value.replace(tzPart('short'), tzPart('long'))
 			);
 		});
+	});
+});
+
+// Upstream's `Timestamp calendar systems` block. The polyfill-only cases that
+// compare against the full polyfill's Chinese month starts are not repeated;
+// the runtime's own Temporal is the oracle for these.
+describe('Timestamp calendar systems', () => {
+	const INSTANT = new Date('2026-10-30T12:00:00Z');
+	const VALUE = INSTANT.toISOString();
+
+	it.each([
+		{ calendar: 'persian', locale: 'en', year: '1405' },
+		{ calendar: 'hebrew', locale: 'en', year: '5787' },
+		{ calendar: 'buddhist', locale: 'th', year: '2569' }
+	] as const)(
+		'renders date_long in the provider calendar $calendar under $locale',
+		async ({ calendar, locale, year }) => {
+			const screen = await render(TimestampI18nProbe, {
+				props: {
+					locale,
+					calendar,
+					value: VALUE,
+					format: 'date_long',
+					hasTooltip: false,
+					'data-testid': 'ts'
+				}
+			});
+			const text = tsIn(screen.container).textContent;
+			expect(text).toBe(formatInstant(INSTANT, 'date_long', locale, { calendar }));
+			expect(text).toContain(year);
+		}
+	);
+
+	it('keeps the time of day of date_time in the provider calendar', async () => {
+		const screen = await render(TimestampI18nProbe, {
+			props: {
+				locale: 'en',
+				calendar: 'persian',
+				value: VALUE,
+				format: 'date_time',
+				hasTooltip: false,
+				'data-testid': 'ts'
+			}
+		});
+		const text = tsIn(screen.container).textContent ?? '';
+		expect(text).toBe(formatInstant(INSTANT, 'date_time', 'en', { calendar: 'persian' }));
+		expect(text).toContain('Aban');
+		expect(text).toMatch(/\d:\d\d/);
+	});
+
+	it('keeps system_date Gregorian ISO under a provider calendar', async () => {
+		const screen = await render(TimestampI18nProbe, {
+			props: {
+				locale: 'fa',
+				calendar: 'persian',
+				value: VALUE,
+				format: 'system_date',
+				hasTooltip: false,
+				'data-testid': 'ts'
+			}
+		});
+		expect(tsIn(screen.container).textContent).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
+
+	it('ignores a -u-ca- keyword in the provider locale', async () => {
+		const screen = await render(TimestampI18nProbe, {
+			props: {
+				locale: 'th-TH-u-ca-buddhist',
+				value: VALUE,
+				format: 'date_long',
+				hasTooltip: false,
+				'data-testid': 'ts'
+			}
+		});
+		expect(tsIn(screen.container).textContent).toBe(
+			formatInstant(INSTANT, 'date_long', 'th-TH-u-ca-buddhist')
+		);
+		expect(tsIn(screen.container).textContent).toContain('2026');
+		expect(tsIn(screen.container).textContent).not.toContain('2569');
 	});
 });

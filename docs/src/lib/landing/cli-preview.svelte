@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { HStack, Icon, IconButton, Text, VStack } from '@astryx-svelte/core';
+	import { HStack, Icon, IconButton, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Live, theme-aware chat composer, ported from upstream's

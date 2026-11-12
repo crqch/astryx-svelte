@@ -26,7 +26,7 @@
 		Text,
 		TextInput,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import { CheckCircleIcon, SquaresPlusIcon } from '@fvilers/heroicons-svelte/24/outline';
 
 	const COVER_IMAGE_URL =

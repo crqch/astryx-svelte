@@ -108,5 +108,6 @@ export function getIndicator(
 		// `name` may be an augmented one, which this map has no entry for — hence
 		// the `| undefined` the overloads expose to those callers.
 		(defaultIndicators as Partial<Record<IndicatorName, unknown>>)[name]) as
-		IndicatorComponent | undefined;
+		| IndicatorComponent
+		| undefined;
 }

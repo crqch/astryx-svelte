@@ -39,13 +39,21 @@ const styles = stylex.create({
 		flexDirection: 'column',
 		width: '100%'
 	},
+	// A collapsed rail row holds only its icon, so it keeps a fixed square.
 	itemCollapsed: {
 		justifyContent: 'center',
 		width: sizeVars['--size-element-md'],
+		height: sizeVars['--size-element-md'],
 		paddingInline: 0
 	},
-	itemCollapsedSm: { width: sizeVars['--size-element-sm'] },
-	itemCollapsedLg: { width: sizeVars['--size-element-lg'] },
+	itemCollapsedSm: {
+		width: sizeVars['--size-element-sm'],
+		height: sizeVars['--size-element-sm']
+	},
+	itemCollapsedLg: {
+		width: sizeVars['--size-element-lg'],
+		height: sizeVars['--size-element-lg']
+	},
 	label: {
 		flex: 1,
 		minWidth: 0,
@@ -76,20 +84,37 @@ const styles = stylex.create({
 	childrenCollapsible: {
 		display: 'grid',
 		gridTemplateRows: '1fr',
-		transitionProperty: 'grid-template-rows',
+		// The group clips its rows only for the 0fr collapse animation. Nested
+		// rows sit flush with the group, so a permanent clip would cut off their
+		// focus ring, which paints outside the row. The expanded group therefore
+		// stops clipping once it has finished opening: `overflow` is discrete, so
+		// it rides the same transition with `allow-discrete` and a delay equal to
+		// the open duration, holding `hidden` until the rows' height has settled.
+		// Collapsing flips back to `hidden` at once (no delay on the collapsed
+		// state), so nothing spills while the group closes.
+		overflow: 'visible',
+		transitionProperty: 'grid-template-rows, overflow',
+		transitionBehavior: 'allow-discrete',
 		transitionDuration: {
-			default: durationVars['--duration-medium'],
-			'@media (prefers-reduced-motion: reduce)': '0s'
+			default: `${durationVars['--duration-medium']}, 0s`,
+			'@media (prefers-reduced-motion: reduce)': '0s, 0s'
+		},
+		transitionDelay: {
+			default: `0s, ${durationVars['--duration-medium']}`,
+			'@media (prefers-reduced-motion: reduce)': '0s, 0s'
 		},
 		transitionTimingFunction: easeVars['--ease-standard']
 	},
 	childrenCollapsed: {
-		gridTemplateRows: '0fr'
-	},
-	childrenInner: {
+		gridTemplateRows: '0fr',
 		overflow: 'hidden',
-		minHeight: 0,
-		paddingInlineStart: spacingVars['--spacing-6']
+		transitionDelay: '0s, 0s'
+	},
+	// No inline padding: nested rows fill the full width of the nav list, and
+	// each row carries its own indent (`indentStyles` below). `minHeight: 0`
+	// lets the 0fr track shrink this item to nothing; the group clips it.
+	childrenInner: {
+		minHeight: 0
 	},
 	expandChevron: {
 		display: 'inline-flex',
@@ -109,6 +134,11 @@ const styles = stylex.create({
 		},
 		transitionTimingFunction: easeVars['--ease-standard'],
 		flexShrink: 0
+	},
+	// Inside a whole-row toggle the chevron takes its 1em glyph's height, so
+	// the row's height comes from its label, not from the chevron's box.
+	expandChevronInRow: {
+		height: 'auto'
 	},
 	expandChevronExpanded: {
 		transform: 'rotate(180deg)'
@@ -190,6 +220,37 @@ const styles = stylex.create({
 	}
 });
 
+// Nesting indent, drawn inside the row: one `--spacing-6` step per nesting
+// level. The row itself stays full width, so its hover and selected fill
+// matches a top-level row's.
+// - `sm` / `md` — the ordinary row, where the row element is the link or
+//   button: its own inline-start padding plus the steps.
+//   SYNC: the base padding matches navItemStyles.sm / .md / .lg.
+// - `primary` — the row-wrapper path: the wrapper keeps its base padding and
+//   the steps go on the primary link or button, so the whole indent is part
+//   of the click target rather than dead space that still shows feedback.
+const indentStyles = stylex.create({
+	sm: (depth: number) => ({
+		paddingInlineStart: `calc(${spacingVars['--spacing-1']} + ${depth} * ${spacingVars['--spacing-6']})`
+	}),
+	md: (depth: number) => ({
+		paddingInlineStart: `calc(${spacingVars['--spacing-2']} + ${depth} * ${spacingVars['--spacing-6']})`
+	}),
+	primary: (depth: number) => ({
+		paddingInlineStart: `calc(${depth} * ${spacingVars['--spacing-6']})`
+	})
+});
+
+/** The nesting indent for an ordinary row, or `null` at the top level. */
+export function sideNavItemIndentStyle(size: NavItemSize, depth: number): StyleArg {
+	return depth > 0 ? indentStyles[size === 'sm' ? 'sm' : 'md'](depth) : null;
+}
+
+/** The nesting indent for the split-action primary, or `null` at the top level. */
+export function sideNavItemPrimaryIndentStyle(depth: number): StyleArg {
+	return depth > 0 ? indentStyles.primary(depth) : null;
+}
+
 /**
  * The item's outer column — the row plus any nested children. `xstyle` lands
  * here because it is the component's outermost box; upstream drops it entirely
@@ -238,9 +299,13 @@ function rowStyleArgs(size: NavItemSize, isSelected: boolean, isDisabled: boolea
 export function sideNavItemFocusableRowAttrs(
 	size: NavItemSize,
 	isSelected: boolean,
-	isDisabled: boolean
+	isDisabled: boolean,
+	depth: number
 ): SvelteStyleAttrs {
-	return focusOutlineProps.focusVisible(...rowStyleArgs(size, isSelected, isDisabled));
+	return focusOutlineProps.focusVisible(
+		...rowStyleArgs(size, isSelected, isDisabled),
+		sideNavItemIndentStyle(size, depth)
+	);
 }
 
 /**
@@ -317,6 +382,7 @@ export function sideNavItemChildrenInnerAttrs(): SvelteStyleAttrs {
  * rotation land on the element a theme targets rather than a wrapper `<span>`.
  */
 export const sideNavItemChevronStyle = styles.expandChevron;
+export const sideNavItemChevronInRowStyle = styles.expandChevronInRow;
 export const sideNavItemChevronExpandedStyle = styles.expandChevronExpanded;
 
 /** The chevron as its own button, in the split-action row. */
@@ -329,8 +395,8 @@ export function sideNavItemExpandToggleAttrs(): SvelteStyleAttrs {
 }
 
 /** The primary link/button in the split-action row. */
-export function sideNavItemSplitActionAttrs(): SvelteStyleAttrs {
-	return focusOutlineProps.focusVisible(styles.splitAction);
+export function sideNavItemSplitActionAttrs(depth: number): SvelteStyleAttrs {
+	return focusOutlineProps.focusVisible(styles.splitAction, sideNavItemPrimaryIndentStyle(depth));
 }
 
 /**
@@ -338,8 +404,8 @@ export function sideNavItemSplitActionAttrs(): SvelteStyleAttrs {
  * for this element ({@link sideNavItemActionsRowAttrs}); suppressing here is what
  * keeps the UA's own ring from painting inside that one.
  */
-export function sideNavItemSplitActionSuppressedAttrs(): SvelteStyleAttrs {
-	return focusOutlineProps.suppressed(styles.splitAction);
+export function sideNavItemSplitActionSuppressedAttrs(depth: number): SvelteStyleAttrs {
+	return focusOutlineProps.suppressed(styles.splitAction, sideNavItemPrimaryIndentStyle(depth));
 }
 
 /** The flyout shown for a collapsed item that has children. */

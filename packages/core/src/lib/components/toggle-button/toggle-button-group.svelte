@@ -34,12 +34,17 @@
 	}
 
 	export type ToggleButtonGroupProps =
-		ToggleButtonGroupSingleProps | ToggleButtonGroupMultipleProps;
+		| ToggleButtonGroupSingleProps
+		| ToggleButtonGroupMultipleProps;
 </script>
 
 <script lang="ts">
 	import { cx } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
+	import { useGroupPressTracking } from '../../hooks/use-group-press-tracking.svelte.js';
+	import { setPressGroupContext } from '../../hooks/press-group-context.svelte.js';
+	import { TOUCH_QUERY } from '../../utils/touch-queries.js';
 	import { setToggleButtonGroupContext } from './toggle-button-group-context.svelte.js';
 	import { toggleButtonGroupAttrs } from './toggle-button-group.stylex.js';
 
@@ -84,18 +89,34 @@
 		}
 	}
 
+	// Only under the touch presentation does a press slide across the toggles.
+	// A desktop press stays the native toggle's.
+	const isTouch = useMediaQuery(() => TOUCH_QUERY);
+	const tracksPress = $derived(!(props.isDisabled ?? false) && isTouch.matches);
+	let groupEl = $state<HTMLDivElement | null>(null);
+	useGroupPressTracking(
+		() => groupEl,
+		() => tracksPress
+	);
+
 	setToggleButtonGroupContext(() => ({
 		selectedValues,
 		toggle,
 		size: props.size,
-		isDisabled: props.isDisabled ?? false
+		isDisabled: props.isDisabled ?? false,
+		tracksPress
 	}));
 
+	// Only a ToggleButton with a value joins the tracking (ToggleButton reads
+	// the group). Any other child keeps its own press.
+	setPressGroupContext(() => null);
+
 	const theme = themeProps('toggle-button-group');
-	const groupAttrs = $derived(toggleButtonGroupAttrs(orientation, props.xstyle));
+	const groupAttrs = $derived(toggleButtonGroupAttrs(orientation, tracksPress, props.xstyle));
 </script>
 
 <div
+	bind:this={groupEl}
 	role="group"
 	aria-label={props.label}
 	data-testid={props['data-testid']}

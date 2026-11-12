@@ -6,14 +6,8 @@
 	`key={density}` is what it uses on the React side.
 -->
 <script lang="ts">
-	import type { ChatDensity } from '@astryx-svelte/core';
-	import {
-		ChatMessage,
-		ChatMessageBubble,
-		ChatMessageList,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
+	import type { ChatDensity } from '@astryx-sv/core';
+	import { ChatMessage, ChatMessageBubble, ChatMessageList, Text, VStack } from '@astryx-sv/core';
 
 	const DENSITIES: Array<{ density: ChatDensity; label: string }> = [
 		{ density: 'compact', label: 'Compact' },

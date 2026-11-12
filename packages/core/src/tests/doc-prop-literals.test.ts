@@ -118,6 +118,7 @@ const ENUMERATED_IN_PROSE = new Set(['IconName']);
 const PORT_DOC_TYPE_DEBT = new Set([
 	'CheckboxInput.status',
 	'CheckboxList.status',
+	'Code.size',
 	'ComplexSelector.startIcon',
 	'ContextMenuItem.icon',
 	'DropdownMenuCheckboxItem.icon',
@@ -128,6 +129,8 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	'FileInput.status',
 	'Heading.hasTruncateTooltip',
 	'InputGroup.status',
+	// Upstream's 0.7.13 `Item.doc.mjs` still says `'start' | 'center'` while
+	// `Item.tsx` declares `'first-line'`. The source is ground truth.
 	'MultiSelector.startIcon',
 	'NumberInput.status',
 	'PowerSearch.onChange',
@@ -142,18 +145,21 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	'SideNavItem.selectedIcon',
 	'Slider.status',
 	'Switch.status',
+	// Upstream's own Stepper prop is typed `StepperHorizontalOptions`, whose
+	// nested `collapsedVariant` union the generated doc cannot inline either.
+	'Stepper.horizontalOptions',
 	'TabMenu.options',
 	'Text.hasTruncateTooltip',
-	'Text.type',
+	'Theme.theme',
 	'TextArea.status',
 	'TextInput.status',
 	'TimeInput.status',
-	'Timestamp.type',
 	'Toast.onDismiss',
 	'Toast.onHide',
 	'Tokenizer.startIcon',
 	'Toolbar.dividers',
 	'Typeahead.startIcon',
+	'useTableRowStatus.getStatus',
 	'useTableSortable.onSortChange'
 ]);
 

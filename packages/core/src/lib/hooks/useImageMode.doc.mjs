@@ -47,7 +47,7 @@ export default {
 		},
 		{
 			name: 'options.fallback',
-			type: "'dark' | 'light'",
+			type: "'light' | 'dark'",
 			description: 'Fallback value while loading or on error.',
 			default: 'null'
 		}
@@ -55,7 +55,7 @@ export default {
 	returns: [
 		{
 			name: 'mode',
-			type: "'dark' | 'light'",
+			type: "'light' | 'dark'",
 			description:
 				'Detected luminance mode of the image. Returns null while loading or if src is null/undefined.'
 		}
@@ -83,6 +83,6 @@ export default {
 	},
 	relatedComponents: ['MediaTheme'],
 	relatedHooks: ['useMediaQuery'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'media'
 };

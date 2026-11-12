@@ -9,8 +9,8 @@
 // a rule for any string, and the result is CSS that parses, loads, and styles
 // nothing.
 //
-// This theme has no upstream counterpart to diff against, so those two checks
-// are made directly instead:
+// This theme has no upstream counterpart to diff against, so those checks are
+// made directly instead:
 //
 //   1. every token it declares is a real Astryx token (or in this theme's own
 //      documented `--glass-*` namespace);
@@ -18,7 +18,10 @@
 //   3. every override it wrote reached the stylesheet;
 //   4. the `-webkit-` half of every `backdrop-filter` is present;
 //   5. no `backdrop-filter` value contains a `var()`;
-//   6. the reduced-transparency block switches off every glass surface.
+//   6. the reduced-transparency block switches off every glass surface **and**
+//      leaves no translucent `background-color` behind;
+//   7. every state transition the theme adds is zeroed under
+//      `prefers-reduced-motion: reduce`.
 //
 // (4) and (5) are here because they are the two defects in this theme that no
 // reviewer on a Chromium machine can see. A dropped prefix loses the material on
@@ -27,6 +30,12 @@
 // to (mdn/browser-compat-data#25914). Both fail silently, in the one browser a
 // macOS theme most needs to be right on. Retire (5) when WebKit fixes the bug.
 //
+// (6) and (7) exist because both blocks are appended outside `defineTheme` —
+// the token map cannot express a media query — so nothing in the theme object
+// would notice if one stopped covering a surface. Their selector sets are
+// derived by `scripts/derived.mjs`, the same module `build-theme.mjs` emits
+// from, rather than re-walking the theme here.
+//
 // Ground truth for (1) and (2) is core's **built `dist/`**, the same artifact
 // consumers resolve — not its `src/`, which would let this pass against code
 // that was never shipped.
@@ -34,7 +43,8 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { liquidGlassTheme } from '../src/liquid-glass-theme.ts';
+import { liquidGlassTheme, reducedTransparencyComponents } from '../src/liquid-glass-theme.ts';
+import { glassSelectors, selectorFor, transitionSelectors } from './derived.mjs';
 
 const packageDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const coreDist = join(packageDir, '..', '..', 'core', 'dist');
@@ -55,6 +65,28 @@ async function filesUnder(dir, suffix, out = []) {
 function fail(message) {
 	console.error(message);
 	process.exitCode = 1;
+}
+
+/**
+ * The text of the brace block that starts at or after `index`.
+ *
+ * The appended blocks all live in the same `@layer astryx-theme`, so a plain
+ * `css.slice(reduceIndex)` would run on into the reduced-motion and squircle
+ * blocks that follow — and a selector missing from the transparency block could
+ * be "found" in a later one. Brace matching ends it where the block ends.
+ */
+function blockAt(css, index) {
+	const start = css.indexOf('{', index);
+	if (start === -1) return '';
+	let depth = 0;
+	for (let i = start; i < css.length; i++) {
+		if (css[i] === '{') depth++;
+		else if (css[i] === '}') {
+			depth--;
+			if (depth === 0) return css.slice(index, i + 1);
+		}
+	}
+	return css.slice(index);
 }
 
 // -----------------------------------------------------------------------------
@@ -86,7 +118,7 @@ if (knownComponents.size === 0) {
 }
 
 const css = await readFile(join(packageDir, 'dist', 'theme.css'), 'utf8').catch(() => {
-	fail('dist/theme.css does not exist — run `pnpm build` in this package first.');
+	fail('dist/theme.css does not exist — run `bun run build` in this package first.');
 	return '';
 });
 
@@ -134,28 +166,49 @@ const varInBackdrop = [
 ];
 
 // -----------------------------------------------------------------------------
-// 6. Reduced transparency switches off every glass surface
+// 6. Reduced transparency
 //
 // The block is appended by `scripts/build-theme.mjs` from the theme object, so
 // this asserts the two ends agree rather than re-deriving the list: every
-// selector that got a material must appear in the block, and the block must
-// exist at all.
+// selector that got a material must appear in the block, the block must exist at
+// all, and no surface may be left translucent inside it. The last half is new
+// and is the one the first pass missed: the secondary Button's fill is a literal
+// in its component override, so it kept its 56% alpha while every token-driven
+// surface went opaque.
 // -----------------------------------------------------------------------------
 
 const reduceIndex = css.indexOf('prefers-reduced-transparency');
-const reduceBlock = reduceIndex === -1 ? '' : css.slice(reduceIndex);
-const glassSelectors = [];
-for (const [component, styleKeys] of Object.entries(liquidGlassTheme.components ?? {})) {
-	for (const [styleKey, styles] of Object.entries(styleKeys)) {
-		if ('backdropFilter' in styles) glassSelectors.push({ component, styleKey });
-	}
-}
+const reduceBlock = reduceIndex === -1 ? '' : blockAt(css, reduceIndex);
+const surfaces = glassSelectors(liquidGlassTheme);
+
+// `#rrggbbaa` with a non-ff alpha. `light-dark(#ffffff, #2c2c2e)` and the single
+// `--color-*: #ffffff` declarations are six-digit values and pass.
+const translucentBackgrounds = [...reduceBlock.matchAll(/background-color:\s*(#[0-9a-fA-F]{8})\b/g)]
+	.map((m) => m[1])
+	.filter((hex) => !hex.toLowerCase().endsWith('ff'));
+
 const unreduced =
 	reduceIndex === -1
 		? ['(the whole @media block is missing)']
-		: glassSelectors
-				.filter(({ component }) => !reduceBlock.includes(`.astryx-${component}`))
-				.map(({ component, styleKey }) => `${component} / ${styleKey}`);
+		: surfaces
+				.filter((selector) => !reduceBlock.includes(selector))
+				.map((selector) => selector.replace(/^\.astryx-/, ''));
+
+const missingReducedComponents = Object.entries(reducedTransparencyComponents).flatMap(
+	([component, styleKeys]) =>
+		Object.keys(styleKeys)
+			.map((styleKey) => selectorFor(component, styleKey))
+			.filter((selector) => !reduceBlock.includes(selector))
+);
+
+// -----------------------------------------------------------------------------
+// 7. Every theme-authored transition is zeroed under reduced motion
+// -----------------------------------------------------------------------------
+
+const motionIndex = css.indexOf('prefers-reduced-motion');
+const motionBlock = motionIndex === -1 ? '' : blockAt(css, motionIndex);
+const translated = transitionSelectors(liquidGlassTheme);
+const unmoved = translated.filter((selector) => !motionBlock.includes(selector));
 
 // -----------------------------------------------------------------------------
 // Report
@@ -166,7 +219,13 @@ console.log(
 	`components overridden: ${declaredComponents.length} (${unknownComponents.length} unknown)`
 );
 console.log(`backdrop-filter:     ${unprefixed} unprefixed / ${prefixed} -webkit-`);
-console.log(`glass surfaces:      ${glassSelectors.length} (${unreduced.length} not reduced)`);
+console.log(
+	`glass surfaces:      ${surfaces.length} (${unreduced.length} not reduced, ` +
+		`${translucentBackgrounds.length} translucent backgrounds)`
+);
+console.log(
+	`state transitions:   ${translated.length} themed (${unmoved.length} not reduced under motion)`
+);
 console.log(`known token names:   ${knownTokens.size}`);
 console.log(`known components:    ${knownComponents.size}`);
 
@@ -209,6 +268,28 @@ if (unreduced.length) {
 	fail(
 		'\n--- glass surfaces not switched off under prefers-reduced-transparency ---\n' +
 			unreduced.map((n) => `  ${n}`).join('\n')
+	);
+}
+if (translucentBackgrounds.length) {
+	fail(
+		'\n--- translucent backgrounds left in the prefers-reduced-transparency block ---\n' +
+			'  Every surface must be opaque there; an alpha fill is the one thing the\n' +
+			'  preference exists to remove.\n' +
+			translucentBackgrounds.map((v) => `  ${v}`).join('\n')
+	);
+}
+if (missingReducedComponents.length) {
+	fail(
+		'\n--- component overrides missing from prefers-reduced-transparency ---\n' +
+			missingReducedComponents.map((n) => `  ${n}`).join('\n')
+	);
+}
+if (motionIndex === -1) {
+	fail('\n--- the prefers-reduced-motion block is missing ---');
+} else if (unmoved.length) {
+	fail(
+		'\n--- theme transitions not zeroed under prefers-reduced-motion ---\n' +
+			unmoved.map((n) => `  ${n}`).join('\n')
 	);
 }
 

@@ -10,7 +10,7 @@ export default {
 	displayName: 'Chat Composer Input',
 	subComponentOf: 'Chat',
 	description:
-		"Rich text input for the chat composer. Supports trigger menus (type @ or / to open a typeahead), inline tokens rendered as badges, message history recall with ArrowUp/Down, paste/drop file handling, and a 16px touch-device font-size floor to prevent iOS input zoom. Pass it to ChatComposer's input slot when you need more than a plain textarea.",
+		"Rich text input for the chat composer. Supports trigger menus (type @ or / to open a typeahead), inline tokens rendered as badges, message history recall with ArrowUp/Down, paste/drop file handling, and a 16px iOS font-size floor to prevent input zoom. Pass it to ChatComposer's input slot when you need more than a plain textarea.",
 	keywords: [
 		'chat',
 		'message',
@@ -31,12 +31,61 @@ export default {
 	group: 'Chat',
 	category: 'Chat',
 	isHiddenFromOverview: true,
+	usage: {
+		description:
+			"Pass ChatComposerInput to ChatComposer's input slot when the draft needs trigger menus, inline tokens, history recall, dictation insertion, or file intake.",
+		bestPractices: [
+			{
+				guidance: true,
+				description:
+					'Use handleRef for programmatic text or token insertion; inserted text follows the same onChange pipeline as typing.'
+			},
+			{
+				guidance: true,
+				description:
+					'Use onFiles for files pasted or dropped onto the editor, and keep file validation and upload progress in the product layer.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use custom token rendering for ordinary mentions or commands; prefer the structured badge form so tokens remain predictable and themeable.'
+			}
+		],
+		anatomy: [
+			{
+				name: 'Input root',
+				required: true,
+				description: 'The themed container that forwards the root ref and BaseProps styling seams.'
+			},
+			{
+				name: 'Editable surface',
+				required: true,
+				description:
+					'The labeled contenteditable textbox or combobox that owns text, selection, keyboard, paste, and drop behavior.'
+			},
+			{
+				name: 'Placeholder',
+				required: false,
+				description: 'Visual guidance shown only while the serialized draft is empty.'
+			},
+			{
+				name: 'Trigger menu',
+				required: false,
+				description: 'The suggestion popup rendered while a configured trigger is active.'
+			},
+			{
+				name: 'Inline token',
+				required: false,
+				description: 'A non-editable badge or custom rendering with a stable serialized value.'
+			}
+		]
+	},
 	props: [
 		{
 			name: 'handleRef',
 			type: 'ChatComposerInputHandle | null',
 			description:
-				'Imperative handle for programmatic control: insertToken, insertText, focus, and getValue.'
+				'Imperative handle for programmatic control: insertToken, expandToken, insertText, focus, and getValue.'
 		},
 		{
 			name: 'value',
@@ -66,7 +115,7 @@ export default {
 			name: 'triggers',
 			type: 'ChatComposerTrigger[]',
 			description:
-				'Trigger definitions for typeahead menus. Each trigger specifies a character (@ or /), a search source, and an onSelect handler that returns the token to insert.'
+				'Trigger definitions for typeahead menus. Each trigger specifies a character (@ or /), a search source, and an onSelect handler that returns the token to insert. Set hasMultiWordQuery: true when suggestions contain spaces (people, topics): the query then runs to a line break or about 64 characters instead of ending at the first space. Per-trigger emptySearchText (ReactNode) is the message when the query matched nothing.'
 		},
 		{
 			name: 'debounceMs',
@@ -95,7 +144,14 @@ export default {
 		{
 			name: 'onPaste',
 			type: '(event: ClipboardEvent, text: string) => boolean | void',
-			description: 'Called when text is pasted. Use to intercept or transform pasted content.'
+			description:
+				'Called when plain text is pasted. Return true after handling the text yourself; otherwise ChatComposerInput inserts it or applies paste-as-token behavior.'
+		},
+		{
+			name: 'pasteAsToken',
+			type: 'UseChatPasteAsTokenReturn | false',
+			description:
+				'Paste-as-token behavior. By default, plain-text pastes over 200 characters become expandable tokens. Pass false to keep every text paste inline, or provide useChatPasteAsToken() to customize the conversion.'
 		},
 		{
 			name: 'onFiles',
@@ -114,6 +170,13 @@ export default {
 			type: '(event: KeyboardEvent) => void',
 			description:
 				'Key-down handler invoked before the built-in Enter/history behavior (after any open trigger menu). The seam for platform-specific keys: call event.preventDefault() to suppress the default submit (e.g. newline on a touch keyboard), or act on the event yourself to add behavior (e.g. submit on Cmd/Ctrl+Enter). IME composition is always respected; Enter never submits mid-composition.'
+		},
+		{
+			name: 'enterKeyHint',
+			type: "'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send'",
+			description:
+				'What the Return key of a touch keyboard says (the native enterkeyhint). Enter sends the message, so it defaults to send and iOS shows its Send key. When onKeyDown makes Enter insert a line break on touch keyboards, pass enter so the key shows Return again.',
+			default: "'send'"
 		}
 	]
 };

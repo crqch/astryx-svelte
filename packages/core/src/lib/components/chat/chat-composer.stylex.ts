@@ -3,7 +3,6 @@ import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import {
 	borderVars,
 	colorVars,
-	durationVars,
 	easeVars,
 	radiusVars,
 	shadowVars,
@@ -62,7 +61,8 @@ const styles = stylex.create({
 		// two tiers differ in more than depth (`none` draws a real border and
 		// re-insets the padding), so neither can be expressed as an override of a
 		// base shadow. `border-color` joins the transition for the same reason.
-		transition: `box-shadow ${durationVars['--duration-fast']} ${easeVars['--ease-standard']}, border-color ${durationVars['--duration-fast']} ${easeVars['--ease-standard']}`
+		transitionProperty: 'box-shadow, border-color',
+		transitionTimingFunction: easeVars['--ease-standard']
 	},
 	header: {
 		display: 'flex',
@@ -123,6 +123,11 @@ const styles = stylex.create({
 		alignItems: 'center',
 		gap: spacingVars['--spacing-1']
 	},
+	interruptibleFooter: {
+		// The composer may disable editing while a response is streaming. Restore
+		// pointer hit-testing for the footer so its Stop action stays reachable.
+		pointerEvents: 'auto'
+	},
 	statusBar: {
 		position: 'relative',
 		zIndex: 0,
@@ -150,11 +155,29 @@ const styles = stylex.create({
 	},
 	statusError: {
 		backgroundColor: colorVars['--color-error-muted'],
-		color: colorVars['--color-text-red']
+		color: colorVars['--color-on-error-muted'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible.
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: {
+			default: null,
+			'@media (forced-colors: active)': 'CanvasText'
+		},
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	statusWarning: {
 		backgroundColor: colorVars['--color-warning-muted'],
-		color: colorVars['--color-text-yellow']
+		color: colorVars['--color-on-warning-muted'],
+		// Forced colors replace status fills with Canvas; this boundary keeps the
+		// fill's shape visible.
+		outlineWidth: { default: null, '@media (forced-colors: active)': '1px' },
+		outlineStyle: { default: null, '@media (forced-colors: active)': 'solid' },
+		outlineColor: {
+			default: null,
+			'@media (forced-colors: active)': 'CanvasText'
+		},
+		outlineOffset: { default: null, '@media (forced-colors: active)': '-1px' }
 	},
 	compact: {
 		// Override the padding *var* (not the `padding` property) so both the base
@@ -259,8 +282,8 @@ export function chatComposerFooterLeftAttrs(): SvelteStyleAttrs {
 	return sx(styles.footerLeft);
 }
 
-export function chatComposerFooterRightAttrs(): SvelteStyleAttrs {
-	return sx(styles.footerRight);
+export function chatComposerFooterRightAttrs(isInterruptible: boolean): SvelteStyleAttrs {
+	return sx(styles.footerRight, isInterruptible && styles.interruptibleFooter);
 }
 
 export function chatComposerStatusBarAttrs(

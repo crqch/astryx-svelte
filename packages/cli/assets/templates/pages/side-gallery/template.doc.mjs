@@ -3,7 +3,7 @@
  * `assets/templates/pages/side-gallery/page.tsx`.
  */
 
-/** @type {import('@astryx-svelte/cli/authoring').TemplateDoc} */
+/** @type {import('@astryx-sv/cli/authoring').TemplateDoc} */
 export const doc = {
 	type: 'page',
 	name: 'Side Gallery',

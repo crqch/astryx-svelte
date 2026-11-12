@@ -7,8 +7,8 @@
 	`CodeBlock` get theirs where the array is written, in the prop expression.
 -->
 <script lang="ts">
-	import type { ChatToolCallItem } from '@astryx-svelte/core';
-	import { ChatToolCalls, CodeBlock } from '@astryx-svelte/core';
+	import type { ChatToolCallItem } from '@astryx-sv/core';
+	import { ChatToolCalls, CodeBlock } from '@astryx-sv/core';
 
 	const editDiff = `--- a/src/utils/formatDate.ts
 +++ b/src/utils/formatDate.ts

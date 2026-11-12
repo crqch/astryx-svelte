@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ChatComposer, Stack } from '@astryx-svelte/core';
+	import { ChatComposer, Stack } from '@astryx-sv/core';
 </script>
 
 <Stack direction="vertical" width="100%" style="max-width: 450px">

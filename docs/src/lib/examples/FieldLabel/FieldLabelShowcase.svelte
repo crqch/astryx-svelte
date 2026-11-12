@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { FieldLabel, VStack } from '@astryx-svelte/core';
+	import { FieldLabel, VStack } from '@astryx-sv/core';
 </script>
 
 <!-- Upstream authors the padlock inline in the story file, so it transcribes as-is. -->

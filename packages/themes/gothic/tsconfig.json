@@ -16,6 +16,6 @@
 	// The theme is authored against the compiler's own types, which it reaches
 	// through core's built `dist/`. So `check` here depends on core having been
 	// built — pnpm's topological ordering guarantees that, since this package
-	// devDepends on `@astryx-svelte/core`.
+	// devDepends on `@astryx-sv/core`.
 	"include": ["src/**/*.ts"]
 }

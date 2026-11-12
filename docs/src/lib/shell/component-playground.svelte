@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { Heading, Section, Text, VStack } from '@astryx-svelte/core';
+	import { Heading, Section, Text, VStack } from '@astryx-sv/core';
 	import type { ComponentEntry } from '$lib/generated/types.js';
 	import PlaygroundStage from './playground-stage.svelte';
 	import PropControlCell from './prop-control-cell.svelte';

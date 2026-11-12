@@ -2,7 +2,7 @@
 
 **Status:** research and phase plan, not yet implemented
 **Date:** 2026-08-15
-**Scope:** `docs/`, the SvelteKit app deployed at https://astryx-svelte.rohitk06.in/. Not the
+**Scope:** `docs/`, the SvelteKit app deployed at https://astryx.crqch.dev/. Not the
 component library's own README or npm listing.
 
 ## The problem, stated precisely
@@ -354,5 +354,5 @@ feature. Not recommended solely for this purpose; note it as available if the ho
   property lists such as `APIReference`'s `assemblyVersion`/`programmingModel` are noted as a legacy,
   compiled-SDK-flavored fit rather than a natural match for a component prop table)
 - Repo sources: every file path and line number in Parts 1, 3 and 4 was read directly from this
-  checkout on 2026-08-15, plus live HTTP checks against https://astryx-svelte.rohitk06.in/ on the
-  same date (`curl`/`WebFetch`, raw responses recorded in this audit)
+  checkout on 2026-08-15, plus live HTTP checks against the then-live deployment on the same date
+  (`curl`/`WebFetch`, raw responses recorded in this audit)

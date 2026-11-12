@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Avatar, AvatarGroup, AvatarGroupOverflow, Stack, Text } from '@astryx-svelte/core';
+	import { Avatar, AvatarGroup, AvatarGroupOverflow, Stack, Text } from '@astryx-sv/core';
 
 	const REVIEWERS = [{ name: 'Alex Daniels' }, { name: 'Ann Smith' }, { name: 'Carol Davis' }];
 </script>

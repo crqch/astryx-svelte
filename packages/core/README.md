@@ -5,13 +5,13 @@
 -->
 
 <img
-	src="https://raw.githubusercontent.com/DevRohit06/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
+	src="https://raw.githubusercontent.com/crqch/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
 	alt=""
 	width="64"
 	height="64"
 />
 
-# @astryx-svelte/core
+# @astryx-sv/core
 
 Svelte 5 components, theme system, and utilities for Astryx — a port of Meta's open source design
 system. Unofficial, and not affiliated with Meta. For project setup, see [Quick Start](#quick-start)
@@ -37,9 +37,9 @@ Pick one.
 The same thing Astryx's own package does, and what most projects should do:
 
 ```ts
-import '@astryx-svelte/core/base.css';
-import '@astryx-svelte/core/astryx.css';
-import '@astryx-svelte/theme-neutral/theme.css';
+import '@astryx-sv/core/base.css';
+import '@astryx-sv/core/astryx.css';
+import '@astryx-sv/theme-neutral/theme.css';
 ```
 
 That is the entire setup. `dist` ships compiled, so nothing needs to run StyleX.
@@ -73,7 +73,7 @@ For Vite (and therefore SvelteKit), **use the preset**:
 
 ```ts
 // vite.config.ts
-import { astryx } from '@astryx-svelte/core/vite';
+import { astryx } from '@astryx-sv/core/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -113,10 +113,10 @@ export default defineConfig({
 	// Vite's dev-time pre-bundler runs esbuild outside the plugin pipeline, so anything
 	// it optimises never reaches the StyleX transform and `stylex.create` survives into
 	// the browser as a runtime no-op.
-	optimizeDeps: { exclude: ['@astryx-svelte/core'] },
+	optimizeDeps: { exclude: ['@astryx-sv/core'] },
 	// Same reasoning for the server build: an externalised dependency is imported from
 	// node_modules at runtime rather than transformed.
-	ssr: { noExternal: ['@astryx-svelte/core'] }
+	ssr: { noExternal: ['@astryx-sv/core'] }
 });
 ```
 
@@ -142,24 +142,24 @@ pnpm exec astryx-svelte search button         # components, utils, docs and temp
 ```
 
 Everything is exported from the package root. There are no per-component subpath entrypoints —
-Astryx publishes one per component and this port publishes none, so `@astryx-svelte/core` is where
+Astryx publishes one per component and this port publishes none, so `@astryx-sv/core` is where
 `Button` lives and the barrel is tree-shaken by your bundler. The subpaths that do exist are for
 non-component surfaces:
 
-| Subpath                            | What it is                                                   |
-| ---------------------------------- | ------------------------------------------------------------ |
-| `@astryx-svelte/core`              | Every component, every util, every props type                |
-| `@astryx-svelte/core/theme`        | `Theme`, `useTheme`, the token vars                          |
-| `@astryx-svelte/core/theme/define` | `defineTheme` and its types, for authoring a theme           |
-| `@astryx-svelte/core/theme/syntax` | Syntax-highlighting themes for `CodeBlock`                   |
-| `@astryx-svelte/core/hooks`        | The composables, without the components                      |
-| `@astryx-svelte/core/utils`        | Framework-free helpers                                       |
-| `@astryx-svelte/core/naming`       | The class-name helpers themes and integrations build against |
-| `@astryx-svelte/core/i18n`         | The message catalog runtime                                  |
-| `@astryx-svelte/core/locales/*`    | The shipped catalogs (`en`, `fr-FR`, `pseudo`)               |
-| `@astryx-svelte/core/vite`         | The `astryx()` Vite preset, for compiling from `source`      |
-| `@astryx-svelte/core/base.css`     | Layer order and `color-scheme` — always needed               |
-| `@astryx-svelte/core/astryx.css`   | Every component's styles, pre-built — see above              |
+| Subpath                        | What it is                                                   |
+| ------------------------------ | ------------------------------------------------------------ |
+| `@astryx-sv/core`              | Every component, every util, every props type                |
+| `@astryx-sv/core/theme`        | `Theme`, `useTheme`, the token vars                          |
+| `@astryx-sv/core/theme/define` | `defineTheme` and its types, for authoring a theme           |
+| `@astryx-sv/core/theme/syntax` | Syntax-highlighting themes for `CodeBlock`                   |
+| `@astryx-sv/core/hooks`        | The composables, without the components                      |
+| `@astryx-sv/core/utils`        | Framework-free helpers                                       |
+| `@astryx-sv/core/naming`       | The class-name helpers themes and integrations build against |
+| `@astryx-sv/core/i18n`         | The message catalog runtime                                  |
+| `@astryx-sv/core/locales/*`    | The shipped catalogs (`en`, `fr-FR`, `pseudo`)               |
+| `@astryx-sv/core/vite`         | The `astryx()` Vite preset, for compiling from `source`      |
+| `@astryx-sv/core/base.css`     | Layer order and `color-scheme` — always needed               |
+| `@astryx-sv/core/astryx.css`   | Every component's styles, pre-built — see above              |
 
 ## Page Layouts
 
@@ -182,7 +182,7 @@ way.
 
 ## Astryx CLI
 
-`@astryx-svelte/cli` provides the tooling around the library: component and util docs, reference
+`@astryx-sv/cli` provides the tooling around the library: component and util docs, reference
 topics, search, theme scaffolding and building, source ejection, and upgrade codemods.
 
 ```bash
@@ -198,7 +198,7 @@ pnpm exec astryx-svelte doctor              # diagnose a project's setup
 ```
 
 ```bash
-npm install -D @astryx-svelte/cli
+npm install -D @astryx-sv/cli
 ```
 
 The binary is `astryx-svelte`, not `astryx`: `astryx` on npm is an unrelated package and Astryx's
@@ -206,25 +206,25 @@ own CLI already claims it, so a distinct name means both can be installed in one
 
 ## Related Packages
 
-| Package                             | Description                                                     |
-| ----------------------------------- | --------------------------------------------------------------- |
-| `@astryx-svelte/cli`                | Component docs, reference topics, themes, scaffolding, codemods |
-| `@astryx-svelte/theme-neutral`      | The default Astryx look — muted and minimal                     |
-| `@astryx-svelte/theme-butter`       | Warm creamy yellows with a friendly blue accent                 |
-| `@astryx-svelte/theme-chocolate`    | Rich cozy browns with Fraunces headings                         |
-| `@astryx-svelte/theme-gothic`       | Deep blue-grays and a display serif; dark-only                  |
-| `@astryx-svelte/theme-matcha`       | Earthy greens, calm and organic                                 |
-| `@astryx-svelte/theme-stone`        | Warm stone and slate, understated                               |
-| `@astryx-svelte/theme-y2k`          | Hot pinks, lime greens, and Poppins                             |
-| `@astryx-svelte/theme-liquid-glass` | macOS translucent materials; **no upstream counterpart**        |
+| Package                         | Description                                                     |
+| ------------------------------- | --------------------------------------------------------------- |
+| `@astryx-sv/cli`                | Component docs, reference topics, themes, scaffolding, codemods |
+| `@astryx-sv/theme-neutral`      | The default Astryx look — muted and minimal                     |
+| `@astryx-sv/theme-butter`       | Warm creamy yellows with a friendly blue accent                 |
+| `@astryx-sv/theme-chocolate`    | Rich cozy browns with Fraunces headings                         |
+| `@astryx-sv/theme-gothic`       | Deep blue-grays and a display serif; dark-only                  |
+| `@astryx-sv/theme-matcha`       | Earthy greens, calm and organic                                 |
+| `@astryx-sv/theme-stone`        | Warm stone and slate, understated                               |
+| `@astryx-sv/theme-y2k`          | Hot pinks, lime greens, and Poppins                             |
+| `@astryx-sv/theme-liquid-glass` | macOS translucent materials; **no upstream counterpart**        |
 
 ## Resources
 
-- [The documentation site](https://astryx-svelte.rohitk06.in/) — every component page, reference
+- [The documentation site](https://astryx.crqch.dev/) — every component page, reference
   topic and example, rendering live Svelte from the files in this repository
 - [Astryx](https://astryx.atmeta.com/) — the design system this ports, and the source of every
   documented behaviour
-- [The repository](https://github.com/devrohit06/astryx-svelte)
+- [The repository](https://github.com/crqch/astryx-svelte)
 
 ## Quick Start
 
@@ -234,10 +234,10 @@ throughout, so there is no Svelte 4 compatibility mode.
 Install the library, a theme, and StyleX:
 
 ```bash
-npm install @astryx-svelte/core @astryx-svelte/theme-neutral
+npm install @astryx-sv/core @astryx-sv/theme-neutral
 ```
 
-`@stylexjs/stylex` is a peer dependency and npm and pnpm install it for you. It is required at
+`@stylexjs/stylex` is a peer dependency and npm, pnpm and Bun install it for you. It is required at
 runtime — the components reach `stylex.props()` through `sx()` — so add it explicitly if your
 package manager does not resolve peers automatically.
 
@@ -245,9 +245,9 @@ package manager does not resolve peers automatically.
 
 ```css
 /* src/app.css */
-@import '@astryx-svelte/core/base.css';
-@import '@astryx-svelte/core/astryx.css';
-@import '@astryx-svelte/theme-neutral/theme.css';
+@import '@astryx-sv/core/base.css';
+@import '@astryx-sv/core/astryx.css';
+@import '@astryx-sv/theme-neutral/theme.css';
 ```
 
 There is no step for configuring a compiler — `astryx.css` is pre-built. (If you would rather
@@ -270,8 +270,8 @@ layer deliberately: unlayered rules beat layered ones regardless of specificity.
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-	import { Theme } from '@astryx-svelte/core';
-	import { neutralTheme } from '@astryx-svelte/theme-neutral';
+	import { Theme } from '@astryx-sv/core';
+	import { neutralTheme } from '@astryx-sv/theme-neutral';
 	import '../app.css';
 
 	const { children } = $props();
@@ -290,7 +290,7 @@ component.
 
 ```svelte
 <script lang="ts">
-	import { Button, VStack } from '@astryx-svelte/core';
+	import { Button, VStack } from '@astryx-sv/core';
 </script>
 
 <VStack gap={2}>
@@ -314,7 +314,7 @@ export const overrides = stylex.create({
 
 ```svelte
 <script lang="ts">
-	import { Button } from '@astryx-svelte/core';
+	import { Button } from '@astryx-sv/core';
 	import { overrides } from './page.stylex.js';
 </script>
 
@@ -332,8 +332,8 @@ them.
 
 ```svelte
 <script lang="ts">
-	import { I18nProvider } from '@astryx-svelte/core';
-	import fr from '@astryx-svelte/core/locales/fr-FR.json';
+	import { I18nProvider } from '@astryx-sv/core';
+	import fr from '@astryx-sv/core/locales/fr-FR.json';
 </script>
 
 <I18nProvider locale="fr-FR" messages={fr}>

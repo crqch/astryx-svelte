@@ -7,26 +7,22 @@ import SlotProbe from './fixtures/slot-probe.svelte';
 import SpinnerMany from './fixtures/spinner-many.svelte';
 
 /**
- * Ported from Astryx's `Spinner/Spinner.test.tsx`, all 24 `it` blocks (21 plain
- * plus three `it.each` tables) at the 0.5.0 pin, across its two describe blocks.
- * Nothing is dropped.
- *
- * The suite is a late addition: `Spinner` was one of the first components
- * ported, before the case-for-case discipline, and its `label` prop was missed
- * with it — the styles module had `wrapper` all along with nothing rendering it.
- * The prop is now restored and this suite pins it.
+ * Ported from Astryx's `Spinner/Spinner.test.tsx` at the 0.7.13 pin, across its
+ * component and `Spinner ring` blocks. `Spinner ring` tracks the 0.7.13
+ * two-svg rotor shape — a static track svg and an arc svg inside the turning
+ * span — so the geometry is assertable from attributes and the colours come off
+ * the cascade. Upstream's computed-StyleX motion cases (injected-CSS reads) and
+ * its `geometry var registration` block are not ported here and remain in the
+ * case delta.
  *
  * `label={<span/>}` becomes the shared `slot-probe` (a snippet), and
  * `renders as an inline element (span)` reads the *unlabelled* root, which is
  * where upstream's `data-testid` lands too — with a label the testid moves to
  * the wrapper `<div>`, exactly as upstream routes it.
  *
- * `Spinner ring` is new at upstream 0.5.0, where the canvas ring became two SVG
- * `<circle>`s: the geometry is assertable from attributes now, and the colours
- * come off the cascade, so nothing reads a computed style to paint. Two of its
- * cases are **restated** rather than translated, each marked at the case, and
- * both for the same reason — upstream's environment is jsdom, which implements
- * no Web Animations, while this project's is real Chromium, which does.
+ * Two ring cases are **restated** rather than translated, each marked at the
+ * case, both because upstream's environment is jsdom, which implements no Web
+ * Animations, while this project's is real Chromium, which does.
  *
  * Runs in the **client** (real Chromium) project: the ring is real layout, and
  * `expect.element` retrying stands in for upstream's `waitFor`.
@@ -44,10 +40,15 @@ const SIZES = {
  * Upstream's `ring`/`circles` helpers read back through `screen.getByTestId`;
  * here `screen` is per-render, so they take the resolved root element instead.
  */
-const ringOf = (root: Element): SVGSVGElement => root.querySelector('svg') as SVGSVGElement;
+/** The track's svg and the arc's svg, in that order. */
+const ringsOf = (root: Element): SVGSVGElement[] => [...root.querySelectorAll('svg')];
+
+/** The box that turns: the arc's svg sits inside it, the track's does not. */
+const rotorOf = (root: Element): HTMLSpanElement =>
+	ringsOf(root)[1].parentElement as HTMLSpanElement;
 
 const circlesOf = (root: Element): { track: SVGCircleElement; arc: SVGCircleElement } => {
-	const [track, arc] = [...ringOf(root).querySelectorAll('circle')];
+	const [track, arc] = [...root.querySelectorAll('circle')];
 	return { track, arc };
 };
 
@@ -180,12 +181,24 @@ describe('Spinner ring', () => {
 		vi.restoreAllMocks();
 	});
 
+	it('keeps the track out of the rotor', async () => {
+		const screen = await render(Spinner, { props: { 'data-testid': 'spinner' } });
+		const root = screen.getByTestId('spinner').element();
+		expect(rotorOf(root).contains(circlesOf(root).arc)).toBe(true);
+		expect(rotorOf(root).contains(circlesOf(root).track)).toBe(false);
+		expect(rotorOf(root).getAttribute('aria-hidden')).toBe('true');
+	});
+
 	it('draws the ring in SVG', async () => {
 		const screen = await render(Spinner, { props: { 'data-testid': 'spinner' } });
 		const root = screen.getByTestId('spinner').element();
-		const svg = ringOf(root);
-		expect(svg).not.toBeNull();
-		expect(svg.querySelectorAll('circle')).toHaveLength(2);
+		// The track and the arc each have their own svg: the track stays put and
+		// the arc's svg sits in the rotor that turns.
+		const [trackSvg, arcSvg] = ringsOf(root);
+		expect(trackSvg.querySelectorAll('circle')).toHaveLength(1);
+		expect(arcSvg.querySelectorAll('circle')).toHaveLength(1);
+		expect(trackSvg.parentElement).toBe(root);
+		expect(rotorOf(root).parentElement).toBe(root);
 		expect(root.querySelector('canvas')).toBeNull();
 	});
 
@@ -196,12 +209,23 @@ describe('Spinner ring', () => {
 				props: { size: size as keyof typeof SIZES, 'data-testid': 'spinner' }
 			});
 			const root = screen.getByTestId('spinner').element();
+			// No viewBox: one user unit is one px, so the attributes below mean px.
+			// They are the no-stylesheet fallback; CSS sizes the frame from the box.
+			// The track's are zero, so without a stylesheet the arc alone fills the
+			// box rather than sitting beside a second disc.
 			const frame = diameter + border * 2;
-			expect(ringOf(root).getAttribute('viewBox')).toBe(`0 0 ${frame} ${frame}`);
+			const [trackSvg, arcSvg] = ringsOf(root);
+			for (const svg of [trackSvg, arcSvg]) {
+				expect(svg.getAttribute('viewBox')).toBeNull();
+			}
+			expect(Number(arcSvg.getAttribute('width'))).toBe(frame);
+			expect(Number(arcSvg.getAttribute('height'))).toBe(frame);
+			expect(Number(trackSvg.getAttribute('width'))).toBe(0);
+			expect(Number(trackSvg.getAttribute('height'))).toBe(0);
 			const { track, arc } = circlesOf(root);
 			for (const c of [track, arc]) {
-				expect(Number(c.getAttribute('cx'))).toBe(frame / 2);
-				expect(Number(c.getAttribute('cy'))).toBe(frame / 2);
+				expect(c.getAttribute('cx')).toBe('50%');
+				expect(c.getAttribute('cy')).toBe('50%');
 				expect(Number(c.getAttribute('r'))).toBe(diameter / 2);
 				expect(Number(c.getAttribute('stroke-width'))).toBe(border);
 			}
@@ -222,10 +246,12 @@ describe('Spinner ring', () => {
 
 	it('starts the arc at twelve o’clock', async () => {
 		const screen = await render(Spinner, { props: { 'data-testid': 'spinner' } });
-		const frame = SIZES.md.diameter + SIZES.md.border * 2;
-		expect(circlesOf(screen.getByTestId('spinner').element()).arc.getAttribute('transform')).toBe(
-			`rotate(-90 ${frame / 2} ${frame / 2})`
-		);
+		// A CSS rotation about the shape's own box, not an SVG transform about a
+		// centre in user units — the centre is `50%`, so there is no user-unit
+		// number to name, and the offset has to survive a themed diameter.
+		expect(
+			circlesOf(screen.getByTestId('spinner').element()).arc.getAttribute('transform')
+		).toBeNull();
 	});
 
 	// The whole point of the SVG ring: the colours come off the cascade, so
@@ -248,12 +274,12 @@ describe('Spinner ring', () => {
 	);
 
 	it('schedules no frame where the Web Animations API is absent', async () => {
-		// RESTATED: upstream asserts the precondition — `expect(SVGElement.prototype)
+		// RESTATED: upstream asserts the precondition — `expect(HTMLElement.prototype)
 		// .not.toHaveProperty('getAnimations')` — which holds because its environment
 		// is jsdom. Real Chromium implements the API, so the guarded branch is
 		// unreachable until the inherited method is shadowed with `undefined` for the
 		// duration of the render. The assertion is upstream's unchanged: with no
-		// `getAnimations`, the ring schedules no frame.
+		// `getAnimations`, the rotor schedules no frame.
 		//
 		// The pending-frame flag is module state shared by every spinner on the page,
 		// so one real frame is awaited first: an earlier case in this file scheduled
@@ -261,7 +287,7 @@ describe('Spinner ring', () => {
 		// for the wrong reason. jsdom has no frame loop and upstream has no such flag
 		// to drain.
 		await new Promise((resolve) => requestAnimationFrame(resolve));
-		Object.defineProperty(SVGElement.prototype, 'getAnimations', {
+		Object.defineProperty(HTMLElement.prototype, 'getAnimations', {
 			value: undefined,
 			configurable: true,
 			writable: true
@@ -269,11 +295,11 @@ describe('Spinner ring', () => {
 		const raf = vi.spyOn(window, 'requestAnimationFrame');
 		try {
 			const screen = await render(Spinner, { props: { 'data-testid': 'spinner' } });
-			expect(ringOf(screen.getByTestId('spinner').element())).not.toBeNull();
+			expect(rotorOf(screen.getByTestId('spinner').element())).not.toBeNull();
 			expect(raf).not.toHaveBeenCalled();
 		} finally {
 			// @ts-expect-error — dropping the shadow restores Chromium's real surface
-			delete SVGElement.prototype.getAnimations;
+			delete HTMLElement.prototype.getAnimations;
 		}
 	});
 
@@ -295,7 +321,7 @@ describe('Spinner ring', () => {
 			animations.push(a);
 			return [a];
 		});
-		Object.defineProperty(SVGElement.prototype, 'getAnimations', {
+		Object.defineProperty(HTMLElement.prototype, 'getAnimations', {
 			value: getAnimations,
 			configurable: true,
 			writable: true
@@ -316,6 +342,13 @@ describe('Spinner ring', () => {
 			frames.forEach((cb) => cb(0));
 			expect(animations).toHaveLength(5);
 			expect(animations.every((a) => a.startTime === 0)).toBe(true);
+			// The rotation lives on the rotor itself, the element the attachment
+			// sits on.
+			expect(getAnimations.mock.contexts).toEqual(
+				Array.from({ length: 5 }, (_, i) =>
+					rotorOf(screen.container.querySelector(`[data-testid="spinner-${i}"]`) as Element)
+				)
+			);
 			// The pin runs on the branch the other shade cases cannot reach, so the
 			// no-read assertion is made here too.
 			expect(
@@ -323,7 +356,7 @@ describe('Spinner ring', () => {
 			).toEqual([]);
 		} finally {
 			// @ts-expect-error — removing the stub restores Chromium's real surface
-			delete SVGElement.prototype.getAnimations;
+			delete HTMLElement.prototype.getAnimations;
 		}
 	});
 });

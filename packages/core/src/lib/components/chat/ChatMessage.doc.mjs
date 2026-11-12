@@ -30,6 +30,17 @@ export default {
 	],
 	group: 'Chat',
 	category: 'Chat',
+	playground: {
+		defaults: {
+			sender: 'assistant'
+		},
+		wrapper: {
+			component: 'Stack',
+			props: {
+				width: 480
+			}
+		}
+	},
 	props: [
 		{
 			name: 'sender',
@@ -47,24 +58,26 @@ export default {
 		{
 			name: 'avatar',
 			type: 'Snippet',
-			description: 'Avatar element rendered beside the message. Typically Avatar.'
+			description:
+				'Avatar element rendered beside the message. Typically Avatar. `null`, booleans, and empty strings create no slot; any other content that renders nothing collapses its slot.'
 		},
 		{
 			name: 'name',
 			type: 'string | Snippet',
 			description:
-				"Sender name rendered above the message body. Use when the first child is raw content (not a bubble). If the first child is a bubble, put the name on the bubble's `name` prop instead."
+				"Sender name rendered above the message body; it labels the message. `null`, booleans, and empty strings create no slot, and any other content that renders nothing collapses its slot; either way the message is labelled by the translated sender fallback. Use when the first child is raw content (not a bubble). If the first child is a bubble, put the name on the bubble's `name` prop instead."
 		},
 		{
 			name: 'metadata',
 			type: 'string | Snippet',
 			description:
-				"Metadata rendered below the message body. Use when the last child is raw content (not a bubble). If the last child is a bubble, put metadata on the bubble's `metadata` prop instead."
+				"Metadata rendered below the message body. `null`, booleans, and empty strings create no slot; any other content that renders nothing collapses its slot. Use when the last child is raw content (not a bubble). If the last child is a bubble, put metadata on the bubble's `metadata` prop instead."
 		},
 		{
 			name: 'density',
 			type: "'compact' | 'balanced' | 'spacious'",
-			description: 'Visual density. Inherited from list context if not set.'
+			description: 'Visual density. Inherited from list context if not set.',
+			default: "'balanced'"
 		}
 	]
 };

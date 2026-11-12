@@ -12,7 +12,7 @@
 		TabList,
 		Text,
 		VStack
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import coverage from '$lib/generated/coverage.js';
 	import BestPracticesBlock from '$lib/shell/best-practices-block.svelte';
 	import ComponentPlayground from '$lib/shell/component-playground.svelte';

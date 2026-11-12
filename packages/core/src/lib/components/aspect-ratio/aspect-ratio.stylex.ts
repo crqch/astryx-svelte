@@ -37,15 +37,33 @@ const styles = stylex.create({
 		width: '100%',
 		height: '100%'
 	},
-	// fit="center" centres the child at its natural size from the wrapper — no
-	// styles on the child itself. The `cover`/`contain` child sizing can't live
-	// here (StyleX has no descendant selectors); it ships as baseline rules in
-	// `styles/base.css`, keyed on the `data-astryx-aspect-ratio-override`
-	// attribute the wrapper carries.
+	// fit="center" centres the child at its natural size from the wrapper —
+	// no styles on the child itself.
 	childCenter: {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center'
+	},
+	// `cover`/`contain` must style the child itself (`object-fit` only applies
+	// on the replaced element), and StyleX has no child selector. The
+	// `:not([stylex-hack])` pseudo-class always matches, so StyleX accepts the
+	// key and emits `.x:not([stylex-hack]) > *`, a direct-child rule in the
+	// `astryx-base` layer like every other component style.
+	childFill: {
+		':not([stylex-hack]) > *': {
+			width: '100%',
+			height: '100%'
+		}
+	},
+	childCover: {
+		':not([stylex-hack]) > :is(img, video)': {
+			objectFit: 'cover'
+		}
+	},
+	childContain: {
+		':not([stylex-hack]) > :is(img, video)': {
+			objectFit: 'contain'
+		}
 	}
 });
 
@@ -77,5 +95,11 @@ export function aspectRatioContainerAttrs(
 }
 
 export function aspectRatioChildAttrs(fit: AspectRatioFit | undefined): SvelteStyleAttrs {
-	return sx(styles.child, fit === 'center' && styles.childCenter);
+	return sx(
+		styles.child,
+		fit === 'center' && styles.childCenter,
+		(fit === 'cover' || fit === 'contain') && styles.childFill,
+		fit === 'cover' && styles.childCover,
+		fit === 'contain' && styles.childContain
+	);
 }

@@ -15,7 +15,7 @@
 	 * Theme packages add custom variants through declaration merging:
 	 *
 	 * ```ts
-	 * declare module '@astryx-svelte/core' {
+	 * declare module '@astryx-sv/core' {
 	 *   interface AppShellVariantMap {
 	 *     glass: true;
 	 *   }
@@ -129,9 +129,11 @@
 
 <script lang="ts">
 	import { useTranslator } from '../../i18n/index.js';
+	import { createAttachmentKey } from 'svelte/attachments';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { observeResize, unobserveResize } from '../../internal/shared-resize-observer.js';
 	import { themeProps } from '../../internal/theme-props.js';
+	import { attachScrollKeyboardDelegation } from '../../hooks/scroll-keyboard-delegation.js';
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
 	import Layout from '../layout/layout.svelte';
 	import LayoutContent from '../layout/layout-content.svelte';
@@ -142,14 +144,17 @@
 	import TopNavMobileContentScope from '../top-nav/top-nav-mobile-content-scope.svelte';
 	import TopNavRenderScope from '../top-nav/top-nav-render-scope.svelte';
 	import { setAppShellMobileContext } from './app-shell-mobile-context.svelte.js';
+	import { observeMainOverflow } from './observe-main-overflow.js';
 	import {
 		appShellAutoMobileTopBarAttrs,
+		appShellAutoTopBarAttrs,
 		appShellBannerAttrs,
 		appShellContentAreaStyle,
+		appShellContentWrapperAttrs,
 		appShellElevatedBackdropAttrs,
 		appShellElevatedContentWrapperAttrs,
 		appShellHeaderAttrs,
-		appShellMainFocusTarget,
+		appShellMainStyle,
 		appShellNavAreaStyle,
 		appShellRootAttrs,
 		appShellSideNavPanelStyle,
@@ -281,6 +286,138 @@
 	const isFill = $derived(height === 'fill');
 	const isAuto = $derived(height === 'auto');
 
+	// =========================================================================
+	// Main as a keyboard scroll region
+	//
+	// With `fill`, main is the page's scroller. While its content overflows it
+	// must be reachable from the keyboard even when nothing inside it is
+	// focusable: it joins the tab order. Only `fill` observes main.
+	// =========================================================================
+	const MAIN_NODE = createAttachmentKey();
+	let mainEl = $state<HTMLDivElement | null>(null);
+	let isMainOverflowing = $state(false);
+	const isMainScrollRegion = $derived(isFill && isMainOverflowing);
+	// Main draws its focus ring only for focus a Tab press moved onto it, and
+	// keeps it for as long as that focus stays, even once the content fits.
+	// Programmatic focus (the skip link, a script's focus() on a route change)
+	// draws none.
+	let isTabFocus = $state(false);
+	// A window or tab switch blurs main without moving focus off it: main stays
+	// the document's active element, and focus comes back to it with no Tab
+	// press. The ring holds across that round trip; any real focus move ends it.
+	let isMainAway = false;
+
+	function handleMainBlur(event: FocusEvent): void {
+		const target = event.currentTarget as HTMLElement;
+		if (event.target !== target) {
+			return;
+		}
+		if (document.activeElement === target) {
+			isMainAway = true;
+			return;
+		}
+		isMainAway = false;
+		isTabFocus = false;
+	}
+
+	$effect(() => {
+		const main = mainEl;
+		if (!isFill || main == null) {
+			isMainOverflowing = false;
+			return;
+		}
+		return observeMainOverflow(main, (overflows) => {
+			isMainOverflowing = overflows;
+		});
+	});
+
+	// Main's node is owned through a ref. While main is a scroll region the
+	// keyboard delegation is attached to it.
+	$effect(() => {
+		const main = mainEl;
+		if (main == null || !isMainScrollRegion) {
+			return;
+		}
+		return attachScrollKeyboardDelegation(main, main);
+	});
+
+	// While main is a keyboard stop, a Tab keydown anywhere in the document
+	// (capture, so Shift+Tab from the page start counts too) marks the next focus
+	// move, and so does the window's focus event for keyboard focus that enters
+	// the document from outside. A mark counts only once its event's dispatch has
+	// finished uncancelled; a focus() a page's handler calls during it is
+	// programmatic and draws no ring. The marks expire on a zero-delay timer.
+	$effect(() => {
+		if (!isMainScrollRegion) {
+			return;
+		}
+		let tabKeydown: KeyboardEvent | null = null;
+		let windowFocus: FocusEvent | null = null;
+		let expiry: ReturnType<typeof setTimeout> | undefined;
+		const expireMarks = (): void => {
+			clearTimeout(expiry);
+			expiry = setTimeout(() => {
+				tabKeydown = null;
+				windowFocus = null;
+			}, 0);
+		};
+		const onKeyDown = (event: KeyboardEvent): void => {
+			tabKeydown = event.key === 'Tab' ? event : null;
+			windowFocus = null;
+			expireMarks();
+		};
+		const onPointerDown = (): void => {
+			tabKeydown = null;
+			windowFocus = null;
+		};
+		const onWindowFocus = (event: FocusEvent): void => {
+			windowFocus = event;
+			expireMarks();
+		};
+		const onFocusIn = (event: FocusEvent): void => {
+			const tabDone = tabKeydown != null && tabKeydown.eventPhase === 0;
+			const focusDone = windowFocus != null && windowFocus.eventPhase === 0;
+			const arrivedByTab = tabDone && tabKeydown?.defaultPrevented === false;
+			const enteredDocument = focusDone;
+			if (tabDone) {
+				tabKeydown = null;
+			}
+			if (focusDone) {
+				windowFocus = null;
+			}
+			const main = mainEl;
+			const isMain = event.target != null && event.target === main;
+			if (isMainAway) {
+				// Focus comes back after a window or tab switch (main keeps the ring
+				// it had), or lands elsewhere (main's ring is over).
+				isMainAway = false;
+				if (isMain && !arrivedByTab) {
+					return;
+				}
+				if (!isMain) {
+					isTabFocus = false;
+					return;
+				}
+			}
+			if (isMain) {
+				isTabFocus = arrivedByTab || (enteredDocument && main.matches(':focus-visible'));
+			}
+		};
+		document.addEventListener('keydown', onKeyDown, true);
+		document.addEventListener('pointerdown', onPointerDown, true);
+		document.addEventListener('focusin', onFocusIn, true);
+		window.addEventListener('focus', onWindowFocus);
+		return () => {
+			document.removeEventListener('keydown', onKeyDown, true);
+			document.removeEventListener('pointerdown', onPointerDown, true);
+			document.removeEventListener('focusin', onFocusIn, true);
+			window.removeEventListener('focus', onWindowFocus);
+			clearTimeout(expiry);
+		};
+	});
+
+	const drawsMainFocusRing = $derived(isTabFocus);
+
 	// Nav-presence derived values. A snippet is never empty-string or boolean, so
 	// `!= null` is `isRenderable`'s exact analogue here.
 	const hasBanner = $derived(banner != null);
@@ -379,13 +516,20 @@
 	const skipLinkAttrs = appShellSkipLinkAttrs();
 	const bannerAttrs = $derived(appShellBannerAttrs(navAreaStyle));
 	const headerAttrs = $derived(appShellHeaderAttrs(navAreaStyle, isAuto));
+	const autoTopBarAttrs = $derived(
+		appShellAutoTopBarAttrs(navAreaStyle, isAuto, hasTopNav || hasBanner)
+	);
 	const sideNavStickyAttrs = appShellSideNavStickyAttrs();
 	const sideNavPanelStyle = $derived(
 		appShellSideNavPanelStyle(navAreaStyle, stickyBgStyle, isAuto)
 	);
 	const elevatedWrapperAttrs = appShellElevatedContentWrapperAttrs();
+	const contentWrapperAttrs = appShellContentWrapperAttrs();
 	const elevatedBackdropAttrs = appShellElevatedBackdropAttrs();
 	const autoMobileTopBarAttrs = appShellAutoMobileTopBarAttrs();
+	const mainStyle = $derived(
+		appShellMainStyle(contentAreaStyle, drawsMainFocusRing, shouldElevateWithCorner)
+	);
 </script>
 
 <!--
@@ -450,8 +594,8 @@
 		<div
 			role={hasTopNav || hasBanner ? undefined : 'banner'}
 			{...headerTheme}
-			class={cx(headerTheme.class, headerAttrs.class)}
-			style={headerAttrs.style}
+			class={cx(headerTheme.class, autoTopBarAttrs.class)}
+			style={autoTopBarAttrs.style}
 		>
 			<LayoutHeader padding={0} hasDivider={navHasDividers}>
 				<div
@@ -509,9 +653,11 @@
 		padding={contentPadding ?? 0}
 		role="main"
 		id={MAIN_CONTENT_ID}
-		tabindex={-1}
+		tabindex={isMainScrollRegion ? 0 : -1}
 		isScrollable={isFill}
-		xstyle={[contentAreaStyle, appShellMainFocusTarget]}
+		onblur={handleMainBlur}
+		xstyle={mainStyle}
+		{...{ [MAIN_NODE]: (node: HTMLElement) => (mainEl = node as HTMLDivElement) }}
 	>
 		{@render children()}
 	</LayoutContent>
@@ -524,7 +670,9 @@
 			{@render mainInner()}
 		</div>
 	{:else}
-		{@render mainInner()}
+		<div class={contentWrapperAttrs.class} style={contentWrapperAttrs.style}>
+			{@render mainInner()}
+		</div>
 	{/if}
 {/snippet}
 

@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Stack, TextArea } from '@astryx-svelte/core';
+	import { Stack, TextArea } from '@astryx-sv/core';
 
 	let requiredValue = $state('');
 </script>

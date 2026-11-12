@@ -54,17 +54,10 @@ export default {
 				private: true
 			},
 			{
-				name: '--_input-clear-hit-inset',
+				name: '--_field-status-overlap',
 				description:
-					"Outset of the clear (✕) button's invisible hit area, applied to a ::after overlay. 0 on a fine pointer; negative on a coarse one, which grows the 20px button to the 24px touch target without changing what is drawn.",
-				default: '0px',
-				private: true
-			},
-			{
-				name: '--_input-clear-hit-content',
-				description:
-					'Whether the clear (✕) button\'s invisible hit overlay exists. `none` on a fine pointer, so no ::after is generated and hover still reaches the glyph; `""` on a coarse one, where the overlay provides the 24px touch target.',
-				default: 'none',
+					'Amount an attached FieldStatus extends behind the lower half of the control. Set from the rendered control size.',
+				default: 'calc(var(--size-element-md) / 2)',
 				private: true
 			}
 		],
@@ -100,9 +93,9 @@ export default {
 					'Nest Field around styled inputs such as TextInput, Typeahead, Select, DateInput, or TextArea; those components already render their own Field shell.'
 			},
 			{
-				guidance: false,
+				guidance: true,
 				description:
-					'Use the attached status variant on non-bordered controls such as sliders, switches, or checkboxes; use detached so the message does not overlap the control.'
+					'Use attached status only when the wrapped control is opaque, bordered, and fixed-height; use detached for custom, tall, translucent, or non-bordered controls.'
 			},
 			{
 				guidance: false,
@@ -116,15 +109,26 @@ export default {
 		],
 		anatomy: [
 			{
+				name: 'Container',
+				required: true,
+				description:
+					'Root field box that owns layout, width, and local stacking for the label, control, and status.'
+			},
+			{
 				name: 'Label',
 				required: true,
 				description:
 					'Text identifying the field. Always rendered for accessibility, optionally hidden visually.'
 			},
 			{
-				name: 'Description',
+				name: 'Ordinary description',
 				required: false,
-				description: 'Helper text between the label and input explaining what to enter.'
+				description: 'Helper text under the label in the ordinary field layout.'
+			},
+			{
+				name: 'Horizontal-label description',
+				required: false,
+				description: 'Helper text in the control column when FormLayout owns horizontal labels.'
 			},
 			{
 				name: 'Control slot',
@@ -138,14 +142,34 @@ export default {
 				description: 'Inline validation feedback showing error, warning, or success with a message.'
 			},
 			{
+				name: 'Input status icon',
+				required: false,
+				description: 'Shared status affordance used by Field-composed input controls.'
+			},
+			{
+				name: 'Input clear button',
+				required: false,
+				description: 'Shared clear action used by Field-composed input controls.'
+			},
+			{
+				name: 'Input clear icon',
+				required: false,
+				description: 'Glyph inside the shared input clear action.'
+			},
+			{
 				name: 'Optional/Required indicator',
 				required: false,
 				description: 'Badge next to the label showing whether the field is optional or required.'
 			},
 			{
-				name: 'Label tooltip',
+				name: 'Label tooltip trigger',
 				required: false,
-				description: 'Info icon at the end of the label with a tooltip explaining the field.'
+				description: 'Info icon beside the label that opens explanatory content.'
+			},
+			{
+				name: 'Label tooltip surface',
+				required: false,
+				description: 'Layer-hosted explanatory content for the label tooltip.'
 			}
 		]
 	},
@@ -231,7 +255,8 @@ export default {
 		{
 			name: 'labelTooltip',
 			type: 'string',
-			description: 'Tooltip text to display in an info icon at the end of the label.'
+			description:
+				'Help text for an info button after the label, named "About {label}". Hover and keyboard focus preview it; a tap, click, Enter, or Space opens it and never focuses or toggles the control.'
 		},
 		{
 			name: 'status',
@@ -243,14 +268,14 @@ export default {
 			name: 'statusVariant',
 			type: "'tooltip' | 'attached' | 'detached'",
 			description:
-				'How the status message renders relative to the input. Attached overlaps the input border; detached floats below.',
+				'How status feedback is placed. Attached overlaps an eligible opaque, bordered, fixed-height control; detached renders a message below custom or non-bordered controls; tooltip leaves the visible affordance to the wrapped input and announces its message without a FieldStatus box.',
 			default: "'attached'"
 		},
 		{
 			name: 'width',
 			type: 'SizeValue',
 			description:
-				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned. Prefer this over setting width via xstyle/className/style, which only size the inner control box.'
+				'Width of the field (number = pixels, string used as-is, e.g. "100%"). Sizes the whole field (label, control, and status) so they stay aligned. Prefer this over setting width via xstyle/className/style, which only size the inner control box. Without a width, a row can shrink the whole field below the natural width of its control, so filter bars shrink instead of overflowing.'
 		},
 		{
 			name: 'ref',

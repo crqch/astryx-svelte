@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Link, MetadataList, MetadataListItem } from '@astryx-svelte/core';
+	import { Badge, Link, MetadataList, MetadataListItem } from '@astryx-sv/core';
 </script>
 
 <!-- `title` is a snippet here, against upstream's `ReactNode`. -->

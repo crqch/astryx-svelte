@@ -25,6 +25,13 @@ export default {
 				description:
 					"Colour of the selection ring drawn for a variant a theme added. The built-in variants each ring in their own border token and ignore this; a theme that adds a variant sets it in the same rule as that variant's `backgroundColor`, because no token the component could pick is guaranteed to contrast with a fill it cannot know.",
 				default: 'var(--color-accent)'
+			},
+			{
+				name: '--_press-overlay',
+				description:
+					"Colour of the ::after interaction overlay for the hover and mouse states: transparent at rest, the hover overlay token on hover (hover-capable pointers), the pressed overlay token while a mouse holds `:active`. A press the touch press controller paints (`data-astryx-press`) is the overlay's image instead, at the press's strength, and the colour yields to it. Set on the card element by its own interaction arms.",
+				default: 'transparent',
+				private: true
 			}
 		]
 	},
@@ -34,11 +41,12 @@ export default {
 		bestPractices: [
 			{
 				guidance: true,
-				description: 'Use for plan pickers, filter chips, or option grids.'
+				description:
+					'Use for multi-select choices: filter chips, feature add-ons, or option grids where several can be on.'
 			},
 			{
 				guidance: true,
-				description: 'For single-select track one ID; for multi-select use a Set.'
+				description: 'Use for multi-select groups; track the selected IDs in a Set.'
 			},
 			{
 				guidance: true,
@@ -47,6 +55,11 @@ export default {
 			{
 				guidance: false,
 				description: 'Use for navigation; use ClickableCard for that.'
+			},
+			{
+				guidance: false,
+				description:
+					'Use for a single-select group: each card is a checkbox, so assistive technology announces a multi-select group with one tab stop per card.'
 			}
 		],
 		anatomy: [
@@ -101,13 +114,13 @@ export default {
 		},
 		{
 			name: 'padding',
-			type: '0 | 6 | 2 | 4 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
+			type: '0 | 4 | 6 | 2 | 0.5 | 1 | 1.5 | 3 | 5 | 8 | 10',
 			description: 'Inner padding.',
 			default: '4'
 		},
 		{
 			name: 'variant',
-			type: "'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'default' | 'transparent' | 'muted' | 'gray'",
+			type: "'default' | 'blue' | 'cyan' | 'green' | 'orange' | 'pink' | 'purple' | 'red' | 'teal' | 'yellow' | 'transparent' | 'muted' | 'gray'",
 			description: 'Background color variant.',
 			default: "'default'"
 		},

@@ -72,7 +72,7 @@
 		Toolbar,
 		VStack,
 		useResizable
-	} from '@astryx-svelte/core';
+	} from '@astryx-sv/core';
 	import {
 		AtSymbolIcon,
 		ChevronRightIcon,

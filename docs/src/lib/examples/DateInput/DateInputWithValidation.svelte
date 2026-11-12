@@ -8,7 +8,7 @@
 	upstream's `as DateString` casts on the seeded literals drop out.
 -->
 <script lang="ts">
-	import { DateInput, Stack, type ISODateString } from '@astryx-svelte/core';
+	import { DateInput, Stack, type ISODateString } from '@astryx-sv/core';
 
 	let errorVal = $state<ISODateString | undefined>('2026-01-25');
 	let warningVal = $state<ISODateString | undefined>('2026-12-25');

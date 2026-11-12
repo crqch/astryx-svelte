@@ -186,7 +186,7 @@ function formatTargetsTable(docs, themeData) {
  * @param {any} docs - Component doc object
  * @param {object} [options] - Options
  * @param {any} [options.themeData] - Resolved theme data
- * @param {string|null} [options.importHint] - Import path hint (e.g. '@astryx-svelte/core')
+ * @param {string|null} [options.importHint] - Import path hint (e.g. '@astryx-sv/core')
  */
 export function formatFull(docs, options = {}) {
 	/** @type {string[]} */

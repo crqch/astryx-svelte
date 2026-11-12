@@ -8,7 +8,7 @@
 	take. The `<svg>` already carries its own 16px size.
 -->
 <script lang="ts">
-	import { Icon, TopNav, TopNavHeading, TopNavItem } from '@astryx-svelte/core';
+	import { Icon, TopNav, TopNavHeading, TopNavItem } from '@astryx-sv/core';
 </script>
 
 {#snippet homeIcon()}

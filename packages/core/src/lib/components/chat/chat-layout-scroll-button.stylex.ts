@@ -6,6 +6,7 @@ import {
 	easeVars,
 	radiusVars,
 	shadowVars,
+	sizeVars,
 	spacingVars
 } from '../../styles/tokens.stylex.js';
 
@@ -31,8 +32,14 @@ const styles = stylex.create({
 		borderRadius: radiusVars['--radius-full'],
 		backgroundColor: colorVars['--color-background-popover'],
 		boxShadow: shadowVars['--shadow-med'],
-		height: '32px',
-		transitionProperty: 'opacity, transform, max-width',
+		// The pill clips its own content, so it must track the height of the
+		// md Button it wraps. A literal would clip that Button under any theme
+		// that retunes the element scale.
+		height: sizeVars['--size-element-md'],
+		// `visibility` rides the same transition so the fade-out still plays:
+		// it flips to `visible` immediately on the way in and only at the end
+		// of the duration on the way out.
+		transitionProperty: 'opacity, transform, max-width, visibility',
 		transitionTimingFunction: easeVars['--ease-standard'],
 		transitionDuration: {
 			default: durationVars['--duration-fast-max'],
@@ -42,14 +49,20 @@ const styles = stylex.create({
 	hidden: {
 		opacity: 0,
 		pointerEvents: 'none',
-		maxWidth: '32px'
+		// The hidden pill paints nothing, so focus landing on it would have no
+		// visible indicator (WCAG 2.2 SC 2.4.7). `visibility` removes it from
+		// sequential navigation after the fade; `inert` immediately prevents new
+		// focus and makes an already-focused descendant relinquish focus.
+		visibility: 'hidden',
+		maxWidth: sizeVars['--size-element-md']
 	},
 	visible: {
 		opacity: 1,
-		pointerEvents: 'auto'
+		pointerEvents: 'auto',
+		visibility: 'visible'
 	},
 	collapsed: {
-		maxWidth: '32px'
+		maxWidth: sizeVars['--size-element-md']
 	},
 	expanded: {
 		maxWidth: '200px'

@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for the layout API against the real
- * `@astryx-svelte/core` registry. Every expansion is additionally checked for
+ * `@astryx-sv/core` registry. Every expansion is additionally checked for
  * syntactic validity with the **Svelte compiler**, so the "expansion emits a
  * compilable component" contract is enforced, not assumed.
  *
@@ -319,7 +319,7 @@ describe('template referencing', () => {
 	it(
 		'imports app-registered local components (the local-component bridge)',
 		async () => {
-			// Inside the workspace so @astryx-svelte/core resolves; cleaned up after.
+			// Inside the workspace so @astryx-sv/core resolves; cleaned up after.
 			// A package.json beside the config makes Project.load resolve it as the
 			// sibling-of-nearest-package.json (the standard config resolution).
 			const cwd = mkdtempSync(join(process.cwd(), '.astryx-xle-imp-test-'));

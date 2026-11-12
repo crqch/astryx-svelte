@@ -31,6 +31,8 @@ import { focusOutlineProps } from '../../utils/focus-outline.stylex.js';
 const styles = stylex.create({
 	trigger: {
 		position: 'relative',
+		// Keeps its label's width in a strip that scrolls, as a hugging tab does.
+		flexShrink: 0,
 		display: 'inline-flex',
 		alignItems: 'center',
 		justifyContent: 'center',
@@ -127,6 +129,8 @@ const styles = stylex.create({
 		transform: 'rotate(180deg)'
 	},
 	dropdown: {
+		// A held pointer slides across the items; it selects no text.
+		userSelect: 'none',
 		display: 'flex',
 		flexDirection: 'column',
 		gap: spacingVars['--spacing-0-5'],
@@ -185,16 +189,17 @@ const styles = stylex.create({
 });
 
 const sizeStyles = stylex.create({
-	sm: { height: sizeVars['--size-element-sm'] },
-	md: { height: sizeVars['--size-element-md'] },
-	lg: { height: sizeVars['--size-element-lg'] }
+	sm: { minHeight: sizeVars['--size-element-sm'] },
+	md: { minHeight: sizeVars['--size-element-md'] },
+	lg: { minHeight: sizeVars['--size-element-lg'] }
 });
 
-// Hover bg uses the standard element size (one step smaller than tab)
+// The hover background fills the tab (inset 0) and is never shorter than the
+// element size.
 const hoverSizeStyles = stylex.create({
-	sm: { height: sizeVars['--size-element-sm'] },
-	md: { height: sizeVars['--size-element-md'] },
-	lg: { height: sizeVars['--size-element-lg'] }
+	sm: { minHeight: sizeVars['--size-element-sm'] },
+	md: { minHeight: sizeVars['--size-element-md'] },
+	lg: { minHeight: sizeVars['--size-element-lg'] }
 });
 
 /** The trigger `<button>`. */

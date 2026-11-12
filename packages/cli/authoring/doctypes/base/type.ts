@@ -136,7 +136,7 @@ export interface ComponentPlaygroundConfig {
 	 *  ```
 	 */
 	wrapper?: {
-		/** Parent component name as exported from `@astryx-svelte/core`, e.g. `'TabList'`. */
+		/** Parent component name as exported from `@astryx-sv/core`, e.g. `'TabList'`. */
 		component: string;
 		/** Props for the wrapper. The previewed sub-component becomes its `children`. */
 		props?: Record<string, unknown>;

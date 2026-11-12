@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Badge, Button, Icon, MediaTheme, Section, Stack, Text } from '@astryx-svelte/core';
+	import { Badge, Button, Icon, MediaTheme, Section, Stack, Text } from '@astryx-sv/core';
 
 	const SHOWCASE_IMAGE_URL =
 		'https://lookaside.facebook.com/assets/astryx/light-scene-horizontal-1.png';

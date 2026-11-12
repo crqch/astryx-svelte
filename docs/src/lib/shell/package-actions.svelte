@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-	import { Button, Card, CodeBlock, HStack, Popover, Text, VStack } from '@astryx-svelte/core';
+	import { Button, Card, CodeBlock, HStack, Popover, Text, VStack } from '@astryx-sv/core';
 
 	/**
 	 * Upstream's `docs/PackageActions` — the package-only affordances rendered in
@@ -18,7 +18,7 @@
 	 * **The one divergence is the version, and it is a fact rather than a
 	 * preference.** Upstream renders `Install v{version}` whenever a version is
 	 * given and plain `Install` when it is not. Every package in this repo is
-	 * still at `0.0.0` and `@astryx-svelte/cli` is additionally `private`, so
+	 * still at `0.0.0` and `@astryx-sv/cli` is additionally `private`, so
 	 * neither is on npm: printing `Install v0.0.0` over an `npm install` command
 	 * that cannot resolve would be a button that lies twice. An unreleased
 	 * package therefore takes upstream's *own* version-less branch, and its steps

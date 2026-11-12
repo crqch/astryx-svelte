@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { Card, Kbd, List, ListItem } from '@astryx-svelte/core';
+	import { Card, Kbd, List, ListItem } from '@astryx-sv/core';
 
 	const menuItems = [
 		{ label: 'Cut', keys: 'mod+x' },

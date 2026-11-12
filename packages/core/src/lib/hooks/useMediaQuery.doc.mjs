@@ -27,7 +27,7 @@ export default {
 	],
 	usage: {
 		description:
-			'SSR-safe media query hook that subscribes to window.matchMedia changes. Returns whether the given media query matches. Always returns false on first render for SSR compatibility.',
+			'SSR-safe media query hook that subscribes to window.matchMedia changes. Returns whether the given media query matches. Always returns false on first render for SSR compatibility. Where `window.matchMedia` is missing, it returns its server default and never throws.',
 		bestPractices: [
 			{
 				guidance: true,
@@ -47,6 +47,6 @@ export default {
 		]
 	},
 	relatedHooks: ['useImageMode'],
-	importPath: '@astryx-svelte/core/hooks',
+	importPath: '@astryx-sv/core/hooks',
 	category: 'media'
 };

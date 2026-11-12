@@ -37,16 +37,31 @@
 		tabList: Omit<TabListProps, 'children'>;
 		tabs?: TabFixtureItem[];
 		/** When set, a trailing `<TabMenu>` with this label and these options. */
-		menu?: { label: string; options: TabMenuOption[] };
+		menu?: {
+			label: string;
+			options: TabMenuOption[];
+			/** Host props and handlers forwarded to the trigger. */
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			props?: Record<string, any>;
+			/** Wraps the menu in a `<div>`, so the strip holds a non-tab child. */
+			wrapper?: boolean;
+		};
 		/** When set, wraps everything in a `LinkProvider` publishing this component. */
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		provider?: Component<any>;
+		/** When set, renders a heading with this text before the strip. */
+		heading?: string;
+		/** When set, wraps the strip in an openable `<div popover="manual">`. */
+		wrapInPopover?: boolean;
 	}
 
-	const { tabList, tabs = [], menu, provider }: Props = $props();
+	const { tabList, tabs = [], menu, provider, heading, wrapInPopover }: Props = $props();
 </script>
 
 {#snippet strip()}
+	{#if heading}
+		<h2 id="views-heading">{heading}</h2>
+	{/if}
 	<TabList {...tabList}>
 		{#each tabs as tab (tab.props.value)}
 			{#snippet icon()}
@@ -68,13 +83,19 @@
 			/>
 		{/each}
 		{#if menu}
-			<TabMenu label={menu.label} options={menu.options} />
+			{#if menu.wrapper}
+				<div><TabMenu label={menu.label} options={menu.options} {...menu.props} /></div>
+			{:else}
+				<TabMenu label={menu.label} options={menu.options} {...menu.props} />
+			{/if}
 		{/if}
 	</TabList>
 {/snippet}
 
 {#if provider}
 	<LinkProvider component={provider}>{@render strip()}</LinkProvider>
+{:else if wrapInPopover}
+	<div popover="manual">{@render strip()}</div>
 {:else}
 	{@render strip()}
 {/if}

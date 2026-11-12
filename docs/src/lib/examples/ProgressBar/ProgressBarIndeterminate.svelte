@@ -3,7 +3,7 @@
 	Transcribed, not re-authored: the parity rule covers example content too.
 -->
 <script lang="ts">
-	import { ProgressBar } from '@astryx-svelte/core';
+	import { ProgressBar } from '@astryx-sv/core';
 </script>
 
 <ProgressBar isIndeterminate label="Loading..." style="width: 300px" />

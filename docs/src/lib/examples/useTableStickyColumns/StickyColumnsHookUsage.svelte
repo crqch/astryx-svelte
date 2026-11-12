@@ -17,7 +17,7 @@
 	No icon substitutions: the edge shadows are the plugin's own chrome.
 -->
 <script lang="ts">
-	import { Table, pixel, useTableStickyColumns } from '@astryx-svelte/core';
+	import { Table, pixel, useTableStickyColumns } from '@astryx-sv/core';
 
 	interface Employee extends Record<string, unknown> {
 		id: string;
