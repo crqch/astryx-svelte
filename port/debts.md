@@ -1509,18 +1509,6 @@ The other keyframes (`enterBelow`, `enterAbove`, `enterEnd`, `enterStart`, both 
 variants, `rotation`) all match, because they use theme vars rather than a `defineConsts`
 member.
 
-### `Item`'s swipe panels are not ported, so a row has no swipe motion
-
-- **units:** Item
-- **kind:** unported
-- **retires:** when `Item/ItemSwipeLayer.tsx` and `useSwipeAction` are ported
-
-Upstream's swipe panels transition `transform` and `width` as a drag uncovers the verbs
-and as a row springs back or commits, and respect Reduce Motion through
-`useMediaQuery('(prefers-reduced-motion: reduce)')`. This port has no swipe layer at
-all: the documented `swipeActions`/`swipeBehavior` props render nothing. The suites
-`ItemSwipeLayer.test.tsx` and its gesture companions are in `port/status.md`.
-
 ### `ChatComposer`'s shadow/border transition runs where upstream's has no duration
 
 - **units:** ChatComposer
