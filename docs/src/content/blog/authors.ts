@@ -53,7 +53,7 @@ export const authors = {
 		role: 'Original author'
 	},
 	crqch: {
-		name: 'crqch',
+		name: 'Michał Kosior',
 		github: 'crqch',
 		role: 'Maintainer'
 	}
