@@ -5,7 +5,7 @@ import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
 import * as stylex from '@stylexjs/stylex';
-import DateTimeInput from '$lib/components/date-time-input/date-time-input.svelte';
+import DateTimeInput from './fixtures/date-time-input-touch-probe.svelte';
 import type { ISODateTimeString } from '$lib/components/date-time-input/date-time-input.svelte';
 // Upstream reads its own source with `node:fs`; the browser project has neither
 // `fs` nor `__dirname`, and Vite's `?raw` hands over the same bytes. The
@@ -27,6 +27,11 @@ import ControlledDateTimeInput from './fixtures/date-time-input-controlled.svelt
  * holding a virtualized month scroller and four wheels — the scroll-snapped
  * column on a fine pointer, the absolute strip under a finger; every
  * one of those needs real layout.
+ *
+ * Every case renders through `date-time-input-touch-probe.svelte`, upstream's
+ * local wrapper that passes `nativePicker="never"`, so this suite keeps
+ * exercising Astryx's bottom sheet now that `DateTimeInput` defaults to the
+ * platform picker on a coarse pointer.
  *
  * ## Upstream's environment shims are dropped, every one of them deliberately
  *

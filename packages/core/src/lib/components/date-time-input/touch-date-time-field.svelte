@@ -241,6 +241,10 @@
 		xstyle,
 		class: className,
 		style: styleProp,
+		// Surface policy belongs to `DateTimeInput`; destructured only to keep them
+		// out of `...rest`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		...rest
 	}: DateTimeInputProps = $props();
 

@@ -2645,10 +2645,14 @@ const CASES = [
 			['styles.input', 'styles.inputDisabled', 'styles.inputInvalid'],
 			['styles.timeListbox']
 		],
-		// The native presentation (`nativePicker`, NativeDateSegment/NativeTimeSegment)
-		// is not ported, so `nativeRow` has no call site here.
+		// `nativeRow` is emitted by `native-picker-segment.stylex.ts`, which this
+		// entry cannot pair because a module maps to one upstream file and the
+		// native segment module has its own upstream counterpart. The rule itself
+		// is checked by `compare-upstream-css.mjs`; only the class-name pairing is
+		// excused here.
 		skip: {
-			'styles.nativeRow': 'the native date/time presentation is not ported'
+			'styles.nativeRow':
+				'declared in native-picker-segment.stylex.ts; the CSS oracle checks the rule'
 		}
 	},
 	{

@@ -2,10 +2,10 @@
  * Picker-surface vocabulary, ported from Astryx's
  * `utils/inputPresentation.ts` (AST-043).
  *
- * This port currently publishes `presentation` on `DateInput`; `DateTimeInput`
- * and `TimeInput` still select a surface from the pointer alone. The policy
- * functions are shared so those components can adopt the same vocabulary
- * without re-deriving it.
+ * This port publishes `presentation` on `DateInput` and `DateTimeInput`;
+ * `TimeInput` still selects a surface from the pointer alone. The policy
+ * functions are shared so those components adopt the same vocabulary without
+ * re-deriving it.
  */
 
 /** Picker-surface policy for date/time inputs. */

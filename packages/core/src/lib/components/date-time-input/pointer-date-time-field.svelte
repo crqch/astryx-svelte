@@ -90,17 +90,24 @@
 		dateTimeInputTimeOptionAttrs,
 		dateTimeInputTimeWrapperAttrs
 	} from './date-time-input.stylex.js';
+	import NativeDateSegment from './native-date-segment.svelte';
+	import NativeTimeSegment from './native-time-segment.svelte';
+	import { nativePickerSegmentRowAttrs } from './native-picker-segment.stylex.js';
+
+	/** Which native controls this field was asked to use. */
+	type NativeMode = 'off' | 'adaptive' | 'forced' | 'legacy';
 
 	/**
 	 * The pointer-driven half of `DateTimeInput`, ported from the
 	 * `PointerDateTimeField` function in Astryx's
-	 * `DateTimeInput/DateTimeInput.tsx`. `DateTimeInput` renders this whenever the
-	 * primary pointer is not a finger; the touch surface is
-	 * `touch-date-time-field.svelte`.
+	 * `DateTimeInput/DateTimeInput.tsx`. `DateTimeInput` renders this for its
+	 * pointer surface, and for its native surface on either pointer; the touch
+	 * sheet is `touch-date-time-field.svelte`.
 	 *
 	 * A combined date and time picker: side-by-side date and time fields under one
-	 * label. The date field opens a `Calendar` popover; the time field supports
-	 * typed entry and arrow-key adjustment.
+	 * label. On the pointer surface the date field opens a `Calendar` popover and
+	 * the time field supports typed entry and arrow-key adjustment; the native
+	 * surface swaps in OS-owned date and time controls with the same field chrome.
 	 *
 	 * The two halves are not independent. `value` is one ISO string that is split
 	 * on the `T` for display and recombined on every commit, so **a time alone
@@ -149,8 +156,13 @@
 		xstyle,
 		class: className,
 		style: styleProp,
+		nativeMode = 'off',
+		// Surface policy belongs to `DateTimeInput`; destructured only to keep them
+		// out of `...rest`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		...rest
-	}: DateTimeInputProps = $props();
+	}: DateTimeInputProps & { nativeMode?: NativeMode } = $props();
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -194,7 +206,26 @@
 	// Upstream's `useOptimistic` + `useTransition` pair.
 	const optimistic = createOptimistic(() => value);
 	const isBusy = $derived(isLoading || optimistic.isPending);
-	const isEffectivelyDisabled = $derived(isDisabled || isBusy);
+	// `forced` (`presentation="native"`, FR2): no Astryx fallback. `adaptive`
+	// (`adaptive-native` coarse) and `legacy` (deprecated `nativePicker="always"`):
+	// iOS's native time picker has no seconds wheel, treats step as validation
+	// rather than picker cadence, and cannot express our preset-time list, so
+	// those keep the Astryx time field — exactly as released.
+	const usesNativePicker = $derived(nativeMode !== 'off');
+	const usesNativeTimePicker = $derived(
+		nativeMode === 'forced' ||
+			((nativeMode === 'adaptive' || nativeMode === 'legacy') &&
+				!hasSeconds &&
+				timeIncrement === 1 &&
+				timeOptionInterval === undefined)
+	);
+	// A native wheel emits several edits while it remains open. Disabling the
+	// control after the first optimistic edit detaches the iOS picker, so pending
+	// changeAction work stays interactive just like TouchDateTimeField. Explicit
+	// loading still disables every surface.
+	const isEffectivelyDisabled = $derived(
+		isDisabled || isLoading || (!usesNativePicker && optimistic.isPending)
+	);
 
 	// Only the persistent `isDisabled` state — not the transient busy state —
 	// surfaces a reason. The listeners attach to the outer row, which is always
@@ -213,6 +244,23 @@
 	const minParts = $derived(splitDateTime(min));
 	const maxParts = $derived(splitDateTime(max));
 	const valueParts = $derived(splitDateTime(optimistic.current));
+
+	// Native date and time are separate OS pickers. Hold a time chosen before the
+	// date exists, then combine it when the date picker commits.
+	let nativeTimeDraft = $state<ISOTimeString | undefined>(undefined);
+	let previousNativeValue: ISODateTimeString | undefined = optimistic.current;
+	$effect.pre(() => {
+		const next = optimistic.current;
+		untrack(() => {
+			if (next !== previousNativeValue) {
+				previousNativeValue = next;
+				if (nativeTimeDraft !== undefined) {
+					nativeTimeDraft = undefined;
+				}
+			}
+		});
+	});
+	const nativeTimeValue = $derived(nativeTimeDraft ?? valueParts.time);
 
 	const calendarMin = $derived(minParts.date);
 	const calendarMax = $derived(maxParts.date);
@@ -273,7 +321,7 @@
 	const ariaDescribedBy = $derived(
 		[
 			description ? descriptionID : null,
-			typedDate.calendarDescription != null ? calendarDescriptionID : null,
+			!usesNativePicker && typedDate.calendarDescription != null ? calendarDescriptionID : null,
 			fieldStatus?.message ? statusMessageID : null,
 			// Always `undefined` — the fixed `detached` presentation renders no
 			// info-tip — but kept so the described-by list matches the rest of the
@@ -306,6 +354,7 @@
 	// See `date-input.svelte` for why these are plain `let`s and why the body is
 	// untracked.
 	let lastFiredDate: ISODateString | undefined = undefined;
+	// svelte-ignore state_referenced_locally
 	let prevDate: ISODateString | undefined = splitDateTime(value).date;
 
 	$effect.pre(() => {
@@ -395,7 +444,7 @@
 	// Opt-in: without `timeOptionInterval` the time field keeps exactly the
 	// semantics it shipped with — a plain text input, no combobox role, no second
 	// listbox in the accessibility tree.
-	const hasTimeOptions = $derived(timeOptionInterval !== undefined);
+	const hasTimeOptions = $derived(!usesNativeTimePicker && timeOptionInterval !== undefined);
 
 	const timeOptions = $derived.by(() => {
 		if (timeOptionInterval === undefined) {
@@ -419,7 +468,7 @@
 
 	/** Fires `onChange`, then runs `changeAction` behind the optimistic override. */
 	function fireChange(newValue: ISODateTimeString | undefined): void {
-		if (isBusy) {
+		if (isEffectivelyDisabled) {
 			return;
 		}
 		onChange(newValue);
@@ -468,7 +517,7 @@
 	 * `min` or `max` boundary day.
 	 */
 	function handleDateChange(newDate: ISODateString, source: 'calendar' | 'input'): void {
-		const currentTime = valueParts.time ?? getDefaultTime(hasSeconds);
+		const currentTime = valueParts.time ?? nativeTimeDraft ?? getDefaultTime(hasSeconds);
 
 		let effectiveTime = currentTime;
 		if (minParts.date && newDate === minParts.date && minParts.time) {
@@ -980,9 +1029,41 @@
 		}
 	}
 
+	function handleNativeDateChange(newDate: ISODateString | undefined): void {
+		if (newDate === undefined) {
+			fireChange(undefined);
+			return;
+		}
+		handleDateChange(newDate, 'input');
+	}
+
+	function handleNativeTimeChange(newTime: ISOTimeString | undefined): void {
+		if (newTime === undefined) {
+			nativeTimeDraft = undefined;
+			if (optimistic.current !== undefined) {
+				fireChange(undefined);
+			}
+			return;
+		}
+		if (valueParts.date) {
+			const combined = combineDateTime(valueParts.date, newTime);
+			if (combined) {
+				fireChange(combined);
+			}
+			return;
+		}
+		// A datetime cannot be emitted until its date exists, but the OS time
+		// picker is independently reachable. Preserve this draft for the date
+		// commit instead of making the user's first choice disappear.
+		nativeTimeDraft = newTime;
+	}
+
 	function handleClear(): void {
+		nativeTimeDraft = undefined;
 		fireChange(undefined);
-		dateInput?.focus();
+		if (!usesNativePicker) {
+			dateInput?.focus();
+		}
 	}
 
 	// Focus the time input when clicking its wrapper padding or clock glyph.
@@ -1004,6 +1085,7 @@
 		})
 	);
 	const rowAttrs = $derived(dateTimeInputRowAttrs(xstyle));
+	const nativeRowAttrs = $derived(usesNativePicker ? nativePickerSegmentRowAttrs() : null);
 	const dateWrapperAttrs = $derived(
 		dateTimeInputDateWrapperAttrs(size, fieldStatus?.type, isEffectivelyDisabled)
 	);
@@ -1054,8 +1136,8 @@
 	<div
 		{...rest}
 		{...theme}
-		class={cx(theme.class, rowAttrs.class, className)}
-		style={mergeStyle(rowAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, rowAttrs.class, nativeRowAttrs?.class, className)}
+		style={mergeStyle(rowAttrs.style, nativeRowAttrs?.style, styleProp as string | undefined)}
 		{@attach disabledMessageTooltip.attachTrigger}
 	>
 		<!-- Date input -->
@@ -1063,71 +1145,90 @@
 			{...dateSegmentTheme}
 			class={cx(dateSegmentTheme.class, dateWrapperAttrs.class)}
 			style={dateWrapperAttrs.style}
-			{@attach popover.attachTrigger}
+			{@attach usesNativePicker ? undefined : popover.attachTrigger}
 		>
-			<button
-				type="button"
-				onclick={handleCalendarToggle}
-				disabled={isEffectivelyDisabled}
-				aria-label={popover.isOpen
-					? t('@astryx.dateInput.toggleCalendarClose')
-					: t('@astryx.dateInput.openCalendar')}
-				class={toggleAttrs.class}
-				style={toggleAttrs.style}
-			>
-				<!--
-					Stable theme target on the calendar glyph, and on each open/closed
-					state, mirroring `date-input-toggle-icon`. Same-element rules in
-					`@layer astryx-theme` win over the icon's own base colour and size,
-					which a segment-level target could not reach.
-				-->
-				<Icon
-					icon="calendar"
-					size="sm"
-					color="secondary"
-					{...themeProps('date-time-input-toggle-icon', {
-						state: popover.isOpen ? 'expanded' : 'collapsed'
-					})}
+			{#if usesNativePicker}
+				<NativeDateSegment
+					id={dateInputId}
+					value={valueParts.date}
+					onChange={handleNativeDateChange}
+					{placeholder}
+					min={calendarMin}
+					max={calendarMax}
+					isDateDisabled={constraints.isDateDisabled}
+					{isEffectivelyDisabled}
+					isFocusableDisabled
+					isEffectivelyRequired={isEffectivelyRequired()}
+					{isBusy}
+					statusType={status?.type}
+					{ariaDescribedBy}
 				/>
-			</button>
-			<input
-				bind:this={dateInput}
-				id={dateInputId}
-				type="text"
-				role="combobox"
-				value={dateDisplayValue}
-				oninput={handleDateInputChange}
-				onfocus={handleDateFocus}
-				onblur={handleDateBlur}
-				onclick={handleDateInputClick}
-				onkeydown={handleDateKeyDown}
-				placeholder={dateFormatHint ?? placeholder}
-				disabled={isEffectivelyDisabled && !showsDisabledMessage}
-				aria-disabled={showsDisabledMessage ? 'true' : undefined}
-				readonly={showsDisabledMessage || undefined}
-				aria-describedby={ariaDescribedBy}
-				aria-required={isEffectivelyRequired() ? 'true' : undefined}
-				aria-invalid={fieldStatus?.type === 'error' || !isDateInputValid ? 'true' : undefined}
-				aria-busy={isBusy || undefined}
-				aria-expanded={popover.isOpen}
-				aria-haspopup="dialog"
-				aria-controls={popover.isOpen ? popover.id : undefined}
-				aria-autocomplete="none"
-				autocomplete="off"
-				class={dateControlAttrs.class}
-				style={dateControlAttrs.style}
-			/>
-			<!--
-				Live region announcing invalid typed date input to assistive
-				technology. The value silently reverts on blur, so without this a
-				screen-reader user would get no feedback that their entry was
-				rejected (WCAG 3.3.1).
-			-->
-			<VisuallyHidden as="div" role="alert" aria-live="assertive">
-				{dateAlertMessage}
-			</VisuallyHidden>
-			{#if typedDate.calendarDescription != null}
-				<VisuallyHidden id={calendarDescriptionID}>{typedDate.calendarDescription}</VisuallyHidden>
+			{:else}
+				<button
+					type="button"
+					onclick={handleCalendarToggle}
+					disabled={isEffectivelyDisabled}
+					aria-label={popover.isOpen
+						? t('@astryx.dateInput.toggleCalendarClose')
+						: t('@astryx.dateInput.openCalendar')}
+					class={toggleAttrs.class}
+					style={toggleAttrs.style}
+				>
+					<!--
+						Stable theme target on the calendar glyph, and on each open/closed
+						state, mirroring `date-input-toggle-icon`. Same-element rules in
+						`@layer astryx-theme` win over the icon's own base colour and size,
+						which a segment-level target could not reach.
+					-->
+					<Icon
+						icon="calendar"
+						size="sm"
+						color="secondary"
+						{...themeProps('date-time-input-toggle-icon', {
+							state: popover.isOpen ? 'expanded' : 'collapsed'
+						})}
+					/>
+				</button>
+				<input
+					bind:this={dateInput}
+					id={dateInputId}
+					type="text"
+					role="combobox"
+					value={dateDisplayValue}
+					oninput={handleDateInputChange}
+					onfocus={handleDateFocus}
+					onblur={handleDateBlur}
+					onclick={handleDateInputClick}
+					onkeydown={handleDateKeyDown}
+					placeholder={dateFormatHint ?? placeholder}
+					disabled={isEffectivelyDisabled && !showsDisabledMessage}
+					aria-disabled={showsDisabledMessage ? 'true' : undefined}
+					readonly={showsDisabledMessage || undefined}
+					aria-describedby={ariaDescribedBy}
+					aria-required={isEffectivelyRequired() ? 'true' : undefined}
+					aria-invalid={fieldStatus?.type === 'error' || !isDateInputValid ? 'true' : undefined}
+					aria-busy={isBusy || undefined}
+					aria-expanded={popover.isOpen}
+					aria-haspopup="dialog"
+					aria-controls={popover.isOpen ? popover.id : undefined}
+					aria-autocomplete="none"
+					autocomplete="off"
+					class={dateControlAttrs.class}
+					style={dateControlAttrs.style}
+				/>
+				<!--
+					Live region announcing invalid typed date input to assistive
+					technology. The value silently reverts on blur, so without this a
+					screen-reader user would get no feedback that their entry was
+					rejected (WCAG 3.3.1).
+				-->
+				<VisuallyHidden as="div" role="alert" aria-live="assertive">
+					{dateAlertMessage}
+				</VisuallyHidden>
+				{#if typedDate.calendarDescription != null}
+					<VisuallyHidden id={calendarDescriptionID}>{typedDate.calendarDescription}</VisuallyHidden
+					>
+				{/if}
 			{/if}
 			{#if hasClear && value !== undefined && !isEffectivelyDisabled}
 				<InputClearButton label={t('@astryx.dateInput.clear', { label })} onclick={handleClear} />
@@ -1139,64 +1240,87 @@
 		<!-- Time input -->
 		<div
 			bind:this={timeContainer}
-			{...timeInputContainer}
+			{...usesNativeTimePicker ? {} : timeInputContainer}
 			onpointerdown={hasTimeOptions ? markTimePointerActive : undefined}
 			{...timeSegmentTheme}
 			class={cx(timeSegmentTheme.class, timeWrapperAttrs.class)}
 			style={timeWrapperAttrs.style}
 		>
-			<div class={iconAttrs.class} style={iconAttrs.style}>
-				<!--
-					The time segment has no toggle button — the clock is a static leading
-					affordance — so this target carries no interactive state.
-				-->
-				<Icon
-					icon="clock"
-					size="sm"
-					color="secondary"
-					{...themeProps('date-time-input-clock-icon')}
+			{#if usesNativeTimePicker}
+				<NativeTimeSegment
+					id={timeInputId}
+					value={nativeTimeValue}
+					onChange={handleNativeTimeChange}
+					placeholder={timePlaceholder}
+					inputLabel={resolvedTimeLabel}
+					openPickerLabel={t('@astryx.dateTimeInput.openTimePicker', {
+						label: resolvedTimeLabel
+					})}
+					iconThemeProps={themeProps('date-time-input-clock-icon')}
+					min={timeMin}
+					max={timeMax}
+					{hourFormat}
+					{isEffectivelyDisabled}
+					isFocusableDisabled
+					isEffectivelyRequired={isEffectivelyRequired()}
+					{isBusy}
+					statusType={status?.type}
+					{ariaDescribedBy}
 				/>
-			</div>
-			<input
-				bind:this={timeInput}
-				id={timeInputId}
-				type="text"
-				value={timeDisplayValue}
-				oninput={handleTimeInputChange}
-				onfocus={handleTimeFocus}
-				onblur={handleTimeBlur}
-				onkeydown={handleTimeKeyDown}
-				onclick={hasTimeOptions ? showTimeOptions : undefined}
-				onpointerdown={hasTimeOptions ? markTimePointerActive : undefined}
-				placeholder={resolvedTimePlaceholder}
-				role={hasTimeOptions ? 'combobox' : undefined}
-				aria-expanded={hasTimeOptions ? timePopover.isOpen : undefined}
-				aria-controls={hasTimeOptions && timePopover.isOpen ? timeListboxId : undefined}
-				aria-autocomplete={hasTimeOptions ? 'list' : undefined}
-				aria-activedescendant={hasTimeOptions &&
-				timePopover.isOpen &&
-				activeTimeIndex >= 0 &&
-				activeTimeIndex < timeOptions.length
-					? timeOptionId(activeTimeIndex)
-					: undefined}
-				disabled={isEffectivelyDisabled && !showsDisabledMessage}
-				aria-disabled={showsDisabledMessage ? 'true' : undefined}
-				readonly={showsDisabledMessage || undefined}
-				aria-label={resolvedTimeLabel}
-				aria-describedby={ariaDescribedBy}
-				aria-required={isEffectivelyRequired() ? 'true' : undefined}
-				aria-invalid={status?.type === 'error' || !isTimeInputValid ? 'true' : undefined}
-				aria-busy={isBusy || undefined}
-				class={timeControlAttrs.class}
-				style={timeControlAttrs.style}
-			/>
-			<!--
-				Live region announcing invalid typed time input to assistive
-				technology (WCAG 3.3.1).
-			-->
-			<VisuallyHidden as="div" role="alert" aria-live="assertive">
-				{!isTimeInputValid ? t('@astryx.timeInput.invalidTime') : ''}
-			</VisuallyHidden>
+			{:else}
+				<div class={iconAttrs.class} style={iconAttrs.style}>
+					<!--
+						The time segment has no toggle button — the clock is a static leading
+						affordance — so this target carries no interactive state.
+					-->
+					<Icon
+						icon="clock"
+						size="sm"
+						color="secondary"
+						{...themeProps('date-time-input-clock-icon')}
+					/>
+				</div>
+				<input
+					bind:this={timeInput}
+					id={timeInputId}
+					type="text"
+					value={timeDisplayValue}
+					oninput={handleTimeInputChange}
+					onfocus={handleTimeFocus}
+					onblur={handleTimeBlur}
+					onkeydown={handleTimeKeyDown}
+					onclick={hasTimeOptions ? showTimeOptions : undefined}
+					onpointerdown={hasTimeOptions ? markTimePointerActive : undefined}
+					placeholder={resolvedTimePlaceholder}
+					role={hasTimeOptions ? 'combobox' : undefined}
+					aria-expanded={hasTimeOptions ? timePopover.isOpen : undefined}
+					aria-controls={hasTimeOptions && timePopover.isOpen ? timeListboxId : undefined}
+					aria-autocomplete={hasTimeOptions ? 'list' : undefined}
+					aria-activedescendant={hasTimeOptions &&
+					timePopover.isOpen &&
+					activeTimeIndex >= 0 &&
+					activeTimeIndex < timeOptions.length
+						? timeOptionId(activeTimeIndex)
+						: undefined}
+					disabled={isEffectivelyDisabled && !showsDisabledMessage}
+					aria-disabled={showsDisabledMessage ? 'true' : undefined}
+					readonly={showsDisabledMessage || undefined}
+					aria-label={resolvedTimeLabel}
+					aria-describedby={ariaDescribedBy}
+					aria-required={isEffectivelyRequired() ? 'true' : undefined}
+					aria-invalid={status?.type === 'error' || !isTimeInputValid ? 'true' : undefined}
+					aria-busy={isBusy || undefined}
+					class={timeControlAttrs.class}
+					style={timeControlAttrs.style}
+				/>
+				<!--
+					Live region announcing invalid typed time input to assistive
+					technology (WCAG 3.3.1).
+				-->
+				<VisuallyHidden as="div" role="alert" aria-live="assertive">
+					{!isTimeInputValid ? t('@astryx.timeInput.invalidTime') : ''}
+				</VisuallyHidden>
+			{/if}
 		</div>
 	</div>
 

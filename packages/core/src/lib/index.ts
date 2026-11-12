@@ -464,6 +464,8 @@ export type { DateRangeInputSize } from './components/date-range-input/date-rang
 export type {
 	DateTimeInputProps,
 	DateTimeInputHourFormat,
+	DateTimeInputNativePicker,
+	DateTimeInputPresentation,
 	DateTimeInputStatus,
 	DateTimeInputStatusType,
 	DateTimeInputTimeIncrement,
@@ -1575,11 +1577,14 @@ export type {
 	OverlayShowOn
 } from './components/overlay/overlay-scrim.stylex.js';
 export {
+	percent,
 	useResizable,
 	type ResizableConfig,
+	type ResizablePercentSize,
 	type ResizableProps,
 	type ResizableRegion,
 	type ResizableRegionConfig,
+	type ResizableSize,
 	type UseResizableMultiConfig,
 	type UseResizableSingleConfig
 } from './components/resizable/use-resizable.svelte.js';

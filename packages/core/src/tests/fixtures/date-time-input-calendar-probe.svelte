@@ -8,15 +8,19 @@
 		locale,
 		props = {},
 		providerCalendar,
+		count = 1,
 		onChange
 	}: {
 		locale: string;
 		props?: Partial<Omit<DateTimeInputProps, 'label' | 'onChange'>>;
 		providerCalendar?: CalendarSystem;
+		count?: number;
 		onChange: (value: string | undefined) => void;
 	} = $props();
 </script>
 
 <InternationalizationProvider {locale} calendar={providerCalendar}>
-	<DateTimeInput label="Meeting" {onChange} {...props} />
+	{#each Array.from({ length: count }) as _, index (index)}
+		<DateTimeInput label="Meeting" {onChange} {...props} />
+	{/each}
 </InternationalizationProvider>
