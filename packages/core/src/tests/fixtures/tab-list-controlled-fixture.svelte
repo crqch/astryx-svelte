@@ -24,7 +24,7 @@
 	}
 </script>
 
-<TabList value={value} onChange={handleChange}>
+<TabList {value} onChange={handleChange}>
 	{#each tabs as tab (tab.value)}
 		<Tab value={tab.value} label={tab.label} />
 	{/each}

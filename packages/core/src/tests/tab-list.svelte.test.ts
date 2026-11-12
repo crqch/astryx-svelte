@@ -151,11 +151,7 @@ function fakeScrollBox(
 function fakeGeometry(
 	strip: HTMLElement,
 	tabValue: string,
-	{
-		stripWidth,
-		tabLeft,
-		tabRight
-	}: { stripWidth: number; tabLeft: number; tabRight: number }
+	{ stripWidth, tabLeft, tabRight }: { stripWidth: number; tabLeft: number; tabRight: number }
 ): void {
 	strip.getBoundingClientRect = () =>
 		({ left: 0, right: stripWidth, width: stripWidth }) as DOMRect;
@@ -198,11 +194,6 @@ async function renderStrip(
 		}
 	});
 	return { ...screen, strip: stripIn(screen.container) };
-}
-
-/** Let a CSS transition (the strip's mask fade) finish. */
-async function animationsSettled(el: HTMLElement): Promise<void> {
-	await Promise.all(el.getAnimations({ subtree: false }).map((animation) => animation.finished));
 }
 
 // --- Pressed-state helpers --------------------------------------------------
@@ -319,7 +310,6 @@ function hasReleaseFade(el: Element): boolean {
 		!onArmAnimates
 	);
 }
-
 
 afterEach(() => {
 	vi.restoreAllMocks();
@@ -1007,7 +997,9 @@ describe('TabMenu host attributes', () => {
 			}
 		});
 
-		const trigger = screen.getByRole('button', { name: 'More', exact: true }).element() as HTMLElement;
+		const trigger = screen
+			.getByRole('button', { name: 'More', exact: true })
+			.element() as HTMLElement;
 		trigger.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true }));
 		trigger.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true }));
 		expect(onDragOver).toHaveBeenCalledTimes(1);
@@ -1379,10 +1371,7 @@ describe('TabList overflow (scroll)', () => {
 		const screen = await render(TabListFixture, {
 			props: {
 				tabList: { value: 'a', onChange: () => {} },
-				tabs: [
-					{ props: { value: 'a', label: 'Alpha' } },
-					{ props: { value: 'b', label: 'Beta' } }
-				],
+				tabs: [{ props: { value: 'a', label: 'Alpha' } }, { props: { value: 'b', label: 'Beta' } }],
 				menu: { label: 'More', options: [{ value: 'c', label: 'Gamma' }] }
 			}
 		});
@@ -1670,10 +1659,7 @@ describe('TabList ARIA pattern — no role', () => {
 		const screen = await render(TabListFixture, {
 			props: {
 				tabList: { value: 'a', onChange: () => {}, 'aria-label': 'Views' },
-				tabs: [
-					{ props: { value: 'a', label: 'Alpha' } },
-					{ props: { value: 'b', label: 'Beta' } }
-				]
+				tabs: [{ props: { value: 'a', label: 'Alpha' } }, { props: { value: 'b', label: 'Beta' } }]
 			}
 		});
 
@@ -1698,9 +1684,9 @@ describe('TabList ARIA pattern — no role', () => {
 			}
 		});
 
-		expect(screen.getByRole('button', { name: 'Alpha', exact: true }).element()).not.toHaveAttribute(
-			'aria-controls'
-		);
+		expect(
+			screen.getByRole('button', { name: 'Alpha', exact: true }).element()
+		).not.toHaveAttribute('aria-controls');
 		await vi.waitFor(() => {
 			expect(warn).toHaveBeenCalledWith(
 				expect.stringContaining('Tab: panelId does nothing outside a role="tablist" TabList')
@@ -1738,7 +1724,9 @@ describe('pressed state', () => {
 				]
 			}
 		});
-		const tab = screen.getByRole('button', { name: 'Settings', exact: true }).element() as HTMLElement;
+		const tab = screen
+			.getByRole('button', { name: 'Settings', exact: true })
+			.element() as HTMLElement;
 		// The hover surface is a child layer read off the tab; the press paints
 		// the same layer, so the assertion is on that layer.
 		const surface = tab.querySelector('span[aria-hidden="true"]');
@@ -1768,7 +1756,9 @@ describe('pressed state', () => {
 			}
 		});
 
-		const tab = screen.getByRole('button', { name: 'Settings', exact: true }).element() as HTMLElement;
+		const tab = screen
+			.getByRole('button', { name: 'Settings', exact: true })
+			.element() as HTMLElement;
 		// Restated (see file header): Playwright's actionability check treats
 		// `aria-disabled="true"` as disabled and refuses to click, where jsdom's
 		// `user.click` dispatches regardless. The DOM click is what upstream's
@@ -1805,7 +1795,9 @@ describe('pressed state', () => {
 			}
 		});
 
-		const tab = screen.getByRole('button', { name: 'Settings', exact: true }).element() as HTMLElement;
+		const tab = screen
+			.getByRole('button', { name: 'Settings', exact: true })
+			.element() as HTMLElement;
 		tab.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
 		tab.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
 		pressKey(tab, 'x');
@@ -1874,7 +1866,9 @@ describe('pressed state', () => {
 			}
 		});
 
-		const tab = screen.getByRole('button', { name: 'Settings', exact: true }).element() as HTMLElement;
+		const tab = screen
+			.getByRole('button', { name: 'Settings', exact: true })
+			.element() as HTMLElement;
 		tab.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
 		pressKey(tab, 'x');
 		expect(onPointerDown).toHaveBeenCalledTimes(1);
@@ -1921,7 +1915,9 @@ describe('pressed state', () => {
 				]
 			}
 		});
-		const tab = screen.getByRole('button', { name: 'Settings', exact: true }).element() as HTMLElement;
+		const tab = screen
+			.getByRole('button', { name: 'Settings', exact: true })
+			.element() as HTMLElement;
 		const surface = tab.querySelector('span[aria-hidden="true"]');
 		if (surface == null) {
 			throw new Error('the tab has no hover surface to press');
