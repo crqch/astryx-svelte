@@ -257,22 +257,21 @@ deviation, not a task.
 
 ### Tests
 
-### The class oracle is red against the 0.7.13 pin
+### Both style oracles are green against the 0.7.13 pin
 
-- [ ] **Re-baseline `compare-upstream-classes.mjs` against 0.7.13 and close the style drift it
-      exposes.** The oracle reports 246 mismatch/absent/compare-nothing lines on the current tree
-      (273 on `c91640b`, so this predates the batch that ported the home, themes, template and motion
-      work): the largest groups are `toast-viewport` (14), `item` (13), `selector` (12),
-      `native-date-field` (12), `lightbox` (10), `aspect-ratio` (10), `code-block` (9) and
-      `power-search` (8). Two clauses need separate treatment: `interaction-overlay` compares
-      upstream's delegated press-paint vars this port has not ported (recorded above), and
-      `bottom-sheet.stylex.js` "compared nothing" because the case points at a module that no longer
-      carries the styles it did. The gate's `test` stage stops here, so `test:parity` is the first
-      thing to make green after the test-delta and surface fronts.
-- [ ] **The CSS oracle is red behind it:** `test:css` reports 921 mismatches over 230 compiled
-      modules (1,709 classes shared with upstream), including declarations upstream no longer emits.
-      It cannot run until `test:parity` passes; re-baseline both against 0.7.13 in the same batch,
-      because a class fix and a declaration fix are the same style refresh.
+- [x] **Finish the 0.7.13 class-oracle re-baseline.** `test:parity` reports **0 mismatches** over
+      the shared style keys and inline call sites. The re-baseline closed the 1,036-report list by
+      porting the subsystem the reports named, not by adding claims: PowerSearch/Tokenizer sheet
+      presentations, ProgressBar touch, MultiSelector's grid/action model, Lightbox's gallery pager
+      and `usePager`, press-group tracking, DropdownMenu regions/drill-in, and the Typeahead field
+      restructure all landed as features. Five self-retiring skips remain, each with its reason in
+      the script (the Lightbox zoom stage, DateTimeInput's native row, and the `layer-animations`
+      const-keyframe-name debt).
+- [x] **The CSS oracle is green behind it.** `test:css` reports `astryx.css matches upstream.`
+      The fix was the same style refresh: core token defaults re-synced to 0.7.13 (rem spacing, the
+      corrected dark palette, 56 `--color-data-*` tokens), the missing container-corner, focus-owner,
+      gliding/travelling and menu-press-lit modules ported, and the remaining skips named in
+      [`debts.md`](./debts.md) for unported subsystems and upstream's compiled test fixtures.
 
 - [ ] Fold the two per-file `Intl.DateTimeFormat` locale stubs into the client project's `en-US`
       config pin now that it exists, so there's one mechanism instead of three

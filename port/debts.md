@@ -1509,24 +1509,6 @@ The other keyframes (`enterBelow`, `enterAbove`, `enterEnd`, `enterStart`, both 
 variants, `rotation`) all match, because they use theme vars rather than a `defineConsts`
 member.
 
-### `ProgressBar`'s fill still animates `width`, not the compositor transform
-
-- **units:** ProgressBar
-- **kind:** divergence
-- **retires:** when `ProgressBar/ProgressBarTouch` and the 0.7.13 fill rules land
-
-Upstream's determinate fill is a full-width element translated by
-`--_progress-bar-fill`, so a value change animates `transform` on the compositor; under
-`forced-colors` it falls back to `width`, under a finger it takes the
-`progress.fillTrackMs` role, and under Reduce Motion both pointer keys collapse the
-duration to `0s`. This port moves `width` directly with `--duration-medium` and
-`--ease-standard` and has no reduced-motion arm, so a new value travels under Reduce
-Motion and the change is a layout animation. Replacing it needs the touch layer that
-writes `--_progress-bar-fill`, `--_progress-bar-min`, `--_progress-bar-flip`,
-`--_progress-bar-move` and `--_progress-bar-curve`, and the empty/forced-colors rules;
-half of that would regress the zero and high-contrast states, so the whole presentation
-belongs in one change.
-
 ### `Item`'s swipe panels are not ported, so a row has no swipe motion
 
 - **units:** Item
@@ -1552,27 +1534,6 @@ border change at once. This port writes the same two properties through the `tra
 shorthand with `--duration-fast` and `--ease-standard`, so a theme elevation change
 fades. The motion is this port's, not upstream's; keeping it means a theme switch
 animates where upstream snaps. It is recorded rather than silently kept.
-
-### Stepper's compact summary row is not ported
-
-- **units:** Stepper
-- **kind:** unported
-- **retires:** when `Stepper` renders `horizontalOptions.collapsedVariant`'s compact row
-
-Upstream's horizontal Stepper collapses below `horizontalOptions.minimumStepWidth`
-and renders one of three compact treatments under the track: a label with
-Previous/Next controls, the label alone, or a bare progress track. This port
-renders the full labelled track at every width: `collapsedVariant`,
-`minimumStepWidth` and the summary row are documented (`Stepper.doc.mjs`'s
-`astryx-stepper-summary` target) but unimplemented. The CLI's documented-target
-check exempts `stepper-summary` until it lands, and that exemption retires
-itself when the target becomes real.
-
-## Retired
-
-Closed, kept as the record. **Nothing below counts as an open debt** — `scripts/status.mjs` stops
-tallying at this heading, and `astryx-parity` must not find a retired entry when it greps for
-"is this drift already known?", or it would skip live drift.
 
 ### Ported `getByRole` name assertions are substring matches, where upstream's are whole-string
 
@@ -2058,24 +2019,6 @@ kebab modules and current adopters). `animatedLayoutAdopters` has 1/18: the
 wired to the handle, their exit holds, chevron motion and a `LayoutChangeSnapshot`
 commit hook.
 
-### SegmentedControl's press paint is its CSS arm, not the delegated press controller
-
-- **units:** SegmentedControl
-- **kind:** divergence
-- **retires:** when `utils/pressFeedback.ts` (the delegated press controller)
-  is ported
-
-The touch layer now runs upstream's path: `useSegmentedTouchTracking` drives
-`usePressTracker` (landing to lift), a horizontal `PanGestureRecognizer` (the
-lens chase and highlight move, with `lockSelection`), and the ported
-`createActionGroupTracker` (26/26 upstream cases) for the lift target, the
-once-only click and the shared click guard. What remains is the paint: the
-tracker deliberately paints nothing (`paintsHighlight: false`), so the selected
-and pressable arms are the component's own `data-astryx-pressable` mark and CSS
-`:active` overlay, not the delegated controller's `data-astryx-press` clock.
-The press still tracks, commits and cancels identically; only the release fade
-and the touch-paint arm are the CSS approximation.
-
 ### The `utils` suites this batch could not port are blocked on modules the port does not have
 
 - **units:** utils/hitArea, utils/interactionModality, utils/boxHold, utils/calendarSystem, utils/calendarDateParser
@@ -2121,3 +2064,70 @@ The suite's two-row `it.each` under `the reusable Combobox contract` calls
 `use-combobox.svelte.test.ts`'s header; the other declarations are ported. The
 package's absence is the only blocker — the field props it inspects are
 implemented.
+
+### The List reorder subsystem is not ported
+
+- **units:** List/ListReorderHandle, List/listReorderEngine, privateAttributes/reordering, privateAttributes/reorderLine, privateAttributes/ownRing
+- **kind:** unported
+- **retires:** when `ListReorderHandle`, `listReorderEngine`, `reordering`, `reorderLine` and `ownRing` are ported
+
+Upstream's `reorderable` List draws a drag handle, an insertion line, a grabbing
+cursor and its own focus ring. None of that has a renderer here, so the CSS
+oracle skips the 28 atomic classes those modules emit (handle geometry and
+paint, press/disabled states, `:is([data-astryx-reordering] *)`, the forced-colors
+arms, and the `--_item-inset-inline` pull-in). The skips are class/rule pairs in
+`compare-upstream-css.mjs`; they retire when the subsystem lands, not by editing
+the list.
+
+### Markdown heading permalinks are not ported
+
+- **units:** Markdown/plugins/HeadingLinksRenderer, Markdown/createMarkdownHeadingLinks
+- **kind:** unported
+- **retires:** when the heading-links renderer is ported
+
+Upstream wraps each heading in a permalink anchor with a `margin-inline-start`
+and an `align-items: last baseline` row. This port's Markdown renders headings
+without that plugin, so the CSS oracle skips its two atomic classes.
+
+### Avatar draws generated initials as text, not through the pseudo-element
+
+- **units:** Avatar
+- **kind:** divergence
+- **retires:** when initials move from a text node to upstream's `::before content` implementation
+
+Upstream generates initials in CSS (`::before` plus a `defineConsts` content and
+a mask), while this port renders them as text inside the avatar. The ported test
+suite asserts the text form, so switching would break case-for-case parity with
+its own translations. The remaining generated-initials rule is a named skip.
+
+### `PickerWheel` uses a scroll-snap scroller, not upstream's positioned strip
+
+- **units:** DateInput/PickerWheel
+- **kind:** divergence
+- **retires:** when the wheel is rewritten to the absolute strip with the fade mask
+
+Upstream positions a strip by `rowAt` and fades its ends with a mask; this port
+uses a scroll-snap scroller. Two upstream classes (the strip mask and the track
+inset) have no counterpart and are skipped.
+
+### `SelectorBottomSheet` is not ported
+
+- **units:** Selector/SelectorBottomSheet
+- **kind:** unported
+- **retires:** when the mobile selector sheet lands with `useSelectorPresentation`
+
+The selector's bottom-sheet presentation is documented but renders the popover
+only, so the sheet's own `margin-inline` class is skipped in the CSS oracle.
+
+### Upstream compiles its test fixtures into the published stylesheet
+
+- **units:** core published CSS
+- **kind:** upstream bug
+- **retires:** when upstream's `astryx.css` stops bundling `__tests__` fixtures
+
+`Badge.test-violations.tsx` and the `stylexReset`/`PresentedHitTestingLab`
+fixtures are compiled into upstream's `dist/astryx.css` (their glob misses the
+violations file, and the fixtures are imported from a source module). The 10
+Badge classes are skipped by class/rule in `compare-upstream-css.mjs`; the 14
+fixture at-rule/declaration shapes sit in its `OTHER_SKIP`. Neither exists in
+this port and neither is a component rule.

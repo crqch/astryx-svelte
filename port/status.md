@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 363     | 12386          |
+| Ported here              | 367     | 12622          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **434** | **4539**       |
+| **Unported**             | **430** | **4303**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -35,9 +35,7 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | Suite                                                              | Cases |
 | ------------------------------------------------------------------ | ----- |
 | `PowerSearch/PowerSearchBottomSheet.test.tsx`                      | 181   |
-| `hooks/usePager.test.ts`                                           | 132   |
 | `Resizable/useResizable.test.ts`                                   | 97    |
-| `utils/pressFeedback.test.ts`                                      | 97    |
 | `Tokenizer/TokenizerBottomSheet.test.tsx`                          | 90    |
 | `BottomSheet/BottomSheetStacking.test.tsx`                         | 87    |
 | `theme/themeAdaptations.test.ts`                                   | 65    |
@@ -272,7 +270,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `Markdown/plugin-renderer/MarkdownPluginNodeRenderer.test.tsx`     | 5     |
 | `MobileNav/MobileNavRootScrollClaim.test.tsx`                      | 5     |
 | `motion/uikit/gestures.test.ts`                                    | 5     |
-| `privateAttributes/press.test.ts`                                  | 5     |
 | `ProgressBar/__tests__/ProgressBar.a11y.test.tsx`                  | 5     |
 | `Resizable/__tests__/ResizeHandle.a11y.test.tsx`                   | 5     |
 | `Resizable/separatorAttributes.test.ts`                            | 5     |
@@ -397,7 +394,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `inputFontFloor.test.ts`                                           | 2     |
 | `internal/calendar-system.test.ts`                                 | 2     |
 | `internal/dialog-context.test.ts`                                  | 2     |
-| `Item/Item.swipeLayer.test.tsx`                                    | 2     |
 | `Layout/layoutReset.test.tsx`                                      | 2     |
 | `Markdown/incrementalIndentation.test.tsx`                         | 2     |
 | `Markdown/linkDestinationLinear.test.tsx`                          | 2     |
@@ -475,9 +471,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 12386          |
-| Declared here              | 8331           |
-| **Short**                  | **4081**       |
+| Upstream, in ported suites | 12622          |
+| Declared here              | 8525           |
+| **Short**                  | **4123**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -496,9 +492,10 @@ per connected group.
 | `SideNav/SideNav.test.tsx`                                                                                                                                                               | 252      | 116  | 136   |
 | `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
-| `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 33   | 96    |
+| `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 35   | 94    |
 | `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 123  | 94    |
 | `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 106  | 93    |
+| `utils/pressFeedback.test.ts`                                                                                                                                                            | 97       | 12   | 85    |
 | `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 149      | 65   | 84    |
 | `Typeahead/Typeahead.test.tsx`                                                                                                                                                           | 127      | 49   | 78    |
 | `DateTimeInput/DateTimeInput.test.tsx`                                                                                                                                                   | 161      | 89   | 72    |
@@ -506,7 +503,6 @@ per connected group.
 | `NumberInput/NumberInput.test.tsx`                                                                                                                                                       | 174      | 113  | 61    |
 | `Slider/Slider.test.tsx`                                                                                                                                                                 | 96       | 35   | 61    |
 | `DropdownMenu/DropdownMenuSubMenu.test.tsx`                                                                                                                                              | 82       | 22   | 60    |
-| `Item/Item.test.tsx`                                                                                                                                                                     | 105      | 45   | 60    |
 | `Markdown/parser.test.ts`                                                                                                                                                                | 166      | 107  | 59    |
 | `Chat/ChatComposerInput.test.tsx`                                                                                                                                                        | 109      | 51   | 58    |
 | `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
@@ -521,9 +517,9 @@ per connected group.
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
 | `Markdown/Markdown.test.tsx`                                                                                                                                                             | 105      | 62   | 43    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
-| `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 55   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
+| `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 58   | 39    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
 | `CheckboxList/CheckboxList.test.tsx`                                                                                                                                                     | 88       | 51   | 37    |
@@ -535,6 +531,7 @@ per connected group.
 | `Icon/Icon.test.tsx`                                                                                                                                                                     | 65       | 33   | 32    |
 | `Chat/ChatDictationButton.test.tsx`<br>`Chat/ChatLayout.test.tsx`<br>`Chat/ChatLayoutScrollButton.test.tsx`<br>`Chat/useChatNewMessages.test.tsx`<br>`Chat/useChatStreamScroll.test.tsx` | 60       | 30   | 30    |
 | `DateInput/DateInputTouch.test.tsx`                                                                                                                                                      | 160      | 130  | 30    |
+| `Item/Item.swipeLayer.test.tsx`<br>`Item/Item.test.tsx`                                                                                                                                  | 107      | 77   | 30    |
 | `theme/generateThemeRules.test.ts`                                                                                                                                                       | 80       | 50   | 30    |
 | `Carousel/Carousel.test.tsx`                                                                                                                                                             | 47       | 18   | 29    |
 | `Icon/globalIconRegistry.test.tsx`                                                                                                                                                       | 47       | 18   | 29    |
@@ -546,8 +543,8 @@ per connected group.
 | `FileInput/FileInput.test.tsx`                                                                                                                                                           | 85       | 59   | 26    |
 | `hooks/useFocusTrap.test.tsx`                                                                                                                                                            | 43       | 17   | 26    |
 | `List/List.test.tsx`                                                                                                                                                                     | 76       | 50   | 26    |
-| `Spinner/Spinner.test.tsx`                                                                                                                                                               | 50       | 24   | 26    |
 | `Link/Link.test.tsx`                                                                                                                                                                     | 61       | 36   | 25    |
+| `Spinner/Spinner.test.tsx`                                                                                                                                                               | 50       | 25   | 25    |
 | `BottomSheet/BottomSheetPanel.test.tsx`                                                                                                                                                  | 31       | 7    | 24    |
 | `Chat/ChatComposer.test.tsx`                                                                                                                                                             | 29       | 5    | 24    |
 | `TopNav/TopNav.test.tsx`                                                                                                                                                                 | 74       | 50   | 24    |
@@ -596,7 +593,7 @@ per connected group.
 | `theme/themingTargets.test.ts`                                                                                                                                                           | 28       | 16   | 12    |
 | `Card/Card.test.tsx`                                                                                                                                                                     | 16       | 5    | 11    |
 | `CheckboxInput/CheckboxInput.test.tsx`                                                                                                                                                   | 54       | 43   | 11    |
-| `Field/InputClearButton.test.tsx`                                                                                                                                                        | 20       | 10   | 10    |
+| `Field/InputClearButton.test.tsx`                                                                                                                                                        | 20       | 9    | 11    |
 | `Pagination/Pagination.test.tsx`                                                                                                                                                         | 102      | 92   | 10    |
 | `theme/expandColorScale.test.ts`                                                                                                                                                         | 36       | 26   | 10    |
 | `Chat/ChatToolCalls.test.tsx`                                                                                                                                                            | 24       | 15   | 9     |
@@ -607,7 +604,6 @@ per connected group.
 | `Section/Section.test.tsx`                                                                                                                                                               | 29       | 20   | 9     |
 | `Collapsible/Collapsible.test.tsx`                                                                                                                                                       | 44       | 36   | 8     |
 | `hooks/useListFocus.test.tsx`                                                                                                                                                            | 39       | 31   | 8     |
-| `ProgressBar/ProgressBar.test.tsx`                                                                                                                                                       | 62       | 54   | 8     |
 | `Toolbar/Toolbar.test.tsx`                                                                                                                                                               | 33       | 25   | 8     |
 | `Typeahead/TypeaheadItem.test.tsx`                                                                                                                                                       | 10       | 2    | 8     |
 | `FormLayout/FormLayout.test.tsx`                                                                                                                                                         | 32       | 25   | 7     |
@@ -707,7 +703,7 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 11    | 2     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 13    | 3     |
 | `getByText` with a string, no `exact`                         | 1     | 1     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string
@@ -719,8 +715,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 676    |
-| **Pending** | **59** |
+| Ported      | 678    |
+| **Pending** | **58** |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a
@@ -731,9 +727,13 @@ this port does not document are not counted as pending.
 
 | Kind                  | Count   |
 | --------------------- | ------- |
-| api-divergence        | 32      |
-| deliberate-divergence | 48      |
-| divergence            | 6       |
-| unported              | 19      |
-| upstream-lag          | 11      |
-| **total**             | **116** |
+| api-divergence        | 36      |
+| deliberate-divergence | 53      |
+| divergence            | 8       |
+| port-defect-fixed     | 1       |
+| unported              | 29      |
+| unported cases        | 1       |
+| upstream bug          | 1       |
+| upstream-bug          | 1       |
+| upstream-lag          | 13      |
+| **total**             | **143** |

@@ -150,23 +150,10 @@ describe('theme-build documented target validation', () => {
 	// added when `timeOptionInterval` (#4837) was unported — and porting that
 	// feature made the literals real; this check then failed on the stale entries
 	// rather than letting them sit, which is exactly the behaviour that stops a
-	// deferral outliving its reason. The three entries now are the same shape:
-	// Item's swipe panels/actions (the whole swipe layer is absent) and Stepper's
-	// compact summary row (the collapsed renderer is absent).
-	const UNPORTED_FEATURE_TARGETS = new Map([
-		[
-			'item-swipe-panel',
-			'Item swipe panels are not ported — ItemSwipeLayer/useSwipeAction are absent (port/debts.md)'
-		],
-		[
-			'item-swipe-action',
-			'Item swipe actions are not ported — ItemSwipeLayer/useSwipeAction are absent (port/debts.md)'
-		],
-		[
-			'stepper-summary',
-			'Stepper compact-summary row is not ported — horizontalOptions.collapsedVariant has no renderer yet'
-		]
-	]);
+	// deferral outliving its reason. The list is empty now that Item's swipe
+	// layer and Stepper's compact summary row are ported; a new deferred feature
+	// adds its entry here and retires it when the renderer lands.
+	const UNPORTED_FEATURE_TARGETS = new Map([]);
 
 	it('every documented theming target is backed by a real themeProps literal', () => {
 		// Guards against a component whose doc target className and rendered
