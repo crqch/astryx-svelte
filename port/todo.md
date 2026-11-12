@@ -17,11 +17,10 @@ unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0
 2026-08-31 (batch 040), and to `0.7.13` on 2026-11-11. Each move widened the distance rather than
 closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
 dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
-tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea` and `Drawer`; only the
-`SnapPaging` subsystem remains on the component surface. `Drawer`'s 71-case suite, its header, direction
-and SSR suites are complete; its 4-case touch-entrance suite waits on the input-hold stack. The remaining
-`useScrollableArea` frame/focus cases and the SnapPaging subsystem are the next work; the latter is scoped
-in [`snap-paging.md`](./snap-paging.md). All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
+tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea`, `Drawer` and the `SnapPaging`
+subsystem. `Drawer`'s 71-case suite, its header, direction and SSR suites are complete; its 4-case
+touch-entrance suite waits on the input-hold stack. The remaining `useScrollableArea` frame/focus cases
+are test work, not a missing component. All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
 sizes, motion tempo, status aliases, syntax diff slots, adaptations and local tokens. The size of it is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
@@ -177,32 +176,21 @@ because the thing it types is. None was recorded before; none is a surface-polic
       character offsets (`parser.ts` — the field, and `stampSourceRanges`), and publishes
       `SourceRange` from the root. Our `BlockNode` has no `range` and `ParseOptions` no
       `sourceRanges`. A 0.5.x feature batch 040's pin move did not catch
-- [ ] **`MultiSelector.formatValue` is documented here and unimplemented.** Upstream declares
-      `formatValue?: (items: MultiSelectorSelectedItem[]) => string`, destructures it and calls it
-      twice; ours has no occurrence of the name. `MultiSelector.doc.mjs` documents it anyway — the
-      emitter's fallback for an unresolvable prop absorbed it, the same mechanism `debts.md`'s "22
-      documented props resolve to no declaration in core" entry describes, except this one is a real
-      gap rather than a translation. That entry's count is understated by at least one
-- [ ] **`Icon` rejects namespaced names that upstream accepts.** `icon` is typed
-      `IconName | IconType` where upstream's is `IconType | IconName | NamespacedIconName`, so
-      `<Icon icon="richtext:bold" />` is a type error here and legal upstream — even though
-      `registerIcons` already takes the key at runtime. Needs `NamespacedIconName` declared and
-      published
-- [ ] **Two of upstream's sixteen module-augmentation seams are missing**, and the union drifted with
-      each. `CardVariantMap` is absent and `CardVariant` is a **closed** union where upstream's is
-      `keyof CardVariantMap` — so a theme cannot add a variant, which
-      `selectable-card.stylex.ts` carries a comment asserting it can. `CustomTextTypes` is absent and
-      `TextType` is `BuiltinTextType | (string & {})`, which accepts any string where upstream
-      accepts only registered ones
+- [x] **`MultiSelector.formatValue`** — implemented as upstream declares it: the selected items
+      pass through the formatter for both the trigger label and its text alternative.
+- [x] **`Icon` accepts namespaced names** — `NamespacedIconName` is declared and published, and
+      the `icon` union matches upstream's.
+- [x] **The two module-augmentation seams are present** — `CardVariantMap` backs
+      `CardVariant = keyof CardVariantMap`, and `CustomTextTypes` backs
+      `TextType = BuiltinTextType | keyof CustomTextTypes`. Both are published.
 - [ ] **`Selector`/`MultiSelector`'s `presentation` is documented and unimplemented.**
       Upstream's `useSelectorPresentation` hook (`Selector/useSelectorPresentation.ts`) drives
       `'popover' | 'bottom-sheet' | 'adaptive'`; this port renders the popover only, so the prop in
       both `.doc.mjs` files is the emitter's fallback, not a declaration. The
       `SelectorBottomSheet` example block stays unported until it lands
-- [ ] **`useCombobox` publishes a narrower result than upstream's.** Upstream hands back
-      `getFieldProps()`, `getListboxProps()` and `getOptionProps()`, which the `useCombobox — Assign
-      To Field` block spreads onto `TextInput`/`Item`; ours publishes only the event handlers and
-      `getItemId`, so that block cannot be transcribed until the helper props land
+- [x] **`useCombobox` publishes upstream's helper props** — `getFieldProps()`,
+      `getListboxProps()` and `getOptionProps()` are implemented, so the assign-to-field block can
+      be transcribed.
 - [ ] **`ComplexSelector` is missing upstream's field-styling seam.**
       `containerXstyle`/`containerClassName`/`containerStyle` and
       `controlXstyle`/`controlClassName`/`controlStyle` are documented in `ComplexSelector.doc.mjs`
