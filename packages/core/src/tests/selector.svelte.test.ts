@@ -64,8 +64,10 @@ import { stubMatchMedia } from './stub-match-media.js';
  * bottom-sheet listbox`, `uses a bottom sheet for adaptive presentation on
  * compact touch`, `keeps adaptive presentation anchored without compact
  * touch`, and the four-row read-only transition table) transcribe from
- * upstream. The file's remaining shortfall is the cases named below plus the
- * later-pin additions `port/status.md` measures.
+ * upstream. The `Selector light dismiss focus (spec:Popover AR4)` block's two
+ * cases are ported with the shared controller, which now owns that policy. The
+ * file's remaining shortfall is the cases named below plus the later-pin
+ * additions `port/status.md` measures.
  *
  * ## `does not select the highlighted option on a composing Enter (IME)`
  *
@@ -2111,6 +2113,64 @@ describe('Selector', () => {
 			});
 			expect([...new FormData(screen.container.querySelector('form')!).keys()]).toEqual([]);
 		});
+	});
+});
+
+describe('Selector light dismiss focus (spec:Popover AR4)', () => {
+	/** Upstream's `closeByLightDismiss`: the browser's toggle after a light dismiss. */
+	function closeByLightDismiss(container: HTMLElement): void {
+		const popover = popoverOf(container);
+		popover.dispatchEvent(
+			Object.assign(new Event('toggle'), { oldState: 'open', newState: 'closed' })
+		);
+	}
+
+	it('leaves focus on the field a press moved it to', async () => {
+		const notes = document.createElement('input');
+		notes.setAttribute('aria-label', 'Notes');
+		document.body.append(notes);
+		try {
+			const screen = await render(Selector, {
+				props: {
+					label: 'Fruit',
+					options: OPTIONS,
+					value: 'Banana',
+					onChange: () => {},
+					placement: 'below'
+				}
+			});
+			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			await userEvent.click(trigger);
+			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'true');
+
+			// The press on another field focuses it before the browser's light
+			// dismiss closes the list.
+			notes.focus();
+			closeByLightDismiss(screen.container);
+
+			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+			expect(notes).toHaveFocus();
+		} finally {
+			notes.remove();
+		}
+	});
+
+	it('returns focus to the trigger when the press lands on nothing focusable', async () => {
+		const screen = await render(Selector, {
+			props: {
+				label: 'Fruit',
+				options: OPTIONS,
+				value: 'Banana',
+				onChange: () => {},
+				placement: 'below'
+			}
+		});
+		const trigger = screen.getByRole('combobox').element() as HTMLElement;
+		await userEvent.click(trigger);
+		(document.activeElement as HTMLElement | null)?.blur();
+		closeByLightDismiss(screen.container);
+
+		await vi.waitFor(() => expect(trigger).toHaveFocus());
 	});
 });
 
