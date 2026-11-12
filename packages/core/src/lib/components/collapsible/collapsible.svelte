@@ -276,16 +276,30 @@
 		collapsible.toggle();
 	}
 
-	const theme = $derived(themeProps('collapsible', { density: density ?? undefined }));
+	const theme = $derived(
+		themeProps('collapsible', {
+			density: density ?? undefined,
+			divided: isDivided ? 'divided' : null
+		})
+	);
 	const contentTheme = $derived(
-		themeProps('collapsible-content', { density: density ?? undefined })
+		themeProps('collapsible-content', {
+			density: density ?? undefined,
+			open: collapsible.isOpen ? 'open' : null
+		})
 	);
 	const rootAttrs = $derived(collapsibleRootAttrs(isDivided, xstyle));
 	// The trigger is a theming target of its own, so a theme can restyle it
 	// independently from the content — e.g. a heading font on the trigger while
-	// the content keeps the body font.
+	// the content keeps the body font. Every visual axis and state the target
+	// owns is reflected, as upstream does, so a theme can select them.
 	const triggerTheme = $derived(
-		themeProps('collapsible-trigger', { density: density ?? undefined })
+		themeProps('collapsible-trigger', {
+			density: density ?? undefined,
+			chevronPosition: position,
+			open: collapsible.isOpen ? 'open' : null,
+			disabled: isDisabled ? 'disabled' : null
+		})
 	);
 	// The trigger is the pressable: it has no hover surface, so its pressed
 	// overlay is the only background it paints.

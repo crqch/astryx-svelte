@@ -18,6 +18,10 @@
 		target?: string;
 		isDisabled?: boolean;
 		isSelected?: boolean;
+		/** Consumer styles for the row element. See `TreeListItemData`. */
+		xstyle?: StyleArg;
+		className?: string;
+		style?: string;
 		hasChildren: boolean;
 		/**
 		 * Whether the tree has any expandable item at all. A leaf only reserves the
@@ -58,7 +62,7 @@
 </script>
 
 <script lang="ts">
-	import { cx, mergeStyle } from '../../internal/sx.js';
+	import { cx, mergeStyle, type StyleArg } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { spacingVars } from '../../styles/tokens.stylex.js';
 	import Icon from '../icon/icon.svelte';
@@ -66,6 +70,10 @@
 	import LinkElement from '../link/link-element.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { usePressFeedback } from '../../hooks/use-press-feedback.svelte.js';
+	import {
+		hasInteractiveAncestor,
+		useClickableContainer
+	} from '../../hooks/use-clickable-container.svelte.js';
 	import TreeListBranches from './tree-list-branches.svelte';
 	import {
 		treeItemBranchesAttrs,
@@ -94,6 +102,9 @@
 		description,
 		startContent,
 		endContent,
+		xstyle,
+		className,
+		style: styleProp,
 		onClick,
 		href,
 		target,
@@ -125,6 +136,9 @@
 
 	function handleToggle(e: MouseEvent): void {
 		e.stopPropagation();
+		if (isDisabled) {
+			return;
+		}
 		onToggle?.(id);
 	}
 
@@ -132,8 +146,11 @@
 		if (isDisabled) {
 			return;
 		}
-		const el = e.target as HTMLElement;
-		if (el.closest('button, a, input, select, textarea')) {
+		// Controls inside the row, native or role-based, keep their own
+		// activation; the same rule link rows get from the enlarged-surface hook
+		// below (`spec:AST-085` FR7). A hand-rolled tag list would miss
+		// `[role="switch"]` and every other role-based control.
+		if (hasInteractiveAncestor(e.target as Element, e.currentTarget as Element)) {
 			return;
 		}
 		if (onClick != null) {
@@ -141,6 +158,37 @@
 		} else if (canToggle) {
 			onToggle?.(id);
 		}
+	}
+
+	/** The row surface, the container the link-row click delegation reads. */
+	let rowEl = $state<HTMLDivElement | null>(null);
+	// A link row (an `href` and no other row action) is an enlarged surface for
+	// its link: the indent is part of the row, so a click anywhere in it must
+	// follow the link, as Enter already does. Built on the shared
+	// enlarged-surface hook: it skips nested controls and text selections,
+	// re-dispatches the click on the anchor with its modifier keys, and stops
+	// the original so ancestors see one click per press. Middle-click has no
+	// synthetic equivalent, so the second instance takes the hook's href path.
+	const forwardsToLink = $derived(href != null && onClick == null && !canToggle);
+	const linkDelegate = useClickableContainer(() => ({
+		container: forwardsToLink ? rowEl : null,
+		interactive: forwardsToLink && rowEl ? rowEl.querySelector<HTMLElement>('a[href]') : null,
+		disabled: isDisabled || !forwardsToLink
+	}));
+	const linkMiddleClick = useClickableContainer(() => ({
+		container: forwardsToLink ? rowEl : null,
+		href,
+		target,
+		disabled: isDisabled || !forwardsToLink
+	}));
+
+	function handleAction(e: MouseEvent): void {
+		// Disabled stays focusable (spec:AST-085 FR1) but inert (FR2): the native
+		// click still reaches this handler, which is where activation is blocked.
+		if (isDisabled) {
+			return;
+		}
+		onClick?.(e);
 	}
 
 	// Per-level indent distance. The per-level step is the public, themeable
@@ -174,7 +222,7 @@
 	const branchesAttrs = treeItemBranchesAttrs();
 	const rowWrapperAttrs = treeItemRowWrapperAttrs();
 	const contentWrapperAttrs = $derived(
-		treeItemContentWrapperAttrs(density, hasInteractiveStyles, isDisabled, isSelected)
+		treeItemContentWrapperAttrs(density, hasInteractiveStyles, isDisabled, isSelected, xstyle)
 	);
 	const anchorAttrs = treeItemInvisibleAnchorAttrs();
 	const buttonAttrs = treeItemInvisibleButtonAttrs();
@@ -200,11 +248,16 @@
 	);
 
 	// The polymorphic link props for the invisible-anchor branch; custom
-	// components also get a `to={href}` alias, as `Item`'s do.
+	// components also get a `to={href}` alias, as `Item`'s do. A disabled item's
+	// anchor has no destination, so neither the row's forwarded activation nor a
+	// screen reader's click can navigate (`spec:AST-085` FR2); it keeps the link
+	// role without the router link component, and sits in the same DOM position
+	// so focus survives the change.
 	const anchorProps = $derived({
-		href,
-		...(linkResolved.isNative ? {} : { to: href }),
-		target,
+		href: isDisabled ? undefined : href,
+		...(linkResolved.isNative ? {} : { to: isDisabled ? undefined : href }),
+		target: isDisabled ? undefined : target,
+		role: isDisabled ? 'link' : undefined,
 		'aria-disabled': isDisabled || undefined,
 		'aria-labelledby': labelId,
 		'aria-describedby': description != null ? descriptionId : undefined,
@@ -256,6 +309,8 @@
 
 <li
 	role="treeitem"
+	aria-labelledby={labelId}
+	aria-describedby={description != null ? descriptionId : undefined}
 	aria-expanded={hasChildren ? isExpanded : undefined}
 	aria-selected={isSelected || undefined}
 	aria-disabled={isDisabled || undefined}
@@ -282,11 +337,17 @@
 			control inside. That is why no key handler is needed here.
 		-->
 		<div
+			bind:this={rowEl}
 			{...hasInteractiveStyles ? pressable : undefined}
 			{...theme}
-			class="{theme.class} {contentWrapperAttrs.class}"
-			style={mergeStyle(contentWrapperAttrs.style, `--_tree-indent:${indentDistance}`)}
-			onclick={onClick != null || canToggle ? handleClick : undefined}
+			class={cx(theme.class, contentWrapperAttrs.class, className)}
+			style={mergeStyle(contentWrapperAttrs.style, `--_tree-indent:${indentDistance}`, styleProp)}
+			onclick={forwardsToLink
+				? linkDelegate.onclick
+				: onClick != null || canToggle
+					? handleClick
+					: undefined}
+			onmouseup={forwardsToLink ? linkMiddleClick.onmouseup : undefined}
 		>
 			<div class={indentedAttrs.class} style={indentedAttrs.style}>
 				{#if hasChildren}
@@ -304,7 +365,7 @@
 							aria-expanded={isExpanded}
 							aria-label={t('@astryx.treeList.toggleChildren')}
 							data-tree-toggle=""
-							disabled={isDisabled}
+							aria-disabled={isDisabled || undefined}
 							tabindex={-1}
 							onclick={handleToggle}
 							{...chevronTheme}
@@ -334,8 +395,8 @@
 				{:else if onClick != null}
 					<button
 						type="button"
-						onclick={onClick}
-						disabled={isDisabled}
+						onclick={handleAction}
+						aria-disabled={isDisabled || undefined}
 						aria-labelledby={labelId}
 						aria-describedby={description != null ? descriptionId : undefined}
 						tabindex={-1}

@@ -1,6 +1,7 @@
 import { untrack } from 'svelte';
 import type { Attachment } from 'svelte/attachments';
 import { isRtlElement } from './is-rtl-element.js';
+import { findTypeaheadMatch, nextTypeaheadBuffer } from '../utils/typeahead-match.js';
 
 /**
  * The WAI-ARIA tree keyboard model, ported from Astryx's `hooks/useTreeFocus.ts`.
@@ -46,6 +47,44 @@ const NAVIGATION_KEYS = new Set([
 
 /** Default reset delay for the typeahead buffer. */
 const DEFAULT_TYPEAHEAD_RESET_MS = 500;
+
+/**
+ * Options the package's own components pass beyond the public hook.
+ *
+ * A second argument would be a public surface upstream does not have, so this
+ * stays an extension of the options object and the public {@link useTreeFocus}
+ * pins it off.
+ */
+export type UseTreeFocusInternalOptions = UseTreeFocusOptions & {
+	/**
+	 * Match typeahead against the item's `aria-labelledby` text (its label
+	 * alone) instead of its whole text content, so start content, a chevron
+	 * toggle or a description never takes part. TreeList passes this; the
+	 * released text match stays the default for direct callers.
+	 * @default false
+	 */
+	matchLabelledBy?: boolean;
+};
+
+/**
+ * The text typeahead matches against. With `matchLabelledBy`, the row's
+ * `aria-labelledby` text (the label alone) when it has one; otherwise, and by
+ * default, its text content.
+ */
+function itemLabelText(item: HTMLElement, matchLabelledBy: boolean): string {
+	const labelledBy = matchLabelledBy ? item.getAttribute('aria-labelledby') : null;
+	if (labelledBy != null) {
+		const label = labelledBy
+			.split(/\s+/)
+			.map((id) => item.ownerDocument.getElementById(id)?.textContent ?? '')
+			.join(' ')
+			.trim();
+		if (label !== '') {
+			return label;
+		}
+	}
+	return (item.textContent ?? '').trim();
+}
 
 /**
  * Configuration for tree focus behavior.
@@ -231,6 +270,17 @@ function setTabIndex(el: HTMLElement, value: 0 | -1): void {
  * ```
  */
 export function useTreeFocus(options: () => UseTreeFocusOptions = () => ({})): UseTreeFocusReturn {
+	return useTreeFocusInternal(() => ({ ...options(), matchLabelledBy: false }));
+}
+
+/**
+ * The implementation behind {@link useTreeFocus}, with the package's own extra
+ * options. Not exported from the hooks barrel: TreeList imports this module
+ * directly, so the released option set stays exactly {@link UseTreeFocusOptions}.
+ */
+export function useTreeFocusInternal(
+	options: () => UseTreeFocusInternalOptions = () => ({})
+): UseTreeFocusReturn {
 	// The one option read reactively: it decides whether the attachment installs
 	// the tab-stop repair at all.
 	const hasRovingTabIndex = $derived(options().hasRovingTabIndex ?? false);
@@ -365,16 +415,18 @@ export function useTreeFocus(options: () => UseTreeFocusOptions = () => ({})): U
 	}
 
 	function runTypeahead(e: KeyboardEvent, items: HTMLElement[], currentIndex: number): void {
-		const { typeaheadResetMs = DEFAULT_TYPEAHEAD_RESET_MS } = options();
+		const { typeaheadResetMs = DEFAULT_TYPEAHEAD_RESET_MS, matchLabelledBy = false } = options();
 
+		// The same buffer step as `useTypeahead`: a repeat means "next match", and
+		// a lone combining mark typed first is not a letter to jump to.
+		const nextBuffer = nextTypeaheadBuffer(typeaheadBuffer, e.key);
+		if (nextBuffer == null) {
+			return;
+		}
 		if (typeaheadTimer != null) {
 			clearTimeout(typeaheadTimer);
 		}
-		// "aa" would match nothing; a repeat means "next match" (useTypeahead).
-		const char = e.key.toLowerCase();
-		const isRepeatSameChar =
-			typeaheadBuffer.length > 0 && typeaheadBuffer.split('').every((c) => c === char);
-		typeaheadBuffer = isRepeatSameChar ? char : typeaheadBuffer + char;
+		typeaheadBuffer = nextBuffer;
 		typeaheadTimer = setTimeout(() => {
 			typeaheadBuffer = '';
 		}, typeaheadResetMs);
@@ -385,10 +437,15 @@ export function useTreeFocus(options: () => UseTreeFocusOptions = () => ({})): U
 		const start = hasCurrent ? currentIndex : 0;
 		const offset = hasCurrent && query.length === 1 ? 1 : 0;
 		const ordered = [...items.slice(start + offset), ...items.slice(0, start + offset)];
-		const match = ordered.find(
-			(item) =>
-				!itemDisabled(item) && (item.textContent ?? '').trim().toLowerCase().startsWith(query)
+		const enabled = ordered.filter((item) => !itemDisabled(item));
+		// Case, accents, stroked letters and Turkish i fold away, and a typed
+		// mark prefers the exact match.
+		const matchIndex = findTypeaheadMatch(
+			enabled.map((_, i) => i),
+			(i) => itemLabelText(enabled[i], matchLabelledBy),
+			query
 		);
+		const match = matchIndex >= 0 ? enabled[matchIndex] : undefined;
 		if (match != null) {
 			e.preventDefault();
 			focusItem(match);

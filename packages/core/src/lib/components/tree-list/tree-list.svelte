@@ -87,13 +87,24 @@
 		};
 		return walk(items) ?? firstEnabled ?? items[0]?.id;
 	}
+
+	/**
+	 * Upstream's `isRenderable`: `null`, `undefined`, booleans and the empty
+	 * string render nothing in React. The header is `string | Snippet` here, so
+	 * only the empty string can reach that branch through the type — the rest
+	 * arrive from a JS caller, and Svelte would otherwise render the header box
+	 * for `false`/`true` and name the tree with an empty element.
+	 */
+	function isRenderableHeader(value: unknown): boolean {
+		return value != null && typeof value !== 'boolean' && value !== '';
+	}
 </script>
 
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { cx, mergeStyle } from '../../internal/sx.js';
 	import { themeProps } from '../../internal/theme-props.js';
-	import { useTreeFocus } from '../../hooks/use-tree-focus.svelte.js';
+	import { useTreeFocusInternal } from '../../hooks/use-tree-focus.svelte.js';
 	import { useAnimatedLayout } from '../../hooks/use-animated-layout.svelte.js';
 	import { useMediaQuery } from '../../hooks/use-media-query.svelte.js';
 	import {
@@ -147,11 +158,16 @@
 		xstyle,
 		class: className,
 		style: styleProp,
+		'aria-label': ariaLabel,
+		'aria-labelledby': ariaLabelledby,
+		onkeydown: onKeyDownProp,
 		animatedLayout: animatedLayoutProp,
 		...rest
 	}: TreeListProps = $props();
 
 	const headerId = $props.id();
+	// A header that renders nothing names nothing, so the tree keeps its own label.
+	const hasHeader = $derived(isRenderableHeader(header));
 
 	// Expanded keys from data: recomputed whenever items change.
 	const expandedKeysFromProps = $derived(new Set(collectExpandedKeys(items)));
@@ -541,12 +557,31 @@
 		}
 	}
 
-	const tree = useTreeFocus(() => ({
+	const tree = useTreeFocusInternal(() => ({
 		onToggleExpand: handleToggle,
 		onActivate: activateItem,
 		hasRovingTabIndex: true,
+		// Rows are named by their label (AR1); typeahead matches that label, not
+		// the chevron toggle, start content or description.
+		matchLabelledBy: true,
 		itemSelector: TREE_ITEM_SELECTOR
 	}));
+
+	/**
+	 * Consumer keydown first, on the root, then the tree model only when the
+	 * event originated inside the list — upstream's `handleRootKeyDown`. A
+	 * consumer can prevent the built-in move by preventing the default, and a key
+	 * pressed in the header slot never navigates the tree.
+	 */
+	function handleRootKeyDown(event: KeyboardEvent): void {
+		onKeyDownProp?.(event as KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement });
+		if (event.defaultPrevented) {
+			return;
+		}
+		if (treeEl != null && event.target instanceof Node && treeEl.contains(event.target)) {
+			tree.handleKeyDown(event);
+		}
+	}
 
 	// `variant` belongs here as well as `density`: `TreeListVariantMap` is
 	// declaration-mergeable, so an augmented variant type-checks and renders —
@@ -580,6 +615,9 @@
 			description={item.description}
 			startContent={item.startContent}
 			endContent={item.endContent}
+			xstyle={item.xstyle}
+			className={item.className}
+			style={item.style}
 			{hasChildren}
 			{hasExpandableItems}
 			onClick={item.onClick}
@@ -608,8 +646,9 @@
 	{...theme}
 	class={cx(theme.class, rootAttrs.class, className)}
 	style={mergeStyle(rootAttrs.style, styleProp as string | undefined)}
+	onkeydown={handleRootKeyDown}
 >
-	{#if header != null}
+	{#if hasHeader}
 		<div id={headerId} class={headerAttrs.class} style={headerAttrs.style}>
 			{#if typeof header === 'function'}{@render header()}{:else}{header}{/if}
 		</div>
@@ -618,8 +657,8 @@
 		bind:this={treeEl}
 		{@attach tree.attachTree}
 		role="tree"
-		aria-labelledby={header != null ? headerId : undefined}
-		onkeydown={tree.handleKeyDown}
+		aria-label={hasHeader ? undefined : ariaLabel}
+		aria-labelledby={hasHeader ? headerId : ariaLabelledby}
 		onfocusin={tree.handleFocus}
 		class={listAttrs.class}
 		style={listAttrs.style}

@@ -1,5 +1,5 @@
 import * as stylex from '@stylexjs/stylex';
-import { sx, type SvelteStyleAttrs } from '../../internal/sx.js';
+import { sx, type StyleArg, type SvelteStyleAttrs } from '../../internal/sx.js';
 import {
 	colorVars,
 	durationVars,
@@ -328,14 +328,16 @@ export function treeItemContentWrapperAttrs(
 	density: TreeListDensity,
 	hasInteractiveStyles: boolean,
 	isDisabled: boolean,
-	isSelected: boolean
+	isSelected: boolean,
+	xstyle?: StyleArg
 ): SvelteStyleAttrs {
 	if (!hasInteractiveStyles) {
 		return sx(
 			styles.contentWrapper,
 			densityStyles[density],
 			isDisabled && styles.disabled,
-			isSelected && styles.selected
+			isSelected && styles.selected,
+			xstyle
 		);
 	}
 	// `focusWithinOrPublished` sits FIRST, as upstream's does, and carries
@@ -353,7 +355,8 @@ export function treeItemContentWrapperAttrs(
 		rowPressLayerStyles.cell,
 		rowPressLayerStyles.cellOnImage,
 		isDisabled && styles.disabled,
-		isSelected && styles.selected
+		isSelected && styles.selected,
+		xstyle
 	);
 }
 

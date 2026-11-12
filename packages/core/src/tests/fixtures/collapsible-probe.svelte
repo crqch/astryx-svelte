@@ -13,6 +13,10 @@
 		body?: string;
 		/** Render the body inside `<span data-testid={childTestId}>` instead of `<p>`. */
 		childTestId?: string;
+		/** Render the body as a focusable `<button>` instead of `<p>` (close-focus cases). */
+		bodyButton?: string;
+		/** Render upstream's `<button>Elsewhere</button>` sibling after the disclosure. */
+		elsewhere?: boolean;
 	}
 </script>
 
@@ -31,6 +35,8 @@
 		richTrigger = false,
 		body = 'Body',
 		childTestId,
+		bodyButton,
+		elsewhere = false,
 		...rest
 	}: CollapsibleProbeProps = $props();
 </script>
@@ -38,5 +44,15 @@
 {#snippet rich()}<span data-testid="rich">Rich</span>{/snippet}
 
 <Collapsible trigger={richTrigger ? rich : trigger} {...rest}>
-	{#if childTestId}<span data-testid={childTestId}>{body}</span>{:else}<p>{body}</p>{/if}
+	{#if bodyButton}
+		<button type="button">{bodyButton}</button>
+	{:else if childTestId}
+		<span data-testid={childTestId}>{body}</span>
+	{:else}
+		<p>{body}</p>
+	{/if}
 </Collapsible>
+
+{#if elsewhere}
+	<button type="button">Elsewhere</button>
+{/if}
