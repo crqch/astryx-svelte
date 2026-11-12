@@ -649,6 +649,13 @@ export type {
 	FieldStatusInput,
 	FieldStatusType
 } from './components/field/field.svelte';
+export type {
+	FieldContainerStyleProps,
+	FieldControlStyleProps,
+	FieldInputBaseProps,
+	FieldInputForbiddenStyleProp,
+	FieldPartStyleProps
+} from './components/field/field-parts.js';
 export type { FieldLabelProps } from './components/field/field-label.svelte';
 export type { FieldStatusProps } from './components/field-status/field-status.svelte';
 // No `FileInputMode`: upstream inlines the `'dropzone' | 'input'` union in
@@ -736,6 +743,14 @@ export type {
 	MarkdownInlinePlugin,
 	MarkdownSource
 } from './components/markdown/markdown-types.js';
+// Upstream ships these on the `@astryxdesign/core/Markdown/plugins` subpath.
+// This port has no per-component subpaths (port/debts.md), so its names live on
+// the root barrel. `MarkdownPluginEntry` appears on `MarkdownProps.plugins` and
+// therefore belongs to the published surface even though the generic
+// `createMarkdownPlugin()` protocol is not ported yet.
+export { createMarkdownHeadingLinks } from './components/markdown/plugins/heading-links.js';
+export type { MarkdownHeadingLinksOptions } from './components/markdown/plugins/heading-links.js';
+export type { MarkdownPluginEntry } from './components/markdown/plugins/protocol.js';
 export {
 	parseMarkdown,
 	parseMarkdownIncremental,
@@ -1513,6 +1528,7 @@ export {
 } from './components/outline/use-outline-from-dom.svelte.js';
 // Landed with batch 11's markdown parser, which is what they were deferred on.
 export { parseOutlineFromMarkdown } from './components/outline/parse-outline-from-markdown.js';
+export type { ParseOutlineFromMarkdownOptions } from './components/outline/parse-outline-from-markdown.js';
 export {
 	useOutlineFromMarkdown,
 	type OutlineFromMarkdownState

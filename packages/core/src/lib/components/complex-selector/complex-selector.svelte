@@ -1,6 +1,6 @@
 <script lang="ts" module>
 	import type { Snippet } from 'svelte';
-	import type { BaseProps } from '../../base-props.js';
+	import type { FieldInputBaseProps } from '../field/field-parts.js';
 	import type { StyleArg } from '../../internal/sx.js';
 	import type { SizeValue } from '../../internal/types.js';
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
@@ -71,7 +71,7 @@
 	 * the first `ReactNode` one.
 	 */
 	export interface ComplexSelectorProps<Value> extends Omit<
-		BaseProps<HTMLDivElement>,
+		FieldInputBaseProps<HTMLDivElement>,
 		'children' | 'onchange' | 'placeholder'
 	> {
 		/** Label text for accessibility and the field label. */
@@ -139,6 +139,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Field from '../field/field.svelte';
+	import { useFieldInputStyling } from '../field/field-parts.js';
 	import Icon from '../icon/icon.svelte';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import PopoverLayer from '../popover/popover-layer.svelte';
@@ -219,14 +220,29 @@
 		placement = 'below',
 		alignment = 'start',
 		contentXstyle,
-		xstyle,
-		class: className,
-		style: styleProp,
+		containerXstyle,
+		containerClassName,
+		containerStyle,
+		controlXstyle,
+		controlClassName,
+		controlStyle,
 		'data-testid': testId,
 		// Destructured out of the rest spread on purpose — see `handleTriggerClick`.
 		onclick: onclickProp,
 		...rest
 	}: ComplexSelectorProps<Value> = $props();
+
+	// Upstream's `useFieldInputStyling`: root styling is stripped with a
+	// development warning, and the `container*` props reach the Field box only
+	// where one renders. The getters keep the FormLayout/InputGroup decision
+	// reactive.
+	const field = useFieldInputStyling('ComplexSelector', rest, {
+		containerXstyle,
+		containerClassName,
+		containerStyle
+	});
+	const fieldRest = $derived(field.rest());
+	const fieldContainer = $derived(field.container());
 
 	// Announce the effective required state (form default included) while the
 	// native `required` stays bound to the explicit `isRequired`, so a layout
@@ -397,7 +413,13 @@
 		themeProps('complex-selector', { variant, size, status: status?.type ?? null })
 	);
 	const containerAttrs = $derived(
-		complexSelectorTriggerContainerAttrs(size, isDisabled, triggerLabel != null, variant, xstyle)
+		complexSelectorTriggerContainerAttrs(
+			size,
+			isDisabled,
+			triggerLabel != null,
+			variant,
+			controlXstyle
+		)
 	);
 	const triggerAttrs = complexSelectorTriggerAttrs();
 	const triggerTextAttrs = complexSelectorTriggerTextAttrs();
@@ -420,11 +442,11 @@
 		{@attach popover.attachTrigger}
 		data-testid={testId}
 		{...pressable}
-		{...rest}
+		{...fieldRest}
 		onclick={handleTriggerClick}
 		{...theme}
-		class={cx(theme.class, containerAttrs.class, className)}
-		style={mergeStyle(containerAttrs.style, styleProp as string | undefined)}
+		class={cx(theme.class, containerAttrs.class, controlClassName)}
+		style={mergeStyle(containerAttrs.style, controlStyle)}
 	>
 		<!--
 			Upstream's `renderIconSlot(startIcon, {size: 'sm', color: 'secondary'})`
@@ -552,6 +574,9 @@
 	statusVariant={effectiveStatusVariant}
 	{labelTooltip}
 	{width}
+	xstyle={fieldContainer.xstyle}
+	class={fieldContainer.className}
+	style={fieldContainer.style}
 >
 	{@render selectorContent()}
 </Field>
