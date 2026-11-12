@@ -399,10 +399,10 @@
 	}
 
 	/**
-	 * Record where a dialog should return focus. A press that did not focus its
-	 * button (Safari) would otherwise record the element focused before it, so
-	 * the opener is whatever the document had focused when `open()` ran — unless
-	 * that is inside the menu that is about to be replaced.
+	 * Record where a dialog should return focus. Upstream prefers the control a
+	 * press started on (`pressedOpener`, which this port has not adopted); without
+	 * it this reads the element focused when `open()` ran — unless that is inside
+	 * the menu that is about to be replaced.
 	 */
 	function captureOpener(): void {
 		const active = document.activeElement;
@@ -993,7 +993,7 @@
 		class={cx(dropdownTheme.class, dropdownAttrs.class)}
 		style={dropdownAttrs.style}
 	>
-		{#if isEmptySearch}
+		{#if results.length === 0 && hasSearched}
 			<div
 				{...emptyStateTheme}
 				class={cx(emptyStateTheme.class, emptyStateAttrs.class)}

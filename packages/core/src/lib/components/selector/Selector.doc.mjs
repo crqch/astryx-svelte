@@ -416,7 +416,7 @@ export default {
 		},
 		{
 			name: 'presentation',
-			type: "'popover' | 'bottom-sheet' | 'adaptive'",
+			type: "'popover' | 'adaptive' | 'bottom-sheet'",
 			description:
 				'How the option list is presented. adaptive uses a bottom sheet on compact touch screens and an anchored popover otherwise.',
 			default: "'popover'"

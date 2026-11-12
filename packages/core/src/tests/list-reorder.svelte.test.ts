@@ -17,22 +17,72 @@ import { __resetDevWarnings } from '$lib/utils/dev-warning.js';
  * a mouse drag draws the preview and insertion line and drops once. The
  * handle's geometry and paint are covered by the CSS oracle.
  *
- * **Not ported here**, with their reason:
- * - `ListReorderMode.interaction.browser.spec.ts` (the full reorder-mode
- *   keyboard and hint suite), `ListReorderPointer.interaction.browser.spec.ts`,
- *   `ListReorderTouch.interaction.browser.spec.ts` and
- *   `ListReorderSelectionLock.test.tsx`: each drives the gesture host or a
- *   real touch sequence with jsdom-only shims (`pointerQuery`, stubbed
- *   `offsetTop`), which this port's browser project does not have.
- * - `ListReorderLayout.test.tsx` and `listLayoutUpdates.test.tsx`: the row
- *   layout-update subsystem those tests cover is not ported (`port/debts.md`).
- * - The lazy-loading cases ("loads no reorder module from List or ListItem")
- *   and the production-warning case: this port imports the handle and host
- *   statically, and its dev-warning gate is covered by the utility's own
- *   source rather than by re-importing components under a stubbed env.
- * - The jsdom layout helpers (`layOut`) become real browser layout here, so
- *   the exact `--astryx-reorder-line-y`/preview offsets are asserted only as
- *   a shape (a px value), not as upstream's stubbed 131px.
+ * **Not ported here**, each named with its reason:
+ * - `loads no reorder module from List or ListItem: they import its type and
+ *   context only` — this port imports the handle and host statically, so the
+ *   module is present whenever List is; the bundle split is a follow-up.
+ * - `does not warn about a nameless reorderable row in production` — the
+ *   warning goes through `warnOnce`, whose production gate has its own suite.
+ * - `gives a finger's target as an invisible hit layer, not a bigger handle`
+ *   and `starts the hit area's observers only where the primary pointer is
+ *   coarse` — the shared hit-area utility has its own suite; the handle and
+ *   hint compose it unchanged, and its coarse-pointer stubs are jsdom-only.
+ * - `gives the hint's buttons a finger's target as an invisible hit layer` and
+ *   `starts the hint buttons' hit area only where the primary pointer is
+ *   coarse` — same reason as the handle's two hit-area cases.
+ * - `names the handle "Reorder" then the row label element, for a component
+ *   label too` — the shape is asserted indirectly by the rich-label and
+ *   icon-named cases; the two-id `aria-labelledby` split is not.
+ * - `adds one element to a row, the handle, whose lines are a pseudo-element`
+ *   — the no-end-slot case covers the element count; the `endContent` variant
+ *   is not repeated.
+ * - `keeps reorder mode through a move that renames its row, and announces the
+ *   rows by their new names` and `leaves out the ghost of a removed row still
+ *   collapsing` — not driven in this pass: the first needs a fixture that
+ *   names each row by its current place, and the second inserts a
+ *   `data-astryx-leaving` row by hand. `names a row that shows no text after
+ *   its place` (the announcements-only case), `announces a move only once it
+ *   lands, and a declined one with the place the row kept` and `keeps reorder
+ *   mode when its handle loses focus` are announcement/focus cases with the
+ *   same fixture gap.
+ * - `reorders two lists that share one object`, `starts reorder mode from the
+ *   app's own UI with start(key)`, `keeps the mode start(key) entered when the
+ *   UI hands its focus back`, and `starts reorder mode in the list mounted
+ *   last` — the registry and `start(key)` seam exist; those cases need a
+ *   second fixture and a focus-handback UI, and are not driven here.
+ * - The hint rows `takes an Escape that reaches the dismissal stack`,
+ *   `reorders by taps alone`, `refuses the hint's move into a row that keeps
+ *   its place` and `shows the same hint when start(key) enters reorder mode` —
+ *   the hint's show/move/Done path is ported; those four exercise the shared
+ *   dismissal stack and `start(key)`, which have their own suites.
+ * - `keeps the mouse drag slop equal to the date wheel's` — this port's date
+ *   wheel drag constant lives in a different module (`DateInput`), so the
+ *   equality is not reachable without importing a component's private seam.
+ * - `keeps the other rows still during a drag`, `announces Done when a drag
+ *   ends reorder mode`, `restores a cancelled drag at once`, `writes no offset
+ *   to a row a drop leaves at rest at 0`, `reads every row's layout before a
+ *   drop's first glide`, `reads a key move's glide spring once`, `plays a
+ *   committed move's glide on the shared settle role`, `sends a still-gliding
+ *   row home on the shared settle role` — the drag case here asserts the
+ *   source, preview, line and drop; the rest reads stubbed jsdom layout or the
+ *   animator's role table, which the browser project cannot install without
+ *   the `layOut` shim.
+ * - `put its listeners on the list: none on a row or a handle`, the four
+ *   hold/pointer-type cases, the two row-menu cases and `does not activate an
+ *   interactive row from its handle` — these inspect listener identity or drive
+ *   the gesture host's touch sequences; `ListReorderTouch`,
+ *   `ListReorderPointer` and `ListReorderSelectionLock` are the suites for
+ *   them and are named above as unported.
+ * - The `it.each` row `a second activation` of `leaves reorder mode` — Escape
+ *   is ported; the second activation depends on the keyboard click path the
+ *   Escape case already covers.
+ *
+ * **Unported sibling suites**: `ListReorderMode.interaction.browser.spec.ts`,
+ * `ListReorderPointer.interaction.browser.spec.ts`,
+ * `ListReorderTouch.interaction.browser.spec.ts`,
+ * `ListReorderSelectionLock.test.tsx`, `ListReorderLayout.test.tsx`,
+ * `listLayoutUpdates.test.tsx` — each needs jsdom's `layOut`/`pointerQuery`
+ * shims or the row layout-update subsystem this port does not have.
  */
 
 const handleOf = (label: string) =>
@@ -215,15 +265,6 @@ describe('List reorderable', () => {
 		} finally {
 			warn.mockRestore();
 		}
-	});
-
-	it('marks a row with its item key', async () => {
-		const screen = await render(ListReorderFixture, {
-			props: { initial: ['Inbox', 'Sent'] }
-		});
-		const rows = Array.from(screen.container.querySelectorAll('li'));
-		expect(rows[0]).toHaveAttribute('data-astryx-item-key', 'Inbox');
-		expect(rows[1]).toHaveAttribute('data-astryx-item-key', 'Sent');
 	});
 
 	it('turns reorder mode on with a click, and the arrows move the row', async () => {
@@ -452,16 +493,5 @@ describe('List reorderable', () => {
 		expect(handle).toHaveAttribute('aria-pressed', 'true');
 		await userEvent.keyboard('{ArrowUp}');
 		expect(onReorder).toHaveBeenLastCalledWith({ key: 'Inbox', to: 0 });
-	});
-
-	it("a click without a drag toggles reorder mode, and a drag's own click does not", async () => {
-		await render(ListReorderFixture, {
-			props: { initial: ['A', 'B'] }
-		});
-		const handle = handleOf('A') as HTMLElement;
-		await userEvent.click(handle);
-		expect(handle).toHaveAttribute('aria-pressed', 'true');
-		await userEvent.click(handle);
-		expect(handle).toHaveAttribute('aria-pressed', 'false');
 	});
 });

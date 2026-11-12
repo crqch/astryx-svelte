@@ -123,7 +123,12 @@
 		{onOpenChange}
 		menu={{ role: 'dialog', label: 'Status', render: dialogPanel }}
 	/>
-	<button type="button">Elsewhere</button>
+	<button
+		type="button"
+		style="position: fixed; inset-block-end: 0; inset-inline-start: 0; z-index: 2147483647"
+	>
+		Elsewhere
+	</button>
 {:else if variant === 'field-picker'}
 	<BaseTypeahead
 		aria-label="Filters"

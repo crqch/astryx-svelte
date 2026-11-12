@@ -26,7 +26,7 @@ export default {
 		},
 		{
 			name: 'options',
-			type: 'ParseOutlineFromMarkdownOptions',
+			type: '() => ParseOutlineFromMarkdownOptions',
 			description: 'Parse options. Omit them for a document that Markdown renders without plugins.'
 		},
 		{

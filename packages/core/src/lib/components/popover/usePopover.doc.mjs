@@ -107,7 +107,7 @@ export default {
 		},
 		{
 			name: 'contentRef',
-			type: 'HTMLDivElement | null',
+			type: 'HTMLElement | null',
 			description: 'Ref for the popover content container used by focus trapping.'
 		},
 		{

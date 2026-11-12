@@ -1268,6 +1268,11 @@
 {/snippet}
 
 {#snippet listbox()}
+	<!--
+		The sheet listbox owns the keyboard while a bottom sheet is open, so it
+		takes a tab stop; the analyzer cannot see the runtime presentation gate.
+	-->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		bind:this={listboxEl}
 		id={listboxId}

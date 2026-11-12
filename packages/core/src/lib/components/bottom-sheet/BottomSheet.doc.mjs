@@ -125,7 +125,7 @@ export default {
 		},
 		{
 			name: 'finalFocusRef',
-			type: 'HTMLElement | null',
+			type: '() => HTMLElement | null',
 			description:
 				'Optional explicit focus-return target for a standalone sheet. Use when the opener can remount or the active element is not a reliable trigger, such as an adaptive presentation switch. Always focused when the sheet closes on its own or last; when a modal sheet is still open beneath, focus returns into that sheet (to this element if it is inside it, else the revealed panel). Omitted only inside the deprecated BottomSheetSwitcher, which drives its steps itself.'
 		},

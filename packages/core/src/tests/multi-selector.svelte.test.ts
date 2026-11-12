@@ -46,6 +46,15 @@ import { stubMatchMedia } from './stub-match-media.js';
  *   `MultiSelector list structure`. `Selector` and `AvatarGroup` carry the
  *   sibling of this case, and both are unported there too.
  *
+ * The shared presentation block is now ported: the cases under `presentation`
+ * (`uses a bottom sheet and stays open while toggling options`, `uses a bottom
+ * sheet for adaptive presentation on compact touch`, `moves keyboard focus
+ * into a bottom-sheet listbox`, `restores touch focus without painting a
+ * trigger focus ring`, `shows no disabled focus ring after a pointer pick`, and
+ * the four-row read-only transition table) transcribe from upstream. This
+ * suite has no `keeps adaptive presentation anchored` case upstream;
+ * `Selector` does.
+ *
  * **Three predate 0.5.0** and have been missing across more than one pin, since
  * this header stated its count against a stale tag:
  *
@@ -550,6 +559,57 @@ describe('MultiSelector', () => {
 				expect(wrapper.classList.contains(cls)).toBe(false);
 			}
 		});
+
+		it.each([
+			{ presentation: 'bottom-sheet', hasSearch: false },
+			{ presentation: 'bottom-sheet', hasSearch: true },
+			{ presentation: 'adaptive', hasSearch: false },
+			{ presentation: 'adaptive', hasSearch: true }
+		] as const)(
+			'finishes $presentation close and restores focus when read-only changes (search=$hasSearch)',
+			async ({ presentation, hasSearch }) => {
+				if (presentation === 'adaptive') {
+					stubMatchMedia({ pointer: 'coarse', matches: true });
+				}
+				const screen = await render(MultiSelector, {
+					props: {
+						label: 'Fruit',
+						options: defaultOptions,
+						value: [],
+						onChange: () => {},
+						hasSearch,
+						presentation
+					}
+				});
+
+				const editableTrigger = hasSearch
+					? screen.getByRole('button', { name: /^Fruit\b/ })
+					: screen.getByRole('combobox');
+				await userEvent.click(editableTrigger);
+				const dialogLocator = screen.getByRole('dialog', { name: 'Fruit' });
+				await expect.element(dialogLocator).toBeInTheDocument();
+				const dialog = dialogLocator.element() as HTMLDialogElement;
+
+				await screen.rerender({ isReadOnly: true });
+
+				// The sheet starts its exit; focus stays inside it until the exit
+				// ends, so it is not inert yet.
+				await vi.waitFor(() => expect(dialog.getAttribute('aria-modal')).toBeNull());
+				const panel = dialog.querySelector<HTMLElement>('.astryx-bottom-sheet')!;
+				expect(panel).not.toBeNull();
+				panel.dispatchEvent(
+					new TransitionEvent('transitionend', {
+						propertyName: 'transform',
+						bubbles: true
+					})
+				);
+
+				const readOnlyTrigger = screen.getByRole('combobox', { name: 'Fruit' });
+				await expect.element(readOnlyTrigger).toHaveFocus();
+				expect(screen.container.querySelector('[role="dialog"]')).not.toBeInTheDocument();
+				expect(screen.container.querySelector('[role="listbox"]')).not.toBeInTheDocument();
+			}
+		);
 	});
 
 	it('renders listbox with aria-multiselectable', async () => {

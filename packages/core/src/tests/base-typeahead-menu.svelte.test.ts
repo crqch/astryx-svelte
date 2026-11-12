@@ -336,7 +336,6 @@ describe('BaseTypeahead menu', () => {
 		});
 
 		it('stays open when the input is emptied or loses focus', async () => {
-			const user = userEvent.setup();
 			const screen = await render(BaseTypeaheadFixture, {
 				props: { variant: 'editor' as const, searchSource: fruits }
 			});
@@ -401,7 +400,7 @@ describe('BaseTypeahead menu', () => {
 
 	describe('closing a dialog that a pick opened', () => {
 		it('Escape closes it in one press and does not reopen the list', async () => {
-			const { user, screen, input, dialog } = await openDialogFromPick();
+			const { user, input, dialog } = await openDialogFromPick();
 			await user.keyboard('{Escape}');
 			await vi.waitFor(() => expect(input).toHaveFocus());
 			await new Promise((resolve) => setTimeout(resolve, 50));
@@ -419,12 +418,16 @@ describe('BaseTypeahead menu', () => {
 		});
 
 		it('a press outside closes it and leaves the list closed', async () => {
-			const { user, screen, input, dialog } = await openDialogFromPick();
+			const { user, input, dialog } = await openDialogFromPick();
 			// The fixture has no `Elsewhere` sibling in this variant; a detached
 			// element in the document is enough for the layer's light dismiss.
 			const elsewhere = document.createElement('button');
 			elsewhere.type = 'button';
 			elsewhere.textContent = 'Elsewhere';
+			// Bottom-left keeps the control clear of a layer anchored below the
+			// field: the top-layer popover would otherwise intercept the real click.
+			elsewhere.style.cssText =
+				'position: fixed; inset-block-end: 0; inset-inline-start: 0; z-index: 2147483647';
 			document.body.appendChild(elsewhere);
 			try {
 				await user.click(elsewhere);

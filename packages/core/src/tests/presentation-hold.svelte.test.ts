@@ -6,10 +6,7 @@ import { render } from 'vitest-browser-svelte';
 import * as core from '$lib/index.js';
 import barrelSource from '$lib/index.ts?raw';
 import pkgSource from '../../package.json?raw';
-import {
-	createPresentationHold,
-	usePresentationHold
-} from '$lib/components/layer/presentation-hold.svelte.js';
+import { createPresentationHold } from '$lib/components/layer/presentation-hold.svelte.js';
 import PresentationHoldProbe from './fixtures/presentation-hold-probe.svelte';
 
 /**

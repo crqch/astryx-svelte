@@ -486,8 +486,8 @@ per connected group.
 | `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
 | `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 35   | 94    |
-| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 111  | 88    |
-| `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 130  | 87    |
+| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 112  | 87    |
+| `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 131  | 86    |
 | `utils/pressFeedback.test.ts`                                                                                                                                                            | 97       | 12   | 85    |
 | `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 149      | 67   | 82    |
 | `Typeahead/Typeahead.test.tsx`                                                                                                                                                           | 127      | 49   | 78    |
@@ -508,9 +508,9 @@ per connected group.
 | `Timestamp/Timestamp.test.tsx`                                                                                                                                                           | 118      | 74   | 44    |
 | `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 33   | 43    |
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
+| `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 20   | 42    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
-| `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 22   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 58   | 39    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
@@ -698,7 +698,7 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 25    | 5     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 30    | 5     |
 | `getByText` with a string, no `exact`                         | 1     | 1     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string

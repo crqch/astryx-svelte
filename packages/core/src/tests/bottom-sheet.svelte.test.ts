@@ -26,6 +26,12 @@ import { stubMatchMedia } from './stub-match-media.js';
  * Nothing else is dropped and nothing is added. (This header read "all 63 … none
  * dropped" at the v0.4.5 pin, where 63 was the whole suite.)
  *
+ * Two later-pin `focus restore` cases are included with the adaptive-sheet
+ * batch: `always focuses finalFocusRef on close, even when focus had left the
+ * sheet` and `prefers an explicit final focus target`. They exercise the
+ * `finalFocusRef` prop this port declares and now implements; the rest of the
+ * current pin's additions remain in the shortfall `port/status.md` measures.
+ *
  * Runs in the **client** project, in real Chromium, where upstream's is jsdom.
  * That difference drives every restatement below, and each is a difference in
  * how the case is *driven*, never in what it asserts:

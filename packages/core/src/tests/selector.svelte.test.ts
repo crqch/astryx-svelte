@@ -56,6 +56,17 @@ import { stubMatchMedia } from './stub-match-media.js';
  *
  * The twenty-first predates 0.5.0 and is called out separately below.
  *
+ * The shared presentation block is now ported: the cases under `presentation`
+ * (`uses a bottom sheet and closes after a selection when requested`,
+ * `restores touch focus without painting a trigger focus ring`,
+ * `shows no disabled focus ring after a pointer pick`, `uses content-hugging
+ * height without extra bottom content padding`, `moves keyboard focus into a
+ * bottom-sheet listbox`, `uses a bottom sheet for adaptive presentation on
+ * compact touch`, `keeps adaptive presentation anchored without compact
+ * touch`, and the four-row read-only transition table) transcribe from
+ * upstream. The file's remaining shortfall is the cases named below plus the
+ * later-pin additions `port/status.md` measures.
+ *
  * ## `does not select the highlighted option on a composing Enter (IME)`
  *
  * Upstream declares it in `describe('hasSearch')`; it is still not here. **Its
@@ -464,10 +475,16 @@ describe('Selector', () => {
 
 			await expect.element(screen.getByRole('dialog', { name: 'Fruit' })).toBeInTheDocument();
 			expect(showPopover).not.toHaveBeenCalled();
+			const dialog = screen.getByRole('dialog', { name: 'Fruit' }).element() as HTMLDialogElement;
 
 			optionNamed(screen.container, 'Banana').click();
 			expect(onChange).toHaveBeenCalledWith('Banana');
 			await expect.element(screen.getByRole('combobox')).toHaveAttribute('aria-expanded', 'false');
+
+			// The sheet leaves the tree only after its exit hands focus back to the
+			// trigger; the controller releases both holds on that focus event.
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+			expect(screen.getByRole('combobox').element()).toHaveFocus();
 		});
 
 		it('restores touch focus without painting a trigger focus ring', async () => {
@@ -573,6 +590,56 @@ describe('Selector', () => {
 			expect(showPopover).toHaveBeenCalledOnce();
 			expect(showModal).not.toHaveBeenCalled();
 		});
+
+		it.each([
+			{ presentation: 'bottom-sheet', hasSearch: false },
+			{ presentation: 'bottom-sheet', hasSearch: true },
+			{ presentation: 'adaptive', hasSearch: false },
+			{ presentation: 'adaptive', hasSearch: true }
+		] as const)(
+			'finishes $presentation close and restores focus when read-only changes (search=$hasSearch)',
+			async ({ presentation, hasSearch }) => {
+				if (presentation === 'adaptive') {
+					stubMatchMedia({ pointer: 'coarse', matches: true });
+				}
+				const screen = await render(Selector, {
+					props: {
+						label: 'Fruit',
+						options: OPTIONS,
+						value: 'Apple',
+						hasSearch,
+						presentation
+					}
+				});
+
+				const editableTrigger = hasSearch
+					? screen.getByRole('button', { name: /^Fruit\b/ })
+					: screen.getByRole('combobox');
+				await userEvent.click(editableTrigger);
+				const dialogLocator = screen.getByRole('dialog', { name: 'Fruit' });
+				await expect.element(dialogLocator).toBeInTheDocument();
+				const dialog = dialogLocator.element() as HTMLDialogElement;
+
+				await screen.rerender({ isReadOnly: true });
+
+				// The sheet starts its exit; focus stays inside it until the exit
+				// ends, so it is not inert yet.
+				await vi.waitFor(() => expect(dialog.getAttribute('aria-modal')).toBeNull());
+				const panel = dialog.querySelector<HTMLElement>('.astryx-bottom-sheet')!;
+				expect(panel).not.toBeNull();
+				panel.dispatchEvent(
+					new TransitionEvent('transitionend', {
+						propertyName: 'transform',
+						bubbles: true
+					})
+				);
+
+				const readOnlyTrigger = screen.getByRole('combobox', { name: 'Fruit' });
+				await expect.element(readOnlyTrigger).toHaveFocus();
+				expect(screen.container.querySelector('[role="dialog"]')).not.toBeInTheDocument();
+				expect(screen.container.querySelector('[role="listbox"]')).not.toBeInTheDocument();
+			}
+		);
 	});
 
 	it('supports explicit menu placement', async () => {

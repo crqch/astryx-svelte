@@ -292,7 +292,7 @@ export default {
 		},
 		{
 			name: 'plugins',
-			type: 'readonly MarkdownPluginEntry[]',
+			type: 'ReadonlyArray<MarkdownPluginEntry>',
 			description:
 				'Ordered extensions created by createMarkdownPlugin(). Plugins may add bounded syntax, immutable typed AST transforms, and typed extension renderers. Use isMarkdownExtensionNode() to narrow extension data observed from other plugins. Renderer callbacks are pure; return a child component when hooks are needed. Omitted and empty lists preserve the released Markdown behavior.'
 		},
