@@ -2014,14 +2014,13 @@ cases here: `animatedLayout` 44/47, `.presented` 11/13, `.slide` 9/13, `.edge` 1
 jsdom's stubbed animation timeline and layout rectangles; Chromium produces a different
 frame grid and live layout, so the values cannot be asserted without a jsdom-equivalent
 animation stand-in. `animatedLayout.boundary` is ported 6/6 (restated for this port's
-kebab modules and current adopters). `animatedLayoutAdopters` has 1/18: the
-`useAnimatedLayout` hook is ported, but the other declarations need Collapsible/TreeList
-wired to the handle, their exit holds, chevron motion and a `LayoutChangeSnapshot`
-commit hook.
+kebab modules and current adopters). `animatedLayoutAdopters` is ported 18/18 (20
+executions): Collapsible and TreeList are wired to the handle, with their exit holds,
+chevron motion and the `LayoutChangeSnapshot` commit hook.
 
 ### The `utils` suites this batch could not port are blocked on modules the port does not have
 
-- **units:** utils/hitArea, utils/interactionModality, utils/boxHold, utils/calendarSystem, utils/calendarDateParser
+- **units:** utils/hitArea, utils/interactionModality, utils/boxHold
 - **kind:** unported
 - **retires:** when each named module is ported
 
@@ -2030,12 +2029,10 @@ mutation observer's candidate set) is a thousand-line measuring module, not a
 transcription; `utils/interactionModality.ts` carries per-document shared state,
 a callback ref and a text-entry tracker behind a hook React implements and
 Svelte would need a probe for; `utils/boxHold.ts` also needs `pressClaim.ts`,
-which is absent; `utils/calendarSystem.ts` and `utils/calendarDateParser.ts`
-depend on calendar-formatting helpers this port's `plain-date.ts` does not
-carry, and the upstream calendar-system suite additionally takes its oracle
-from `temporal-polyfill`. Their suites are listed, unported, in
-`port/status.md`. Port the module first, then the suite; none has a small
-companion fix that would make it run now.
+which is absent. (`utils/calendarSystem.ts` and `utils/calendarDateParser.ts`
+are now ported; their suites are green.) Their remaining suites are listed,
+unported, in `port/status.md`. Port the module first, then the suite; none has
+a small companion fix that would make it run now.
 
 ### Two component suites are unported because their internals are not here
 
@@ -2107,19 +2104,3 @@ violations file, and the fixtures are imported from a source module). The 10
 Badge classes are skipped by class/rule in `compare-upstream-css.mjs`; the 14
 fixture at-rule/declaration shapes sit in its `OTHER_SKIP`. Neither exists in
 this port and neither is a component rule.
-
-### The calendar-system layer behind `InternationalizationProvider.calendar` is not ported
-
-- **units:** i18n/useCalendarSystem, utils/calendarSystem, utils/calendarDateParser, Calendar, DateInput, DateTimeInput, Timestamp
-- **kind:** unported
-- **retires:** when `CalendarSystem`, `resolveCalendarSystem`, the calendar date parser and the provider's `calendar` prop are ported and the date controls render the selected system
-
-Upstream lets an application select a calendar system (for example a non-Gregorian
-calendar) through the provider; the date controls then parse, format, navigate and
-render months in that system. This port renders the Gregorian calendar only. The
-layer is large — `utils/calendarSystem.ts` is 838 lines and
-`utils/calendarDateParser.ts` is 1,385 — and it reaches Calendar, DateInput,
-DateTimeInput and Timestamp. The `InternationalizationProvider04Calendar` example
-block stays pending until it lands. Recorded here rather than approximated,
-because a substitute calendar would change what dates mean rather than how they
-look.
