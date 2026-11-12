@@ -141,7 +141,7 @@ npx @astryx-sv/cli docs getting-started
 
 ```sh
 bun install
-bun run --filter '*' build     # must run before check — the docs generator reads core's built dist/
+bun run build     # must run before check — the docs generator reads core's built dist/
 bun run dev          # the docs site, the port's only demo surface
 
 bun run verify       # the gate: build, check, lint, test, and the status drift check

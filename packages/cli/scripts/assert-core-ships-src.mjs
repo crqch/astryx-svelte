@@ -24,7 +24,7 @@
  * `test` script the way `packages/core` wires `test:parity` and
  * `packages/themes/neutral` wires `test:parity` / `test:icons`.
  *
- * Requires core to have been built (`bun run --filter '*' build`) — `dist/` is packed too,
+ * Requires core to have been built (`bun run build`) — `dist/` is packed too,
  * and this deliberately runs `bun pm pack` with `--ignore-scripts` rather than
  * letting it fire core's `prepack` and rebuild the package as a side effect of
  * a test.
@@ -64,7 +64,7 @@ if (!coreDir) {
 const core = coreDir;
 
 if (!fs.existsSync(path.join(core, 'dist'))) {
-	fail(`${core} has no dist/. Run \`bun run --filter '*' build\` before this check.`);
+	fail(`${core} has no dist/. Run \`bun run build\` before this check.`);
 }
 
 const PACK_ARGS = ['pm', 'pack', '--dry-run', '--ignore-scripts'];

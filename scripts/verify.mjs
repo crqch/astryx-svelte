@@ -65,7 +65,7 @@ if (scratch.length > 0) {
 const workspaceFilter = noDocs ? '@astryx-sv/*' : '*';
 
 const stages = [
-	runStage('build', 'bun', ['run', '--filter', workspaceFilter, 'build']),
+	runStage('build', 'bun', ['run', noDocs ? 'build:packages' : 'build']),
 	runStage('check', 'bun', ['run', '--filter', workspaceFilter, 'check']),
 	runStage('lint', 'bun', ['run', '--filter', workspaceFilter, 'lint']),
 	// Package lint scripts format their own trees, so the repo root and

@@ -40,7 +40,7 @@
 //
 // Run it with `bun run --filter docs emit-core-docs`. It is deliberately **not** wired
 // into `bun run --filter docs generate` or any `build`: a build that writes into another
-// workspace package's source tree is not hermetic, and `bun run --filter '*' build` orders
+// workspace package's source tree is not hermetic, and `bun run build` orders
 // docs after core, so the files would land a step too late to be packed.
 //
 // `--check` is the same run as an assertion — it writes nothing and fails on a

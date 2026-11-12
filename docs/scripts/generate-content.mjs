@@ -102,7 +102,7 @@ function findDocModules(dir, accept = (name) => name.endsWith('.doc.mjs')) {
  * at 0.3.0). When it does, the old path resolves to nothing, every downstream
  * count silently becomes zero, and the generator writes **empty registries over
  * real ones** while exiting 0 — which is what happened on the 0.3.0 bump, and
- * `bun run --filter '*' build` reported success throughout because it runs this script.
+ * `bun run build` reported success throughout because it runs this script.
  *
  * So a root that does not exist, or exists and yields no modules, throws. The
  * pipeline must fail *closed*: a wrong path is a diagnosable error, never a

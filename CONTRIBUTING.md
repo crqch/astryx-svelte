@@ -60,7 +60,7 @@ write a number by hand — that is what `port/status.md` is for.
 
 ```sh
 bun install
-bun run --filter '*' build     # must run before check — theme-neutral typechecks against core's built dist/,
+bun run build     # must run before check — theme-neutral typechecks against core's built dist/,
                   #   and the docs generator reads props types out of that same dist/
 bun run --filter '*' check     # svelte-check + tsc
 bun run --filter '*' lint      # oxfmt --check && oxlint

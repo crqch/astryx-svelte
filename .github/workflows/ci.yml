@@ -159,7 +159,7 @@ jobs:
       # but `svelte-kit sync` and the theme packages it touches expect the
       # topological build to have run.
       - name: Build
-        run: bun run --filter '*' build
+        run: bun run build
 
       - name: Client test project
         run: bun run --filter @astryx-sv/core test:client
@@ -187,7 +187,7 @@ jobs:
       # `@astryxdesign/*` packages and prop *types* out of core's `dist/`, so the
       # build is a prerequisite here exactly as it is in `lib`.
       - name: Build
-        run: bun run --filter '*' build
+        run: bun run build
 
       - name: Typecheck
         run: bun run --filter docs check

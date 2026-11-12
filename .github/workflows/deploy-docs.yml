@@ -31,7 +31,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Build docs
-        run: bun run --filter 'docs...' build
+        run: bun run build
         env:
           # Optional. Unset, the analytics component renders nothing.
           PUBLIC_GA_MEASUREMENT_ID: ${{ vars.PUBLIC_GA_MEASUREMENT_ID }}

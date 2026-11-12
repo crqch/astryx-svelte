@@ -84,7 +84,7 @@ bun run verify --fast # skips the whole test stage — the browser suite (real C
                    #   literal, and two `InputClearButton` cases the pin move added. Three of those
                    #   came from one commit. **`bun run verify` — full — before the batch is called
                    #   done, and before any release.**
-bun run --filter '*' build     # must run before check — theme-neutral typechecks against core's built dist/,
+bun run build     # must run before check — theme-neutral typechecks against core's built dist/,
                   #   and the docs generator reads props types out of that same dist/
 bun run --filter '*' check     # svelte-check + tsc
 bun run --filter '*' lint      # oxfmt --check && oxlint
@@ -210,7 +210,7 @@ wrong:
 - **`packages/core/src/lib/**/*.doc.mjs` are generated, and hand-editing them is a mistake** — each
   says so at the top. `docs/scripts/emit-core-docs.mjs` writes them from the pinned upstream
   `.doc.mjs` plus core's built `dist/**/*.d.ts`, so after a version bump the whole prose delta lands
-  with `bun run --filter '*' build && bun run --filter docs emit-core-docs` (17 files at 0.4.2), and `--check` fails on
+  with `bun run build && bun run --filter docs emit-core-docs` (17 files at 0.4.2), and `--check` fails on
   drift. They are the CLI's discovery corpus, not just the docs site's.
 
 ## The fidelity oracles

@@ -3,9 +3,9 @@
 // This is the Svelte-side equivalent of Astryx's `astryx theme build`, and will
 // move into the CLI as `astryx-svelte theme build` once that package exists.
 //
-// Requires @astryx-sv/core to be built first (`pnpm --filter
+// Requires @astryx-sv/core to be built first (`bun run --filter
 // @astryx-sv/core build`), since it imports the compiled theme compiler.
-// Under pnpm's topological ordering `bun run --filter '*' build` already does that.
+// The root `bun run build` orders core before the themes.
 //
 // The per-package `scripts/build-theme.mjs` is a thin caller: it imports its own
 // theme definition and hands it here. It runs under Node's type stripping so the

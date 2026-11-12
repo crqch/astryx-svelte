@@ -74,7 +74,7 @@ jobs:
       # The same gates as CI, re-run here rather than trusted from the commit's
       # own run: a tag can be pushed at any commit, including one CI never saw.
       - name: Build
-        run: bun run --filter '*' build
+        run: bun run build
 
       - name: Typecheck
         run: bun run --filter '*' check

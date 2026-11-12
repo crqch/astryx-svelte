@@ -661,7 +661,7 @@ if (examples) {
 } else {
 	push(
 		'Not derivable in this run: the count comes from the docs generator, which reads core’s',
-		"built `dist/`. Run `bun run --filter '*' build` first.",
+		"built `dist/`. Run `bun run build` first.",
 		''
 	);
 }

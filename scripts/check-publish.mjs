@@ -11,8 +11,8 @@
  * fails everywhere but `packages/core`. The API takes a directory, so one root
  * script covers all ten.
  *
- * Reads the built `dist/` where a package has one, so `bun run --filter '*' build` must have
- * run first — publint checks that `exports` resolve to files that exist, and an
+ * Reads the built `dist/` where a package has one, so `bun run build` must have run
+ * first — publint checks that `exports` resolve to files that exist, and an
  * unbuilt package fails on every entry point at once.
  *
  * Given `--version <x.y.z>` it also asserts every publishable package sits at

@@ -14,18 +14,18 @@ packages, so build the workspace before the first dev run and after changing cor
 ```sh
 # repository root
 bun install
-bun run --filter '*' build
+bun run build
 bun run dev
 ```
 
 `bun run dev` starts this app. The site also needs `packages/core/dist` built after a clean checkout;
-`bun run --filter 'docs...' build` does that automatically.
+`bun run build` does that in dependency order.
 
 ## Build
 
 ```sh
 # repository root
-bun run --filter 'docs...' build
+bun run build
 ```
 
 The Cloudflare adapter writes to `.svelte-kit/cloudflare/`, which is the asset directory named in
@@ -86,7 +86,7 @@ If you would rather let Cloudflare build the repository, connect it under **Work
 Create → Workers Builds** and use:
 
 - **Root directory:** repository root
-- **Build command:** `bun run --filter 'docs...' build`
+- **Build command:** `bun run build`
 - **Deploy command:** `bun run --filter docs deploy`
 
 ## Configuration
