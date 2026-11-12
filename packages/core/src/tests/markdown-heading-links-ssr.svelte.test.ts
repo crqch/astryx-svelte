@@ -26,10 +26,27 @@ interface SsrPayload {
 	error?: string;
 }
 
-/** Server-render a fixture through the Vite dev server's SSR module graph. */
+/**
+ * Server-render a fixture through the Vite dev server's SSR module graph.
+ *
+ * The first request for a fixture can hang while the shared Vite graph is still
+ * compiling under CI load; the second fixture then succeeds against the warmed
+ * graph. Abort and retry once rather than letting the test itself absorb the
+ * whole budget, and keep an HTTP error authoritative — only a transport timeout
+ * is retried.
+ */
 async function serverRender(module: string, props: Record<string, unknown> = {}): Promise<string> {
 	const query = new URLSearchParams({ module, props: JSON.stringify(props) });
-	const response = await fetch(`/__ssr-fixture?${query}`);
+	const url = `/__ssr-fixture?${query}`;
+	let response: Response;
+	for (let attempt = 1; ; attempt++) {
+		try {
+			response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+			break;
+		} catch (error) {
+			if (attempt >= 2) throw error;
+		}
+	}
 	const payload = (await response.json()) as SsrPayload;
 	if (!response.ok) throw new Error(`SSR render failed: ${payload.error}`);
 	return payload.body;
@@ -57,11 +74,10 @@ function headingIds(root: HTMLElement): Array<string | null> {
 }
 
 describe('Markdown heading links — SSR', () => {
-	// SSR plus a real hydration walk; the suite's 15 s default is tight on a
-	// loaded CI runner, where the Vite SSR transport alone can take most of it.
+	// SSR plus a real hydration walk, with one 20 s transport retry allowed.
 	it(
 		'keeps duplicate-copy ids and buttons stable across SSR and hydration',
-		{ timeout: 30_000 },
+		{ timeout: 60_000 },
 		async () => {
 			const serverHTML = await serverRender(VALID_FIXTURE);
 			expect(serverHTML).toContain('id="article-a--overview"');
@@ -99,7 +115,7 @@ describe('Markdown heading links — SSR', () => {
 
 	it(
 		'fails soft across SSR and hydration for unsupported same-name entries',
-		{ timeout: 30_000 },
+		{ timeout: 60_000 },
 		async () => {
 			const serverHTML = await serverRender(INVALID_FIXTURE);
 			const target = mountServerMarkup(serverHTML);
