@@ -1133,18 +1133,6 @@ tracking pass and written down in `port/upstream-diff.md`, whose own header says
 point-in-time analysis rather than spec, and no agent greps it; that is how a two-line fix stayed
 open across four batches. Recorded here so it is findable
 
-### `tailwind-theme.css` has no counterpart
-
-- **units:** theme (tailwind-theme.css)
-- **kind:** unported
-- **retires:** when the Tailwind bridge is ported
-
-Upstream ships a `./tailwind-theme.css` subpath mapping its tokens into Tailwind's `@theme inline`
-layer, so a Tailwind consumer can use Astryx tokens as Tailwind utilities. Nothing here
-corresponds. Noted in `ledger/012` and in `port/upstream-diff.md` — both of them
-per-batch or frozen records that the parity agents do not read — so it has been effectively
-invisible since batch 11. Recorded here instead
-
 ### `BottomSheet`'s `height` and `snapPoints` doc types name their alias where upstream writes the members
 
 - **units:** BottomSheet (docs props table)
