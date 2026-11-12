@@ -9,6 +9,36 @@ release the port makes on its own has no number of its own to take. 0.3.1 is the
 ports Astryx 0.3.0, exactly as 0.3.0 did, and changes only things upstream has no counterpart for.
 Each entry states its parity target for that reason.
 
+## 0.7.13
+
+Ports Astryx `0.7.13`, the version this tree is pinned to.
+
+**Every package publishes under the new `@astryx-sv` scope.** Core, the CLI and all eight themes
+move from `@astryx-svelte/*` to `@astryx-sv/*` together at `0.7.13`. The old scope stays on npm at
+`0.5.2`; this is the new scope's first release. The version is the parity target: the tree's
+`@astryxdesign/*` pins are all `0.7.13`.
+
+**The docs site moves to Cloudflare Workers.** `docs/` builds with `adapter-cloudflare` and deploys
+through `docs/wrangler.jsonc` to **<https://astryx.crqch.dev/>**, with a GitHub Actions deploy
+workflow and a prerendered 404 page. `adapter-vercel` and `docs/vercel.json` are removed. The site
+was already fully prerendered; Cloudflare serves those pages as static assets and only invokes the
+worker for non-asset requests.
+
+**This fork is now the maintenance home.** Public links point at
+`github.com/crqch/astryx-svelte` and `astryx.crqch.dev`; the upstream remote is gone. The blog author
+registry and site footer add `crqch` as maintainer, alongside the original port credit to
+`DevRohit06`.
+
+**Release plumbing follows the rename.** The publish script, release workflow, package metadata and
+README install commands all use `@astryx-sv`. The generated core docs were refreshed against the
+`0.7.13` declarations — including the missing `useMenuPress` page — and the swizzle test now targets
+`@astryx-sv/core/theme/tokens.stylex`, the subpath core actually publishes.
+
+### Published
+
+Ten packages, all at `0.7.13`: `@astryx-sv/core`, `@astryx-sv/cli` and
+`@astryx-sv/theme-{neutral,matcha,butter,gothic,y2k,chocolate,stone,liquid-glass}`.
+
 ## 0.5.2
 
 Ports Astryx `0.5.2`.
