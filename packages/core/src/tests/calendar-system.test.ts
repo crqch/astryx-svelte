@@ -187,22 +187,25 @@ describe.skipIf(!hasTemporal)('calendar month invariants from 1900 through 2100'
 });
 
 describe('calendar month and year steps', () => {
-	it('a month step keeps the day of the month and clamps it', () => {
+	it.skipIf(!hasTemporal)('a month step keeps the day of the month and clamps it', () => {
 		// 31 Shahrivar 1405 → Mehr has 30 days.
 		expect(plainDateToISO(calendarShiftMonths('persian', iso('2026-09-22'), 1))).toBe('2026-10-22');
 		expect(plainDateToISO(calendarShiftMonths('gregory', iso('2026-01-31'), 1))).toBe('2026-02-28');
 	});
 
-	it('a Hebrew year step from Adar I lands in Adar, clamped', () => {
+	it.skipIf(!hasTemporal)('a Hebrew year step from Adar I lands in Adar, clamped', () => {
 		// 30 Adar I 5784 → 5785 has no Adar I; Adar has 29 days.
 		expect(plainDateToISO(calendarShiftYears('hebrew', iso('2024-03-10'), 1))).toBe('2025-03-29');
 	});
 
-	it('an Ethiopic year step keeps the month, unlike twelve month steps', () => {
-		const meskerem2018 = iso('2025-09-11');
-		expect(plainDateToISO(calendarShiftMonths('ethiopic', meskerem2018, 12))).toBe('2026-09-06');
-		expect(plainDateToISO(calendarShiftYears('ethiopic', meskerem2018, 1))).toBe('2026-09-11');
-	});
+	it.skipIf(!hasTemporal)(
+		'an Ethiopic year step keeps the month, unlike twelve month steps',
+		() => {
+			const meskerem2018 = iso('2025-09-11');
+			expect(plainDateToISO(calendarShiftMonths('ethiopic', meskerem2018, 12))).toBe('2026-09-06');
+			expect(plainDateToISO(calendarShiftYears('ethiopic', meskerem2018, 1))).toBe('2026-09-11');
+		}
+	);
 
 	it('a Gregorian year step moves to the same day a year away, clamped', () => {
 		expect(plainDateToISO(calendarShiftYears('gregory', iso('2026-06-15'), -1))).toBe('2025-06-15');
@@ -244,7 +247,7 @@ describe('calendarMonthFromYearMonth past the end of its year', () => {
 		}
 	});
 
-	it('constrains a Hebrew month past the end of its year, leap or not', () => {
+	it.skipIf(!hasTemporal)('constrains a Hebrew month past the end of its year, leap or not', () => {
 		const elul = calendarMonthFromYearMonth('hebrew', { year: 5784, month: 13 });
 		expect(calendarMonthFromYearMonth('hebrew', { year: 5784, month: 14 })).toEqual(elul);
 		expect(calendarMonthFromYearMonth('hebrew', { year: 5784, month: 99 })).toEqual(elul);
