@@ -465,8 +465,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 12761          |
-| Declared here              | 8634           |
-| **Short**                  | **4153**       |
+| Declared here              | 8636           |
+| **Short**                  | **4151**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -487,8 +487,8 @@ per connected group.
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
 | `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 35   | 94    |
 | `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 112  | 87    |
-| `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 131  | 86    |
 | `utils/pressFeedback.test.ts`                                                                                                                                                            | 97       | 12   | 85    |
+| `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 133  | 84    |
 | `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 149      | 67   | 82    |
 | `Typeahead/Typeahead.test.tsx`                                                                                                                                                           | 127      | 49   | 78    |
 | `DateTimeInput/DateTimeInput.test.tsx`                                                                                                                                                   | 161      | 89   | 72    |
