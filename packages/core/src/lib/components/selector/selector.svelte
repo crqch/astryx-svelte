@@ -1141,7 +1141,7 @@
 		aria-selected={isSelected}
 		aria-disabled={item.disabled}
 		onclick={() => combobox.onItemSelect(item)}
-		onmouseenter={() => keyboardHighlight.onItemMouseEnter(item, flatIndex, isHighlighted)}
+		onmousemove={() => keyboardHighlight.onItemMouseEnter(item, flatIndex, isHighlighted)}
 		{...optionRowTheme}
 		class={cx(optionRowTheme.class, attrs.class)}
 		style={attrs.style}

@@ -1390,6 +1390,9 @@ describe('Selector', () => {
 
 			const trigger = screen.getByRole('combobox');
 			await userEvent.click(trigger);
+			// The popover can drop focus to the body when it opens; put it back so
+			// the keydown reaches the trigger's handler.
+			(trigger.element() as HTMLElement).focus();
 			const options = optionsIn(screen.container);
 
 			await userEvent.keyboard('{End}');
@@ -1610,9 +1613,11 @@ describe('Selector', () => {
 				props: { label: 'City', options: ['Austin', 'Chicago', 'Cleveland'], onChange }
 			});
 
-			await userEvent.tab();
-			await userEvent.keyboard('{Enter}'); // open
 			const trigger = screen.getByRole('combobox').element() as HTMLElement;
+			// `userEvent.tab()` is document-wide and this suite renders many
+			// selectors; focus the control being driven so Enter opens this one.
+			trigger.focus();
+			await userEvent.keyboard('{Enter}'); // open
 
 			await userEvent.keyboard('c');
 			await vi.waitFor(() => {
