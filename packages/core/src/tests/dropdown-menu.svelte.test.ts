@@ -8,10 +8,18 @@ import menuBottomSheetSource from '$lib/components/dropdown-menu/menu-bottom-she
 import { stubMatchMedia } from './stub-match-media.js';
 import Compound from './fixtures/dropdown-menu-compound.svelte';
 import Controlled from './fixtures/dropdown-menu-controlled.svelte';
+import SheetControlled from './fixtures/dropdown-menu-sheet-controlled.svelte';
 import CopyRow from './fixtures/dropdown-menu-copy-row.svelte';
 import DataApi from './fixtures/dropdown-menu-data-api.svelte';
 import IconButton from './fixtures/dropdown-menu-icon-button.svelte';
 import Rtl from './fixtures/dropdown-menu-rtl.svelte';
+import { sx } from '$lib/internal/sx.js';
+import { rtlStyles } from '$lib/utils/rtl.stylex.js';
+import {
+	dropdownBottomSheetContentAttrs,
+	dropdownBottomSheetRootHeadingStyle
+} from '$lib/components/dropdown-menu/dropdown-menu.stylex.js';
+import { menuBottomSheetHeadingAloneStyle } from '$lib/components/dropdown-menu/menu-bottom-sheet.stylex.js';
 
 /**
  * Ported from Astryx's `DropdownMenu/DropdownMenu.test.tsx` — 67 of its 77 cases,
@@ -24,7 +32,7 @@ import Rtl from './fixtures/dropdown-menu-rtl.svelte';
  * `open focus follows input modality (#4477)`, and `data/compound parity`).
  *
  * The bottom-sheet presentation's cases arrived at the **0.7.13** pin and are
- * not counted against the 0.5.0 total above: ten further cases live in
+ * not counted against the 0.5.0 total above: thirteen further cases live in
  * `DropdownMenu bottom-sheet presentation` at the end of this file.
  *
  * DROPPED, and named here because the count is the contract: the whole of
@@ -1281,6 +1289,104 @@ describe('DropdownMenu bottom-sheet presentation', () => {
 
 		await expect.element(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
 		expect(trigger).toHaveAttribute('aria-expanded', 'true');
+	});
+
+	it('mirrors bottom-sheet drill-in affordances under RTL', async () => {
+		const mirrorClasses = sx(rtlStyles.mirror).class.split(/\s+/).filter(Boolean);
+		expect(mirrorClasses.length).toBeGreaterThan(0);
+
+		const screen = await render(Rtl, {
+			props: {
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Move to project', items: [{ label: 'Apollo launch' }] }]
+			}
+		});
+
+		const trigger = screen.getByRole('button', { name: /Actions/ }).element() as HTMLElement;
+		trigger.click();
+		await expect.element(screen.getByRole('dialog', { name: 'Actions' })).toBeInTheDocument();
+
+		const submenuButton = screen.getByRole('button', { name: 'Move to project' }).element();
+		const forwardIcon = submenuButton.closest('li')?.querySelector('.astryx-icon');
+		expect(forwardIcon).not.toBeNull();
+		for (const className of mirrorClasses) {
+			expect(forwardIcon).toHaveClass(className);
+		}
+
+		(submenuButton as HTMLElement).click();
+		await expect
+			.element(screen.getByRole('heading', { name: 'Move to project' }))
+			.toBeInTheDocument();
+		const backButton = screen.getByRole('button', { name: /back/i }).element();
+		const backIcon = backButton.querySelector('.astryx-icon');
+		expect(backIcon).not.toBeNull();
+		for (const className of mirrorClasses) {
+			expect(backIcon).toHaveClass(className);
+		}
+	});
+
+	it('returns to the root after a controlled bottom sheet closes externally', async () => {
+		const screen = await render(SheetControlled, {
+			props: {
+				items: [{ label: 'Move to project', items: [{ label: 'Apollo launch' }] }]
+			}
+		});
+
+		const trigger = screen
+			.getByRole('button', { name: /Project actions/ })
+			.element() as HTMLElement;
+		trigger.click();
+		await expect
+			.element(screen.getByRole('dialog', { name: 'Project actions' }))
+			.toBeInTheDocument();
+		(screen.getByRole('button', { name: 'Move to project' }).element() as HTMLElement).click();
+		await expect
+			.element(screen.getByRole('heading', { name: 'Move to project' }))
+			.toBeInTheDocument();
+
+		(screen.getByRole('button', { name: 'Close externally' }).element() as HTMLElement).click();
+		await vi.waitFor(() => expect(screen.container.querySelector('dialog')).toBeNull());
+
+		trigger.click();
+		await expect
+			.element(screen.getByRole('dialog', { name: 'Project actions' }))
+			.toBeInTheDocument();
+		expect(screen.getByRole('heading', { name: 'Project actions' }).element()).toBeInTheDocument();
+		expect(
+			Array.from(screen.container.querySelectorAll('button')).some(
+				(button) => button.textContent?.trim() === 'Apollo launch'
+			)
+		).toBe(false);
+	});
+
+	it('aligns the root heading and keeps the sheet inset on the menu content', async () => {
+		const screen = await render(DropdownMenu, {
+			props: {
+				button: { label: 'Project actions' },
+				presentation: 'bottom-sheet',
+				items: [{ label: 'Edit project', icon: 'wrench' }]
+			}
+		});
+
+		await openSheet(screen);
+		const heading = screen.getByRole('heading', { name: 'Project actions' }).element();
+		const content = heading.parentElement;
+		expect(content).not.toBeNull();
+		// No Section wrapper: the menu content element carries the sheet inset.
+		expect(content?.parentElement?.closest('.astryx-section')).toBeNull();
+		for (const className of dropdownBottomSheetContentAttrs().class.split(/\s+/).filter(Boolean)) {
+			expect(content).toHaveClass(className);
+		}
+		for (const className of sx(menuBottomSheetHeadingAloneStyle)
+			.class.split(/\s+/)
+			.filter(Boolean)) {
+			expect(heading).toHaveClass(className);
+		}
+		for (const className of sx(dropdownBottomSheetRootHeadingStyle)
+			.class.split(/\s+/)
+			.filter(Boolean)) {
+			expect(heading).toHaveClass(className);
+		}
 	});
 
 	it('keeps content-hugging sheet geometry with no content padding of its own', () => {

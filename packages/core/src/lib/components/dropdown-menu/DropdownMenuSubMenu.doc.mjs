@@ -81,7 +81,7 @@ export default {
 		},
 		{
 			name: 'presentation',
-			type: "'flyout' | 'drill-in' | 'adaptive'",
+			type: "'adaptive' | 'flyout' | 'drill-in'",
 			description:
 				"How the sub-menu shows its rows. 'flyout' opens them beside the row; 'drill-in' replaces the menu's rows with them and a Back row, in the same box; 'adaptive' drills in when a finger opened the menu (a coarse pointer, decided when the menu opened) and flies out otherwise.",
 			default: "'adaptive'"

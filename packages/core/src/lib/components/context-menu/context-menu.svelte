@@ -457,6 +457,9 @@
 {/snippet}
 
 {#snippet sheetDataContent()}
+	<!-- The content element is the sheet's `data-autofocus` target, as upstream's
+	     is: a programmatic tab stop, not a control. -->
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		bind:this={menuEl}
 		data-autofocus=""

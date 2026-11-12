@@ -308,7 +308,7 @@ export default {
 		},
 		{
 			name: 'presentation',
-			type: "'popover' | 'adaptive' | 'bottom-sheet'",
+			type: "'popover' | 'bottom-sheet' | 'adaptive'",
 			description:
 				'How the field presents filter editing. adaptive (the default) uses the bottom sheet on compact touch screens and the popover otherwise, resolved the same way Selector resolves it; the server render and the hydrating render are the popover. popover is the tokenizer field with its typeahead and the editor popover on every device. bottom-sheet makes the whole field, on every device, one trigger showing display-only filter tokens: it opens a Filters sheet listing the filters as rows that edit or remove a filter, with Add filter, Done, and Clear all (which asks first and keeps read-only filters); an Add filter sheet with the fields (or the content search with inline suggestions) opens above it, and a value step that stages operator → value and confirms from its footer opens above that. Dismissing a step reveals the one beneath. The flow edits a draft: adding, editing and removing filters and Clear all change the draft, and onChange is called when Done applies it, once per edit in order; dismissing the flow with a changed draft asks before discarding it. List values edit through the Tokenizer\'s own sheet. In the sheet presentation menuWidth and tokenOverflowBehavior have no surface to act on and warn in development. Pass presentation="popover" to keep the tokenizer field and the editor popover on every device.',
 			default: "'adaptive'"

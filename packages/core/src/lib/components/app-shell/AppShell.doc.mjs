@@ -177,7 +177,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'wash' | 'surface' | 'section' | 'elevated'",
+			type: "'section' | 'wash' | 'surface' | 'elevated'",
 			description:
 				"Navigation background style controlling how nav areas contrast with content. 'wash' uses wash background, 'surface' uses surface background, 'section' adds dividers between nav and content, 'elevated' uses wash nav with elevated surface content and border radius.",
 			default: "'elevated'"

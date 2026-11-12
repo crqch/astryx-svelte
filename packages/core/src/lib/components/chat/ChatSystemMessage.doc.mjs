@@ -98,7 +98,7 @@ export default {
 		},
 		{
 			name: 'variant',
-			type: "'default' | 'divider'",
+			type: "'divider' | 'default'",
 			description:
 				"Visual variant. 'default' renders centered text. 'divider' adds horizontal lines on each side via Divider: use for date separators and section breaks.",
 			default: "'default'"

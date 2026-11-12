@@ -1294,6 +1294,20 @@ const CASES = [
 		constHashed: 'src/lib/components/layer/layer-viewport-inset.stylex.js'
 	},
 	{
+		// Object mode. The shared sheet content box keeps the same group name on
+		// both sides; its two keys survive because the heading takes one as an
+		// `xstyle` and the content box merges a caller `xstyle`.
+		file: 'src/lib/components/dropdown-menu/menu-bottom-sheet.stylex.js',
+		upstreamFile: 'DropdownMenu/menuBottomSheet.stylex.js'
+	},
+	{
+		// Object mode. Upstream declares the action rows' styles as `styles`;
+		// ours are `menuBottomSheetActionListStyles`.
+		file: 'src/lib/components/dropdown-menu/menu-bottom-sheet-action-list.stylex.js',
+		upstreamFile: 'DropdownMenu/MenuBottomSheetActionList.js',
+		rename: { styles: 'menuBottomSheetActionListStyles' }
+	},
+	{
 		// Object mode. Both `menuItemStyles` (root/disabled) and `itemSizeStyles`
 		// (sm/md/lg) reach `Item` as an `xstyle` array beside a dynamic
 		// `itemSizeStyles[size]` index, so the compiler could not fold them and left

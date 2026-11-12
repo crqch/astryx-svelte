@@ -465,8 +465,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 12761          |
-| Declared here              | 8649           |
-| **Short**                  | **4138**       |
+| Declared here              | 8654           |
+| **Short**                  | **4133**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -481,7 +481,7 @@ per connected group.
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
-| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 223      | 78   | 145   |
+| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 223      | 81   | 142   |
 | `SideNav/SideNav.test.tsx`                                                                                                                                                               | 252      | 116  | 136   |
 | `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
@@ -510,8 +510,8 @@ per connected group.
 | `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 20   | 42    |
 | `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
-| `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 36   | 40    |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 77   | 40    |
+| `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 37   | 39    |
 | `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 58   | 39    |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 48   | 38    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
@@ -615,12 +615,12 @@ per connected group.
 | `Layer/layerDismissalFamilies.test.tsx`                                                                                                                                                  | 17       | 11   | 6     |
 | `Layout/__tests__/contentWidth.test.tsx`                                                                                                                                                 | 12       | 6    | 6     |
 | `MobileNav/MobileNavCloseEdgeCases.test.tsx`                                                                                                                                             | 17       | 11   | 6     |
-| `MoreMenu/MoreMenu.test.tsx`                                                                                                                                                             | 27       | 21   | 6     |
 | `Table/plugins/tree/useTableTreeData.test.tsx`                                                                                                                                           | 44       | 38   | 6     |
 | `theme/tokens.test.ts`                                                                                                                                                                   | 32       | 26   | 6     |
 | `IconButton/IconButton.test.tsx`                                                                                                                                                         | 14       | 9    | 5     |
 | `Layer/useLayerDismissal.test.tsx`                                                                                                                                                       | 25       | 20   | 5     |
 | `MobileNav/MobileNav.test.tsx`                                                                                                                                                           | 21       | 16   | 5     |
+| `MoreMenu/MoreMenu.test.tsx`                                                                                                                                                             | 27       | 22   | 5     |
 | `reset.test.ts`                                                                                                                                                                          | 7        | 2    | 5     |
 | `Table/plugins/rowIndex/useTableRowIndex.test.tsx`                                                                                                                                       | 14       | 9    | 5     |
 | `Table/plugins/sortable/useTableSortable.test.tsx`                                                                                                                                       | 45       | 40   | 5     |
@@ -698,8 +698,8 @@ per connected group.
 
 |                                                               | Sites | Files |
 | ------------------------------------------------------------- | ----- | ----- |
-| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 48    | 7     |
-| `getByText` with a string, no `exact`                         | 1     | 1     |
+| `getByRole`/`getByLabelText` with a string `name`, no `exact` | 63    | 8     |
+| `getByText` with a string, no `exact`                         | 2     | 2     |
 
 Testing Library matches an accessible name as a whole string; Playwright matches a string
 `name` as a case-insensitive **substring**. Every site above is therefore a ported assertion

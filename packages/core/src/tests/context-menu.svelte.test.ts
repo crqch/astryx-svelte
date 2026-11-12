@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import ContextMenuFixture from './fixtures/context-menu-fixture.svelte';
 import { stubMatchMedia } from './stub-match-media.js';
+import { contextMenuSheetMenuAttrs } from '$lib/components/context-menu/context-menu.stylex.js';
 
 /**
  * Ported from Astryx's `ContextMenu/ContextMenu.test.tsx`.
@@ -13,7 +14,7 @@ import { stubMatchMedia } from './stub-match-media.js';
  * count goes stale on every upstream release by construction:
  *
  * - upstream at the **0.5.0 pin: 43** cases
- * - here: **32**, plus the three bottom-sheet cases below added at the 0.7.13 pin
+ * - here: **32**, plus the five bottom-sheet cases below added at the 0.7.13 pin
  *
  * The 32nd is 0.3.0's `closes the menu when Tab is pressed inside it`, ported
  * with the component change it covers (the APG menus-5 fix).
@@ -557,4 +558,30 @@ describe('ContextMenu bottom-sheet presentation', () => {
 		await openSheet(screen);
 		expect(showPopover).not.toHaveBeenCalled();
 	});
+
+	for (const mode of ['items', 'compound'] as const) {
+		it(`insets a ${mode} menu sheet itself and publishes the inset to its rows`, async () => {
+			const screen = await render(ContextMenuFixture, {
+				props: {
+					props: {
+						presentation: 'bottom-sheet',
+						...(mode === 'items' ? { items: [{ label: 'Edit' }] } : {})
+					},
+					...(mode === 'compound' ? { compound: [{ label: 'Edit' }] } : {})
+				}
+			});
+
+			await openSheet(screen, 'Context menu');
+			const content = screen.container.querySelector<HTMLElement>('dialog .astryx-context-menu');
+			expect(content).not.toBeNull();
+			// No Section wrapper: the menu element keeps the sheet's side inset plus
+			// its own, and publishes the padding it applies.
+			expect(content?.parentElement?.closest('.astryx-section')).toBeNull();
+			for (const className of contextMenuSheetMenuAttrs(undefined)
+				.class.split(/\s+/)
+				.filter(Boolean)) {
+				expect(content).toHaveClass(className);
+			}
+		});
+	}
 });

@@ -219,6 +219,15 @@
 	const sheetLabel = $derived(typeof currentTitle === 'string' ? currentTitle : rootTitle);
 	const currentItems = $derived(currentSubmenu?.items ?? items ?? []);
 
+	// A controlled close reaches the sheet without passing through
+	// `setSheetOpen`, so the view stack returns to the root as the open state
+	// falls. A pre-effect keeps the exiting sheet painting the root view.
+	$effect.pre(() => {
+		if (!isOpen && submenuPath.length > 0) {
+			submenuPath = [];
+		}
+	});
+
 	// The trigger is the focus-return target, and a pointer return must not paint
 	// the keyboard ring.
 	const focusReturn = useFocusReturnVisibility({ readModality: getInteractionModality });
@@ -398,9 +407,16 @@
 					isHidingPopoverForPresentationChange = true;
 					popover.hide();
 				}
-			} else if (isOpen) {
-				isRestoringPopoverAfterPresentationChange = true;
-				popover.show();
+			} else {
+				// Leaving the sheet for the popover drops the sheet's view stack, as
+				// unmounting upstream's sheet component does.
+				if (submenuPath.length > 0) {
+					submenuPath = [];
+				}
+				if (isOpen) {
+					isRestoringPopoverAfterPresentationChange = true;
+					popover.show();
+				}
 			}
 		});
 	});
