@@ -79,6 +79,7 @@
 							renderWidth={RENDER_WIDTH}
 							borderRadius="0"
 							background="var(--color-background-surface)"
+							layout="page"
 						/>
 					</div>
 				{/each}

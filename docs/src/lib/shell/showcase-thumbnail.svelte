@@ -73,6 +73,13 @@
 		 * surface instead.
 		 */
 		background?: string;
+		/**
+		 * How the render is laid out inside the scaler. Blocks centre in the
+		 * flex box; a *page* template is a document and must fill the render
+		 * width — centring it makes a width-auto page shrink to its min-content
+		 * column (the "paper thin" template tiles).
+		 */
+		layout?: 'block' | 'page';
 	}
 
 	const {
@@ -80,7 +87,8 @@
 		renderWidth,
 		aspectRatio = '16 / 10',
 		borderRadius = 'var(--radius-container)',
-		background = 'var(--color-background-muted)'
+		background = 'var(--color-background-muted)',
+		layout = 'block'
 	}: Props = $props();
 
 	/** Upstream's `FIXED_SCALE`, used when no explicit `renderWidth` is given. */
@@ -135,6 +143,7 @@
 	{#if load && tileWidth > 0 && isVisible}
 		<div
 			class="thumb-scaler"
+			class:page={layout === 'page'}
 			style="width: {layoutWidth}px; height: {scalerHeight}%; transform: scale({scale});"
 		>
 			<svelte:boundary>
@@ -181,6 +190,14 @@
 		overflow: hidden;
 		pointer-events: none;
 		transform-origin: top left;
+	}
+
+	/* A page template is a document, not a centred block: it has to fill the
+	   render width. Centring it in the flex box let a width-auto page shrink to
+	   its min-content column, which is what made several template tiles paper
+	   thin. */
+	.thumb-scaler.page {
+		display: block;
 	}
 
 	.thumb-fallback {
