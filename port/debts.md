@@ -2016,15 +2016,6 @@ The suite's two-row `it.each` under `the reusable Combobox contract` calls
 package's absence is the only blocker — the field props it inspects are
 implemented.
 
-### `SelectorBottomSheet` is not ported
-
-- **units:** Selector/SelectorBottomSheet
-- **kind:** unported
-- **retires:** when the mobile selector sheet lands with `useSelectorPresentation`
-
-The selector's bottom-sheet presentation is documented but renders the popover
-only, so the sheet's own `margin-inline` class is skipped in the CSS oracle.
-
 ### The menu-press model does not reach the non-popover menu consumers
 
 - **units:** DropdownMenu/MenuBottomSheetActionList, NavHeadingMenu, TopNavMenu, TopNavHeading, SideNavHeading, BreadcrumbItem, Selector
