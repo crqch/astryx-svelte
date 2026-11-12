@@ -54,7 +54,7 @@ export default {
 		},
 		{
 			name: 'options.calendar',
-			type: 'CalendarSystem',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
 			description:
 				"Calendar system whose months the hook steps and formats (e.g. 'gregory', 'persian', 'hebrew'). Calendars other than gregory, iso8601, buddhist, roc and japanese need Temporal. The provider's calendar is never read. Default is 'gregory'.",
 			default: "'gregory'"
@@ -74,7 +74,7 @@ export default {
 		},
 		{
 			name: 'visibleCalendarMonths',
-			type: '{year: number; month: number}[]',
+			type: '{ year: number; month: number; }[]',
 			description:
 				'Array of year and month pairs for each visible month in the active calendar system, compatible with useCalendarDays options.'
 		},

@@ -311,7 +311,7 @@ export default {
 		},
 		{
 			name: 'containerXstyle',
-			type: 'StyleXStyles',
+			type: 'StyleArg',
 			description:
 				'StyleX styles for the field container (label, control, and status together). No effect inside InputGroup (style the InputGroup instead) or in a `horizontal-labels` FormLayout. Root `xstyle`, `className`, and `style` are not accepted.'
 		},
@@ -327,7 +327,7 @@ export default {
 		},
 		{
 			name: 'controlXstyle',
-			type: 'StyleXStyles',
+			type: 'StyleArg',
 			description:
 				'StyleX styles for the visual control box: the element that paints the border and background and holds icons and end controls. Never the native input.'
 		},

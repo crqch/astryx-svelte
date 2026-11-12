@@ -460,8 +460,8 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 |                            | Cases          |
 | -------------------------- | -------------- |
 | Upstream, in ported suites | 12899          |
-| Declared here              | 8831           |
-| **Short**                  | **4094**       |
+| Declared here              | 8832           |
+| **Short**                  | **4093**       |
 | Over, across 7 groups      | +26            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -603,7 +603,6 @@ per connected group.
 | `Table/plugins/stickyColumns/useTableStickyColumns.test.tsx`                                                                                                                             | 13       | 6    | 7     |
 | `theme/onMediaTokens.test.ts`                                                                                                                                                            | 29       | 22   | 7     |
 | `Badge/Badge.test.tsx`                                                                                                                                                                   | 14       | 8    | 6     |
-| `Calendar/Calendar.calendarSystems.test.tsx`                                                                                                                                             | 19       | 13   | 6     |
 | `CodeBlock/tokenizer.test.ts`                                                                                                                                                            | 18       | 12   | 6     |
 | `hooks/useAnnounce.test.tsx`                                                                                                                                                             | 15       | 9    | 6     |
 | `InputGroup/InputGroup.test.tsx`                                                                                                                                                         | 24       | 18   | 6     |
@@ -612,6 +611,7 @@ per connected group.
 | `MobileNav/MobileNavCloseEdgeCases.test.tsx`                                                                                                                                             | 17       | 11   | 6     |
 | `Table/plugins/tree/useTableTreeData.test.tsx`                                                                                                                                           | 44       | 38   | 6     |
 | `theme/tokens.test.ts`                                                                                                                                                                   | 32       | 26   | 6     |
+| `Calendar/Calendar.calendarSystems.test.tsx`                                                                                                                                             | 19       | 14   | 5     |
 | `IconButton/IconButton.test.tsx`                                                                                                                                                         | 14       | 9    | 5     |
 | `Layer/useLayerDismissal.test.tsx`                                                                                                                                                       | 25       | 20   | 5     |
 | `MobileNav/MobileNav.test.tsx`                                                                                                                                                           | 21       | 16   | 5     |

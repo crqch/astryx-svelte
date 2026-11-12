@@ -274,13 +274,13 @@ export default {
 		},
 		{
 			name: 'containerXstyle',
-			type: 'StyleXStyles',
+			type: 'StyleArg',
 			description:
 				'StyleX styles for the Field box around the label, control, and status. containerClassName and containerStyle take a class name and inline styles for the same box. No effect (development warning) where no Field box renders: inside InputGroup (style the group) and in a horizontal-labels FormLayout.'
 		},
 		{
 			name: 'controlXstyle',
-			type: 'StyleXStyles',
+			type: 'StyleArg',
 			description:
 				'StyleX styles for the visual control box: the bordered element that holds the text, icons, and end controls, never the native input. controlClassName and controlStyle take a class name and inline styles for the same box. Replaces root xstyle, className, and style, which this component does not accept.'
 		}

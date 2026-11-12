@@ -83,6 +83,9 @@
 		// grid it does not have. Accepted (the prop types are shared) and ignored.
 		numberOfMonths: _numberOfMonths,
 		weekStartsOn: _weekStartsOn,
+		// The native control is Gregorian; DateInput only reaches this surface
+		// for a Gregorian-aligned calendar. Destructured to keep it out of rest.
+		calendar: _calendar,
 		format = 'date_long',
 		width,
 		xstyle,

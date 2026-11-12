@@ -55,7 +55,7 @@ export default {
 		},
 		{
 			name: 'options.calendar',
-			type: 'CalendarSystem',
+			type: "'gregory' | 'iso8601' | 'buddhist' | 'roc' | 'japanese' | 'persian' | 'indian' | 'hebrew' | 'chinese' | 'dangi' | 'coptic' | 'ethiopic' | 'ethioaa' | 'islamic-civil' | 'islamic-tbla' | 'islamic-umalqura'",
 			description:
 				"The calendar system that numbers year, month and each day's dayNumber. Every day keeps its Gregorian date and iso. The hook never reads the InternationalizationProvider calendar. Calendars other than gregory, iso8601, buddhist, roc and japanese need Temporal; without it the hook uses Gregorian numbers and warns once in development.",
 			default: "'gregory'"

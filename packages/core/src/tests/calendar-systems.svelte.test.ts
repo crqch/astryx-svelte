@@ -16,6 +16,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { userEvent } from 'vitest/browser';
 import Calendar from '../lib/components/calendar/calendar.svelte';
+import DateInput from '../lib/components/date-input/date-input.svelte';
+import { formatCalendarDateText } from '../lib/utils/calendar-date-parser.js';
+import { plainDateFromISO } from '../lib/utils/plain-date.js';
 import CalendarProviderProbe from './fixtures/calendar-provider-probe.svelte';
 import DateInputProviderProbe from './fixtures/date-input-provider-probe.svelte';
 import DateRangeInputProviderProbe from './fixtures/date-range-input-provider-probe.svelte';
@@ -191,6 +194,28 @@ describe('Calendar in the Japanese calendar', () => {
 		expect(view.getByRole('grid').element().getAttribute('aria-label')).toContain('Heisei');
 		await userEvent.click(view.getByRole('button', { name: 'Next month', exact: true }));
 		expect(view.getByRole('grid').element().getAttribute('aria-label')).toContain('Reiwa');
+	});
+});
+
+describe('DateInput typed dates in a calendar', () => {
+	it('reads and writes Persian text while the value stays Gregorian ISO', async () => {
+		const onChange = vi.fn();
+		const view = await render(DateInput, {
+			props: {
+				label: 'Date',
+				calendar: 'persian',
+				value: '2026-10-30',
+				onChange
+			}
+		});
+		const input = view.getByRole('combobox').element() as HTMLInputElement;
+		expect(input.value).toBe(
+			formatCalendarDateText(plainDateFromISO('2026-10-30'), 'date_long', 'en', 'persian')
+		);
+
+		input.value = '۱۴۰۵/۸/۱۱';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		await expect.poll(() => onChange.mock.calls.at(-1)?.[0]).toBe('2026-11-02');
 	});
 });
 
