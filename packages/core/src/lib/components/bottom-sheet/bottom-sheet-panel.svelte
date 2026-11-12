@@ -297,13 +297,21 @@
 			pendingMotionComplete = current;
 			return;
 		}
-		return waitForTransition(sheet, current === 'fading' ? 'opacity' : 'transform', () => {
-			if (startedMotion === current) {
-				onMotionComplete?.(current);
-			} else {
-				pendingMotionComplete = current;
+		// Under the reduced-motion cross-fade an exit fades where it is, and its
+		// dialog closes only after the fade, so it waits on opacity. The entrance
+		// still waits on its instant transform.
+		const crossFadeMotion = isCrossFade && current === 'exiting';
+		return waitForTransition(
+			sheet,
+			current === 'fading' || crossFadeMotion ? 'opacity' : 'transform',
+			() => {
+				if (startedMotion === current) {
+					onMotionComplete?.(current);
+				} else {
+					pendingMotionComplete = current;
+				}
 			}
-		});
+		);
 	});
 
 	// The snap is transform-only; the layout height reconciles when it lands.

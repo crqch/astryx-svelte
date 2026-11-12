@@ -9,28 +9,14 @@ import ExitHarness from './fixtures/bottom-sheet-exit-harness.svelte';
 import SwitcherHarness from './fixtures/bottom-sheet-switcher-harness.svelte';
 import FocusRestoreHarness from './fixtures/bottom-sheet-focus-restore-harness.svelte';
 import FinalFocusHarness from './fixtures/bottom-sheet-final-focus-harness.svelte';
+import EscapeGateHarness from './fixtures/bottom-sheet-escape-gate-harness.svelte';
+import ControlledHarness from './fixtures/bottom-sheet-controlled-harness.svelte';
+import NestedHarness from './fixtures/bottom-sheet-nested-harness.svelte';
+import { __resetInteractionModalityForTest } from '$lib/utils/interaction-modality.js';
 import { stubMatchMedia } from './stub-match-media.js';
 
 /**
- * Ported from Astryx's `BottomSheet/BottomSheet.test.tsx` — **63 of its 70 `it`
- * cases at the 0.5.0 pin**, plus both `it.each` tables (7 rows), for 70 running
- * cases against upstream's 77.
- *
- * The 7 not here are both 0.5.0 additions: the six-case Escape/IME-composition
- * guard from #5322 (five top-level — `ignores Escape while an IME composition is
- * active`, `claims the composing Escape so no native close request follows`,
- * `keeps a form sheet open when Escape cancels a field composition`, `still
- * dismisses on the Escape after a composition is cancelled`, `leaves the IME the
- * composition keys that are not Escape` — plus its `hasScrim={false} (non-modal)`
- * twin), and the single `container padding isolation` case from #5208/#5209.
- * Nothing else is dropped and nothing is added. (This header read "all 63 … none
- * dropped" at the v0.4.5 pin, where 63 was the whole suite.)
- *
- * Two later-pin `focus restore` cases are included with the adaptive-sheet
- * batch: `always focuses finalFocusRef on close, even when focus had left the
- * sheet` and `prefers an explicit final focus target`. They exercise the
- * `finalFocusRef` prop this port declares and now implements; the rest of the
- * current pin's additions remain in the shortfall `port/status.md` measures.
+ * Ported from Astryx's `BottomSheet/BottomSheet.test.tsx` (0.7.13).
  *
  * Runs in the **client** project, in real Chromium, where upstream's is jsdom.
  * That difference drives every restatement below, and each is a difference in
@@ -47,12 +33,14 @@ import { stubMatchMedia } from './stub-match-media.js';
  * - **Assertions on the DOM wait for a flush.** `fireEvent` re-renders React
  *   synchronously; a Svelte `$state` write lands on the microtask queue.
  *   Assertions on a mock, which a handler calls synchronously, do not wait.
+ *   Cases upstream drives "in one task" are therefore restated as one
+ *   dispatch followed by `flush()`; their claims about React's pending render
+ *   are not restated.
  * - **`scrollTop` is tracked by hand** where a case asserts on it: Chromium
  *   ignores a write to a non-overflowing element, and it *has* `scrollBy`,
  *   which sends the hook down a branch jsdom never reaches.
- *
- * - **`<dialog>` is stubbed anyway.** jsdom has no `showModal`/`show`/`close`,
- *   so upstream installs prototype stubs that toggle the `open` attribute. Real
+ * - **`<dialog>` is stubbed.** jsdom has no `showModal`/`show`/`close`, so
+ *   upstream installs prototype stubs that toggle the `open` attribute. Real
  *   Chromium has them, but the assertions are about *which* one the host calls,
  *   and a genuine top-layer dialog inside a test harness moves focus in ways the
  *   focus cases would then be measuring instead of the sheet. The stubs stay,
@@ -63,10 +51,91 @@ import { stubMatchMedia } from './stub-match-media.js';
  * - **`matchMedia` uses this repo's query-aware stub**, not a blanket one, so
  *   `prefers-reduced-motion` stays false while width queries answer as before —
  *   the settle path these cases exercise is skipped entirely under reduced
- *   motion.
+ *   motion. Cases that change motion or pointer call it again.
  * - **`ref` is an attachment**, this port's standing ref-callback translation.
  * - **Handler and prop names are Svelte's**: `onclick`, `class`, and `children`
  *   as a snippet.
+ *
+ * Cases **not ported**, and why. Every one needs infrastructure that does not
+ * exist in this port yet, not a weaker assertion. Upstream's
+ * `opens non-modally: a manual popover instead of showModal(), no aria-modal`
+ * is not in this list: it is ported under the restated name
+ * `opens non-modally: show() instead of showModal(), no aria-modal` in the
+ * `hasScrim={false}` block, because this port presents non-modal sheets with
+ * `dialog.show()`.
+ *
+ * **Non-modal Popover presentation** (this port still calls `dialog.show()`,
+ * where 0.7.13 presents a manual popover and measures the engine's
+ * `showPopover` focus landing):
+ *
+ * - `focuses the panel, as show() did, when the browser focuses the popover on show (an engine whose show() lands on the panel container)`
+ * - `measures the engine inside its own dialog, so a first non-modal sheet opened inside an open modal does not cache the wrong answer`
+ * - `falls back to show() below the Popover API support floor`
+ *
+ * **React render scheduling** (`Profiler` and `IS_REACT_ACT_ENVIRONMENT`;
+ * a Svelte DOM flush is a microtask, so the claim has no counterpart):
+ *
+ * - `restores the layout height in the same task as the transform when a drag crosses its detent, without a synchronous render`
+ *
+ * **Focus-region containment** (`useFocusRegionContainment` is not ported;
+ * the sheet renders no Tab-containment code to exercise):
+ *
+ * - `wraps Tab and Shift+Tab inside an open modal sheet`
+ * - `leaves Tab alone in a non-modal sheet`
+ * - `wraps Tab from the checked radio of a group that ends the sheet`
+ * - `wraps Shift+Tab from the checked radio of a group that starts the sheet`
+ *
+ * **0.7.13's keyboard subsystem** (this port's `useMobileKeyboard` predates the
+ * keyboard model, layout guide, pointer-capability gating and animator rides):
+ *
+ * - Pointer capability: `registers no touch listener for a presented Tall sheet under a fine pointer (architecture INV13, spec:AST-094 FR24)`,
+ *   `installs no focus takeover for a presented Tall sheet under a fine pointer (architecture INV13, spec:AST-094 FR24)`,
+ *   `installs the focus takeover for each presented Tall sheet under a coarse pointer, through the one shared listener (spec:AST-094 FR24)`,
+ *   `registers one touch listener for two presented Tall sheets under a coarse pointer (spec:AST-094 FR24)`, and
+ *   `leaves focus to desktop Safari and Firefox, which measure but have a fine pointer (AST-017 FR59)`.
+ * - Partial viewport recovery:
+ *   `restores a top field when interactive keyboard dismissal leaves only the accessory bar`,
+ *   `re-reveals a later focused field after full keyboard recovery restores the opening scroll position`, and
+ *   `retains the accommodated body scroll through partial viewport recovery while focus is leaving`.
+ * - Gboard slides in Chrome on Android:
+ *   `lands the body at once at the keyboard's report, and the content's ride ends with no translate left`,
+ *   `keeps the room through the keyboard's hide while the content rides down to the scroll from before the keyboard, then drops both at rest`,
+ *   `rides the content down and keeps the room through the hide when focus moves to %s, whose picker Chrome opens over the page` (a select / a date input),
+ *   `rides by the scroll the room's drop takes back where the room adds less range than its height, as in Chrome 124`,
+ *   `attaches nothing of the ride under a fine pointer: the room drops at Chrome's hide report`,
+ *   `keeps the content where the slide leaves it until the keyboard's report of its hide, then clears the room with nothing drawn moving`,
+ *   `rides the content back up with the keyboard when the field takes focus again before Chrome reports the hide`, and
+ *   `rides the content back up once the check after the slide reads the keyboard still up, when focus moves into a frame whose field keeps it`.
+ * - Keyboard layout guide:
+ *   `subscribes no keyboard layout guide where the keyboard moves on Safari's schedule, whose transitions the sheet never rides (spec:AST-099 FR8)`.
+ * - Pinch zoom:
+ *   `keeps the keyboard room when the page is pinch-zoomed past 2x with the keyboard up`.
+ * - Reveal at the keyboard's report:
+ *   `reveals the field in the report's own frame`,
+ *   `keeps the smooth reveal where the browser does not pan to the field`,
+ *   `puts back the browser's own pan to the field and reveals at once from then on`,
+ *   `puts the pan back without a second scroll while the smooth reveal is still on its way`,
+ *   `keeps the browser's reveal when the sheet cannot bring the field above the keyboard`,
+ *   `leaves a pan the reader makes`, and
+ *   `leaves a document scroll, which is not the browser revealing the field`.
+ * - iOS ride:
+ *   `rides the content down on the keyboard's spring from the blur, and the report then moves nothing`,
+ *   `rides nothing under a fine pointer: the content stays put until the report clears the room`,
+ *   `dips the content out and back in at its resting place under Reduce Motion, and the report then moves nothing (design:reduced-motion DR2)`,
+ *   `starts no ride when focus moves from a field to a select, whose picker iOS puts where the keyboard was`,
+ *   `rides the content down when focus moves from a field to a plain button inside an open shadow host, as a blur does`,
+ *   `rides the content down from the blur once focus settles on a plain button inside an open shadow host`,
+ *   `starts no ride when focus moves from a field into %s, whose own field can keep the keyboard up` (an open shadow host / a frame),
+ *   `rides the content back up when a field takes focus before the keyboard is gone`,
+ *   `rides the content back up when focus moves into %s before the keyboard is gone` (an open shadow host / a frame), and
+ *   `glides the content to its new place when the keyboard goes while its field keeps focus, as a downward dismissal leaves it`.
+ *
+ * **Reduced-motion touch dismissals** (the gesture hook does not expose
+ * `isDismissedByTouchDrag`, so a fine-pointer touch exit takes the non-touch
+ * arm; recorded in `port/debts.md` and retired when the hook exposes it):
+ *
+ * - `a touch swipe dismissal under reduced motion fades out in place on a fine pointer (design:reduced-motion DR2, a touch drag's release)`
+ * - `a touch swipe dismissal does not outlive the sheet: reopened and closed from a control, it leaves at once again`
  */
 
 // A sheet has no stops unless its host asks for them, so the cases that
@@ -236,7 +305,11 @@ function finishSheetExit(): void {
 }
 
 /** Drive a pointer drag on the grab handle. */
-function drag(handle: HTMLElement, points: { y: number }[]): void {
+function drag(
+	handle: HTMLElement,
+	points: { y: number }[],
+	pointerType: 'mouse' | 'touch' | 'pen' = 'mouse'
+): void {
 	const [down, ...rest] = points;
 	handle.dispatchEvent(
 		new PointerEvent('pointerdown', {
@@ -244,6 +317,7 @@ function drag(handle: HTMLElement, points: { y: number }[]): void {
 			clientY: down.y,
 			button: 0,
 			isPrimary: true,
+			pointerType,
 			bubbles: true,
 			cancelable: true
 		})
@@ -253,6 +327,7 @@ function drag(handle: HTMLElement, points: { y: number }[]): void {
 			new PointerEvent('pointermove', {
 				pointerId: 1,
 				clientY: point.y,
+				pointerType,
 				bubbles: true,
 				cancelable: true
 			})
@@ -263,6 +338,7 @@ function drag(handle: HTMLElement, points: { y: number }[]): void {
 		new PointerEvent('pointerup', {
 			pointerId: 1,
 			clientY: last.y,
+			pointerType,
 			bubbles: true,
 			cancelable: true
 		})
@@ -354,6 +430,77 @@ async function measureSheet(
 		[resizeEntry(borderBoxHeight, contentBoxHeight)],
 		sheetObserver as unknown as ResizeObserver
 	);
+	await flush();
+}
+
+/**
+ * Lay a sheet out `height` px tall, for a case that works with a specific
+ * element — a sheet nested in another sheet's content is not `getSheet()`.
+ */
+async function layOutSheet(
+	observers: ResizeObserverRecord[],
+	sheet: HTMLElement,
+	height = 400
+): Promise<void> {
+	const observer = observers.find((instance) => instance.observed.has(sheet));
+	observer?.callback([resizeEntry(height)], observer as unknown as ResizeObserver);
+	await flush();
+}
+
+/** The primary pointer a case reports through `matchMedia`. */
+function mockPrimaryPointer(pointer: 'fine' | 'coarse'): void {
+	stubMatchMedia({ reduceMotion: false, pointer, matches: false });
+}
+
+/** A touch screen whose user asked for reduced motion. */
+function mockReducedMotion(pointer: 'fine' | 'coarse'): void {
+	// Ported from upstream's `stubReducedMotion`: the plain reduce query is true,
+	// and the compound coarse query follows the pointer. `stubMatchMedia` cannot
+	// express this — it answers the compound query from `reduceMotion` alone, so
+	// it would report a coarse pointer on a fine one.
+	vi.stubGlobal(
+		'matchMedia',
+		vi.fn((query: string) => ({
+			matches:
+				query === '(prefers-reduced-motion: reduce)' ||
+				(pointer === 'coarse' &&
+					query === '(prefers-reduced-motion: reduce) and (pointer: coarse)'),
+			media: query,
+			onchange: null,
+			addEventListener: vi.fn(),
+			removeEventListener: vi.fn(),
+			addListener: vi.fn(),
+			removeListener: vi.fn(),
+			dispatchEvent: vi.fn()
+		}))
+	);
+}
+
+/** A browser with its own keyboard geometry API, as Chrome on Android has. */
+function mockKeyboardGeometryApi(): void {
+	// `navigator.userAgent` is brand-checked in Chromium: reading it through an
+	// `Object.create(navigator)` stand-in throws `Illegal invocation`. jsdom
+	// allows the prototype lookup upstream's helper relies on, so the fields the
+	// hook reads are defined on the stand-in here.
+	const navigatorMock = Object.create(window.navigator);
+	Object.defineProperties(navigatorMock, {
+		userAgent: { configurable: true, value: window.navigator.userAgent },
+		maxTouchPoints: { configurable: true, value: window.navigator.maxTouchPoints },
+		virtualKeyboard: { configurable: true, value: { overlaysContent: false } }
+	});
+	vi.stubGlobal('navigator', navigatorMock);
+}
+
+/**
+ * End one of the sheet's transitions.
+ *
+ * Flushes first for the same reason `endTransform` does: the listener that
+ * `waitForTransition` attaches lives in an effect, which has not run when a
+ * synthetic event is dispatched in the same task as the state change.
+ */
+async function endTransition(propertyName: 'transform' | 'opacity'): Promise<void> {
+	await flush();
+	getSheet().dispatchEvent(new TransitionEvent('transitionend', { propertyName, bubbles: true }));
 	await flush();
 }
 
@@ -499,8 +646,26 @@ async function flush(): Promise<void> {
 	await tick();
 }
 
-function press(target: Element, key: string): void {
-	target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+/**
+ * Dispatch a keydown and report whether it was claimed.
+ *
+ * `isComposing` and `keyCode` are defined rather than passed in the init
+ * dictionary: Chromium ignores the legacy `keyCode` there, and the IME guard
+ * reads both signals.
+ */
+function press(
+	target: Element,
+	key: string,
+	init: { isComposing?: boolean; keyCode?: number } = {}
+): boolean {
+	const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+	if (init.isComposing) {
+		Object.defineProperty(event, 'isComposing', { value: true });
+	}
+	if (init.keyCode != null) {
+		Object.defineProperty(event, 'keyCode', { value: init.keyCode });
+	}
+	return target.dispatchEvent(event);
 }
 
 function click(target: Element): void {
@@ -609,6 +774,149 @@ describe('BottomSheet', () => {
 		expect(onOpenChange).toHaveBeenCalledWith(false);
 	});
 
+	it('ignores Escape while an IME composition is active', async () => {
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				onOpenChange,
+				label: 'Filters',
+				children: html('<input aria-label="Search" />')
+			}
+		});
+		const dialog = getDialog();
+
+		press(dialog, 'Escape', { isComposing: true });
+		press(dialog, 'Escape', { keyCode: 229 });
+
+		expect(onOpenChange).not.toHaveBeenCalled();
+	});
+
+	it('claims the composing Escape so no native close request follows', async () => {
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				onOpenChange,
+				label: 'Filters',
+				children: html('<input aria-label="Search" />')
+			}
+		});
+
+		// An unclaimed Escape lets the browser raise its own close request, which
+		// arrives as `cancel` and dismisses the sheet on the same keypress. The
+		// guard has to swallow the composing Escape, not merely skip dismissal.
+		const wasNotClaimed = press(getDialog(), 'Escape', { isComposing: true });
+
+		expect(wasNotClaimed).toBe(false);
+		expect(onOpenChange).not.toHaveBeenCalled();
+	});
+
+	it('keeps a form sheet open when Escape cancels a field composition', async () => {
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				purpose: 'form',
+				onOpenChange,
+				label: 'Edit profile',
+				children: html('<input aria-label="Name" />')
+			}
+		});
+
+		// The reported path: the keydown starts at the composing field and bubbles
+		// to the sheet's <dialog>, so the guard has to survive the trip.
+		press(field('Name'), 'Escape', { isComposing: true });
+
+		expect(onOpenChange).not.toHaveBeenCalled();
+	});
+
+	it('still dismisses on the Escape after a composition is cancelled', async () => {
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				onOpenChange,
+				label: 'Filters',
+				children: html('<input aria-label="Search" />')
+			}
+		});
+		const dialog = getDialog();
+
+		press(dialog, 'Escape', { isComposing: true });
+		expect(onOpenChange).not.toHaveBeenCalled();
+
+		press(dialog, 'Escape');
+
+		expect(onOpenChange).toHaveBeenCalledWith(false);
+	});
+
+	it('leaves the IME the composition keys that are not Escape', async () => {
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				onOpenChange,
+				label: 'Filters',
+				children: html('<input aria-label="Search" />')
+			}
+		});
+		const dialog = getDialog();
+
+		// Enter commits a candidate and the arrows walk the candidate window. The
+		// sheet must claim neither, or the IME loses keys it owns.
+		const enterUnclaimed = press(dialog, 'Enter', { isComposing: true });
+		const arrowUnclaimed = press(dialog, 'ArrowDown', { isComposing: true });
+
+		expect(enterUnclaimed).toBe(true);
+		expect(arrowUnclaimed).toBe(true);
+		expect(onOpenChange).not.toHaveBeenCalled();
+	});
+
+	it("the internal Escape gate (Popover's sheet) blocks Escape and the close request, not the scrim or swipe", async () => {
+		const onOpenChange = vi.fn();
+		await render(EscapeGateHarness, {
+			props: { isOpen: true, onOpenChange, children: text('Content') }
+		});
+		const dialog = getDialog();
+
+		press(dialog, 'Escape');
+		dialog.dispatchEvent(new Event('cancel', { cancelable: true }));
+		expect(onOpenChange).not.toHaveBeenCalled();
+
+		click(dialog);
+		expect(onOpenChange).toHaveBeenCalledTimes(1);
+		drag(getHandle(), [{ y: 0 }, { y: 40 }, { y: 120 }]);
+		expect(onOpenChange).toHaveBeenCalledTimes(2);
+		expect(onOpenChange).toHaveBeenNthCalledWith(2, false);
+	});
+
+	it('stays open when a file picker inside it is dismissed, and still closes on its own close request', async () => {
+		// A file input fires a bubbling `cancel` at itself when its picker is
+		// dismissed. It reaches the <dialog> like a close request but is not one.
+		const onOpenChange = vi.fn();
+		await render(BottomSheet, {
+			props: {
+				isOpen: true,
+				purpose: 'form',
+				onOpenChange,
+				label: 'Upload',
+				children: html('<input type="file" aria-label="Picture" />')
+			}
+		});
+
+		const fromPicker = new Event('cancel', { bubbles: true, cancelable: true });
+		field('Picture').dispatchEvent(fromPicker);
+
+		expect(onOpenChange).not.toHaveBeenCalled();
+		expect(fromPicker.defaultPrevented).toBe(false);
+
+		getDialog().dispatchEvent(new Event('cancel', { cancelable: true }));
+
+		expect(onOpenChange).toHaveBeenCalledTimes(1);
+		expect(onOpenChange).toHaveBeenCalledWith(false);
+	});
+
 	it('requests close when the scrim (dialog element itself) is clicked', async () => {
 		const onOpenChange = vi.fn();
 		await render(BottomSheet, {
@@ -714,6 +1022,90 @@ describe('BottomSheet', () => {
 			expect(getDialog().hasAttribute('aria-modal')).toBe(false);
 		});
 
+		it('leaves focus on the first control, as show() did, in an engine whose show() skips the panel container', async () => {
+			// Firefox's `show()` and `showPopover()` both land on the first
+			// control in the sheet. Nothing is re-targeted, so a lone non-modal
+			// sheet focuses as it did with `show()` there too.
+			const show = dialogPrototype.show;
+			dialogPrototype.show = vi.fn(function (this: HTMLDialogElement) {
+				this.setAttribute('open', '');
+				this.querySelector<HTMLElement>('button')?.focus();
+			});
+			try {
+				const opener = document.createElement('button');
+				document.body.append(opener);
+				opener.focus();
+				await render(BottomSheet, {
+					props: {
+						isOpen: true,
+						onOpenChange: () => {},
+						label: 'Filters',
+						hasScrim: false,
+						children: html('<button type="button">First action</button>')
+					}
+				});
+				expect(document.activeElement?.textContent).toBe('First action');
+				expect(getSheet().hasAttribute('autofocus')).toBe(false);
+				opener.remove();
+			} finally {
+				dialogPrototype.show = show;
+			}
+		});
+
+		it('returns focus to its opener on close when the person was still in the sheet', async () => {
+			const opener = document.createElement('button');
+			opener.textContent = 'Open';
+			document.body.append(opener);
+			opener.focus();
+			try {
+				await render(ExitHarness, { props: { hasScrim: false } });
+				// The person moved into the sheet (e.g. tabbed to its control).
+				closeButton().focus();
+				press(getDialog(), 'Escape');
+				await endTransform();
+				expect(getDialog().hasAttribute('open')).toBe(false);
+				expect(document.activeElement).toBe(opener);
+			} finally {
+				opener.remove();
+			}
+		});
+
+		it('leaves focus where the person took it when the sheet closes from the page', async () => {
+			const opener = document.createElement('button');
+			const elsewhere = document.createElement('input');
+			document.body.append(opener, elsewhere);
+			opener.focus();
+			try {
+				await render(ExitHarness, { props: { hasScrim: false } });
+				// The page stayed live: the person moved on, then the sheet closed
+				// (a timer, a page control).
+				elsewhere.focus();
+				click(closeButton());
+				await endTransform();
+				expect(document.activeElement).toBe(elsewhere);
+			} finally {
+				opener.remove();
+				elsewhere.remove();
+			}
+		});
+
+		it('leaves focus alone when the browser does not move it on show', async () => {
+			const opener = document.createElement('button');
+			document.body.append(opener);
+			opener.focus();
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Filters',
+					hasScrim: false,
+					children: html('<button type="button">First action</button>')
+				}
+			});
+			expect(document.activeElement).toBe(opener);
+			opener.remove();
+		});
+
 		it('does not dismiss when the shell (dialog element itself) is clicked', async () => {
 			// No scrim: a tap on the transparent shell must pass through to the
 			// page, not dismiss the sheet.
@@ -744,6 +1136,26 @@ describe('BottomSheet', () => {
 			});
 			press(getDialog(), 'Escape');
 			expect(onOpenChange).toHaveBeenCalledWith(false);
+		});
+
+		it('ignores Escape while an IME composition is active', async () => {
+			const onOpenChange = vi.fn();
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					hasScrim: false,
+					onOpenChange,
+					label: 'Filters',
+					children: html('<input aria-label="Search" />')
+				}
+			});
+
+			// Escape is this sheet's only keyboard route out — there is no native
+			// close request behind it — so the guard is all that stands between a
+			// composing CJK user and a dismissed sheet.
+			press(getDialog(), 'Escape', { isComposing: true });
+
+			expect(onOpenChange).not.toHaveBeenCalled();
 		});
 
 		it('still dismisses on a downward swipe past the threshold', async () => {
@@ -936,6 +1348,112 @@ describe('BottomSheet', () => {
 			// Transitions come back for the next gesture.
 			await runHeldFrames(frames);
 			expect(sheet.style.transition).toBe('');
+		});
+
+		it("rests at the detent's height when the finger lifts in the same task as the move that crossed it", async () => {
+			const observers = mockResizeObserverInstances();
+			mockVisualViewport(800);
+			mockWindowHeight(800);
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Release notes',
+					snapPoints: SNAP_POINTS,
+					height: 'tall',
+					children: text('Content')
+				}
+			});
+			const sheet = getSheet();
+			await measureSheet(observers, 784, 736);
+
+			// Rest on p50 (offset 336) with the 336px layout split.
+			fireTimedPointer(getHandle(), 'pointerdown', { time: 0, y: 0 });
+			fireTimedPointer(getHandle(), 'pointermove', { time: 1000, y: 336 });
+			fireTimedPointer(getHandle(), 'pointerup', { time: 2000, y: 336 });
+			await flush();
+			expect(sheet.style.height).toBe('448px');
+			fireTimedPointer(getHandle(), 'pointerdown', { time: 3000, y: 336 });
+
+			// A 3px nudge up crosses the detent, and the finger lifts before the
+			// render that move scheduled has committed. Both are dispatched in one
+			// task and the DOM is flushed once afterwards; a Svelte update is a
+			// microtask, so the React claim about a pending render has no
+			// counterpart, while the release's use of the crossing move does.
+			fireTimedPointer(getHandle(), 'pointermove', { time: 4000, y: 333 });
+			fireTimedPointer(getHandle(), 'pointerup', { time: 4500, y: 333 });
+			await flush();
+
+			// At rest it is drawn at p50 again: the split height, no offset, and no
+			// end inset left over from the drag.
+			expect(sheet.style.height).toBe('448px');
+			expect(sheet.style.transform).toBe('');
+			expect(getBody().style.paddingBlockEnd).toBe('');
+		});
+
+		describe('with a caller-set height', () => {
+			// Rests on p50 (offset 336), presses the handle again, and returns the
+			// sheet. Upstream delivers events outside `act()` so a React render is
+			// still pending when each input task ends; Svelte's update is a
+			// microtask, so each dispatch is followed by `flush()` before the
+			// height is read.
+			async function restOnHalfWithCallerHeight() {
+				const observers = mockResizeObserverInstances();
+				mockVisualViewport(800);
+				mockWindowHeight(800);
+				await render(BottomSheet, {
+					props: {
+						isOpen: true,
+						onOpenChange: () => {},
+						label: 'Release notes',
+						snapPoints: SNAP_POINTS,
+						height: 'tall',
+						style: 'height: 500px',
+						children: text('Content')
+					}
+				});
+				const sheet = getSheet();
+				await measureSheet(observers, 784, 736);
+				fireTimedPointer(getHandle(), 'pointerdown', { time: 0, y: 0 });
+				fireTimedPointer(getHandle(), 'pointermove', { time: 1000, y: 336 });
+				fireTimedPointer(getHandle(), 'pointerup', { time: 2000, y: 336 });
+				await flush();
+				fireTimedPointer(getHandle(), 'pointerdown', { time: 3000, y: 336 });
+				return { sheet };
+			}
+
+			it('keeps the caller height through a drag across the detent and back', async () => {
+				const { sheet } = await restOnHalfWithCallerHeight();
+				expect(sheet.style.height).toBe('500px');
+
+				const heights: string[] = [];
+				fireTimedPointer(getHandle(), 'pointermove', { time: 4000, y: 136 });
+				await flush();
+				heights.push(sheet.style.height);
+				fireTimedPointer(getHandle(), 'pointermove', { time: 5000, y: 436 });
+				await flush();
+				heights.push(sheet.style.height);
+				fireTimedPointer(getHandle(), 'pointerup', { time: 6000, y: 336 });
+				await flush();
+
+				// The caller's height owns the element: the crossing writes only the
+				// transform and the end inset, and nothing replaces the height after.
+				expect(heights).toEqual(['500px', '500px']);
+				expect(sheet.style.height).toBe('500px');
+			});
+
+			it('keeps the caller height when the finger lifts in the same task as the crossing move', async () => {
+				const { sheet } = await restOnHalfWithCallerHeight();
+
+				fireTimedPointer(getHandle(), 'pointermove', { time: 4000, y: 333 });
+				await flush();
+				const heightAboveDetent = sheet.style.height;
+				fireTimedPointer(getHandle(), 'pointerup', { time: 4500, y: 333 });
+				await flush();
+
+				expect(heightAboveDetent).toBe('500px');
+				expect(sheet.style.height).toBe('500px');
+			});
 		});
 
 		it('uses transforms while dragging and resizes to the visible snapped height', async () => {
@@ -1336,6 +1854,62 @@ describe('BottomSheet', () => {
 			expect(focus).not.toHaveBeenCalledWith({ preventScroll: true });
 			expect(onFocus).toHaveBeenCalledTimes(1);
 			expect(getBody().style.getPropertyValue('--_sheet-keyboard-inset')).toBe('0px');
+		});
+
+		it('lays out no keyboard room when the body overhangs the viewport by a fraction of a pixel', async () => {
+			// On Chrome for Android, the visual viewport can be 0.3 px taller than
+			// the layout viewport. A sheet sized to it ends that far below it.
+			mockIOSWebKit();
+			mockWindowHeight(800);
+			mockVisualViewport(800.3);
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Add a comment',
+					height: 'tall',
+					children: html('<input aria-label="Comment" />')
+				}
+			});
+			const body = getBody();
+			const input = field('Comment');
+			vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(rect({ top: 100, bottom: 800.3 }));
+			vi.spyOn(input, 'getBoundingClientRect').mockReturnValue(rect({ top: 700, bottom: 740 }));
+
+			input.focus();
+			await flush();
+
+			expect(body.style.getPropertyValue('--_sheet-keyboard-inset')).toBe('0px');
+		});
+
+		it('scrolls nothing for a field in the bottom clearance band when the body overhangs the viewport by a fraction of a pixel', async () => {
+			// Chrome on Android: the visual viewport can be 0.3 px taller than the
+			// layout viewport. With no keyboard up, a field in the sheet's bottom
+			// 48 px is already visible: the suggestion clearance is for a keyboard.
+			mockIOSWebKit();
+			mockWindowHeight(800);
+			mockVisualViewport(800.3);
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Add a comment',
+					height: 'tall',
+					children: html('<input aria-label="Comment" />')
+				}
+			});
+			const body = getBody();
+			const input = field('Comment');
+			vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(rect({ top: 100, bottom: 800.3 }));
+			vi.spyOn(input, 'getBoundingClientRect').mockReturnValue(rect({ top: 760, bottom: 790 }));
+			const scrollBy = vi.fn();
+			Object.defineProperty(body, 'scrollBy', { configurable: true, value: scrollBy });
+
+			input.focus();
+			await flush();
+
+			expect(scrollBy).not.toHaveBeenCalled();
+			expect(body.scrollTop).toBe(0);
 		});
 
 		it('keeps Tall geometry fixed while extending and cleaning up its internal scroll range', async () => {
@@ -1799,6 +2373,104 @@ describe('BottomSheet', () => {
 			Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
 		});
 
+		it('puts back only the page\u2019s own scroll, never an element\u2019s scroll that reaches the window', async () => {
+			mockVisualViewport(377);
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Add a comment',
+					height: 'tall',
+					children: html('<input aria-label="Comment" />')
+				}
+			});
+			const body = getBody();
+			const input = field('Comment');
+			trackBodyScroll(body);
+			vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(rect({ top: 57, bottom: 714 }));
+			vi.spyOn(input, 'getBoundingClientRect').mockImplementation(() =>
+				rect({ top: 600 - body.scrollTop, bottom: 640 - body.scrollTop })
+			);
+			input.focus();
+			await flush();
+			const scrollTo = vi.mocked(window.scrollTo);
+			scrollTo.mockClear();
+			Object.defineProperty(window, 'scrollY', { configurable: true, value: 337 });
+			try {
+				body.dispatchEvent(new Event('scroll'));
+				await flush();
+				expect(scrollTo).not.toHaveBeenCalled();
+				window.dispatchEvent(new Event('scroll'));
+				await flush();
+				expect(scrollTo).toHaveBeenCalledWith(0, 0);
+			} finally {
+				Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+			}
+		});
+
+		it('lays out the keyboard room in Chrome on Android, which has its own keyboard geometry API (spec:AST-099 DEC-4)', async () => {
+			// Gboard shrinks Chrome's visual viewport while the layout viewport
+			// keeps its height; the VirtualKeyboard API is not read.
+			mockKeyboardGeometryApi();
+			mockPrimaryPointer('coarse');
+			mockWindowHeight(800);
+			mockVisualViewport(500);
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Add a comment',
+					height: 'tall',
+					children: html('<input aria-label="Comment" />')
+				}
+			});
+			const body = getBody();
+			const input = field('Comment');
+			vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(rect({ top: 100, bottom: 800 }));
+			vi.spyOn(input, 'getBoundingClientRect').mockReturnValue(rect({ top: 300, bottom: 340 }));
+
+			input.focus();
+			await flush();
+
+			expect(body.style.getPropertyValue('--_sheet-keyboard-inset')).toBe('348px');
+		});
+
+		it('makes no keyboard room beside a classic scrollbar with no keyboard', async () => {
+			// A desktop page with a 17 px vertical scrollbar: innerWidth counts it,
+			// the document's client width and the visual viewport do not.
+			mockPrimaryPointer('fine');
+			mockWindowHeight(800);
+			vi.stubGlobal('innerWidth', 1280);
+			Object.assign(mockVisualViewport(800), { width: 1263, scale: 1 });
+			Object.defineProperty(document.documentElement, 'clientWidth', {
+				configurable: true,
+				value: 1263
+			});
+			try {
+				await render(BottomSheet, {
+					props: {
+						isOpen: true,
+						onOpenChange: () => {},
+						label: 'Add a comment',
+						height: 'tall',
+						children: html('<input aria-label="Comment" />')
+					}
+				});
+				const body = getBody();
+				const input = field('Comment');
+				vi.spyOn(body, 'getBoundingClientRect').mockReturnValue(rect({ top: 100, bottom: 800 }));
+				vi.spyOn(input, 'getBoundingClientRect').mockReturnValue(rect({ top: 700, bottom: 740 }));
+
+				input.focus();
+				await flush();
+
+				expect(body.style.getPropertyValue('--_sheet-keyboard-inset')).toBe('0px');
+			} finally {
+				Reflect.deleteProperty(document.documentElement, 'clientWidth');
+				vi.unstubAllGlobals();
+			}
+		});
+
 		it('leaves the document alone when no keyboard is measured', async () => {
 			mockVisualViewport(800);
 			await render(BottomSheet, {
@@ -2241,6 +2913,125 @@ describe('BottomSheet', () => {
 
 			expect(document.activeElement).toBe(target);
 		});
+
+		// The returned focus shows the focus-visible ring only after keyboard
+		// input (`architecture:interaction-modality` INV1). A plain focus() leaves
+		// that to the browser, which rings it after a pointer close: WebKit after
+		// a tap, and Chromium when the sheet was opened from the keyboard.
+		describe('ring on the returned focus', () => {
+			beforeEach(() => {
+				__resetInteractionModalityForTest();
+			});
+
+			afterEach(() => {
+				vi.restoreAllMocks();
+			});
+
+			async function openThenClose(closeWith: 'pointer' | 'keyboard') {
+				await render(FocusRestoreHarness, { props: {} });
+				const buttons = [...document.querySelectorAll('button')];
+				const opener = buttons.find((button) => button.textContent === 'Open sheet')!;
+				opener.focus();
+				click(opener);
+				await flush();
+				const done = buttons.find((button) => button.textContent === 'Done')!;
+				if (closeWith === 'pointer') {
+					done.dispatchEvent(
+						new PointerEvent('pointerdown', {
+							pointerId: 1,
+							button: 0,
+							isPrimary: true,
+							bubbles: true,
+							cancelable: true
+						})
+					);
+				} else {
+					press(done, 'Enter');
+				}
+				click(done);
+				await flush();
+				return opener;
+			}
+
+			it('asks the browser for no ring after a pointer close', async () => {
+				const opener = await openThenClose('pointer');
+				const focus = vi.spyOn(opener, 'focus');
+				await endTransform();
+
+				expect(opener).toHaveFocus();
+				// The return reveals nothing: the opener was on screen when the sheet
+				// opened and the page has not moved since.
+				expect(focus.mock.calls).toEqual([[{ preventScroll: true, focusVisible: false }]]);
+			});
+
+			it('leaves the ring to the browser after a keyboard close', async () => {
+				const opener = await openThenClose('keyboard');
+				const focus = vi.spyOn(opener, 'focus');
+				await endTransform();
+
+				expect(opener).toHaveFocus();
+				expect(focus.mock.calls).toEqual([[{ preventScroll: true }]]);
+			});
+
+			it('clears a ring the native close already drew before refocusing', async () => {
+				const opener = await openThenClose('pointer');
+				// The browser's own dialog close restores focus to the opener, with a
+				// ring, before the sheet moves focus, and focusing the focused element
+				// changes nothing.
+				const close = dialogPrototype.close;
+				dialogPrototype.close = vi.fn(function (this: HTMLDialogElement) {
+					this.removeAttribute('open');
+					opener.focus();
+				});
+				const matches = HTMLElement.prototype.matches;
+				vi.spyOn(HTMLElement.prototype, 'matches').mockImplementation(function (
+					this: HTMLElement,
+					selector: string
+				) {
+					return selector === ':focus-visible' ? this === opener : matches.call(this, selector);
+				});
+				const blur = vi.spyOn(opener, 'blur');
+				const focus = vi.spyOn(opener, 'focus');
+				try {
+					await endTransform();
+
+					expect(blur).toHaveBeenCalledTimes(1);
+					expect(focus.mock.calls.at(-1)).toEqual([{ preventScroll: true, focusVisible: false }]);
+					expect(blur.mock.invocationCallOrder[0]).toBeLessThan(
+						focus.mock.invocationCallOrder.at(-1) ?? 0
+					);
+					expect(opener).toHaveFocus();
+				} finally {
+					dialogPrototype.close = close;
+				}
+			});
+
+			it('asks for no ring on an explicit final focus target too', async () => {
+				await render(FinalFocusHarness, { props: {} });
+				const buttons = [...document.querySelectorAll('button')];
+				const opener = buttons.find((button) => button.textContent === 'Open sheet')!;
+				const target = buttons.find((button) => button.textContent === 'Adaptive trigger')!;
+				const done = buttons.find((button) => button.textContent === 'Done')!;
+				click(opener);
+				await flush();
+				done.dispatchEvent(
+					new PointerEvent('pointerdown', {
+						pointerId: 1,
+						button: 0,
+						isPrimary: true,
+						bubbles: true,
+						cancelable: true
+					})
+				);
+				click(done);
+				await flush();
+				const focus = vi.spyOn(target, 'focus');
+				await endTransform();
+
+				expect(target).toHaveFocus();
+				expect(focus.mock.calls).toEqual([[{ preventScroll: true, focusVisible: false }]]);
+			});
+		});
 	});
 
 	describe('initial focus', () => {
@@ -2268,6 +3059,101 @@ describe('BottomSheet', () => {
 				}
 			});
 			expect(document.activeElement).toBe(field('Search'));
+		});
+	});
+
+	describe('data-autofocus eligibility on open (AR4)', () => {
+		async function openWith(markup: string, hasScrim = true) {
+			// A raw snippet must resolve to a single root element; upstream's JSX
+			// fragments can hold siblings, so the arm is wrapped here.
+			return render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Filters',
+					hasScrim,
+					children: html(`<div>${markup}</div>`)
+				}
+			});
+		}
+		const own = () => field('Own');
+
+		it('focuses the field over a control placed before it, modal or not', async () => {
+			// Land on the first control, as Firefox's native focusing steps do, so
+			// the test shows that the native landing does not count as placed. The
+			// non-modal arm stubs `show()` where upstream stubs `showPopover()`:
+			// that is the presentation call this port makes.
+			const landOnFirstControl = function (this: HTMLDialogElement) {
+				this.setAttribute('open', '');
+				this.querySelector<HTMLElement>('button')?.focus();
+			};
+			const showModal = dialogPrototype.showModal;
+			const show = dialogPrototype.show;
+			dialogPrototype.showModal = vi.fn(landOnFirstControl);
+			dialogPrototype.show = vi.fn(landOnFirstControl);
+			try {
+				for (const hasScrim of [true, false]) {
+					const view = await openWith(
+						'<button type="button">First action</button>' +
+							'<input data-autofocus aria-label="Own" />',
+						hasScrim
+					);
+					expect(document.activeElement).toBe(own());
+					view.unmount();
+				}
+			} finally {
+				dialogPrototype.showModal = showModal;
+				dialogPrototype.show = show;
+			}
+		});
+
+		it('skips a field that belongs to a sheet nested in the content', async () => {
+			await openWith(
+				'<dialog><input data-autofocus aria-label="Nested" /></dialog>' +
+					'<input data-autofocus aria-label="Own" />'
+			);
+			expect(document.activeElement).toBe(own());
+		});
+
+		it('skips an inert field', async () => {
+			await openWith(
+				'<div inert><input data-autofocus aria-label="Inert" /></div>' +
+					'<input data-autofocus aria-label="Own" />'
+			);
+			expect(document.activeElement).toBe(own());
+		});
+
+		it('skips a field that is not rendered', async () => {
+			// jsdom has no layout, so upstream's stub reads `hidden`. Chromium's
+			// `hidden` also computes to `display:none`, but the same stub keeps the
+			// assertion about the eligibility check rather than the UA stylesheet.
+			const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'checkVisibility');
+			Object.defineProperty(HTMLElement.prototype, 'checkVisibility', {
+				configurable: true,
+				value(this: HTMLElement) {
+					return this.closest('[hidden]') == null;
+				}
+			});
+			try {
+				await openWith(
+					'<input data-autofocus aria-label="Hidden" hidden />' +
+						'<input data-autofocus aria-label="Own" />'
+				);
+				expect(document.activeElement).toBe(own());
+			} finally {
+				if (original) {
+					Object.defineProperty(HTMLElement.prototype, 'checkVisibility', original);
+				} else {
+					Reflect.deleteProperty(HTMLElement.prototype, 'checkVisibility');
+				}
+			}
+		});
+
+		it('moves on from a candidate that refuses focus', async () => {
+			await openWith(
+				'<div data-autofocus>Not focusable</div>' + '<input data-autofocus aria-label="Own" />'
+			);
+			expect(document.activeElement).toBe(own());
 		});
 	});
 
@@ -2301,9 +3187,167 @@ describe('BottomSheet', () => {
 			});
 			expect(getDialog()).toBeInTheDocument();
 		});
+
+		function control(name: string): HTMLButtonElement {
+			const button = [...document.querySelectorAll('button')].find(
+				(candidate) => candidate.textContent === name
+			);
+			if (!button) {
+				throw new Error(`${name} button not found`);
+			}
+			return button;
+		}
+
+		it('a refused touch swipe spends its request: a guarded onOpenChange keeps the sheet open, and the next close from a control leaves at once', async () => {
+			mockReducedMotion('fine');
+			await render(ControlledHarness, { props: { variant: 'guarded' } });
+			const dialog = getDialog();
+			drag(getHandle(), [{ y: 0 }, { y: 40 }, { y: 120 }], 'touch');
+			// Refused: the sheet stays open.
+			expect(dialog).toHaveAttribute('open');
+			click(control('Unlock'));
+			click(control('Close'));
+			// A control close: its collapsed transform end closes the dialog; the
+			// spent swipe request does not turn it into a cross-fade.
+			await endTransition('transform');
+			expect(dialog).not.toHaveAttribute('open');
+		});
+
+		it('a mouse drag dismissal under reduced motion on a fine pointer leaves at once (DR3): a mouse or pen drag is not a touch drag', async () => {
+			mockReducedMotion('fine');
+			await render(ControlledHarness, { props: {} });
+			const dialog = getDialog();
+			drag(getHandle(), [{ y: 0 }, { y: 40 }, { y: 120 }], 'mouse');
+			await endTransition('transform');
+			expect(dialog).not.toHaveAttribute('open');
+		});
+
+		it('a dismissal from a control under reduced motion on a fine pointer leaves at once (DR3): its (collapsed) transform end closes the dialog', async () => {
+			mockReducedMotion('fine');
+			await render(ControlledHarness, { props: {} });
+			const dialog = getDialog();
+			click(control('Close'));
+			await endTransition('transform');
+			expect(dialog).not.toHaveAttribute('open');
+		});
+
+		it('a dismissal from a control under reduced motion on a coarse pointer fades out (DR2)', async () => {
+			mockReducedMotion('coarse');
+			await render(ControlledHarness, { props: {} });
+			const dialog = getDialog();
+			click(control('Close'));
+			await flush();
+			getSheet().dispatchEvent(
+				new TransitionEvent('transitionend', { propertyName: 'transform', bubbles: true })
+			);
+			await flush();
+			expect(dialog).toHaveAttribute('open');
+			getSheet().dispatchEvent(
+				new TransitionEvent('transitionend', { propertyName: 'opacity', bubbles: true })
+			);
+			await flush();
+			expect(dialog).not.toHaveAttribute('open');
+		});
+	});
+
+	describe('container padding isolation', () => {
+		it('resets container padding custom properties to 0px on the sheet panel element', async () => {
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Filters',
+					children: text('Content')
+				}
+			});
+			const sheet = getSheet();
+			const computed = window.getComputedStyle(sheet);
+			expect(computed.getPropertyValue('--container-padding-inline-start')).toBe('0px');
+			expect(computed.getPropertyValue('--container-padding-inline-end')).toBe('0px');
+			expect(computed.getPropertyValue('--container-padding-block-start')).toBe('0px');
+			expect(computed.getPropertyValue('--container-padding-block-end')).toBe('0px');
+		});
+	});
+
+	describe('container padding', () => {
+		it('passes padding to the content box of a standalone sheet', async () => {
+			await render(BottomSheet, {
+				props: {
+					isOpen: true,
+					onOpenChange: () => {},
+					label: 'Filters',
+					padding: 0,
+					children: html('<span data-testid="sheet-child">Content</span>')
+				}
+			});
+			const box = document.querySelector<HTMLElement>(
+				'[data-testid="sheet-child"]'
+			)!.parentElement!;
+			const computed = getComputedStyle(box);
+			// Chromium resolves the token through a custom property; jsdom reports
+			// the specified `var(--spacing-0)` upstream asserts. Comparing against
+			// the token's own computed value keeps the claim about the same token.
+			expect(computed.getPropertyValue('--container-padding-inline-start')).toBe(
+				computed.getPropertyValue('--spacing-0')
+			);
+			expect(getSheet().hasAttribute('padding')).toBe(false);
+		});
+
+		it('passes padding to the content box of a switcher sheet', async () => {
+			await render(SwitcherHarness, {
+				props: {
+					activeSheet: 'comment',
+					padding: 2,
+					first: html('<span data-testid="switcher-child">Content</span>')
+				}
+			});
+			const box = document.querySelector<HTMLElement>(
+				'[data-testid="switcher-child"]'
+			)!.parentElement!;
+			const computed = getComputedStyle(box);
+			expect(computed.getPropertyValue('--container-padding-inline-start')).toBe(
+				computed.getPropertyValue('--spacing-2')
+			);
+		});
 	});
 
 	describe('swipe to dismiss', () => {
+		it("a sheet opened from inside another sheet's content drags to dismiss by its own handle, and the covered host neither drags nor takes the pointer (FR6, FR7)", async () => {
+			const onInnerOpenChange = vi.fn();
+			const onOuterOpenChange = vi.fn();
+			const observers = mockResizeObserverInstances();
+			await render(NestedHarness, { props: { onInnerOpenChange, onOuterOpenChange } });
+			const dialogs = document.querySelectorAll('dialog');
+			expect(dialogs).toHaveLength(2);
+			const [outerDialog, innerDialog] = dialogs;
+			// The inner sheet's dialog is rendered inside the outer sheet's body,
+			// so its events bubble through the outer body's gesture listeners.
+			expect(outerDialog.contains(innerDialog)).toBe(true);
+			const outerPanel = outerDialog.querySelector<HTMLElement>('.astryx-bottom-sheet')!;
+			const outerBody = outerPanel.querySelector<HTMLElement>(':scope > :not([aria-hidden])')!;
+			const innerPanel = innerDialog.querySelector<HTMLElement>('.astryx-bottom-sheet')!;
+			const innerHandle = innerPanel.querySelector<HTMLElement>(':scope > [aria-hidden="true"]')!;
+			await layOutSheet(observers, innerPanel);
+			// `setPointerCapture` is a prototype stub here, so record who captures.
+			const captured: Element[] = [];
+			const capture = vi.spyOn(Element.prototype, 'setPointerCapture').mockImplementation(function (
+				this: Element
+			) {
+				captured.push(this);
+			});
+			drag(innerHandle, [{ y: 0 }, { y: 40 }, { y: 120 }], 'touch');
+			capture.mockRestore();
+			// The inner sheet's own drag ran to its dismissal.
+			expect(onInnerOpenChange).toHaveBeenCalledWith(false);
+			// The covered host saw the same pointer bubble up and did nothing with
+			// it: no drag of its own (its panel keeps its resting transform) and no
+			// pointer capture, which would have cancelled the inner handle's drag.
+			expect(onOuterOpenChange).not.toHaveBeenCalled();
+			expect(captured).toContain(innerHandle);
+			expect(captured).not.toContain(outerBody);
+			expect(outerPanel.style.transform).toBe('');
+		});
+
 		it('requests close when dragged past the dismiss threshold', async () => {
 			const onOpenChange = vi.fn();
 			await render(BottomSheet, {

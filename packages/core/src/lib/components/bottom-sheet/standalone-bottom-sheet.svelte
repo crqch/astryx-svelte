@@ -9,7 +9,9 @@
 	import { setBottomSheetEscape, useBottomSheetEscape } from './bottom-sheet-escape.js';
 	import { useDevWarning } from '../../hooks/use-dev-warning.svelte.js';
 	import { useScrollLock } from '../../hooks/use-scroll-lock.svelte.js';
+	import { focusForLastInput } from '../../utils/focus-return.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
+	import { trackInteractionModality } from '../../utils/interaction-modality.js';
 
 	/**
 	 * Ported from the private `StandaloneBottomSheet` in Astryx's
@@ -52,6 +54,26 @@
 	// close. Nothing renders from either.
 	let panelEl: HTMLDivElement | null = null;
 	let triggerEl: HTMLElement | null = null;
+	// Whether focus was inside the sheet when its close began. A non-modal sheet
+	// leaves the page interactive, so it returns focus to its opener only if the
+	// person was still in the sheet; a modal sheet always does.
+	let hadFocusAtClose = false;
+
+	// The returned focus shows its ring only after keyboard input. Tracking is
+	// global and once-per-document; this effect exists so a sheet in the page
+	// starts it, exactly as the other overlay components do.
+	$effect(() => {
+		trackInteractionModality();
+	});
+
+	// Read with the close, before the exiting dialog goes inert and blurs what
+	// the person had focused. `$effect.pre` runs before Svelte applies the
+	// attribute that would move focus.
+	$effect.pre(() => {
+		if (!isOpen && dialogEl != null) {
+			hadFocusAtClose = dialogEl.contains(document.activeElement);
+		}
+	});
 
 	// Seeded from the initial prop, as upstream's `useState(isOpen)` is: a sheet
 	// mounted already-open is presented from the first frame.
@@ -124,8 +146,11 @@
 		isPresented = true;
 		dialog.style.setProperty('--_sheet-scrim-opacity', '1');
 		if (!dialog.open) {
+			// Captured before either presentation call: `show()` can move focus to
+			// the first control, and a non-modal sheet still returns focus to
+			// whatever opened it when the person is still inside at close.
+			triggerEl ??= document.activeElement as HTMLElement | null;
 			if (hasScrim) {
-				triggerEl = document.activeElement as HTMLElement | null;
 				dialog.showModal();
 			} else {
 				dialog.show();
@@ -154,9 +179,13 @@
 			// The sheet's exit has settled, so the element it held can take focus
 			// back. An explicit target wins over the opener — an adaptive
 			// presentation's trigger may not be the focused element that opened
-			// the sheet.
-			const focusTarget = finalFocusRef?.() ?? triggerEl;
-			focusTarget?.focus();
+			// the sheet. A non-modal sheet returns focus only when the person was
+			// still in it: the page behind stayed live, so focus taken elsewhere
+			// stays there.
+			const focusTarget = finalFocusRef?.() ?? (hasScrim || hadFocusAtClose ? triggerEl : null);
+			if (focusTarget != null) {
+				focusForLastInput(focusTarget, { preventScroll: true });
+			}
 			triggerEl = null;
 		});
 	}
@@ -170,6 +199,11 @@
 	);
 
 	function handleCancel(event: Event): void {
+		// A `cancel` that bubbles up from inside is not a close request: a file
+		// input fires it when its picker is dismissed, so it is left alone.
+		if (event.target !== event.currentTarget) {
+			return;
+		}
 		// No IME guard here: `cancel` is a plain Event carrying no composition
 		// state, and `handleKeyDown` claims a composing Escape before the browser
 		// can raise the close request that would arrive here.

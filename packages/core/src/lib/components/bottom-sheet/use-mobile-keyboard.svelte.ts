@@ -40,6 +40,10 @@ import { untrack } from 'svelte';
  */
 
 const MOBILE_KEYBOARD_INSET_VAR = '--_sheet-keyboard-inset';
+// A shortfall smaller than this is rounding, not a keyboard: Chrome on Android
+// can report a visual viewport a fraction of a pixel taller than the layout
+// viewport, and the sheet ends that far below it.
+const KEYBOARD_EPSILON = 1;
 const NON_TEXT_INPUT_TYPES = new Set([
 	'button',
 	'checkbox',
@@ -89,6 +93,12 @@ function getObstructionTop(): number {
 /** The keyboard is gone once the visible band reaches the layout viewport bottom. */
 function isVisualViewportRecovered(): boolean {
 	return getObstructionTop() >= window.innerHeight - 0.5;
+}
+
+/** How far the sheet's body extends under the keyboard, or 0 for rounding. */
+function overlapOf(bodyBottom: number, obstructionTop: number): number {
+	const overlap = bodyBottom - obstructionTop;
+	return overlap > KEYBOARD_EPSILON ? overlap : 0;
 }
 
 function isIOSWebKit(): boolean {
@@ -265,7 +275,7 @@ export function useMobileKeyboard(options: UseMobileKeyboardOptions): void {
 			const measuredBodyRect = body.getBoundingClientRect();
 			const measuredControlRect = control.getBoundingClientRect();
 			const obstructionTop = getObstructionTop();
-			const overlap = Math.max(0, measuredBodyRect.bottom - obstructionTop);
+			const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
 			const clearance = overlap > 0 ? bottomClearance : 0;
 			const safeTop = measuredBodyRect.top;
 			const safeBottom = Math.min(measuredBodyRect.bottom, obstructionTop - clearance);
@@ -290,7 +300,7 @@ export function useMobileKeyboard(options: UseMobileKeyboardOptions): void {
 				clearKeyboardLayout();
 				return;
 			}
-			const overlap = Math.max(0, geometry.bodyBottom - obstructionTop);
+			const overlap = overlapOf(geometry.bodyBottom, obstructionTop);
 			if (overlap === 0) {
 				clearKeyboardLayout();
 				return;
@@ -358,7 +368,7 @@ export function useMobileKeyboard(options: UseMobileKeyboardOptions): void {
 
 			const measuredBodyRect = body.getBoundingClientRect();
 			const obstructionTop = getObstructionTop();
-			const overlap = Math.max(0, measuredBodyRect.bottom - obstructionTop);
+			const overlap = overlapOf(measuredBodyRect.bottom, obstructionTop);
 			// The extra clearance leaves room for mobile suggestion UI, but only while
 			// the visual viewport actually overlaps the sheet. With no obstruction,
 			// ordinary desktop and hardware-keyboard focus must not shift an already
