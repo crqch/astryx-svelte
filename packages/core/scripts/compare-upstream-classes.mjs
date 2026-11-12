@@ -2822,6 +2822,24 @@ const CASES = [
 		]
 	},
 	{
+		// Object mode. The presentation controller's only style is the
+		// pointer-restored focus pair; upstream keeps the group name `styles`, so
+		// ours needs a rename.
+		file: 'src/lib/components/selector/selector-presentation.stylex.js',
+		upstreamFile: 'Selector/selectorPresentation.stylex.js',
+		rename: { styles: 'selectorPresentationStyles' }
+	},
+	{
+		// Both modes. The sheet's `content` key folds to an inline string at its
+		// one call site; `heading` survives as an object because `Heading` takes it
+		// as an `xstyle`. Upstream's group is `styles`, ours
+		// `selectorBottomSheetStyles`.
+		file: 'src/lib/components/selector/selector-bottom-sheet.stylex.js',
+		upstreamFile: 'Selector/SelectorBottomSheet.js',
+		rename: { styles: 'selectorBottomSheetStyles' },
+		inline: [['selectorBottomSheetStyles.content']]
+	},
+	{
 		// Both modes at once. Upstream declares Selector's styles inline in the
 		// component file rather than a style module, and keeps the group names
 		// `styles`/`sizeStyles`/`itemSizeStyles`, so ours need no rename.
