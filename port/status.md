@@ -21,9 +21,9 @@
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
 | Upstream                 | 806     | 17025          |
-| Ported here              | 387     | 13002          |
+| Ported here              | 388     | 13010          |
 | No counterpart by design | 9       | 100            |
-| **Unported**             | **410** | **3923**       |
+| **Unported**             | **409** | **3915**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -164,7 +164,6 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | `BottomSheet/BottomSheetKeyboard.test.tsx`                         | 8     |
 | `Button/__tests__/Button.a11y.test.tsx`                            | 8     |
 | `CommandPalette/CommandPaletteEmpty.test.tsx`                      | 8     |
-| `DateInput/DateInput.calendarPresentation.test.tsx`                | 8     |
 | `DateInput/MonthScrollerSettle.test.tsx`                           | 8     |
 | `EmptyState/EmptyState.announce.test.tsx`                          | 8     |
 | `Layer/LayerProvider.test.tsx`                                     | 8     |
@@ -451,9 +450,9 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases          |
 | -------------------------- | -------------- |
-| Upstream, in ported suites | 13002          |
-| Declared here              | 9087           |
-| **Short**                  | **3947**       |
+| Upstream, in ported suites | 13010          |
+| Declared here              | 9134           |
+| **Short**                  | **3908**       |
 | Over, across 8 groups      | +32            |
 | Beyond upstream            | 96 in 20 files |
 
@@ -464,7 +463,7 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (211)</summary>
+<details><summary>Suites short of upstream (212)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
@@ -493,7 +492,6 @@ per connected group.
 | `Resizable/ResizeHandle.test.tsx`                                                                                                                                                        | 58       | 14   | 44    |
 | `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
 | `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 20   | 42    |
-| `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 47   | 42    |
 | `Calendar/Calendar.test.tsx`                                                                                                                                                             | 126      | 86   | 40    |
 | `Timestamp/Timestamp.test.tsx`                                                                                                                                                           | 118      | 78   | 40    |
 | `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 37   | 39    |
@@ -640,6 +638,7 @@ per connected group.
 | `AspectRatio/AspectRatio.test.tsx`                                                                                                                                                       | 28       | 26   | 2     |
 | `Calendar/getInitialFocusDate.test.ts`                                                                                                                                                   | 15       | 13   | 2     |
 | `Code/Code.test.tsx`                                                                                                                                                                     | 8        | 6    | 2     |
+| `DateInput/DateInput.calendarPresentation.test.tsx`                                                                                                                                      | 8        | 6    | 2     |
 | `Divider/Divider.test.tsx`                                                                                                                                                               | 18       | 16   | 2     |
 | `hooks/scrollbarGutter.test.ts`                                                                                                                                                          | 10       | 8    | 2     |
 | `i18n/__tests__/resolve.test.ts`                                                                                                                                                         | 22       | 20   | 2     |
@@ -672,6 +671,7 @@ per connected group.
 | `Table/plugins/selection/useTableSelectionState.test.tsx`                                                                                                                                | 15       | 14   | 1     |
 | `Table/plugins/sortable/useTableSortableState.test.tsx`                                                                                                                                  | 20       | 19   | 1     |
 | `Table/plugins/tree/useTableTreeState.test.tsx`                                                                                                                                          | 37       | 36   | 1     |
+| `TabList/TabList.test.tsx`                                                                                                                                                               | 89       | 88   | 1     |
 | `theme/contrast.test.ts`                                                                                                                                                                 | 11       | 10   | 1     |
 | `theme/expandMotionScale.test.ts`                                                                                                                                                        | 11       | 10   | 1     |
 | `Timer/Timer.test.tsx`                                                                                                                                                                   | 19       | 18   | 1     |

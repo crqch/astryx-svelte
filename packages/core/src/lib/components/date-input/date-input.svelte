@@ -5,6 +5,7 @@
 	import type { FieldStatusVariant } from '../field-status/field-status.stylex.js';
 	import type { DayOfWeek, DayOfWeekName, ISODateString } from '../../utils/date-types.js';
 	import type { CalendarSystem } from '../../utils/calendar-system.js';
+	import type { PickerPresentation } from '../../utils/input-presentation.js';
 	import type { TimestampFormat } from '../timestamp/timestamp-format.js';
 	// `DateInputSize` is published from `date-input.stylex.ts`, derived from the
 	// size style keys — the arrangement `TextInput`/`NumberInput`/`TimeInput` use.
@@ -44,6 +45,9 @@
 	 * - `'never'`: Astryx's own pickers everywhere
 	 */
 	export type DateInputNativePicker = 'touch' | 'always' | 'never';
+
+	/** Which surface draws the date picker (`presentation`). */
+	export type DateInputPresentation = PickerPresentation;
 
 	/**
 	 * `onchange` and `defaultValue` are the only omissions, matching upstream.
@@ -212,6 +216,23 @@
 		calendar?: CalendarSystem;
 
 		/**
+		 * Which surface draws the date picker:
+		 * - `'adaptive-native'` (default): Astryx's calendar popover on a fine
+		 *   pointer and the browser/OS picker on a coarse pointer
+		 * - `'native'`: the browser/OS picker on every pointer, with no fallback
+		 * - `'adaptive-bottom-sheet'`: the popover on a fine pointer and Astryx's
+		 *   bottom sheet on a coarse pointer
+		 * - `'popover'` / `'bottom-sheet'`: that Astryx surface on every pointer
+		 *
+		 * With a calendar other than `gregory` or `iso8601`, the native policies
+		 * use the popover on a fine pointer and the bottom sheet on a coarse
+		 * pointer, because the native date control is Gregorian. An explicit
+		 * `'native'` then warns in development.
+		 * @default 'adaptive-native'
+		 */
+		presentation?: DateInputPresentation;
+
+		/**
 		 * When date picking is handed to the browser/OS instead of Astryx's own
 		 * surfaces: the field becomes an `<input type="date">` and the platform
 		 * draws the picker — the iOS wheel, the Android calendar dialog — with the
@@ -237,6 +258,9 @@
 		 * reason enough to prefer `'never'` on a field that uses it.
 		 *
 		 * @default 'touch'
+		 * @deprecated Use `presentation` (`'touch'` → `'adaptive-native'`,
+		 * `'always'` → `'native'`, `'never'` → `'adaptive-bottom-sheet'`).
+		 * `presentation` wins when both are set.
 		 * @example
 		 * ```svelte
 		 * <!-- Astryx's own touch picker instead of the platform's -->
@@ -252,6 +276,11 @@
 	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import { isGregorianCalendar } from '../../utils/calendar-system.js';
 	import { warnOnce } from '../../utils/dev-warning.js';
+	import {
+		calendarPickerPresentation,
+		effectivePickerPresentation,
+		resolvePickerPresentation
+	} from '../../utils/input-presentation.js';
 	import NativeDateField from './native-date-field.svelte';
 	import PointerDateField from './pointer-date-field.svelte';
 	import TouchDateField from './touch-date-field.svelte';
@@ -322,31 +351,36 @@
 	const props: DateInputProps = $props();
 
 	const isTouch = useMediaQuery(() => TOUCH_POINTER_QUERY);
-	const nativePicker = $derived(props.nativePicker ?? 'touch');
 	const calendar = useCalendarSystem(() => props.calendar, 'DateInput');
 	const isNativeCalendar = $derived(isGregorianCalendar(calendar()));
-	// The platform's picker, where the consumer asked for it — see the
-	// `nativePicker` prop for what that trades away. The native control is
-	// Gregorian by specification, so a non-Gregorian field falls back to the
-	// Astryx surface on both pointers.
-	const usesNativePicker = $derived(
-		isNativeCalendar && (nativePicker === 'always' || (nativePicker === 'touch' && isTouch.matches))
+	// The policy is the explicit `presentation`, else the released
+	// `nativePicker`, else adaptive-native. In a calendar the native control
+	// cannot show, both native policies become adaptive-bottom-sheet.
+	const presentation = $derived(
+		calendarPickerPresentation(
+			effectivePickerPresentation(props.presentation, props.nativePicker),
+			isNativeCalendar
+		)
 	);
+	const surface = $derived(resolvePickerPresentation(presentation, isTouch.matches));
 	$effect(() => {
-		if (nativePicker === 'always' && !isNativeCalendar) {
+		const calendarShown = calendar();
+		if (props.presentation === 'native' && !isGregorianCalendar(calendarShown)) {
 			warnOnce(
-				`presentation-native-calendar:DateInput:${calendar()}`,
+				`presentation-native-calendar:DateInput:${calendarShown}`,
 				'DateInput',
-				`nativePicker="always" shows the Astryx picker in the "${calendar()}" ` +
-					'calendar, because the native date control shows only Gregorian dates.'
+				`presentation="native" shows the Astryx picker in the "${calendarShown}" ` +
+					'calendar, because the native date control shows only Gregorian ' +
+					'dates: the popover on a fine pointer and the bottom sheet on a ' +
+					'coarse pointer.'
 			);
 		}
 	});
 </script>
 
-{#if usesNativePicker}
+{#if surface === 'native'}
 	<NativeDateField {...props} />
-{:else if isTouch.matches}
+{:else if surface === 'sheet'}
 	{#key calendar()}
 		<TouchDateField {...props} />
 	{/key}

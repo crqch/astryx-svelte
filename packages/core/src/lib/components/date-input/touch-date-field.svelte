@@ -126,6 +126,10 @@
 		weekStartsOn: weekStartsOnProp = 0,
 		format = 'date_long',
 		calendar: calendarProp,
+		// Surface policy belongs to `DateInput`; destructured only to keep it out
+		// of `...rest`, which reaches the wrapper `<div>`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		width,
 		xstyle,
 		class: className,

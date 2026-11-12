@@ -1,10 +1,9 @@
 /** PORTS: DateInput/DateInputTouch.calendar.test.tsx */
 //
-// Upstream forces the sheet with `presentation="bottom-sheet"`. This port's
-// date surfaces are chosen by pointer until `presentation` lands, so the
-// equivalent harness is a coarse primary pointer plus
-// `nativePicker="never"`: the same TouchDateField, opened the same way. The
-// month-model cases are pure and run here unchanged.
+// Upstream forces the sheet with `presentation="bottom-sheet"`, which this port
+// now supports, so `openSheet` passes the same policy. The coarse pointer is
+// still stubbed because the suite is about the touch surface and the harness
+// must not depend on the runner's pointer.
 //
 // Upstream's jsdom shims (`MockResizeObserver`, `withLayout`, scroll/dialog
 // stubs) are dropped for the reasons `date-input-touch.svelte.test.ts` gives:
@@ -17,13 +16,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { page } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 import { tick } from 'svelte';
-import DateInput from '$lib/components/date-input/date-input.svelte';
 import type { DateInputProps } from '$lib/components/date-input/date-input.svelte';
-import DateTimeInput from '$lib/components/date-time-input/date-time-input.svelte';
-import {
-	createMonthModel,
-	dateInMonth
-} from '$lib/components/date-input/month-geometry.js';
+import DateInputCalendarProbe from './fixtures/date-input-calendar-probe.svelte';
+import { createMonthModel, dateInMonth } from '$lib/components/date-input/month-geometry.js';
 import {
 	type CalendarSystem,
 	calendarDateFromFields,
@@ -32,6 +27,7 @@ import {
 import type { ISODateString } from '$lib/utils/date-types.js';
 import { plainDateAddDays, plainDateFromISO } from '$lib/utils/plain-date.js';
 import type { ISODateTimeString } from '$lib/components/date-time-input/date-time-input.svelte';
+import DateTimeInputCalendarProbe from './fixtures/date-time-input-calendar-probe.svelte';
 
 const HOVER_CAPABLE = /\(\s*hover\s*:\s*hover\s*\)/;
 
@@ -89,8 +85,7 @@ async function click(element: Element): Promise<void> {
 	await tick();
 }
 
-const field = (): HTMLInputElement =>
-	page.getByRole('combobox').element() as HTMLInputElement;
+const field = (): HTMLInputElement => page.getByRole('combobox').element() as HTMLInputElement;
 
 function title(): HTMLElement {
 	const element = document.querySelector<HTMLElement>('[data-title="month-year"]');
@@ -127,16 +122,34 @@ function frame(): Promise<void> {
 	return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+/** Waits until a pane with this month label is mounted. */
+async function waitForPane(label: string): Promise<void> {
+	await vi.waitFor(() => {
+		const found = [...document.querySelectorAll('[role="grid"]')].some(
+			(element) => element.getAttribute('aria-label') === label
+		);
+		if (!found) {
+			throw new Error(
+				`pane ${label} not mounted among ${[...document.querySelectorAll('[role="grid"]')]
+					.map((element) => element.getAttribute('aria-label'))
+					.join(' | ')}`
+			);
+		}
+	});
+}
+
 async function openSheet(
 	locale: string,
 	props: Partial<DateInputProps> & { calendar: CalendarSystem }
 ): Promise<void> {
-	await render(DateInput, {
+	await render(DateInputCalendarProbe, {
 		props: {
-			label: 'Date',
-			nativePicker: 'never',
-			onChange: () => {},
-			...props
+			locale,
+			props: {
+				presentation: 'bottom-sheet',
+				onChange: () => {},
+				...props
+			}
 		}
 	});
 	await click(field());
@@ -160,9 +173,7 @@ function pane(label: string): HTMLElement {
 
 /** The in-month day buttons of a pane, in order. */
 function monthDays(grid: HTMLElement): HTMLButtonElement[] {
-	return [
-		...grid.querySelectorAll<HTMLButtonElement>('button[data-date]:not([aria-disabled])')
-	];
+	return [...grid.querySelectorAll<HTMLButtonElement>('button[data-date]:not([aria-disabled])')];
 }
 
 /** The two wheel listboxes, month first. The labels are localized. */
@@ -278,15 +289,14 @@ describe('the bottom sheet in a calendar', () => {
 		expect(monthDays(adar)).toHaveLength(29);
 		expect(monthDays(adar)[0]).toHaveAttribute('data-date', '2025-03-01');
 		expect(
-			[...document.querySelectorAll('[role="grid"]')].map((grid) =>
-				grid.getAttribute('aria-label')
-			)
+			[...document.querySelectorAll('[role="grid"]')].map((grid) => grid.getAttribute('aria-label'))
 		).not.toContain('Adar I 5785');
 	});
 
 	// English names the Ethiopic era "ERA1" in CLDR 47, which has no name for
-	// it, and "AM" in CLDR 48. Any other version expects "AM".
-	const era = process.versions.cldr?.startsWith('47.') ? 'ERA1' : 'AM';
+	// it, and "AM" in CLDR 48. Chromium here ships CLDR 48; a CLDR 47 runner
+	// fails here first.
+	const era = 'AM';
 	it.each([
 		['a common year', '2026-09-08', `Pagumen 2018 ${era}`, 5, '2026-09-06'],
 		['a leap year', '2027-09-08', `Pagumen 2019 ${era}`, 6, '2027-09-06']
@@ -435,43 +445,61 @@ describe('the bottom sheet in a calendar', () => {
 
 describe('the DateTimeInput bottom sheet in a calendar', () => {
 	it('shows Persian months and the date in the calendar', async () => {
-		await render(DateTimeInput, {
+		await render(DateTimeInputCalendarProbe, {
 			props: {
-				label: 'When',
-				calendar: 'persian',
-				value: '2026-11-02T09:00' as ISODateTimeString,
-				min: '2026-09-01T00:00' as ISODateTimeString,
-				max: '2026-12-31T23:59' as ISODateTimeString,
+				locale: 'en',
+				props: {
+					calendar: 'persian',
+					value: '2026-11-02T09:00' as ISODateTimeString,
+					min: '2026-09-01T00:00' as ISODateTimeString,
+					max: '2026-12-31T23:59' as ISODateTimeString
+				},
 				onChange: () => {}
 			}
 		});
 		await click(document.querySelector('input[inputmode="none"]')!);
 		await settleMonthPanes();
-		await waitTitleStable();
+		await waitForPane('Aban 1405 AP');
 		expect(monthDays(pane('Aban 1405 AP'))[0]).toHaveAttribute('data-date', '2026-10-23');
 	});
 });
 
 describe('the DateTimeInput bottom sheet heading in a split month', () => {
 	it('names the era of the kept day', async () => {
-		await render(DateTimeInput, {
+		await render(DateTimeInputCalendarProbe, {
 			props: {
-				label: '日時',
-				calendar: 'japanese',
-				value: '1989-01-03T09:00' as ISODateTimeString,
-				min: '1988-12-01T00:00' as ISODateTimeString,
-				max: '1989-02-28T23:59' as ISODateTimeString,
+				locale: 'ja-JP',
+				props: {
+					calendar: 'japanese',
+					value: '1989-01-03T09:00' as ISODateTimeString,
+					min: '1988-12-01T00:00' as ISODateTimeString,
+					max: '1989-02-28T23:59' as ISODateTimeString
+				},
 				onChange: () => {}
 			}
 		});
 		await click(document.querySelector('input[inputmode="none"]')!);
 		await settleMonthPanes();
-		await waitTitleStable();
+		// The pane label is the month's own era; the header names the era of the
+		// kept day inside the split month.
+		await waitForPane('平成元年1月');
 		// The heading button names the shown month; the date segment also holds
 		// 昭和64年1月 as part of its full date, so read the button's text.
-		const heading = [...document.querySelectorAll<HTMLButtonElement>('dialog[open] button[aria-expanded]')].find(
-			(button) => button.textContent === '昭和64年1月'
-		);
+		const heading = await vi.waitFor(() => {
+			const found = [
+				...document.querySelectorAll<HTMLButtonElement>('dialog[open] button[aria-expanded]')
+			].find((button) => button.textContent?.trim() === '昭和64年1月');
+			if (found == null) {
+				throw new Error(
+					`no split-month heading among ${[
+						...document.querySelectorAll<HTMLButtonElement>('dialog[open] button[aria-expanded]')
+					]
+						.map((button) => JSON.stringify(button.textContent))
+						.join(' | ')}`
+				);
+			}
+			return found;
+		});
 		expect(heading).toBeDefined();
 	});
 });

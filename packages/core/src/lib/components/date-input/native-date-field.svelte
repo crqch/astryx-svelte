@@ -86,6 +86,10 @@
 		// The native control is Gregorian; DateInput only reaches this surface
 		// for a Gregorian-aligned calendar. Destructured to keep it out of rest.
 		calendar: _calendar,
+		// Surface policy belongs to `DateInput`; destructured only to keep it out
+		// of `...rest`.
+		presentation: _presentation,
+		nativePicker: _nativePicker,
 		format = 'date_long',
 		width,
 		xstyle,

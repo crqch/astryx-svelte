@@ -196,6 +196,11 @@
 	// stop when none is tabbable.
 	const list = useListFocus(() => ({
 		itemSelector: TAB_STOP_SELECTOR,
+		// The strip is the boundary: a TabMenu's dropdown renders inline in the
+		// same DOM subtree (native popover, not a portal), so without this its
+		// key events would bubble into the strip's own navigation and its items
+		// would be swept into the roving order.
+		boundarySelector: '.astryx-tab-list, [popover]',
 		orientation: isTabList ? 'horizontal' : 'both',
 		hasRovingTabIndex: true
 	}));
@@ -279,6 +284,9 @@
 	// A plain `let`, not `$state`: upstream's `useRef` exists to hold a value
 	// across renders without causing one, which a closure variable already is.
 	let revealedValue: string | null = null;
+	// The tab whose focus revealed it (see `handleRootFocus`), while it keeps
+	// focus.
+	let focusRevealedValue: string | null = null;
 	$effect(() => {
 		const strip = stripEl;
 		const next = value;
@@ -291,6 +299,14 @@
 			return;
 		}
 		revealedValue = next;
+		if (next != null && focusRevealedValue === next) {
+			// A press or an arrow focused this tab first, and focusing it revealed
+			// it. Measuring now would force the new selection's style and layout
+			// inside the press, before it can paint. The next frame lays them out
+			// anyway, so finish there: the selected weight can still widen the tab.
+			const frame = requestAnimationFrame(() => untrack(revealSelectedTab));
+			return () => cancelAnimationFrame(frame);
+		}
 		// `untrack` so a selection change is what re-runs this, as upstream's
 		// dependency list says — not the reveal's own reads of `hasScroll` or of
 		// the scroll state its `scrollBy` then changes.
@@ -347,11 +363,14 @@
 		// The browser scrolls a focused element into view only when it is entirely
 		// outside the scrollport, so arrowing onto a half-visible stop leaves it cut
 		// off under the fade. Finish the job it started.
-		revealStop((e.target as HTMLElement | null)?.closest(TAB_STOP_SELECTOR) ?? null);
+		const stop = (e.target as HTMLElement | null)?.closest<HTMLElement>(TAB_STOP_SELECTOR) ?? null;
+		revealStop(stop);
+		focusRevealedValue = stop?.dataset.tabValue ?? null;
 	}
 
 	function handleRootBlur(e: FocusEvent): void {
 		onBlurProp?.(e as FocusEvent & { currentTarget: EventTarget & HTMLElement });
+		focusRevealedValue = null;
 		if (e.defaultPrevented) {
 			return;
 		}

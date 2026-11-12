@@ -14,9 +14,9 @@
 		icon?: IconName | Snippet;
 	}
 
-	export interface TabMenuProps extends Pick<
+	export interface TabMenuProps extends Omit<
 		BaseProps<HTMLButtonElement>,
-		'xstyle' | 'class' | 'style'
+		'role' | 'tabindex' | 'aria-haspopup' | 'aria-expanded' | 'aria-controls'
 	> {
 		/**
 		 * Label for the trigger button and dropdown heading.
@@ -73,7 +73,15 @@
 	 * </TabList>
 	 * ```
 	 */
-	let { label, options, xstyle, class: className, style: styleProp }: TabMenuProps = $props();
+	let {
+		label,
+		options,
+		xstyle,
+		class: className,
+		style: styleProp,
+		onclick: onClickProp,
+		...rest
+	}: TabMenuProps = $props();
 
 	const tabList = useTabListContext();
 
@@ -122,6 +130,19 @@
 		}
 	}
 
+	/**
+	 * Upstream's `composeEventHandlers(handleToggle, onClick)`: the toggle runs
+	 * first, then the caller's handler. A caller that calls `preventDefault()`
+	 * stops anything after it, but the toggle has already happened — a host
+	 * cannot cancel opening the menu by preventing the event.
+	 */
+	function handleTriggerClick(
+		event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
+	): void {
+		handleToggle();
+		onClickProp?.(event);
+	}
+
 	function handleMenuKeyDown(e: KeyboardEvent): void {
 		// APG menu-button: Tab leaves the menu rather than walking its items.
 		// Close and let onHide return focus to the trigger, from which the
@@ -163,13 +184,14 @@
 <button
 	bind:this={buttonEl}
 	{@attach popover.attachTrigger}
+	{...rest}
 	type="button"
 	aria-haspopup="menu"
 	aria-expanded={popover.isOpen}
 	aria-controls={menuId}
 	data-tab-menu=""
 	tabindex={hasSelectedOption ? 0 : -1}
-	onclick={handleToggle}
+	onclick={handleTriggerClick}
 	{...theme}
 	class={cx(theme.class, triggerAttrs.class, className)}
 	style={mergeStyle(triggerAttrs.style, styleProp as string | undefined)}

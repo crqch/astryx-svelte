@@ -446,6 +446,7 @@ export type { CardProps } from './components/card/card.svelte';
 export type {
 	DateInputFormat,
 	DateInputNativePicker,
+	DateInputPresentation,
 	DateInputProps,
 	DateInputStatus,
 	DateInputStatusType
