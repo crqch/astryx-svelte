@@ -289,3 +289,17 @@ describe('MoreMenu', () => {
 		});
 	});
 });
+
+describe('MoreMenu bottom-sheet presentation', () => {
+	it('forwards BottomSheet presentation to DropdownMenu', async () => {
+		const showPopover = vi.spyOn(HTMLElement.prototype, 'showPopover');
+		const screen = await render(MoreMenu, {
+			props: { items: defaultItems, presentation: 'bottom-sheet' }
+		});
+
+		screen.getByRole('button', { name: 'More options' }).element().click();
+
+		await expect.element(screen.getByRole('dialog', { name: 'More options' })).toBeInTheDocument();
+		expect(showPopover).not.toHaveBeenCalled();
+	});
+});
