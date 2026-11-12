@@ -28,6 +28,8 @@
 		exitingIds: SvelteSet<string>;
 		onExited: (id: string) => void;
 		onDismiss: (id: string, reason: ToastDismissReason) => void;
+		/** Tell the viewport this row has rendered, for its replaced-toast bookkeeping. */
+		onRendered: (id: string) => void;
 	}
 </script>
 
@@ -35,11 +37,26 @@
 	import ToastSurface from './toast-surface.svelte';
 	import { toastWrapperAttrs, toastWrapperInnerAttrs } from './toast-viewport.stylex.js';
 
-	const { entry, isExiting, isReversed, exitingIds, onExited, onDismiss }: ToastRowProps = $props();
+	const {
+		entry,
+		isExiting,
+		isReversed,
+		exitingIds,
+		onExited,
+		onDismiss,
+		onRendered
+	}: ToastRowProps = $props();
 
 	let rowEl = $state<HTMLDivElement | null>(null);
 	let isSettled = $state(false);
 	let hasEntryStarted = $state(false);
+
+	// A toast is "rendered" once a row has mounted for it. The viewport records
+	// this so an entry replaced before it ever mounted reports nothing when the
+	// handle that replaced it also dismisses it.
+	$effect(() => {
+		onRendered(entry.id);
+	});
 
 	// React's transition run and cancel events have no propertyName field.
 	$effect(() => {
@@ -115,6 +132,8 @@
 			onDismiss={(reason) => onDismiss(entry.id, reason)}
 			renderContent={options.renderContent}
 			{hasEntryStarted}
+			isLiveRegion={false}
+			timerKey={entry.id}
 		/>
 	</div>
 </div>

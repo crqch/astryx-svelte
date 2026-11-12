@@ -1,4 +1,6 @@
 import { createAttachmentKey } from 'svelte/attachments';
+import { PanGestureRecognizer } from '../../gestures/pan-gesture-recognizer.js';
+import { useGestureRecognizer } from '../../gestures/use-gesture-recognizer.svelte.js';
 
 /**
  * Ported from Astryx's `Toast/useToastGesture.ts`.
@@ -14,33 +16,34 @@ import { createAttachmentKey } from 'svelte/attachments';
  * `--_toast-swipe-exit-y`); `toast.stylex.ts` reads them through upstream's own
  * fallbacks, so the styles are inert until a gesture starts.
  *
- * Two translations, both following the `useSheetGestures` precedent — which is
- * the same split upstream makes, for the same reason:
+ * ## Touch and pen are two inputs, drawn by two paths
  *
- * - **Pen** rides `on*` handler props, spread onto the card by the caller.
- * - **Touch** is wired with `addEventListener` from an attachment, because the
- *   passive flags are load-bearing: `touchmove` must be `{passive: false}` or
- *   its `preventDefault()` — the thing that stops the page scrolling under a
- *   swipe — is a no-op the browser only warns about. Svelte delegates
- *   `touchmove` handler *attributes* to the mount container, where the browser
- *   makes such listeners passive by default, so the attribute form cannot
- *   express upstream's listener.
+ * A pen is followed directly: the card's `pointer*` handlers begin, move and end
+ * it. A finger's *claim* is the shared `PanGestureRecognizer`, attached to the
+ * card by `useGestureRecognizer`, which decides once — from the first move —
+ * whether the page keeps the touch or the toast does. The drawing still comes
+ * from the touch events themselves, so a page-owned first move (or Chromium's
+ * pointer-before-touch order) ends the swipe instead of drawing under a scroll.
+ * The pan's hysteresis is infinite because it never draws; it only claims.
  *
- * The attachment also replaces upstream's `rootRef`: `Toast.tsx` passes that ref
- * to the card and never reads it, so the hook's two return values collapse into
- * one spreadable object.
+ * Every point carries the input event's `timeStamp`, which is when the finger
+ * was there. Browsers can run a move's handler a frame or two later, and a
+ * flick has to be measured from the input, not from when the callback ran.
  *
- * The options come in as a **getter**. Everything the event handlers read is
- * read at event time, which is what upstream's `useCallback` dependency lists
- * achieve by recreating the callbacks; the one read that happens *during* the
- * attachment is `enabled`, so the attachment re-runs on exactly the values
- * upstream's touch effect re-runs on (`enabled`, and — through `beginGesture`'s
- * identity — `direction` and `canPauseTimer`).
+ * Pen handlers ride `on*` props. The finger's drawing listeners are attached to
+ * the card (non-passive, so a first move toward the edge can hold the touch),
+ * because Svelte's spread `ontouch*` props land on the mount root where the
+ * browser makes `touchmove` passive. Where the page routes fingers through
+ * pointer events, the host sees no TouchEvents at all; the card's listener then
+ * makes the pan's own one-way first-move decision so a page-owned touch never
+ * starts drawing later.
  */
 
 const DRAG_PROMOTION_SLOP = 8;
 const SWIPE_DISMISS_RATIO = 0.4;
-const FLICK_MIN_DISTANCE = 48;
+/** The dismiss distance of a card too short for its height ratio to reach it. */
+const SWIPE_DISMISS_MIN_DISTANCE = 48;
+/** Average speed, px/ms, at which a release dismisses whatever its travel. */
 const FLICK_VELOCITY = 1.2;
 const VERTICAL_INTENT_RATIO = 1.2;
 const SWIPE_EXIT_DISTANCE = '120%';
@@ -51,18 +54,24 @@ const SWIPE_ACTIVE_SCALE_MAX = 0.02;
 export type ToastGestureDirection = 1 | -1;
 
 interface GesturePoint {
+	source: 'touch' | 'pen';
 	pointerId: number;
 	clientX: number;
 	clientY: number;
+	/** The input event's `timeStamp`, which is when the finger was there. */
+	time: number;
 }
 
 interface GestureState {
+	source: GesturePoint['source'];
 	pointerId: number;
 	startX: number;
 	startY: number;
 	startTime: number;
 	direction: ToastGestureDirection;
 	intent: 'pending' | 'vertical' | 'opposite';
+	/** The touch path's one-way first move, which decides who keeps the touch. */
+	firstMoveDecided: boolean;
 	pausedTimer: boolean;
 	surfaceSize: number;
 	dismissThreshold: number;
@@ -80,8 +89,9 @@ interface UseToastGestureOptions {
 }
 
 /**
- * Spread on the toast card: upstream's `bindings`, plus the attachment that
- * stands in for its `rootRef` and owns the non-passive touch listeners.
+ * Spread on the toast card: upstream's `bindings`. The card element itself comes
+ * from the caller's `bind:this`, so the recognizer and these handlers share one
+ * root without an attachment.
  */
 interface ToastGestureBindings {
 	onpointerdown: (event: PointerEvent) => void;
@@ -104,15 +114,43 @@ function clearTransientStyles(root: HTMLElement): void {
 	root.style.removeProperty('--_toast-swipe-scale');
 }
 
-export function useToastGesture(options: () => UseToastGestureOptions): ToastGestureBindings {
-	// Upstream's two refs, and plain `let` for the same reason they are refs:
+export function useToastGesture(
+	options: () => UseToastGestureOptions,
+	getRoot: () => HTMLElement | null
+): ToastGestureBindings {
+	// Upstream's gestureRef and its refs: plain `let` for the same reason, since
 	// nothing renders from either.
-	let root: HTMLElement | null = null;
 	let gesture: GestureState | null = null;
+
+	// The pan claims a finger for the toast or leaves it to the page. It never
+	// draws: its hysteresis is infinite, so it stays possible until it fails.
+	const claim = useGestureRecognizer(
+		() => getRoot(),
+		() =>
+			new PanGestureRecognizer({
+				name: 'toast-swipe',
+				direction: options().direction === 1 ? 'down' : 'up',
+				firstMoveDecides: true,
+				maximumNumberOfTouches: 1,
+				hysteresis: Number.POSITIVE_INFINITY,
+				cancelsTouchesInView: false,
+				shouldReceiveTouch: (_recognizer, touch) => {
+					const root = getRoot();
+					return (
+						touch.pointerType === 'touch' &&
+						root != null &&
+						!options().shouldIgnoreTarget(touch.target as EventTarget, root)
+					);
+				}
+			}),
+		undefined,
+		{ isEnabled: () => options().enabled, manageStyle: false }
+	);
 
 	function resetGesture(shouldResume: boolean): void {
 		const state = gesture;
 		gesture = null;
+		const root = getRoot();
 		if (root) {
 			clearTransientStyles(root);
 		}
@@ -122,6 +160,7 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 	}
 
 	function beginGesture(point: GesturePoint, target: EventTarget | null): boolean {
+		const root = getRoot();
 		const { direction, enabled, canPauseTimer, isTimerPaused, pauseTimer, shouldIgnoreTarget } =
 			options();
 		if (!root || !enabled || gesture != null || shouldIgnoreTarget(target, root)) {
@@ -133,26 +172,29 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 		}
 		const surfaceSize = Math.max(root.getBoundingClientRect().height, 1);
 		gesture = {
+			source: point.source,
 			pointerId: point.pointerId,
 			startX: point.clientX,
 			startY: point.clientY,
-			startTime: Date.now(),
+			startTime: point.time,
 			direction,
 			intent: 'pending',
+			firstMoveDecided: false,
 			pausedTimer,
 			surfaceSize,
-			dismissThreshold: Math.max(surfaceSize * SWIPE_DISMISS_RATIO, FLICK_MIN_DISTANCE)
+			dismissThreshold: Math.max(surfaceSize * SWIPE_DISMISS_RATIO, SWIPE_DISMISS_MIN_DISTANCE)
 		};
 		return true;
 	}
 
 	function moveGesture(
 		point: GesturePoint,
-		preventDefault: () => void,
+		preventDefault?: () => void,
 		releaseCapture?: () => void
 	): void {
 		const state = gesture;
-		if (!state || !root || point.pointerId !== state.pointerId) {
+		const root = getRoot();
+		if (!state || !root || point.source !== state.source || point.pointerId !== state.pointerId) {
 			return;
 		}
 		const deltaX = point.clientX - state.startX;
@@ -176,7 +218,7 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 			}
 			root.style.setProperty('transition-duration', '0s');
 		}
-		preventDefault();
+		preventDefault?.();
 		const travel = Math.max(0, deltaY * state.direction);
 		const progress = swipeProgressValue(travel, state.surfaceSize);
 		root.style.setProperty('--_toast-swipe-y', `${travel * state.direction}px`);
@@ -192,19 +234,25 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 
 	function endGesture(point: GesturePoint): void {
 		const state = gesture;
-		if (!state || !root || point.pointerId !== state.pointerId) {
+		const root = getRoot();
+		if (!state || !root || point.source !== state.source || point.pointerId !== state.pointerId) {
 			return;
 		}
 		const travel = Math.max(0, (point.clientY - state.startY) * state.direction);
-		const elapsed = Math.max(1, Date.now() - state.startTime);
+		const elapsed = Math.max(1, point.time - state.startTime);
+		// A flick needs no travel floor. Intent turns vertical only past the
+		// slop toward the edge.
 		const isDismissed =
 			state.intent === 'vertical' &&
-			(travel >= state.dismissThreshold ||
-				(travel >= FLICK_MIN_DISTANCE && travel / elapsed > FLICK_VELOCITY));
+			(travel >= state.dismissThreshold || travel / elapsed > FLICK_VELOCITY);
 
 		gesture = null;
 		root.style.removeProperty('transition-duration');
 		if (isDismissed) {
+			// The exit animation owns the final translation. Clear the live-drag
+			// transform/fade/scale first so a standalone Toast does not remain
+			// partially translated or faded after its dismiss callback fires.
+			clearTransientStyles(root);
 			root.style.setProperty(
 				'--_toast-swipe-exit-y',
 				state.direction === 1 ? SWIPE_EXIT_DISTANCE : `calc(-1 * ${SWIPE_EXIT_DISTANCE})`
@@ -226,9 +274,18 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 		if (
 			event.pointerType === 'pen' &&
 			(button == null || button === 0) &&
-			beginGesture(event, event.target)
+			beginGesture(
+				{
+					source: 'pen',
+					pointerId: event.pointerId,
+					clientX: event.clientX,
+					clientY: event.clientY,
+					time: event.timeStamp
+				},
+				event.target
+			)
 		) {
-			root?.setPointerCapture?.(event.pointerId);
+			getRoot()?.setPointerCapture?.(event.pointerId);
 		}
 	}
 
@@ -237,9 +294,15 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 			return;
 		}
 		moveGesture(
-			event,
+			{
+				source: 'pen',
+				pointerId: event.pointerId,
+				clientX: event.clientX,
+				clientY: event.clientY,
+				time: event.timeStamp
+			},
 			() => event.preventDefault(),
-			() => root?.releasePointerCapture?.(event.pointerId)
+			() => getRoot()?.releasePointerCapture?.(event.pointerId)
 		);
 	}
 
@@ -247,73 +310,143 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 		if (event.pointerType !== 'pen') {
 			return;
 		}
-		root?.releasePointerCapture?.(event.pointerId);
-		endGesture(event);
+		getRoot()?.releasePointerCapture?.(event.pointerId);
+		endGesture({
+			source: 'pen',
+			pointerId: event.pointerId,
+			clientX: event.clientX,
+			clientY: event.clientY,
+			time: event.timeStamp
+		});
 	}
 
 	function handlePointerCancel(event: PointerEvent): void {
-		// `root != null` is the "am I still attached?" flag, and it is load-bearing
-		// on the `lostpointercapture` path. Per the Pointer Events spec, removing a
-		// capturing element from the document releases capture and fires
-		// `lostpointercapture` **at that element** — and Svelte leaves a spread
-		// handler attached to the detached node, where upstream's delegated
-		// `onLostPointerCapture` is simply unreachable. Without the guard, a toast
-		// unmounted mid-pen-drag (a `maxVisible` eviction, or a `uniqueID`
-		// overwrite) reads `options()` off a destroyed component and resumes a
-		// timer whose teardown has already run — scheduling a `setTimeout` that
-		// outlives the toast.
-		if (root != null && event.pointerType === 'pen' && gesture?.pointerId === event.pointerId) {
+		// The root can be null on the `lostpointercapture` path: per the Pointer
+		// Events spec, removing a capturing element from the document releases
+		// capture and fires `lostpointercapture` **at that element**, where a
+		// spread handler remains attached after Svelte has detached it. Without
+		// the guard, a toast unmounted mid-pen-drag reads `options()` off a
+		// destroyed component and resumes a timer whose teardown has already run.
+		if (
+			getRoot() != null &&
+			event.pointerType === 'pen' &&
+			gesture?.source === 'pen' &&
+			gesture.pointerId === event.pointerId
+		) {
 			resetGesture(true);
 		}
 	}
 
-	const attachRoot = (node: HTMLElement): (() => void) => {
-		root = node;
-		// The only tracked read in this attachment — see the file header.
-		const { enabled } = options();
-		if (!enabled) {
-			return () => {
-				root = null;
-			};
+	const touchPoint = (touch: Touch, event: TouchEvent): GesturePoint => ({
+		source: 'touch',
+		pointerId: touch.identifier,
+		clientX: touch.clientX,
+		clientY: touch.clientY,
+		time: event.timeStamp
+	});
+
+	function changedTouch(event: TouchEvent): Touch | undefined {
+		const state = gesture;
+		const pointerId = state?.source === 'touch' ? state.pointerId : null;
+		return pointerId == null
+			? undefined
+			: [...event.changedTouches].find((touch) => touch.identifier === pointerId);
+	}
+
+	function handleTouchStart(event: TouchEvent): void {
+		if (!options().enabled) {
+			return;
 		}
+		if (event.touches.length !== 1) {
+			// A second contact means the browser may be handling pinch zoom or
+			// two-finger scrolling. Abandon any accepted one-finger swipe before
+			// touchmove can suppress that native gesture.
+			resetGesture(true);
+			return;
+		}
+		const touch = event.changedTouches[0];
+		if (touch != null) {
+			beginGesture(touchPoint(touch, event), event.target);
+		}
+	}
 
-		const point = (touch: Touch): GesturePoint => ({
-			pointerId: touch.identifier,
-			clientX: touch.clientX,
-			clientY: touch.clientY
+	function handleTouchMove(event: TouchEvent): void {
+		if (!options().enabled) {
+			return;
+		}
+		if (event.touches.length !== 1) {
+			resetGesture(true);
+			return;
+		}
+		// The gesture host's pan decides the touch from its first move. Once the
+		// pan fails, the page has the touch, so the swipe ends too.
+		if (gesture != null && claim.state === 'failed') {
+			resetGesture(true);
+			return;
+		}
+		const touch = changedTouch(event);
+		if (!touch) {
+			return;
+		}
+		const point = touchPoint(touch, event);
+		// Where the page's input mode routes fingers through pointer events, the
+		// host hears no touch at all. The same one-way decision is made here, on
+		// the first move, so a page-owned touch never starts drawing later.
+		const state = gesture;
+		if (state != null && state.source === 'touch' && !state.firstMoveDecided) {
+			const deltaX = point.clientX - state.startX;
+			const deltaY = point.clientY - state.startY;
+			if (deltaX !== 0 || deltaY !== 0) {
+				state.firstMoveDecided = true;
+				const along = deltaY * state.direction;
+				const vertical = Math.abs(deltaY) > VERTICAL_INTENT_RATIO * Math.abs(deltaX);
+				if (!vertical || along <= 0) {
+					resetGesture(true);
+					return;
+				}
+				// A first move toward the dismiss edge holds the finger, as the pan
+				// does before it begins: the browser must not also scroll it.
+				if (event.cancelable) {
+					event.preventDefault();
+				}
+			}
+		}
+		moveGesture(point, () => {
+			if (event.cancelable) {
+				event.preventDefault();
+			}
 		});
-		const changedTouch = (event: TouchEvent): Touch | undefined => {
-			const pointerId = gesture?.pointerId;
-			return pointerId == null
-				? undefined
-				: [...event.changedTouches].find((touch) => touch.identifier === pointerId);
-		};
-		const handleTouchStart = (event: TouchEvent): void => {
-			const touch = event.touches.length === 1 ? event.changedTouches[0] : null;
-			if (touch) {
-				beginGesture(point(touch), event.target);
-			}
-		};
-		const handleTouchMove = (event: TouchEvent): void => {
-			const touch = changedTouch(event);
-			if (touch) {
-				moveGesture(point(touch), () => {
-					if (event.cancelable) {
-						event.preventDefault();
-					}
-				});
-			}
-		};
-		const handleTouchEnd = (event: TouchEvent): void => {
-			const touch = changedTouch(event);
-			if (touch) {
-				endGesture(point(touch));
-			} else if (event.touches.length === 0) {
-				resetGesture(true);
-			}
-		};
-		const handleTouchCancel = (): void => resetGesture(true);
+	}
 
+	function handleTouchEnd(event: TouchEvent): void {
+		if (!options().enabled) {
+			return;
+		}
+		if (event.touches.length > 0) {
+			resetGesture(true);
+			return;
+		}
+		const touch = changedTouch(event);
+		if (touch) {
+			endGesture(touchPoint(touch, event));
+		} else {
+			resetGesture(true);
+		}
+	}
+
+	function handleTouchCancel(): void {
+		if (options().enabled) {
+			resetGesture(true);
+		}
+	}
+
+	/**
+	 * Upstream's React `onTouch*` handlers, which the gesture host cannot supply
+	 * here: the drawing lives on the card's own non-passive listeners so a first
+	 * move toward the edge can hold the touch (`preventDefault` is a no-op on the
+	 * passive listener Svelte would attach at its mount root).
+	 */
+	const attachTouchGesture = (node: HTMLElement): (() => void) => {
 		node.addEventListener('touchstart', handleTouchStart, { passive: true });
 		node.addEventListener('touchmove', handleTouchMove, { passive: false });
 		node.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -323,7 +456,6 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 			node.removeEventListener('touchmove', handleTouchMove);
 			node.removeEventListener('touchend', handleTouchEnd);
 			node.removeEventListener('touchcancel', handleTouchCancel);
-			root = null;
 		};
 	};
 
@@ -333,6 +465,6 @@ export function useToastGesture(options: () => UseToastGestureOptions): ToastGes
 		onpointerup: handlePointerUp,
 		onpointercancel: handlePointerCancel,
 		onlostpointercapture: handlePointerCancel,
-		[createAttachmentKey()]: attachRoot
+		[createAttachmentKey()]: attachTouchGesture
 	};
 }

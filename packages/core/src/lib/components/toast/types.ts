@@ -118,4 +118,9 @@ export interface ToastEntry {
 	id: string;
 	options: ToastOptions;
 	createdAt: number;
+	/**
+	 * The id of the row this entry occupies, when an in-place overwrite replaced
+	 * a toast and kept its row. A new toast normally gets a row of its own.
+	 */
+	rowKey?: string;
 }

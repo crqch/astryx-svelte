@@ -39,7 +39,22 @@
 		 * starting style, so a move between modal outlets starts no transition.
 		 */
 		hasEntryStarted?: boolean;
+		/**
+		 * Whether the card carries its own live region. The viewport is each
+		 * toast's only announcement owner, so it passes false; a standalone
+		 * `Toast` keeps upstream's default.
+		 */
+		isLiveRegion?: boolean;
+		/**
+		 * A value that changes on an in-place overwrite. The timer effect reads
+		 * it so a replacement re-seeds the timer even when the duration did not
+		 * change.
+		 */
+		timerKey?: string;
 	}
+
+	/** A condition that holds a toast's auto-hide timer. */
+	type PauseSource = 'pointer' | 'focus' | 'gesture' | 'window';
 </script>
 
 <script lang="ts">
@@ -74,17 +89,26 @@
 		onDismiss,
 		renderContent,
 		gestureDirection,
-		hasEntryStarted = false
+		hasEntryStarted = false,
+		isLiveRegion = true,
+		timerKey
 	}: ToastSurfaceProps = $props();
 
 	const t = useTranslator();
 	const themeMode = useThemeMode();
 
+	let gestureRoot = $state<HTMLElement | null>(null);
+
 	// Deliberately plain `let`, not `$state`: these are upstream's refs. Nothing
 	// renders from them, and making them reactive would feed the timer effect
 	// below its own writes.
 	let timer: ReturnType<typeof setTimeout> | null = null;
-	let isPaused = false;
+	/**
+	 * Every condition that holds the auto-hide timer — pointer over the card,
+	 * focus inside it, a touch or pen gesture, the window blurred — is tracked on
+	 * its own, so one ending resumes the timer only when no other still holds.
+	 */
+	const pauseSources = new Set<PauseSource>();
 	// Capturing the initial value is the point — this is upstream's
 	// `useRef(autoHideDuration)`. The effect below re-seeds it whenever the prop
 	// genuinely changes; a live read would defeat `pauseTimer`'s bookkeeping.
@@ -100,11 +124,11 @@
 	 * Svelte obviates the ref twice over: a prop read is always current, and the
 	 * read below happens inside a `setTimeout` callback, which is asynchronous
 	 * and therefore outside the effect's tracking. So the timer effect depends on
-	 * `autoHideDuration` and `isAutoHide` only, exactly as upstream's dependency
-	 * list does.
+	 * `autoHideDuration`, `timerKey` and `isAutoHide`, exactly as upstream's
+	 * dependency list does.
 	 */
 	function startTimer(): void {
-		if (!isAutoHide || isPaused) {
+		if (!isAutoHide || pauseSources.size > 0) {
 			return;
 		}
 		if (timer) {
@@ -116,11 +140,12 @@
 		}, remaining);
 	}
 
-	function pauseTimer(): void {
-		if (!isAutoHide || isPaused) {
+	function pauseTimer(source: PauseSource): void {
+		const wasRunning = pauseSources.size === 0;
+		pauseSources.add(source);
+		if (!wasRunning) {
 			return;
 		}
-		isPaused = true;
 		if (timer) {
 			clearTimeout(timer);
 			timer = null;
@@ -133,16 +158,49 @@
 		}
 	}
 
-	function resumeTimer(): void {
-		if (!isAutoHide || !isPaused) {
+	function resumeTimer(source: PauseSource): void {
+		if (!pauseSources.delete(source)) {
 			return;
 		}
-		isPaused = false;
+		const root = gestureRoot;
+		if (pauseSources.has('focus') && root != null && !root.contains(document.activeElement)) {
+			pauseSources.delete('focus');
+		}
+		if (pauseSources.size > 0) {
+			return;
+		}
 		startTimer();
+	}
+
+	function pauseForPointer(): void {
+		pauseTimer('pointer');
+	}
+	function resumeForPointer(): void {
+		resumeTimer('pointer');
+	}
+	function pauseForFocus(): void {
+		pauseTimer('focus');
+	}
+	function resumeForFocus(event: FocusEvent): void {
+		// Focus moving between controls inside the card keeps it held.
+		const next = event.relatedTarget;
+		if (next instanceof Node && (event.currentTarget as Node).contains(next)) {
+			return;
+		}
+		resumeTimer('focus');
 	}
 
 	$effect(() => {
 		remaining = autoHideDuration;
+		// Read the key so an in-place overwrite re-seeds the timer even when the
+		// duration did not change.
+		void timerKey;
+		const root = gestureRoot;
+		// An update in place can remove the focused control, which fires no blur:
+		// a focus hold whose focus has left the card is stale.
+		if (pauseSources.has('focus') && root != null && !root.contains(document.activeElement)) {
+			pauseSources.delete('focus');
+		}
 		startTimer();
 		return () => {
 			if (timer) {
@@ -157,11 +215,20 @@
 		if (!isAutoHide) {
 			return;
 		}
-		window.addEventListener('blur', pauseTimer);
-		window.addEventListener('focus', resumeTimer);
+		const pauseForWindow = (): void => pauseTimer('window');
+		const resumeForWindow = (): void => resumeTimer('window');
+		window.addEventListener('blur', pauseForWindow);
+		window.addEventListener('focus', resumeForWindow);
+		// A toast raised while the window is already blurred gets no blur event,
+		// so it starts held, and the window's next focus resumes it.
+		if (!document.hasFocus()) {
+			pauseForWindow();
+		}
 		return () => {
-			window.removeEventListener('blur', pauseTimer);
-			window.removeEventListener('focus', resumeTimer);
+			window.removeEventListener('blur', pauseForWindow);
+			window.removeEventListener('focus', resumeForWindow);
+			// With the listeners gone, no focus event would clear the window hold.
+			pauseSources.delete('window');
 		};
 	});
 
@@ -170,20 +237,23 @@
 	}
 
 	/**
-	 * Touch/pen swipe dismissal. The bindings carry the pen handlers *and* the
-	 * attachment that stands in for upstream's `rootRef`, so they are spread on
-	 * the card exactly where upstream spreads `bindings` and sets `ref`.
+	 * Touch/pen swipe dismissal. `gestureRoot` is bound on the card below; the
+	 * hook attaches the pan that claims a finger and returns the pointer/touch
+	 * bindings, exactly where upstream sets `ref` and spreads `bindings`.
 	 */
-	const gesture = useToastGesture(() => ({
-		direction: gestureDirection,
-		enabled: !isExiting,
-		canPauseTimer: isAutoHide,
-		isTimerPaused: () => isPaused,
-		pauseTimer,
-		resumeTimer,
-		dismiss: handleDismiss,
-		shouldIgnoreTarget: isInteractiveTarget
-	}));
+	const gesture = useToastGesture(
+		() => ({
+			direction: gestureDirection,
+			enabled: !isExiting,
+			canPauseTimer: isAutoHide,
+			isTimerPaused: () => pauseSources.has('gesture'),
+			pauseTimer: () => pauseTimer('gesture'),
+			resumeTimer: () => resumeTimer('gesture'),
+			dismiss: handleDismiss,
+			shouldIgnoreTarget: isInteractiveTarget
+		}),
+		() => gestureRoot
+	);
 
 	const isError = $derived(type === 'error');
 	// The surface's media side is **measured**, not assumed — a theme can define
@@ -211,13 +281,14 @@
 	they were tabbing through its own controls.
 -->
 <div
-	role={isError ? 'alert' : 'status'}
-	aria-live={isError ? 'assertive' : 'polite'}
-	aria-atomic="true"
-	onmouseenter={pauseTimer}
-	onmouseleave={resumeTimer}
-	onfocusincapture={pauseTimer}
-	onfocusoutcapture={resumeTimer}
+	bind:this={gestureRoot}
+	role={isLiveRegion ? (isError ? 'alert' : 'status') : undefined}
+	aria-live={isLiveRegion ? (isError ? 'assertive' : 'polite') : undefined}
+	aria-atomic={isLiveRegion ? 'true' : undefined}
+	onmouseenter={pauseForPointer}
+	onmouseleave={resumeForPointer}
+	onfocusincapture={pauseForFocus}
+	onfocusoutcapture={resumeForFocus}
 	{...gesture}
 	{...theme}
 	class={cx(theme.class, root.class)}
