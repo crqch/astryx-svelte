@@ -2073,16 +2073,6 @@ a mask), while this port renders them as text inside the avatar. The ported test
 suite asserts the text form, so switching would break case-for-case parity with
 its own translations. The remaining generated-initials rule is a named skip.
 
-### `PickerWheel` uses a scroll-snap scroller, not upstream's positioned strip
-
-- **units:** DateInput/PickerWheel
-- **kind:** divergence
-- **retires:** when the wheel is rewritten to the absolute strip with the fade mask
-
-Upstream positions a strip by `rowAt` and fades its ends with a mask; this port
-uses a scroll-snap scroller. Two upstream classes (the strip mask and the track
-inset) have no counterpart and are skipped.
-
 ### `SelectorBottomSheet` is not ported
 
 - **units:** Selector/SelectorBottomSheet

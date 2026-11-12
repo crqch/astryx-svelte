@@ -79,12 +79,6 @@ const SKIP = [
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},
 	{
-		class: 'xsshixw',
-		rule: '{mask-image:linear-gradient(to bottom,rgb(0 0 0 / .7),rgb(0 0 0) 50%,rgb(0 0 0 / .7))}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
 		class: 'x1u5z0ei',
 		rule: '{height:240px}',
 		reason:
@@ -93,12 +87,6 @@ const SKIP = [
 	{
 		class: 'xg6iff7',
 		rule: '{min-height:100vh}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x5mnzd7',
-		rule: '{top:var(--x-insetBlockStart)}',
 		reason:
 			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
 	},

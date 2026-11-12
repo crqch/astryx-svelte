@@ -24,7 +24,8 @@ import ControlledDateTimeInput from './fixtures/date-time-input-controlled.svelt
  * ## Project
  *
  * Client (real Chromium). The surface is a `<dialog>` opened with `showModal()`
- * holding a virtualized month scroller and four scroll-snapped wheels; every
+ * holding a virtualized month scroller and four wheels — the scroll-snapped
+ * column on a fine pointer, the absolute strip under a finger; every
  * one of those needs real layout.
  *
  * ## Upstream's environment shims are dropped, every one of them deliberately

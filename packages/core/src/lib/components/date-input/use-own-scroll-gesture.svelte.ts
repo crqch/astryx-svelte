@@ -117,6 +117,16 @@ export interface OwnScrollGestureOptions {
 	 * so momentum and snapping are never second-guessed.
 	 */
 	onSwipe?: (direction: 1 | -1) => void;
+	/**
+	 * Also keep the pointer a touch lands with, for an `'all'` scroller that pans
+	 * through the gesture system rather than natively. A sheet arms its pull-down
+	 * on its body's `pointerdown`, and counts on a native pan to cancel a touch
+	 * pointer. A pan of the gesture system never cancels it. Without this, the
+	 * sheet follows the first 8 px of a downward drag before the scroller's own
+	 * pan takes over. The gesture host and the shared modality tracker listen in
+	 * the capture phase, before this.
+	 */
+	isPointerKept?: boolean;
 }
 
 /**
@@ -139,6 +149,7 @@ export function useOwnScrollGesture(
 		if (node == null || options().isEnabled === false) {
 			return;
 		}
+		const isKeepingPointer = ownedAxis === 'all' && options().isPointerKept === true;
 
 		// null = not yet decided; true = ours for the rest of this gesture.
 		let claimed: boolean | null = null;
@@ -215,11 +226,19 @@ export function useOwnScrollGesture(
 		node.addEventListener('touchend', onEnd, { passive: true });
 		node.addEventListener('touchcancel', onEnd, { passive: true });
 
+		const keepPointer = (event: PointerEvent): void => event.stopPropagation();
+		if (isKeepingPointer) {
+			node.addEventListener('pointerdown', keepPointer);
+		}
+
 		return () => {
 			node.removeEventListener('touchstart', onStart);
 			node.removeEventListener('touchmove', onMove);
 			node.removeEventListener('touchend', onEnd);
 			node.removeEventListener('touchcancel', onEnd);
+			if (isKeepingPointer) {
+				node.removeEventListener('pointerdown', keepPointer);
+			}
 		};
 	});
 }
