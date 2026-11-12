@@ -328,6 +328,9 @@ describe('the selection slide', () => {
 		await advance(400);
 		expect(ctx.motion.isSliding).toBe(true);
 		await advance(2000);
+		// The browser's own animations run on the real document timeline, which
+		// fake timers do not move; finish them before the settle assertion.
+		await finishRunningAnimations();
 		expect(ctx.motion.isSliding).toBe(false);
 		expect(ctx.layer('lens', 'visibility')).toBe('');
 		expectOwnSurface(ctx.segments.table);
@@ -687,6 +690,7 @@ describe('under a finger', () => {
 		expect(ctx.animator.get('scaleY')).toBeCloseTo(1, 6);
 		expect(release(ctx, clientCenterOf('grid'))).toBeNull();
 		await advance(2000);
+		await finishRunningAnimations();
 		expect(ctx.motion.isSliding).toBe(false);
 		expectOwnSurface(ctx.segments.grid);
 	});
@@ -836,6 +840,7 @@ describe('under a finger', () => {
 		await advance(500);
 		expect(release(forty, at(0.4))).toBeNull();
 		await advance(3000);
+		await finishRunningAnimations();
 		expect(forty.animator.get('x')).toBe(0);
 		expect(forty.motion.isSliding).toBe(false);
 		expectOwnSurface(forty.segments.grid);
@@ -859,6 +864,7 @@ describe('under a finger', () => {
 		expectHidden(sixty.segments.list);
 		expect(sixty.segments.grid.style.getPropertyValue('background-color')).toBe('');
 		await advance(3000);
+		await finishRunningAnimations();
 		expect(sixty.animator.get('x')).toBe(0);
 		expect(sixty.animator.get('scaleX')).toBe(1);
 		expect(sixty.motion.isSliding).toBe(false);

@@ -103,7 +103,9 @@ describe('ComplexSelector', () => {
 		// laid out.
 		const blockStart = popup.style.getPropertyValue('--x-marginBlockStart');
 		expect(blockStart).not.toBe('');
-		expect(popup.style.getPropertyValue('--x-marginBlockEnd')).toBe(blockStart);
+		// Only the edge facing the trigger carries the clearance; the far edge
+		// rides the viewport gutter as a class, so it has no inline variable.
+		expect(popup.style.getPropertyValue('--x-marginBlockEnd')).toBe('');
 	});
 
 	it('runs changeAction through the provided onChange helper', async () => {
@@ -159,7 +161,10 @@ describe('ComplexSelector popup theme target', () => {
 		// that inner box cannot paint the popup's background or radius, which is
 		// what a theme reaches for this class to do.
 		expect(popup).toHaveAttribute('role', 'dialog');
-		expect(popup).toHaveClass('astryx-popover-surface');
+		// 0.7.13 removed the private `astryx-popover-surface` class; the shared
+		// surface is the `popover` theme target, and the component-specific
+		// target is the class this test queried by.
+		expect(popup).not.toHaveClass('astryx-popover-surface');
 		expect(popup.querySelector('[id]')).not.toBeNull();
 		expect(popup).toContainElement(
 			screen.getByRole('button', { name: 'Done', exact: true }).element() as HTMLElement
