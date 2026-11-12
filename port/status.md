@@ -710,8 +710,8 @@ substring-matching on both sides by design and is not counted.
 
 |             | Blocks |
 | ----------- | ------ |
-| Ported      | 721    |
-| **Pending** | **15** |
+| Ported      | 727    |
+| **Pending** | **9**  |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a

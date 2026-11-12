@@ -265,7 +265,7 @@ async function commitFrame(at: number): Promise<void> {
  * not move; upstream's jsdom has no such timeline.
  */
 async function finishRunningAnimations(): Promise<void> {
-	for (let round = 0; round < 4; round += 1) {
+	for (let round = 0; round < 8; round += 1) {
 		for (const animation of document.getAnimations()) {
 			try {
 				animation.finish();

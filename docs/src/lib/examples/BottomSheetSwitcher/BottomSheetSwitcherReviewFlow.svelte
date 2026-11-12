@@ -7,15 +7,7 @@
 	closes because the person moved on must not undo the move.
 -->
 <script lang="ts">
-	import {
-		BottomSheet,
-		Button,
-		HStack,
-		Heading,
-		Section,
-		Text,
-		VStack
-	} from '@astryx-svelte/core';
+	import { BottomSheet, Button, HStack, Heading, Section, Text, VStack } from '@astryx-svelte/core';
 
 	type Step = 'review' | 'confirm' | null;
 
@@ -43,9 +35,7 @@
 		<VStack gap={4}>
 			<VStack gap={1}>
 				<Heading level={3}>Review settings</Heading>
-				<Text type="supporting" color="secondary">
-					Daily summaries will be sent by email.
-				</Text>
+				<Text type="supporting" color="secondary">Daily summaries will be sent by email.</Text>
 			</VStack>
 			<HStack gap={2} hAlign="end">
 				<Button label="Cancel" variant="secondary" onclick={() => (step = null)} />
