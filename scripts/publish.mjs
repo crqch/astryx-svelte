@@ -62,9 +62,33 @@ console.log(
 		targets.map((t) => `${t.name}@${t.version}`).join(', ')
 );
 
+/**
+ * `bun publish` runs `prepack` through the system shell, and this Bun version
+ * does not add `node_modules/.bin` to that script's PATH. Core's prepack calls
+ * `svelte-kit`, which then resolves only if both the package and root bins are
+ * on PATH. A normal `bun run prepack` already does this; publish apparently
+ * does not.
+ *
+ * @param {string} dir workspace-relative package directory
+ */
+function publishEnv(dir) {
+	const bins = [
+		path.join(root, dir, 'node_modules', '.bin'),
+		path.join(root, 'node_modules', '.bin')
+	];
+	return {
+		...process.env,
+		PATH: [...bins, process.env.PATH].filter(Boolean).join(path.delimiter)
+	};
+}
+
 for (const target of targets) {
 	const args = ['publish', '--access', 'public'];
 	if (dryRun) args.push('--dry-run');
 	console.log(`\n=== ${target.name}@${target.version} ===`);
-	execFileSync('bun', args, { cwd: path.join(root, target.dir), stdio: 'inherit' });
+	execFileSync('bun', args, {
+		cwd: path.join(root, target.dir),
+		stdio: 'inherit',
+		env: publishEnv(target.dir)
+	});
 }
