@@ -1414,20 +1414,6 @@ differs. Two CTAs are repointed for the same reason: upstream's `/changelog` doe
 so "See what's new" opens this repository's releases, and "Learn how to contribute" opens the
 repository rather than Meta's community page.
 
-### `MonthScroller` lands a month change with travel under Reduce Motion
-
-- **units:** DateInput
-- **kind:** divergence
-- **retires:** when the dip path in `DateInput/MonthScroller.tsx` is ported
-
-`Wheel` and the wheel strips now use `playReducedMotionDip` / `reducedMotionFade`
-(`DateInput/Wheel.tsx`'s path), so under Reduce Motion a wheel's smooth landing becomes an
-opacity dip on a coarse pointer and lands at once on a fine one. `MonthScroller` still
-calls `scrollTo({behavior: 'smooth'})` on the same pointer, so a month swipe travels under
-Reduce Motion. Upstream's version also defers the landing to the layout effect through
-`flushSync` so the fade-in starts after the month changes; reproducing that ordering in
-Svelte is its own change, not a call swap.
-
 ### BottomSheet cross-fades a touch dismissal only on a coarse pointer
 
 - **units:** BottomSheet
