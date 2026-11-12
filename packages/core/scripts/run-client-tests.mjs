@@ -201,10 +201,39 @@ if (!process.env.CLIENT_CHUNK_NO_LOCK) {
 	});
 }
 
-const chunks = [];
-for (let i = 0; i < files.length; i += SIZE) chunks.push(files.slice(i, i + SIZE));
+/**
+ * CI shards. The chunk list is divided by index (`index % SHARDS === SHARD - 1`)
+ * so every chunk keeps its composition and the heavy suites are spread across
+ * runners. Each shard reconciles its own files; the CI matrix's aggregate `ci`
+ * job requires every shard to pass, which is what covers the whole suite.
+ */
+const SHARDS = Number(process.env.CLIENT_CHUNK_SHARDS ?? 1);
+const SHARD = Number(process.env.CLIENT_CHUNK_SHARD ?? 1);
+if (
+	!Number.isInteger(SHARDS) ||
+	SHARDS < 1 ||
+	!Number.isInteger(SHARD) ||
+	SHARD < 1 ||
+	SHARD > SHARDS
+) {
+	console.error(
+		`Invalid client shard: CLIENT_CHUNK_SHARD=${SHARD}, CLIENT_CHUNK_SHARDS=${SHARDS}.`
+	);
+	process.exit(1);
+}
 
-console.log(`  client suite: ${files.length} files in ${chunks.length} chunks of up to ${SIZE}\n`);
+const allChunks = [];
+for (let i = 0; i < files.length; i += SIZE) allChunks.push(files.slice(i, i + SIZE));
+
+const runChunks = allChunks
+	.map((chunk, index) => ({ chunk, index }))
+	.filter(({ index }) => index % SHARDS === SHARD - 1);
+
+console.log(
+	`  client suite: ${files.length} files in ${allChunks.length} chunks of up to ${SIZE}` +
+		(SHARDS > 1 ? `; shard ${SHARD}/${SHARDS} runs ${runChunks.length}` : '') +
+		'\n'
+);
 
 let ranFiles = 0;
 let ranCases = 0;
@@ -377,7 +406,7 @@ const serial = CONCURRENCY <= 1;
  * @param {string[]} chunk
  */
 async function settleChunk(index, chunk) {
-	const label = `chunk ${index + 1}/${chunks.length}`;
+	const label = `chunk ${index + 1}/${allChunks.length}`;
 	const args = [vitestBin, '--run', '--project=client', ...chunk, ...process.argv.slice(2)];
 	/** @type {string[]} */
 	const retries = [];
@@ -448,14 +477,15 @@ async function settleChunk(index, chunk) {
  * heavy suites can run twice as long as a light one), and slicing would leave
  * workers idle waiting for the slowest slice to drain.
  */
-const results = new Array(chunks.length);
+const results = new Array(runChunks.length);
 let cursor = 0;
 
 async function worker() {
 	for (;;) {
 		const index = cursor++;
-		if (index >= chunks.length) return;
-		results[index] = await settleChunk(index, chunks[index]);
+		if (index >= runChunks.length) return;
+		const { chunk, index: globalIndex } = runChunks[index];
+		results[index] = await settleChunk(globalIndex, chunk);
 	}
 }
 
@@ -466,7 +496,7 @@ console.log(
 				', each with its own optimizer cache\n'
 );
 
-await Promise.all(Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, worker));
+await Promise.all(Array.from({ length: Math.min(CONCURRENCY, runChunks.length) }, worker));
 
 for (const result of results) {
 	if (result.ok) {
@@ -484,24 +514,29 @@ if (failed.length > 0) {
 		console.error(`  ${label} exited ${code}, over:`);
 		for (const file of chunk) console.error(`      ${file}`);
 	}
+	const shardNote = SHARDS > 1 ? ` in shard ${SHARD}/${SHARDS}` : '';
 	console.error(
-		`\n  ${failed.length} of ${chunks.length} chunk(s) failed. Their output is above,\n` +
+		`\n  ${failed.length} of ${runChunks.length} chunk(s)${shardNote} failed. Their output is above,\n` +
 			`  in place — re-run one with:\n` +
 			`      bunx vitest --run --project=client <file>`
 	);
 	process.exit(1);
 }
 
-if (ranFiles !== files.length) {
+const expectedFiles = runChunks.reduce((total, { chunk }) => total + chunk.length, 0);
+if (ranFiles !== expectedFiles) {
 	console.error(
-		`\n  Reconciliation failed: ${ranFiles} file(s) ran, ${files.length} on disk.\n` +
+		`\n  Reconciliation failed: ${ranFiles} file(s) ran, ${expectedFiles} expected in this run.\n` +
 			`  Every chunk exited 0, so this is a chunk that collected nothing — the\n` +
 			`  case a summed total cannot see.`
 	);
 	process.exit(1);
 }
 
-console.log(`\n  client: ${ranFiles}/${files.length} files, ${ranCases} cases passed, 0 failed`);
+const shardLabel = SHARDS > 1 ? ` shard ${SHARD}/${SHARDS}` : '';
+console.log(
+	`\n  client${shardLabel}: ${ranFiles}/${expectedFiles} files, ${ranCases} cases passed, 0 failed`
+);
 
 // Never a silent retry. A green run that needed one is a different fact from a
 // green run that did not, and the frequency is the measurement that says

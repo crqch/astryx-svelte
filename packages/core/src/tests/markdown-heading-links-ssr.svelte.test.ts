@@ -57,69 +57,79 @@ function headingIds(root: HTMLElement): Array<string | null> {
 }
 
 describe('Markdown heading links — SSR', () => {
-	it('keeps duplicate-copy ids and buttons stable across SSR and hydration', async () => {
-		const serverHTML = await serverRender(VALID_FIXTURE);
-		expect(serverHTML).toContain('id="article-a--overview"');
-		expect(serverHTML).toContain('id="article-b--overview"');
-		expect(serverHTML).toContain('aria-label="Copy link to Details"');
-		expect(serverHTML).not.toContain('href="#article-');
+	// SSR plus a real hydration walk; the suite's 15 s default is tight on a
+	// loaded CI runner, where the Vite SSR transport alone can take most of it.
+	it(
+		'keeps duplicate-copy ids and buttons stable across SSR and hydration',
+		{ timeout: 30_000 },
+		async () => {
+			const serverHTML = await serverRender(VALID_FIXTURE);
+			expect(serverHTML).toContain('id="article-a--overview"');
+			expect(serverHTML).toContain('id="article-b--overview"');
+			expect(serverHTML).toContain('aria-label="Copy link to Details"');
+			expect(serverHTML).not.toContain('href="#article-');
 
-		const target = mountServerMarkup(serverHTML);
-		const before = headingIds(target);
+			const target = mountServerMarkup(serverHTML);
+			const before = headingIds(target);
 
-		const errors: string[] = [];
-		const consoleError = console.error;
-		console.error = (...args: unknown[]) => {
-			errors.push(args.map(String).join(' '));
-		};
+			const errors: string[] = [];
+			const consoleError = console.error;
+			console.error = (...args: unknown[]) => {
+				errors.push(args.map(String).join(' '));
+			};
 
-		let component: Record<string, unknown> | null = null;
-		try {
-			component = hydrate(HeadingLinksSsr, { target }) as Record<string, unknown>;
-		} finally {
-			console.error = consoleError;
+			let component: Record<string, unknown> | null = null;
+			try {
+				component = hydrate(HeadingLinksSsr, { target }) as Record<string, unknown>;
+			} finally {
+				console.error = consoleError;
+			}
+
+			cleanup = () => {
+				if (component) unmount(component);
+				target.remove();
+			};
+
+			expect(errors.filter((message) => message.toLowerCase().includes('hydrat'))).toEqual([]);
+			const after = headingIds(target);
+			expect(after).toEqual(before);
+			expect(new Set(before).size).toBe(before.length);
 		}
+	);
 
-		cleanup = () => {
-			if (component) unmount(component);
-			target.remove();
-		};
+	it(
+		'fails soft across SSR and hydration for unsupported same-name entries',
+		{ timeout: 30_000 },
+		async () => {
+			const serverHTML = await serverRender(INVALID_FIXTURE);
+			const target = mountServerMarkup(serverHTML);
+			const headings = Array.from(target.querySelectorAll('h1,h2'));
 
-		expect(errors.filter((message) => message.toLowerCase().includes('hydrat'))).toEqual([]);
-		const after = headingIds(target);
-		expect(after).toEqual(before);
-		expect(new Set(before).size).toBe(before.length);
-	});
+			expect(headings).toHaveLength(2);
+			expect(headings[0]).toHaveAttribute('id', 'overview');
+			expect(headings[1]).not.toHaveAttribute('id');
+			expect(target.querySelector('button, a[href*="#"]')).toBeNull();
 
-	it('fails soft across SSR and hydration for unsupported same-name entries', async () => {
-		const serverHTML = await serverRender(INVALID_FIXTURE);
-		const target = mountServerMarkup(serverHTML);
-		const headings = Array.from(target.querySelectorAll('h1,h2'));
+			const errors: string[] = [];
+			const consoleError = console.error;
+			console.error = (...args: unknown[]) => {
+				errors.push(args.map(String).join(' '));
+			};
 
-		expect(headings).toHaveLength(2);
-		expect(headings[0]).toHaveAttribute('id', 'overview');
-		expect(headings[1]).not.toHaveAttribute('id');
-		expect(target.querySelector('button, a[href*="#"]')).toBeNull();
+			let component: Record<string, unknown> | null = null;
+			try {
+				component = hydrate(HeadingLinksSsrInvalid, { target }) as Record<string, unknown>;
+			} finally {
+				console.error = consoleError;
+			}
 
-		const errors: string[] = [];
-		const consoleError = console.error;
-		console.error = (...args: unknown[]) => {
-			errors.push(args.map(String).join(' '));
-		};
+			cleanup = () => {
+				if (component) unmount(component);
+				target.remove();
+			};
 
-		let component: Record<string, unknown> | null = null;
-		try {
-			component = hydrate(HeadingLinksSsrInvalid, { target }) as Record<string, unknown>;
-		} finally {
-			console.error = consoleError;
+			expect(errors.filter((message) => message.toLowerCase().includes('hydrat'))).toEqual([]);
+			expect(headingIds(target)).toEqual(['overview', null]);
 		}
-
-		cleanup = () => {
-			if (component) unmount(component);
-			target.remove();
-		};
-
-		expect(errors.filter((message) => message.toLowerCase().includes('hydrat'))).toEqual([]);
-		expect(headingIds(target)).toEqual(['overview', null]);
-	});
+	);
 });
