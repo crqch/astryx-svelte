@@ -2062,17 +2062,6 @@ The suite's two-row `it.each` under `the reusable Combobox contract` calls
 package's absence is the only blocker — the field props it inspects are
 implemented.
 
-### Avatar draws generated initials as text, not through the pseudo-element
-
-- **units:** Avatar
-- **kind:** divergence
-- **retires:** when initials move from a text node to upstream's `::before content` implementation
-
-Upstream generates initials in CSS (`::before` plus a `defineConsts` content and
-a mask), while this port renders them as text inside the avatar. The ported test
-suite asserts the text form, so switching would break case-for-case parity with
-its own translations. The remaining generated-initials rule is a named skip.
-
 ### `SelectorBottomSheet` is not ported
 
 - **units:** Selector/SelectorBottomSheet

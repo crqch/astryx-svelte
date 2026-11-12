@@ -69,40 +69,28 @@ const SKIP = [
 	{
 		class: 'xxbepff',
 		rule: '{border-start-end-radius:var(--radius-element)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
 	},
 	{
 		class: 'x15mvfev',
 		rule: '{border-start-start-radius:var(--radius-element)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
 	},
 	{
 		class: 'x1u5z0ei',
 		rule: '{height:240px}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
 	},
 	{
 		class: 'xg6iff7',
 		rule: '{min-height:100vh}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
-	},
-	{
-		class: 'x1536ba8',
-		rule: '{content:var(--x-16m2d0h)}',
-		reason:
-			'0.7.13 subsystem not ported (List reorder/Markdown heading links/Avatar initials/PickerWheel); see port/todo.md'
+		reason: '0.7.13 subsystem not ported (List reorder/Markdown heading links); see port/todo.md'
 	}
 ];
 
 /** Upstream compiles test fixtures and unported subsystems into its sheet. */
 const OTHER_SKIP = [
 	'@property --x-insetBlockStart { syntax: "*"; inherits: false;}',
-	'@property --x-16m2d0h { syntax: "*"; inherits: true;}',
-	'@property --x-flj70p { syntax: "*"; inherits: true;}',
 	'@media (pointer: coarse){.C.C{-webkit-tap-highlight-color:transparent}}',
 	'@media (hover: none) and (update: slow){.C.C{color:blue}}',
 	'@media (hover: hover) and (update: fast){.C.C{color:red}}',
@@ -112,7 +100,6 @@ const OTHER_SKIP = [
 	'@media (forced-colors: active){.C.C:is([aria-pressed="true"]){color:HighlightText}}',
 	'@media (any-pointer: coarse){.C.C{height:24px}}',
 	'@media (any-pointer: coarse){.C.C{width:24px}}',
-	'@supports (content: "a" / ""){.C.C::before{content:var(--x-flj70p)}}',
 	'@media (forced-colors: active){.C.C::after{background-color:Highlight}}'
 ];
 

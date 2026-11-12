@@ -193,6 +193,19 @@ const styles = stylex.create({
 
 /** Dynamic styles that depend on the avatar size. */
 const dynamicStyles = stylex.create({
+	// Generated content draws the initials. They are part of the picture, not
+	// text of the control. On a link or button, visible text that the name does
+	// not contain fails Label in Name. Newer engines get empty alternative text.
+	// Older engines draw the plain string; the aria-label still names the
+	// control.
+	initials: (quoted: string) => ({
+		'::before': {
+			content: {
+				default: quoted,
+				'@supports (content: "a" / "")': `${quoted} / ""`
+			}
+		}
+	}),
 	size: (size: number) => ({
 		width: size,
 		height: size
@@ -312,9 +325,21 @@ export function avatarImageAttrs(): SvelteStyleAttrs {
 	return sx(styles.image);
 }
 
-/** The initials plate. Its font size tracks the avatar's. */
-export function avatarInitialsAttrs(size: number, isLone: boolean): SvelteStyleAttrs {
-	return sx(styles.fallback, isLone && styles.loneFallback, dynamicStyles.fontSize(size));
+/**
+ * The initials plate. Its font size tracks the avatar's, and its text is
+ * generated content rather than a text node — see `dynamicStyles.initials`.
+ */
+export function avatarInitialsAttrs(
+	size: number,
+	isLone: boolean,
+	quotedInitials: string
+): SvelteStyleAttrs {
+	return sx(
+		styles.fallback,
+		isLone && styles.loneFallback,
+		dynamicStyles.fontSize(size),
+		dynamicStyles.initials(quotedInitials)
+	);
 }
 
 /** The generic-icon plate. No text, so no font size to scale. */
