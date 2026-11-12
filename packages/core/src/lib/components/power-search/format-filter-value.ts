@@ -2,6 +2,7 @@ import type { Locale, TranslatorFn } from '../../i18n/index.js';
 import type { EnumItem, FilterValue, OperatorValue } from './types.js';
 import type { InternalConfig } from './use-internal-config.svelte.js';
 import { truncateCharacters } from '../../utils/characters.js';
+import { type CalendarSystem, formatCalendarInstant } from '../../utils/calendar-system.js';
 
 /**
  * Ported from Astryx's `PowerSearch/formatFilterValue.ts`, verbatim.
@@ -53,20 +54,41 @@ function formatNumber(value: number, locale: Locale, units?: string): string {
 	return units ? `${formatted} ${units}` : formatted;
 }
 
+/**
+ * A date-only value reads its day in `timezoneID`, else in UTC; a value with a
+ * time of day reads in `timezoneID`, else in the viewer's zone. An empty string
+ * is no zone, as the formatter always read it.
+ */
+function resolveDateZone(timezoneID: string | undefined, isDateOnly: boolean): string | undefined {
+	if (timezoneID) {
+		return timezoneID;
+	}
+	return isDateOnly ? 'UTC' : undefined;
+}
+
 export function formatDateAbsolute(
 	unixSeconds: number,
 	locale: Locale,
-	timezoneID?: string
+	timezoneID: string | undefined,
+	isDateOnly = true,
+	calendar: CalendarSystem = 'gregory'
 ): string {
-	const options: Intl.DateTimeFormatOptions = {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric',
-		hour: 'numeric',
-		minute: '2-digit',
-		...(timezoneID ? { timeZone: timezoneID } : {})
-	};
-	return new Intl.DateTimeFormat(locale, options).format(unixSeconds * 1000);
+	const options: Intl.DateTimeFormatOptions = isDateOnly
+		? { year: 'numeric', month: 'short', day: 'numeric' }
+		: {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: '2-digit'
+			};
+	return formatCalendarInstant(
+		calendar,
+		new Date(unixSeconds * 1000),
+		options,
+		locale,
+		resolveDateZone(timezoneID, isDateOnly)
+	);
 }
 
 /**
@@ -76,12 +98,18 @@ export function formatDateAbsolute(
  * different options threaded through a param, since the two callers want
  * genuinely different shapes, not a parameterization of the same one.
  */
-export function formatDateAbsoluteCompact(unixSeconds: number, locale: Locale): string {
-	return new Intl.DateTimeFormat(locale, {
-		year: 'numeric',
-		month: 'short',
-		day: 'numeric'
-	}).format(unixSeconds * 1000);
+export function formatDateAbsoluteCompact(
+	unixSeconds: number,
+	locale: Locale,
+	calendar: CalendarSystem = 'gregory'
+): string {
+	return formatCalendarInstant(
+		calendar,
+		new Date(unixSeconds * 1000),
+		{ year: 'numeric', month: 'short', day: 'numeric' },
+		locale,
+		'UTC'
+	);
 }
 
 function formatRelativeDate(value: string): string {
@@ -100,7 +128,8 @@ export function formatFilterValue(
 	maxLength: number,
 	t: TranslatorFn,
 	locale: Locale,
-	timezoneID?: string
+	timezoneID?: string,
+	calendar: CalendarSystem = 'gregory'
 ): string {
 	switch (filterValue.type) {
 		case 'empty':
@@ -193,7 +222,16 @@ export function formatFilterValue(
 			return filterValue.value;
 
 		case 'date_absolute':
-			return truncate(formatDateAbsolute(filterValue.unixSeconds, locale, timezoneID), maxLength);
+			return truncate(
+				formatDateAbsolute(
+					filterValue.unixSeconds,
+					locale,
+					timezoneID,
+					operatorValue.type !== 'date_absolute' || operatorValue.isDateOnly !== false,
+					calendar
+				),
+				maxLength
+			);
 
 		case 'date_relative':
 			return formatRelativeDate(filterValue.value);

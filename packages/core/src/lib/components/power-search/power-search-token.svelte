@@ -3,6 +3,7 @@
 	import type { PowerSearchTokenProps } from './types.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import { formatFilterValue } from './format-filter-value.js';
 	import { powerSearchTokenValueAttrs } from './power-search-token.stylex.js';
 	import { resolveOperatorLabel } from './resolve-operator-label.js';
@@ -53,6 +54,7 @@
 	const config = useInternalConfig(() => configProp);
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(undefined, 'PowerSearchToken');
 
 	const fieldLabel = $derived(field.label);
 	const resolvedOperatorLabel = $derived(resolveOperatorLabel(operator, t));
@@ -64,7 +66,16 @@
 	);
 
 	const valueStr = $derived(
-		formatFilterValue(config, operator.value, filter.value, adjustedMaxLength, t, locale())
+		formatFilterValue(
+			config,
+			operator.value,
+			filter.value,
+			adjustedMaxLength,
+			t,
+			locale(),
+			undefined,
+			calendar()
+		)
 	);
 </script>
 

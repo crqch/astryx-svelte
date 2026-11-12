@@ -622,7 +622,7 @@
 												placeholder="Enter promo code"
 												value={promo}
 												onChange={(value) => (promo = value)}
-												style={fullWidth}
+												containerStyle={fullWidth}
 											/>
 										</StackItem>
 										<Button label="Apply" variant="secondary" size="lg" onclick={() => {}} />

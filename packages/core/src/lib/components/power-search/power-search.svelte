@@ -201,6 +201,7 @@
 	import { useThemeContext } from '../../theme/theme-context.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import { themeProps } from '../../internal/theme-props.js';
 	import { isFocusDetached } from '../../utils/focus-return.js';
 	import { formatFilterValue } from './format-filter-value.js';
@@ -342,6 +343,7 @@
 	);
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(undefined, 'PowerSearch');
 	const label = $derived(labelFromProps ?? t('@astryx.powersearch.label'));
 	const placeholder = $derived(placeholderFromProps ?? t('@astryx.powersearch.placeholder'));
 	const popoverSaveButtonLabel = $derived(
@@ -672,7 +674,8 @@
 						maxTokenLength,
 						t,
 						locale(),
-						timezoneID
+						timezoneID,
+						calendar()
 					)
 				: '';
 
@@ -914,6 +917,7 @@
 					filterValue={filter.value}
 					maxLength={adjustedMaxLength}
 					locale={locale()}
+					calendar={calendar()}
 				/>
 			{/if}
 		{/snippet}

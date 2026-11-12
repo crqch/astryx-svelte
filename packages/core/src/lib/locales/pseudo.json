@@ -638,6 +638,9 @@
   "@astryx.typeahead.clearSelection": {
     "defaultMessage": "⟦Çłéàř šéłéçţíóñ⟧"
   },
+  "@astryx.typeahead.selectionCleared": {
+    "defaultMessage": "⟦Çłéàřéð {label}⟧"
+  },
   "@astryx.breadcrumbs.label": {
     "defaultMessage": "⟦Ɓřéàðçřúɱƀ⟧"
   },
@@ -685,6 +688,18 @@
   },
   "@astryx.dateInput.invalidDate": {
     "defaultMessage": "⟦Íñṽàłíð ðàţé⟧"
+  },
+  "@astryx.dateInput.nonexistentDate": {
+    "defaultMessage": "⟦Ţĥíš ðàţé ðóéš ñóţ éẋíšţ íñ ţĥé {calendar}⟧"
+  },
+  "@astryx.dateInput.outOfRangeDate": {
+    "defaultMessage": "⟦{bounds, select, both {Enter a date from {min} to {max}} min {Enter a date on or after {min}} max {Enter a date on or before {max}} other {This date is not available}}⟧"
+  },
+  "@astryx.dateInput.formatHint": {
+    "defaultMessage": "⟦é.ĝ., {example}⟧"
+  },
+  "@astryx.dateInput.calendarDescription": {
+    "defaultMessage": "⟦Ðàţéš úšé ţĥé {calendar}⟧"
   },
   "@astryx.dateInput.resetPicking": {
     "defaultMessage": "⟦Řéšéţ⟧"

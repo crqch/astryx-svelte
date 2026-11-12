@@ -92,6 +92,12 @@
 		 */
 		maxMenuItems?: number;
 		/**
+		 * Minimum query length before the search source is queried. Below it no
+		 * search runs and the menu stays closed.
+		 * @default 1
+		 */
+		minQueryLength?: number;
+		/**
 		 * Text shown when no results found.
 		 * @default 'No results found'
 		 */
@@ -160,6 +166,7 @@
 	import { themeProps } from '../../internal/theme-props.js';
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { getInputARIA } from '../../utils/input-aria.js';
+	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import Field from '../field/field.svelte';
 	import Icon from '../icon/icon.svelte';
@@ -170,6 +177,7 @@
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
 	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
+	import { useFormLayout } from '../form-layout/form-layout-context.svelte.js';
 	import BaseTypeahead from './base-typeahead.svelte';
 	import TypeaheadEndLane from './typeahead-end-lane.svelte';
 	import {
@@ -183,6 +191,8 @@
 		typeaheadTokenOverlayStyle,
 		typeaheadWrapperAttrs
 	} from './typeahead.stylex.js';
+
+	type AriaBooleanish = boolean | 'true' | 'false';
 
 	/**
 	 * A search-as-you-type component for selecting an item from a search source.
@@ -222,6 +232,7 @@
 		placeholder,
 		hasEntriesOnFocus,
 		maxMenuItems,
+		minQueryLength,
 		emptySearchResultsText,
 		isDisabled = false,
 		disabledMessage,
@@ -237,12 +248,32 @@
 		xstyle,
 		class: className,
 		style: styleProp,
+		'aria-describedby': ariaDescribedByProp,
+		'aria-invalid': ariaInvalidProp,
+		'aria-labelledby': ariaLabelledByProp,
+		'aria-required': ariaRequiredProp,
 		'data-testid': testId
 	}: TypeaheadProps<T> = $props();
 
 	const t = useTranslator();
 	const resolveSize = useSize();
 	const size = $derived(resolveSize(sizeProp, 'md'));
+	const announce = useAnnounce();
+
+	// A form-level `defaultOptionality` means "only the exception is marked":
+	// a field is required unless it opts out with `isOptional`. The visible
+	// marker hides it, so assistive technology must still hear it as required.
+	const formLayout = useFormLayout();
+	const isEffectivelyRequired = $derived(
+		isRequired || (!isOptional && formLayout().defaultOptionality === 'required')
+	);
+
+	function joinAriaIDs(...values: (string | null | undefined | false)[]): string | undefined {
+		const ids = values
+			.flatMap((value) => (typeof value === 'string' ? value.trim().split(/\s+/) : []))
+			.filter(Boolean);
+		return ids.length === 0 ? undefined : Array.from(new Set(ids)).join(' ');
+	}
 
 	// One base id with derived suffixes — the counterpart to upstream's four
 	// `useId` calls, plus a fifth for the tooltip, which our `useTooltip` takes as
@@ -304,11 +335,47 @@
 	// Edit mode: when the user clicks the token to edit the selected value
 	let isEditing = $state(false);
 	let editingValue = $state.raw<T | null>(null);
+	// Whether the base's list is shown. Escape hides the list first; only a
+	// second Escape leaves edit mode and restores the token.
+	let isListOpen = false;
 
 	// Show token when value is selected and not in edit mode
 	const showToken = $derived(value != null && !isEditing);
 
-	/** Enter edit mode: remove the token visually, populate the input with the value label. */
+	/** Set the input's value and tell the base, which owns the query state. */
+	function setInputValue(input: HTMLInputElement, next: string): void {
+		const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+		setter?.call(input, next);
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+	}
+
+	/**
+	 * Focus the token's button once it renders. Used after edit mode ends, so
+	 * keyboard users stay in the component instead of falling to the page body.
+	 */
+	function focusTokenNextFrame(): void {
+		requestAnimationFrame(() => {
+			// `Token` exposes no element seam (it neither spreads rest nor takes an
+			// attachment — see port/todo.md), so the token is found by the stable
+			// `astryx-token` class `themeProps` stamps on it, scoped to this
+			// component's own wrapper. Upstream holds a `tokenRef`.
+			const tokenEl = wrapperEl?.querySelector<HTMLElement>(`.${stableClassName('token')}`);
+			if (tokenEl) {
+				const button = tokenEl.querySelector('button');
+				(button ?? tokenEl).focus();
+			}
+		});
+	}
+
+	/**
+	 * Enter edit mode: remove the token visually, populate the input with the
+	 * value label and select it.
+	 *
+	 * Everything happens inside the tap or click that asked for it, never a
+	 * frame later: iOS raises the software keyboard only for a focus made while
+	 * the browser is still dispatching the person's own tap. Deferred to an
+	 * animation frame, the focus landed with no keyboard.
+	 */
 	function handleEnterEditMode(): void {
 		if (isDisabled || !value) {
 			return;
@@ -318,21 +385,15 @@
 		isEditing = true;
 		// The base will receive onChangeQuery with the value's label
 		onChangeQuery?.(current.label);
-		requestAnimationFrame(() => {
-			const input = inputEl;
-			if (input) {
-				// Set the input value directly since the base manages its own query
-				// state, then dispatch a synthetic `input` to sync it.
-				const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-					window.HTMLInputElement.prototype,
-					'value'
-				)?.set;
-				nativeInputValueSetter?.call(input, current.label);
-				input.dispatchEvent(new Event('input', { bubbles: true }));
-				input.focus();
-				input.setSelectionRange(0, input.value.length);
-			}
-		});
+		const input = inputEl;
+		if (input) {
+			// The base manages its own query state, so set the input value and
+			// sync it before focusing: its focus handler must see the label, not
+			// an empty query (which would open the hasEntriesOnFocus bootstrap).
+			setInputValue(input, current.label);
+			input.focus();
+			input.setSelectionRange(0, input.value.length);
+		}
 	}
 
 	/** Restore the token if editing and no selection was made. */
@@ -355,32 +416,51 @@
 		editingValue = null;
 		onChange(item);
 		// After selection, focus the token so keyboard users stay in the component.
-		// requestAnimationFrame because the token renders on the next cycle.
 		if (item) {
-			requestAnimationFrame(() => {
-				// `Token` exposes no element seam (it neither spreads rest nor takes an
-				// attachment — see port/todo.md), so the token is found by the stable
-				// `astryx-token` class `themeProps` stamps on it, scoped to this
-				// component's own wrapper. Upstream holds a `tokenRef`.
-				const tokenEl = wrapperEl?.querySelector<HTMLElement>(`.${stableClassName('token')}`);
-				if (tokenEl) {
-					// Focus the internal button inside the token
-					const button = tokenEl.querySelector('button');
-					(button ?? tokenEl).focus();
-				}
-			});
+			focusTokenNextFrame();
 		}
 	}
 
-	/** Handle clear (explicit X button on the token). */
+	/**
+	 * Handle clear (explicit X button on the token). Edit mode copied the label
+	 * into the base's query, and the base only resets that query on a selection,
+	 * so clearing has to empty it the way entering edit mode filled it (#7038).
+	 */
 	function handleClear(): void {
+		const input = inputEl;
+		if (input && input.value !== '') {
+			setInputValue(input, '');
+		}
 		isEditing = false;
 		editingValue = null;
 		onChange(null);
-		inputEl?.focus();
+		input?.focus();
 	}
 
-	/** Escape during edit mode restores the token. */
+	/** Backspace or Delete on the selected token clears it, or starts editing. */
+	function handleTokenKeyDown(e: KeyboardEvent): boolean {
+		if (e.key !== 'Backspace' && e.key !== 'Delete') {
+			return false;
+		}
+		if (isDisabled || !value) {
+			return false;
+		}
+		const target = e.target as Element | null;
+		if (target?.closest(`.${stableClassName('token')}`) == null) {
+			return false;
+		}
+		e.preventDefault();
+		if (hasClear) {
+			const label = value.label;
+			handleClear();
+			announce(t('@astryx.typeahead.selectionCleared', { label }));
+		} else {
+			handleEnterEditMode();
+		}
+		return true;
+	}
+
+	/** Escape during edit mode restores the token, after the list is hidden. */
 	function handleKeyDown(e: KeyboardEvent): void {
 		// BaseTypeahead invokes this external handler *before* its own IME guard,
 		// so we must guard here too: an IME candidate window uses Escape to cancel
@@ -391,12 +471,18 @@
 		if (isImeKeyEvent(e)) {
 			return;
 		}
-		if (e.key === 'Escape' && editingValue) {
+		if (e.key === 'Escape' && editingValue && !isListOpen) {
 			e.preventDefault();
 			isEditing = false;
 			editingValue = null;
-			inputEl?.blur();
+			focusTokenNextFrame();
 		}
+	}
+
+	/** Track the base's open state without taking the caller's callback over. */
+	function handleOpenChange(isOpen: boolean): void {
+		isListOpen = isOpen;
+		onOpenChange?.(isOpen);
 	}
 
 	/** Click the wrapper to focus the input or enter edit mode. */
@@ -411,9 +497,20 @@
 		}
 	}
 
+	/** Keys on the field's other controls: the token's clear/edit keys, then the caller's handler. */
+	function handleWrapperKeyDown(event: KeyboardEvent): void {
+		if (event.target === inputEl) {
+			return;
+		}
+		if (handleTokenKeyDown(event)) {
+			return;
+		}
+		onKeyDown?.(event);
+	}
+
 	const groupValue = $derived(inputGroup ? inputGroup() : null);
-	const aria = $derived(
-		getInputARIA(
+	const aria = $derived.by(() => {
+		const base = getInputARIA(
 			inputLabelId,
 			[
 				description ? descriptionId : null,
@@ -421,7 +518,28 @@
 				showsDisabledMessage ? disabledMessageTooltip.describedBy : null
 			],
 			groupValue ? { labelID: groupValue.labelID, describedByIDs: groupValue.describedByIDs } : null
-		)
+		);
+		// A caller aria-labelledby names the input together with the field's own
+		// label (the field label standalone, the group and input labels in a
+		// group), as upstream joins them.
+		return {
+			ariaLabelledBy:
+				ariaLabelledByProp != null
+					? joinAriaIDs(base.ariaLabelledBy ?? inputLabelId, ariaLabelledByProp)
+					: base.ariaLabelledBy,
+			ariaDescribedBy: joinAriaIDs(base.ariaDescribedBy, ariaDescribedByProp)
+		};
+	});
+	const ariaRequired = $derived<AriaBooleanish | undefined>(
+		isEffectivelyRequired
+			? 'true'
+			: ((ariaRequiredProp as AriaBooleanish | null | undefined) ?? undefined)
+	);
+	const ariaInvalid = $derived<AriaBooleanish | 'grammar' | 'spelling' | undefined>(
+		status?.type === 'error'
+			? 'true'
+			: ((ariaInvalidProp as AriaBooleanish | 'grammar' | 'spelling' | null | undefined) ??
+					undefined)
 	);
 
 	// Captures the `<input>` `BaseTypeahead` renders — the counterpart to
@@ -474,11 +592,7 @@
 		data-testid={testId}
 		onclick={handleWrapperClick}
 		onfocusout={handleBlur}
-		onkeydown={(event) => {
-			if (event.target !== inputEl) {
-				onKeyDown?.(event);
-			}
-		}}
+		onkeydown={handleWrapperKeyDown}
 		{...inputGroup ? inputGroupItemProps : {}}
 		{...theme}
 		class={cx(theme.class, wrapperAttrs.class, inputGroup ? className : undefined)}
@@ -518,15 +632,18 @@
 				placeholder={showToken ? undefined : placeholder}
 				{hasEntriesOnFocus}
 				{maxMenuItems}
+				{minQueryLength}
 				{emptySearchResultsText}
 				{isDisabled}
 				{hasAutoFocus}
-				isFocusableDisabled={showsDisabledMessage}
+				isFocusableDisabled={isDisabled}
 				{inputId}
 				ariaDescribedBy={aria.ariaDescribedBy}
 				ariaLabelledBy={aria.ariaLabelledBy}
+				aria-required={ariaRequired}
+				aria-invalid={ariaInvalid}
 				{onChangeQuery}
-				{onOpenChange}
+				onOpenChange={handleOpenChange}
 				{menu}
 				{debounceMs}
 				anchorEl={wrapperEl}
@@ -555,6 +672,7 @@
 		{isLabelHidden}
 		{description}
 		inputID={inputId}
+		labelID={inputLabelId}
 		descriptionID={description ? descriptionId : undefined}
 		{isOptional}
 		{isRequired}

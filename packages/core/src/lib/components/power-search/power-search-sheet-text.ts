@@ -2,6 +2,7 @@ import type { Locale, TranslatorFn } from '../../i18n/index.js';
 import type { InternalConfig } from './use-internal-config.svelte.js';
 import { formatDateAbsoluteCompact, formatFilterValue } from './format-filter-value.js';
 import type { DateRelativeOperatorValue, FilterValue, OperatorValue } from './types.js';
+import type { CalendarSystem } from '../../utils/calendar-system.js';
 
 /**
  * The text a Filters row shows for a value, in the words the popover token
@@ -18,7 +19,8 @@ export function formatSheetValueText(
 	filterValue: FilterValue,
 	t: TranslatorFn,
 	locale: Locale,
-	timezoneID?: string
+	timezoneID?: string,
+	calendar: CalendarSystem = 'gregory'
 ): string | null {
 	if (filterValue.type === 'empty') {
 		return null;
@@ -28,7 +30,7 @@ export function formatSheetValueText(
 		operatorValue.type === 'date_absolute' &&
 		operatorValue.isDateOnly !== false
 	) {
-		return formatDateAbsoluteCompact(filterValue.unixSeconds, locale);
+		return formatDateAbsoluteCompact(filterValue.unixSeconds, locale, calendar);
 	}
 	const text = formatFilterValue(
 		config,
@@ -37,7 +39,8 @@ export function formatSheetValueText(
 		Number.MAX_SAFE_INTEGER,
 		t,
 		locale,
-		timezoneID
+		timezoneID,
+		calendar
 	);
 	return text === '' ? null : text;
 }

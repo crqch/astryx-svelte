@@ -1,5 +1,6 @@
 <script lang="ts" module>
 	import type { Locale } from '../../i18n/index.js';
+	import type { CalendarSystem } from '../../utils/calendar-system.js';
 	import type { EnumItem, FilterValue, OperatorValue } from './types.js';
 
 	export interface PowerSearchTokenValueProps {
@@ -7,6 +8,8 @@
 		filterValue: FilterValue;
 		maxLength: number;
 		locale: Locale;
+		/** The calendar the token writes a `date_absolute` value in. */
+		calendar?: CalendarSystem;
 	}
 
 	/**
@@ -60,7 +63,8 @@
 	 * transcribed; none of it corrected.
 	 */
 
-	const { operatorValue, filterValue, maxLength, locale }: PowerSearchTokenValueProps = $props();
+	const { operatorValue, filterValue, maxLength, locale, calendar }: PowerSearchTokenValueProps =
+		$props();
 
 	/**
 	 * `null` where upstream returns `null` — the three cases that render no
@@ -141,7 +145,7 @@
 				return filterValue.value;
 
 			case 'date_absolute': {
-				const formatted = formatDateAbsoluteCompact(filterValue.unixSeconds, locale);
+				const formatted = formatDateAbsoluteCompact(filterValue.unixSeconds, locale, calendar);
 				return truncateString(formatted, maxLength);
 			}
 

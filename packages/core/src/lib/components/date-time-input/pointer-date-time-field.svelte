@@ -50,7 +50,7 @@
 	import { isImeKeyEvent } from '../../utils/ime.js';
 	import { createOptimistic } from '../../internal/optimistic.svelte.js';
 	import { useInputContainer } from '../../hooks/use-input-container.svelte.js';
-	import { useTypedDate } from '../date-input/use-typed-date.svelte.js';
+	import { useTypedDate, typedDateError } from '../date-input/use-typed-date.svelte.js';
 	import {
 		adjustTime,
 		formatDisplayTime12h,
@@ -69,6 +69,7 @@
 	import { useCalendarConstraints } from '../calendar/use-calendar-constraints.svelte.js';
 	import { useInputStatusIcon } from '../../hooks/use-input-status-icon.svelte.js';
 	import InputStatusIcon from '../../hooks/input-status-icon.svelte';
+	import type { InputStatus } from '../field/types.js';
 	import Field from '../field/field.svelte';
 	import InputClearButton from '../field/input-clear-button.svelte';
 	import Icon from '../icon/icon.svelte';
@@ -177,6 +178,7 @@
 	const descriptionID = `${uid}-desc`;
 	const statusMessageID = `${uid}-status`;
 	const statusTooltipID = `${uid}-status-tip`;
+	const calendarDescriptionID = `${uid}-calendar-desc`;
 	const popoverID = `${uid}-popover`;
 	const timePopoverID = `${uid}-time-popover`;
 	const timeListboxId = `${uid}-time-listbox`;
@@ -207,28 +209,6 @@
 		isEnabled: showsDisabledMessage
 	}));
 
-	const statusIcon = useInputStatusIcon(() => ({
-		id: statusTooltipID,
-		status,
-		statusVariant: 'detached'
-	}));
-
-	// Hand-rolled rather than `getInputARIA`: this component never reads the
-	// `InputGroup` context, so there is no group half to merge.
-	const ariaDescribedBy = $derived(
-		[
-			description ? descriptionID : null,
-			status?.message ? statusMessageID : null,
-			// Always `undefined` — the fixed `detached` presentation renders no
-			// info-tip — but kept so the described-by list matches the rest of the
-			// family, as upstream's does.
-			statusIcon.describedBy ?? null,
-			showsDisabledMessage ? disabledMessageTooltip.describedBy : null
-		]
-			.filter(Boolean)
-			.join(' ') || undefined
-	);
-
 	// Split min/max and the current value.
 	const minParts = $derived(splitDateTime(min));
 	const maxParts = $derived(splitDateTime(max));
@@ -252,6 +232,59 @@
 		isDateDisabled: constraints.isDateDisabled
 	}));
 
+	// Typed date text, or null when the field shows the committed value.
+	let datePendingInput = $state<string | null>(null);
+	// Set when Enter or blur keeps rejected date text so the person can correct it.
+	let isDateRejectionCommitted = $state(false);
+	let isDateFocused = $state(false);
+
+	const dateTypedResult = $derived(
+		datePendingInput !== null && datePendingInput.trim() ? typedDate.parse(datePendingInput) : null
+	);
+	const dateTypedError = $derived(
+		isDisabled ? null : typedDateError(dateTypedResult, isDateRejectionCommitted)
+	);
+	const dateTypedErrorMessage = $derived(
+		dateTypedError != null && dateTypedResult != null
+			? typedDate.errorMessage(dateTypedResult)
+			: null
+	);
+	// Text that stays in the date field shows its reason as well as announcing it.
+	const isDateErrorShown = $derived(
+		dateTypedError === 'nonexistent' ||
+			dateTypedError === 'outOfRange' ||
+			(dateTypedError === 'unreadable' && isDateRejectionCommitted)
+	);
+	const dateTypedStatus = $derived(
+		isDateErrorShown && dateTypedErrorMessage != null
+			? ({ type: 'error' as const, message: dateTypedErrorMessage } satisfies InputStatus)
+			: undefined
+	);
+	const fieldStatus = $derived<InputStatus | undefined>(dateTypedStatus ?? status);
+
+	const statusIcon = useInputStatusIcon(() => ({
+		id: statusTooltipID,
+		status: fieldStatus,
+		statusVariant: 'detached'
+	}));
+
+	// Hand-rolled rather than `getInputARIA`: this component never reads the
+	// `InputGroup` context, so there is no group half to merge.
+	const ariaDescribedBy = $derived(
+		[
+			description ? descriptionID : null,
+			typedDate.calendarDescription != null ? calendarDescriptionID : null,
+			fieldStatus?.message ? statusMessageID : null,
+			// Always `undefined` — the fixed `detached` presentation renders no
+			// info-tip — but kept so the described-by list matches the rest of the
+			// family, as upstream's does.
+			statusIcon.describedBy ?? null,
+			showsDisabledMessage ? disabledMessageTooltip.describedBy : null
+		]
+			.filter(Boolean)
+			.join(' ') || undefined
+	);
+
 	// Time constraints only bite on the boundary days themselves: a 09:00 minimum
 	// on 1 March constrains 1 March and no other date.
 	const timeMin = $derived.by(() => {
@@ -267,9 +300,6 @@
 		}
 		return valueParts.date === maxParts.date ? maxParts.time : undefined;
 	});
-
-	// --- Date input state ---
-	let datePendingInput = $state<string | null>(null);
 
 	// The `DateInput` reconciliation, on the date half only: a value change this
 	// component caused must not wipe half-typed text, while an external one must.
@@ -287,6 +317,7 @@
 					lastFiredDate = undefined;
 					if (datePendingInput !== null) {
 						datePendingInput = null;
+						isDateRejectionCommitted = false;
 					}
 				}
 			}
@@ -301,13 +332,22 @@
 		return d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? typedDate.formatCommitted(d) : '';
 	});
 
-	const isDateInputValid = $derived.by(() => {
-		if (datePendingInput === null || !datePendingInput.trim()) {
-			return true;
-		}
-		const result = typedDate.parse(datePendingInput);
-		return result.kind !== 'unreadable' && result.kind !== 'nonexistent';
-	});
+	// The format hint for an empty focused date field, unless the caller
+	// supplied a placeholder, which wins.
+	const dateFormatHint = $derived(
+		placeholderFromProps == null && isDateFocused && !dateDisplayValue
+			? typedDate.getFormatHint()
+			: null
+	);
+
+	// Whether the typed date is a rejection — drives the dimmed text and
+	// `aria-invalid`. A blank pending value is not invalid.
+	const isDateInputValid = $derived(dateTypedError == null);
+
+	// A typed date rejection that the field status does not announce. Field's
+	// detached status element announces the rest, so the alert keeps only the
+	// rejections shown nowhere else.
+	const dateAlertMessage = $derived(dateTypedStatus != null ? '' : (dateTypedErrorMessage ?? ''));
 
 	// --- Time input state ---
 	let timePendingInput = $state<string | null>(null);
@@ -460,16 +500,29 @@
 		}
 		const text = (e.target as HTMLInputElement).value;
 		datePendingInput = text;
+		isDateRejectionCommitted = false;
 
 		const result = typedDate.parse(text);
 		if (result.kind === 'value' && result.isComplete) {
 			const parsedISO = plainDateToISO(result.date);
-			if (parsedISO !== valueParts.date && !constraints.isDateDisabled(result.date)) {
-				lastFiredDate = parsedISO;
-				handleDateChange(parsedISO, 'input');
+			if (reportDate(parsedISO)) {
 				calendar?.navigateTo(parsedISO);
 			}
 		}
+	}
+
+	/**
+	 * Reports a parsed date once. A date the caller already holds, or one this
+	 * typing session already reported, fires nothing; Enter or blur ends the
+	 * session so a retyped date reports again.
+	 */
+	function reportDate(iso: ISODateString): boolean {
+		if (iso === valueParts.date || iso === lastFiredDate) {
+			return false;
+		}
+		lastFiredDate = iso;
+		handleDateChange(iso, 'input');
+		return true;
 	}
 
 	function commitDatePendingInput(): void {
@@ -482,17 +535,45 @@
 				fireChange(undefined);
 			}
 			datePendingInput = null;
+			isDateRejectionCommitted = false;
 			return;
 		}
 
 		const result = typedDate.parse(datePendingInput);
+		if (
+			result.kind === 'incomplete' ||
+			result.kind === 'nonexistent' ||
+			result.kind === 'outOfRange'
+		) {
+			// Keep the text and show why it cannot commit; never finish or adjust
+			// the date.
+			isDateRejectionCommitted = true;
+			return;
+		}
 		if (result.kind === 'value') {
 			const parsedISO = plainDateToISO(result.date);
-			if (parsedISO !== valueParts.date) {
-				handleDateChange(parsedISO, 'input');
-			}
+			reportDate(parsedISO);
 		}
+		// A new typing session reports a retyped date again.
+		lastFiredDate = undefined;
 		datePendingInput = null;
+		isDateRejectionCommitted = false;
+	}
+
+	function handleDateFocus(): void {
+		if (isEffectivelyDisabled) {
+			// A disabled/busy field stays focusable (via aria-disabled) so its reason
+			// is discoverable, but it must not present editing affordances — keep the
+			// static placeholder rather than swapping in the format hint.
+			return;
+		}
+		isDateFocused = true;
+		typedDate.prepare();
+	}
+
+	function handleDateBlur(): void {
+		isDateFocused = false;
+		commitDatePendingInput();
 	}
 
 	function handleDateKeyDown(e: KeyboardEvent): void {
@@ -918,25 +999,25 @@
 	const theme = $derived(
 		themeProps('date-time-input', {
 			size,
-			status: status?.type ?? null,
+			status: fieldStatus?.type ?? null,
 			disabled: isDisabled ? 'disabled' : null
 		})
 	);
 	const rowAttrs = $derived(dateTimeInputRowAttrs(xstyle));
 	const dateWrapperAttrs = $derived(
-		dateTimeInputDateWrapperAttrs(size, status?.type, isEffectivelyDisabled)
+		dateTimeInputDateWrapperAttrs(size, fieldStatus?.type, isEffectivelyDisabled)
 	);
 	const timeWrapperAttrs = $derived(
-		dateTimeInputTimeWrapperAttrs(size, status?.type, isEffectivelyDisabled)
+		dateTimeInputTimeWrapperAttrs(size, fieldStatus?.type, isEffectivelyDisabled)
 	);
 	// The two segment wrappers are theming targets of their own, so a theme can
 	// restyle their geometry (padding/height/font) — previously unreachable. Both
 	// reflect `size` and `status` as data attributes, mirroring the root target.
 	const dateSegmentTheme = $derived(
-		themeProps('date-time-input-date-segment', { size, status: status?.type ?? null })
+		themeProps('date-time-input-date-segment', { size, status: fieldStatus?.type ?? null })
 	);
 	const timeSegmentTheme = $derived(
-		themeProps('date-time-input-time-segment', { size, status: status?.type ?? null })
+		themeProps('date-time-input-time-segment', { size, status: fieldStatus?.type ?? null })
 	);
 	const toggleAttrs = $derived(dateTimeInputIconButtonAttrs(isEffectivelyDisabled));
 	const iconAttrs = dateTimeInputIconAttrs();
@@ -959,11 +1040,11 @@
 	{isOptional}
 	{isRequired}
 	{isDisabled}
-	status={status
+	status={fieldStatus
 		? {
-				type: status.type,
-				message: status.message,
-				messageID: status.message ? statusMessageID : undefined
+				type: fieldStatus.type,
+				message: fieldStatus.message,
+				messageID: fieldStatus.message ? statusMessageID : undefined
 			}
 		: undefined}
 	{labelTooltip}
@@ -1016,17 +1097,17 @@
 				role="combobox"
 				value={dateDisplayValue}
 				oninput={handleDateInputChange}
-				onfocus={typedDate.prepare}
-				onblur={commitDatePendingInput}
+				onfocus={handleDateFocus}
+				onblur={handleDateBlur}
 				onclick={handleDateInputClick}
 				onkeydown={handleDateKeyDown}
-				{placeholder}
+				placeholder={dateFormatHint ?? placeholder}
 				disabled={isEffectivelyDisabled && !showsDisabledMessage}
 				aria-disabled={showsDisabledMessage ? 'true' : undefined}
 				readonly={showsDisabledMessage || undefined}
 				aria-describedby={ariaDescribedBy}
 				aria-required={isEffectivelyRequired() ? 'true' : undefined}
-				aria-invalid={status?.type === 'error' || !isDateInputValid ? 'true' : undefined}
+				aria-invalid={fieldStatus?.type === 'error' || !isDateInputValid ? 'true' : undefined}
 				aria-busy={isBusy || undefined}
 				aria-expanded={popover.isOpen}
 				aria-haspopup="dialog"
@@ -1043,8 +1124,11 @@
 				rejected (WCAG 3.3.1).
 			-->
 			<VisuallyHidden as="div" role="alert" aria-live="assertive">
-				{!isDateInputValid ? t('@astryx.dateInput.invalidDate') : ''}
+				{dateAlertMessage}
 			</VisuallyHidden>
+			{#if typedDate.calendarDescription != null}
+				<VisuallyHidden id={calendarDescriptionID}>{typedDate.calendarDescription}</VisuallyHidden>
+			{/if}
 			{#if hasClear && value !== undefined && !isEffectivelyDisabled}
 				<InputClearButton label={t('@astryx.dateInput.clear', { label })} onclick={handleClear} />
 			{/if}

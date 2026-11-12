@@ -133,6 +133,7 @@
 	import { rtlStyles } from '../../utils/rtl.stylex.js';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
 	import { useLocale } from '../../i18n/use-locale.svelte.js';
+	import { useCalendarSystem } from '../../i18n/use-calendar-system.svelte.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import NestedEditor from './nested-editor.svelte';
@@ -238,6 +239,7 @@
 
 	const t = useTranslator();
 	const locale = useLocale();
+	const calendar = useCalendarSystem(undefined, 'PowerSearch');
 	const announce = useAnnounce();
 	const isInteractive = $derived(!isDisabled && !isReadOnly);
 
@@ -525,7 +527,15 @@
 				? (buildSheetRelativeDateOptions(operator.value).find(
 						(option) => option.value === filterValue.value
 					)?.label ?? filterValue.value)
-				: formatSheetValueText(config, operator.value, filterValue, t, locale(), timezoneID);
+				: formatSheetValueText(
+						config,
+						operator.value,
+						filterValue,
+						t,
+						locale(),
+						timezoneID,
+						calendar()
+					);
 		return { label, value };
 	}
 

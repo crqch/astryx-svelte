@@ -77,6 +77,12 @@
 			"svelte": "./dist/internal/naming.js",
 			"default": "./dist/internal/naming.js"
 		},
+		"./internal/calendar-system": {
+			"source": "./src/lib/internal/calendar-system.ts",
+			"types": "./dist/internal/calendar-system.d.ts",
+			"svelte": "./dist/internal/calendar-system.js",
+			"default": "./dist/internal/calendar-system.js"
+		},
 		"./utils": {
 			"source": "./src/lib/utils/index.ts",
 			"types": "./dist/utils/index.d.ts",

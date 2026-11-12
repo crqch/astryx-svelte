@@ -82,17 +82,17 @@
 	 * in the surface would let a caller pass one that typechecks and is then
 	 * silently shadowed.
 	 *
-	 * `oninput`/`onfocus`/`onblur`/`onpointerdown` are omitted for the same reason,
-	 * and it matters more here than upstream: upstream drops *every* rest prop, so
-	 * nothing is advertised-and-then-ignored, whereas this port makes the rest
-	 * spread load-bearing on the `<input>` (it is the seam replacing upstream's
-	 * `ref`). A handler arriving through it would reasonably be expected to fire,
-	 * and these four are set explicitly after the spread. `NumberInput` and
-	 * `TextInput` close exactly this hole.
+	 * `oninput`/`onfocus`/`onblur`/`onpointerdown`/`onclick` are omitted for the
+	 * same reason, and it matters more here than upstream: upstream drops *every*
+	 * rest prop, so nothing is advertised-and-then-ignored, whereas this port
+	 * makes the rest spread load-bearing on the `<input>` (it is the seam
+	 * replacing upstream's `ref`). A handler arriving through it would reasonably
+	 * be expected to fire, and these five are set explicitly after the spread.
+	 * `NumberInput` and `TextInput` close exactly this hole.
 	 */
 	export interface BaseTypeaheadProps<T extends SearchableItem> extends Omit<
 		BaseProps<HTMLInputElement>,
-		'onchange' | 'onkeydown' | 'oninput' | 'onfocus' | 'onblur' | 'onpointerdown'
+		'onchange' | 'onclick' | 'onkeydown' | 'oninput' | 'onfocus' | 'onblur' | 'onpointerdown'
 	> {
 		/** Search source providing items. */
 		searchSource: SearchSource<T>;
@@ -114,6 +114,12 @@
 		 * @default 10
 		 */
 		maxMenuItems?: number;
+		/**
+		 * Minimum query length before the search source is queried. Below it no
+		 * search runs and the menu stays closed.
+		 * @default 1
+		 */
+		minQueryLength?: number;
 		/** Fixed dropdown width in pixels. Never shrinks below the anchor width. */
 		menuWidth?: number;
 		/**
@@ -193,8 +199,10 @@
 </script>
 
 <script lang="ts" generics="T extends SearchableItem">
+	import { untrack } from 'svelte';
 	import { getKey } from '../../utils/get-key.js';
 	import { groupItems } from '../../utils/group-items.js';
+	import { characterCount } from '../../utils/characters.js';
 	import { useAnnounce } from '../../hooks/use-announce.js';
 	// Imported from the module, not the barrel: upstream keeps `isImeKeyEvent`
 	// out of `hooks/index.ts` too, and its consumers reach it directly.
@@ -245,6 +253,7 @@
 		placeholder: placeholderFromProps,
 		hasEntriesOnFocus = false,
 		maxMenuItems = 10,
+		minQueryLength = 1,
 		menuWidth,
 		emptySearchResultsText: emptySearchResultsTextFromProps,
 		isDisabled = false,
@@ -294,6 +303,10 @@
 	let highlightedIndex = $state(-1);
 	let isLoading = $state(false);
 	let hasSearched = $state(false);
+	// True for the one highlight change a pointer movement produced, so the
+	// scroll effect can skip it: scrolling under a stationary pointer moves the
+	// next row beneath it, which re-highlights and scrolls again.
+	let highlightFromPointer = false;
 	// The query the last search was actually started for. Until it matches the
 	// input, the cached answer belongs to the old query, so an empty result set
 	// is not this query's outcome yet (upstream's `isSearchPending`).
@@ -304,6 +317,16 @@
 	const listboxMenu = $derived(menu?.role === 'listbox' ? menu : null);
 	const isSearchPending = $derived(isLoading || query !== lastSearchedQuery);
 	const isEmptySearch = $derived(results.length === 0 && hasSearched && !isSearchPending);
+
+	/**
+	 * A query typed but still shorter than the caller's threshold. An empty
+	 * query is not "below the minimum" — it is the untouched state, and
+	 * `hasEntriesOnFocus` owns what happens there.
+	 */
+	function isBelowMinQueryLength(value: string): boolean {
+		const length = characterCount(value);
+		return length > 0 && length < minQueryLength;
+	}
 
 	// Set when `open()` runs, so the open is handled after the commit and reads
 	// the menu the caller rendered in the same event (a pick that switches a
@@ -431,12 +454,19 @@
 		if (pointerActive) {
 			document.addEventListener(
 				'click',
-				() =>
+				(event) => {
+					// Only this press's own click on the input should complete the
+					// deferred show. A click anywhere else is an outside press and
+					// must not reopen the layer it just dismissed.
+					if (!inputEl?.contains(event.target as Node | null)) {
+						return;
+					}
 					requestAnimationFrame(() => {
 						if (!isDisabled && !isDialogMenu) {
 							popover.show();
 						}
-					}),
+					});
+				},
 				{ once: true }
 			);
 		} else {
@@ -453,11 +483,12 @@
 
 	/** The handle's listbox open: show current results, or load them. */
 	function openListbox(): void {
+		const isBelowMinLength = isBelowMinQueryLength(query);
 		if (results.length > 0 && resultsGen === searchGen) {
 			showLayer();
-		} else if (query.length > 0) {
+		} else if (query.length > 0 && !isBelowMinLength) {
 			void performSearch(query);
-		} else if (hasEntriesOnFocus) {
+		} else if (hasEntriesOnFocus && !isBelowMinLength) {
 			void performBootstrap();
 		}
 	}
@@ -563,6 +594,14 @@
 			if (searchGen !== gen) {
 				return;
 			}
+			// A field that became disabled while the request was out opens no
+			// list and reports no outcome: the query was dropped, not answered.
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
+				hasSearched = false;
+				return;
+			}
 			resultsGen = gen;
 			const shown = searchResults.slice(0, maxMenuItems);
 			results = shown;
@@ -597,10 +636,51 @@
 
 	async function performBootstrap(): Promise<void> {
 		const gen = ++searchGen;
+		// A synchronous source answers in the same turn: there is no in-flight
+		// state to report, so it commits without starting a loading cycle. A
+		// pending search from before the query was cleared is settled here.
+		let bootstrapResult: T[] | Promise<T[]>;
+		try {
+			bootstrapResult = searchSource.bootstrap();
+		} catch {
+			if (searchGen !== gen) {
+				return;
+			}
+			results = [];
+			highlightedIndex = -1;
+			setLoading(false);
+			return;
+		}
+		if (Array.isArray(bootstrapResult)) {
+			if (searchGen !== gen) {
+				return;
+			}
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
+				setLoading(false);
+				return;
+			}
+			resultsGen = gen;
+			const shown = bootstrapResult.slice(0, maxMenuItems);
+			results = shown;
+			highlightedIndex = shown.length > 0 ? 0 : -1;
+			if (bootstrapResult.length > 0) {
+				showLayer();
+			}
+			setLoading(false);
+			return;
+		}
+
 		setLoading(true);
 		try {
-			const bootstrapResults = await searchSource.bootstrap();
+			const bootstrapResults = await bootstrapResult;
 			if (searchGen !== gen) {
+				return;
+			}
+			if (isDisabled) {
+				results = [];
+				highlightedIndex = -1;
 				return;
 			}
 			resultsGen = gen;
@@ -628,13 +708,22 @@
 
 		if (searchTimeout) {
 			clearTimeout(searchTimeout);
+			searchTimeout = null;
 		}
 
-		if (newQuery.length === 0 && !hasEntriesOnFocus) {
+		// Nothing to search: either the field was emptied, or the query is
+		// still shorter than `minQueryLength`. Both drop stale results and
+		// close the menu — showing the empty state for a query that was never
+		// searched would report "no results" that nobody looked for.
+		if ((newQuery.length === 0 && !hasEntriesOnFocus) || isBelowMinQueryLength(newQuery)) {
 			searchGen++;
 			searchSource.cancel?.();
 			results = [];
 			hasSearched = false;
+			// Bumping the generation abandons any in-flight search, whose own
+			// finally declines to clear the flag — so clear it here or the
+			// field spins forever while the query stays below the threshold.
+			setLoading(false);
 			// Clear any lingering result-count / no-results announcement.
 			announce('');
 			hideList();
@@ -661,6 +750,10 @@
 	}
 
 	function handleSelect(item: T): void {
+		// A field that became disabled opens no list and picks nothing.
+		if (isDisabled) {
+			return;
+		}
 		// Bump generation to invalidate any in-flight async searches
 		searchGen++;
 		if (searchTimeout) {
@@ -697,6 +790,22 @@
 			// selection.
 			resultsGen === searchGen
 		) {
+			showLayer();
+		}
+	}
+
+	/**
+	 * A click on the still-focused input reopens a list that was dismissed
+	 * without a blur (Escape, a pick), where no focus event follows. A load
+	 * already in flight owns the open, so the click does not start a second.
+	 */
+	function handleClick(): void {
+		if (isDisabled || isDialogMenu || popover.isOpen || isLoading) {
+			return;
+		}
+		if (hasEntriesOnFocus && results.length === 0 && query.length === 0) {
+			void performBootstrap();
+		} else if (results.length > 0 && resultsGen === searchGen) {
 			showLayer();
 		}
 	}
@@ -744,6 +853,23 @@
 			return;
 		}
 
+		// A focusable-disabled field opens no list and picks nothing; it only
+		// lets a list that was open before it became disabled close.
+		if (isDisabled) {
+			// Enter on a list that is still open picks nothing, and must not
+			// submit an enclosing form either.
+			if (popover.isOpen && e.key === 'Enter') {
+				e.preventDefault();
+			}
+			if (popover.isOpen && (e.key === 'Escape' || e.key === 'Tab')) {
+				if (e.key === 'Escape') {
+					e.preventDefault();
+				}
+				popover.hide();
+			}
+			return;
+		}
+
 		if (!popover.isOpen) {
 			// A dialog-role menu has no options for the input to move through and
 			// only the handle opens it.
@@ -752,11 +878,16 @@
 			}
 			if (e.key === 'ArrowDown' && (hasEntriesOnFocus || query.length > 0)) {
 				e.preventDefault();
+				const isBelowMinLength = isBelowMinQueryLength(query);
 				if (results.length > 0) {
 					popover.show();
 					highlightedIndex = 0;
-				} else if (hasEntriesOnFocus) {
+				} else if (hasEntriesOnFocus && !isBelowMinLength) {
+					// A below-threshold query was never searched; falling back to
+					// bootstrap entries would open suggestions that ignore it.
 					void performBootstrap();
+				} else if (query.length > 0 && !isBelowMinLength) {
+					void performSearch(query);
 				}
 			}
 			return;
@@ -795,6 +926,12 @@
 				e.preventDefault();
 				popover.hide();
 				break;
+			case 'Tab':
+				// Dismiss here rather than from the blur this press produces:
+				// hiding a top-layer popover during the focusout makes Chrome
+				// abandon the in-flight focus move and drop focus to <body>.
+				popover.hide();
+				break;
 			// Upstream nests two guards in these cases. `popover.isOpen` is dead — the
 			// switch is only reached when it is already true — so it is not
 			// transcribed. `results.length > 0` is *not* dead and is kept: without it
@@ -816,6 +953,19 @@
 
 	function getItemId(index: number): string {
 		return `${listboxId}-option-${index}`;
+	}
+
+	/**
+	 * Highlight follows pointer movement, not pointer presence: a menu that
+	 * opens or reflows under a resting pointer keeps its keyboard highlight, so
+	 * Enter acts on the option the person was shown.
+	 */
+	function highlightOnHover(index: number): void {
+		if (index === highlightedIndex) {
+			return;
+		}
+		highlightFromPointer = true;
+		highlightedIndex = index;
 	}
 
 	/** Closes the menu from a listbox or dialog render's `close` member. */
@@ -840,6 +990,10 @@
 		const isOpen = popover.isOpen;
 		const index = highlightedIndex;
 		const count = results.length;
+		if (highlightFromPointer) {
+			highlightFromPointer = false;
+			return;
+		}
 		if (!isOpen || index < 0 || index >= count) {
 			return;
 		}
@@ -865,6 +1019,51 @@
 			}
 			source.cancel?.();
 		};
+	});
+
+	// A replacement source starts a new generation: a response from the source
+	// it replaced must not land in the new source's menu. The busy state and
+	// hasSearched are cleared with it, so a load owned by the old source cannot
+	// leave the field spinning or report "no results" for a query the new
+	// source never ran.
+	let previousSearchSource = $state.raw(untrack(() => searchSource));
+	$effect(() => {
+		const source = searchSource;
+		if (source === previousSearchSource) {
+			return;
+		}
+		previousSearchSource.cancel?.();
+		previousSearchSource = source;
+		searchGen++;
+		resultsGen = 0;
+		results = [];
+		highlightedIndex = -1;
+		hasSearched = false;
+		setLoading(false);
+		announce('');
+		hideList();
+	});
+
+	// A field that becomes disabled stops showing a search as busy, and a
+	// dropped query has no outcome: no empty state. A list already open stays
+	// in the DOM (hidden from the accessibility tree) until it is dismissed.
+	let previousDisabled = $state.raw(untrack(() => isDisabled));
+	$effect(() => {
+		if (isDisabled === previousDisabled) {
+			return;
+		}
+		previousDisabled = isDisabled;
+		if (!isDisabled) {
+			return;
+		}
+		searchGen++;
+		if (searchTimeout) {
+			clearTimeout(searchTimeout);
+			searchTimeout = null;
+		}
+		searchSource.cancel?.();
+		hasSearched = false;
+		setLoading(false);
 	});
 
 	// New at 0.5.0: the dropdown renders `auxiliaryData.group` as named groups,
@@ -928,6 +1127,7 @@
 			{ once: true }
 		);
 	}}
+	onclick={handleClick}
 	onfocus={handleFocus}
 	onblur={handleBlur}
 	onkeydown={(event) => {
@@ -942,6 +1142,8 @@
 	autofocus={hasAutoFocus}
 	data-autofocus={hasAutoFocus || undefined}
 	autocomplete="off"
+	enterkeyhint="search"
+	autocorrect="off"
 	class={cx(inputAttrs.class, className)}
 	style={mergeStyle(inputAttrs.style, styleProp as string | undefined)}
 />
@@ -1038,7 +1240,7 @@
 			aria-selected={isSelected}
 			tabindex={-1}
 			onclick={() => handleSelect(item)}
-			onmouseenter={() => (highlightedIndex = index)}
+			onmousemove={() => highlightOnHover(index)}
 			class={attrs.class}
 			style={attrs.style}
 		>

@@ -280,8 +280,9 @@ describe('DateTimeInput', () => {
 		const onChange = vi.fn();
 		const screen = await render(DateTimeInput, { props: { label: 'Meeting', onChange } });
 		const dateInput = dateInputIn(screen.container);
-		await changeValue(dateInput, '03/15/2026');
-		onChange.mockClear();
+		// A two-digit year commits only on Enter or blur.
+		await changeValue(dateInput, '03/15/26');
+		expect(onChange).not.toHaveBeenCalled();
 
 		// The composing keydown (isComposing / legacy keyCode 229) that commits an
 		// IME candidate must not be read as "commit the typed date".
