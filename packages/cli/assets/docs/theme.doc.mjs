@@ -520,7 +520,7 @@ export const brandTheme = defineTheme({
 					type: 'code',
 					lang: 'ts',
 					label: 'Light/dark tuple',
-					code: "'--color-accent': ['#0064E0', '#2694FE'],\n//                   ^light     ^dark"
+					code: "'--color-accent': ['#0064E0', '#0171E3'],\n//                   ^light     ^dark"
 				},
 				{
 					type: 'code',

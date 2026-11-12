@@ -219,10 +219,10 @@ export const myTheme = defineTheme({
 	//   --font-weight-*  normal · medium · semibold · bold
 	//   --text-*         {heading-1…6, body, large, label, code, supporting,
 	//                    display-1…3} × {-size, -weight, -leading}
-	//   --color-syntax-* code highlighting
+	//   --color-syntax-* code highlighting · --color-data-* charts
 	// ───────────────────────────────────────────────────────────────────────
 	tokens: {
-		'--color-accent': ['#0064E0', '#2694FE'],
+		'--color-accent': ['#0064E0', '#0171E3'],
 		// Changing an accent means owning its on-colour: this is the label that
 		// sits on top of the fill above, in each mode.
 		'--color-on-accent': ['#FFFFFF', '#FFFFFF'],

@@ -33,7 +33,7 @@ export const docs = {
 					type: 'table',
 					headers: ['Token', 'Light', 'Dark'],
 					rows: [
-						['--color-accent', '#0064E0', '#2694FE'],
+						['--color-accent', '#0064E0', '#0171E3'],
 						['--color-accent-muted', '#0082FB33', '#0082FB3F'],
 						['--color-on-accent', '#FFFFFF', '#FFFFFF'],
 						[
@@ -66,7 +66,7 @@ export const docs = {
 						['--color-on-success', '#FFFFFF', '#FFFFFF'],
 						['--color-error', '#E3193B', '#F5394F'],
 						['--color-error-muted', '#E3193B33', '#F5394F3F'],
-						['--color-on-error', '#FFFFFF', '#FFFFFF'],
+						['--color-on-error', '#FFFFFF', '#0A1317'],
 						['--color-warning', '#E9AF08', '#F2C00B'],
 						['--color-warning-muted', '#E2A40033', '#E2A4003F'],
 						['--color-on-warning', '#0A1317', '#0A1317'],
