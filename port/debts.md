@@ -2131,3 +2131,19 @@ violations file, and the fixtures are imported from a source module). The 10
 Badge classes are skipped by class/rule in `compare-upstream-css.mjs`; the 14
 fixture at-rule/declaration shapes sit in its `OTHER_SKIP`. Neither exists in
 this port and neither is a component rule.
+
+### The calendar-system layer behind `InternationalizationProvider.calendar` is not ported
+
+- **units:** i18n/useCalendarSystem, utils/calendarSystem, utils/calendarDateParser, Calendar, DateInput, DateTimeInput, Timestamp
+- **kind:** unported
+- **retires:** when `CalendarSystem`, `resolveCalendarSystem`, the calendar date parser and the provider's `calendar` prop are ported and the date controls render the selected system
+
+Upstream lets an application select a calendar system (for example a non-Gregorian
+calendar) through the provider; the date controls then parse, format, navigate and
+render months in that system. This port renders the Gregorian calendar only. The
+layer is large — `utils/calendarSystem.ts` is 838 lines and
+`utils/calendarDateParser.ts` is 1,385 — and it reaches Calendar, DateInput,
+DateTimeInput and Timestamp. The `InternationalizationProvider04Calendar` example
+block stays pending until it lands. Recorded here rather than approximated,
+because a substitute calendar would change what dates mean rather than how they
+look.
