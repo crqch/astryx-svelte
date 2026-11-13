@@ -434,13 +434,13 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 ## Case delta
 
-|                            | Cases          |
-| -------------------------- | -------------- |
-| Upstream, in ported suites | 13371          |
-| Declared here              | 9617           |
-| **Short**                  | **3786**       |
-| Over, across 8 groups      | +32            |
-| Beyond upstream            | 96 in 20 files |
+|                            | Cases           |
+| -------------------------- | --------------- |
+| Upstream, in ported suites | 13371           |
+| Declared here              | 9617            |
+| **Short**                  | **3786**        |
+| Over, across 8 groups      | +32             |
+| Beyond upstream            | 101 in 21 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s
 worklist, and it is measured here rather than restated in each suite’s header — a header’s

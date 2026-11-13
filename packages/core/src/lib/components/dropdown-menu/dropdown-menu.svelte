@@ -91,7 +91,7 @@
 	import type { MenuPressPointerType } from '../../hooks/menu-press-gesture.js';
 	import { useListFocus } from '../../hooks/use-list-focus.svelte.js';
 	import { useTypeahead } from '../../hooks/use-typeahead.js';
-	import { claimPress } from '../layer/gesture-counter.js';
+	import { claimPress, currentGesture, isPressInFlight } from '../layer/gesture-counter.js';
 	import { focusForLastInput } from '../../utils/focus-return.js';
 	import { layerAnimations } from '../layer/layer-animations.stylex.js';
 	import { rtlStyles } from '../../utils/rtl.stylex.js';
@@ -288,6 +288,7 @@
 			if (!isControlled) internalIsOpen = true;
 			return;
 		}
+		holdOpeningPress();
 		onOpenChange?.(true);
 		if (!isControlled) internalIsOpen = true;
 	}
@@ -515,6 +516,50 @@
 		return true;
 	}
 
+	// The press that asked for the next open, so the layer's show can keep the
+	// trigger the popover's invoker through that press's release (see
+	// `holdInvokerThroughPress`). A plain `let`: the show reads it at event
+	// time, never as a reactive dependency.
+	let openingPress: { gesture: number } | null = null;
+
+	/**
+	 * Keep `control` the invoker of popover `popoverId` for the rest of the
+	 * press in flight, so the native light dismiss of a `popover="auto"` does
+	 * not read the release over the trigger as a dismissal. The attribute is
+	 * dropped a task after the release, once light dismiss has run.
+	 */
+	function holdInvokerThroughPress(control: HTMLElement | null, popoverId: string): void {
+		if (control == null) {
+			return;
+		}
+		const doc = control.ownerDocument;
+		control.setAttribute('popovertarget', popoverId);
+		const onPressEnd = () => {
+			doc.removeEventListener('pointerup', onPressEnd, true);
+			doc.removeEventListener('pointercancel', onPressEnd, true);
+			// Light dismiss runs as the pointerup default action after listeners.
+			doc.defaultView?.setTimeout(() => {
+				control.removeAttribute('popovertarget');
+			}, 0);
+		};
+		doc.addEventListener('pointerup', onPressEnd, true);
+		doc.addEventListener('pointercancel', onPressEnd, true);
+	}
+
+	/**
+	 * The layer committed open while the press that asked for it is still
+	 * down. The browser's light dismiss reads that press's release over the
+	 * trigger as a dismissal because the release is outside the popover, so
+	 * the trigger has to stay the popover's invoker until the press ends.
+	 */
+	function holdOpeningPress(): void {
+		const press = openingPress;
+		openingPress = null;
+		if (press != null && press.gesture === currentGesture() && isPressInFlight()) {
+			holdInvokerThroughPress(buttonEl ?? null, layerId);
+		}
+	}
+
 	// A mouse opens on press-down; a finger held on the trigger opens after
 	// the long-press delay. Pressing the trigger of an open menu closes it, and
 	// the click of that same gesture — reported by `isTriggerClickFromPress` —
@@ -543,6 +588,7 @@
 		if (buttonEl != null) {
 			focusForLastInput(buttonEl, { preventScroll: true });
 		}
+		openingPress = { gesture: currentGesture() };
 		if (isControlled) {
 			openModality = 'pointer';
 			onOpenChange?.(true);
