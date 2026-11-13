@@ -9,6 +9,32 @@ release the port makes on its own has no number of its own to take. 0.3.1 is the
 ports Astryx 0.3.0, exactly as 0.3.0 did, and changes only things upstream has no counterpart for.
 Each entry states its parity target for that reason.
 
+## 0.7.14
+
+Ports Astryx `0.7.13` — the same parity target as 0.7.13. **This release is the port's own, not an
+upstream one**: it fixes a regression in the 0.7.13 port and changes nothing the parity target does
+not already have.
+
+### A click on a menu trigger now keeps the menu open
+
+`DropdownMenu` — and `MoreMenu`, which wraps it — opens on `pointerdown`. The trigger is outside the
+popover, so the browser's native light dismiss read the release of that same press as an outside
+click and closed the menu before its `click` arrived. A plain click flashed the menu open and shut;
+only holding the button and dragging onto a row worked.
+
+The trigger is now kept the popover's invoker (`popovertarget`) through the rest of the opening
+press, as upstream's `DropdownMenu` does, so the release reads as invoker activation rather than a
+dismissal. The attribute is removed once light dismiss has run.
+
+The ported suites drove every open with a bare `click`, which skips `pointerdown` and therefore the
+press model entirely. New real-pointer regression cases cover an uncontrolled `DropdownMenu`, its
+controlled form, `MoreMenu`, toggling closed, and a click outside.
+
+### Published
+
+Ten packages, all at `0.7.14`: `@astryx-sv/core`, `@astryx-sv/cli` and
+`@astryx-sv/theme-{neutral,matcha,butter,gothic,y2k,chocolate,stone,liquid-glass}`.
+
 ## 0.7.13
 
 Ports Astryx `0.7.13`, the version this tree is pinned to.

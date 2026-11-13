@@ -1,6 +1,6 @@
 {
 	"name": "@astryx-sv/theme-neutral",
-	"version": "0.7.13",
+	"version": "0.7.14",
 	"description": "Neutral theme for astryx-svelte \u2014 the default Astryx look.",
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
