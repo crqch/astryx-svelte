@@ -79,14 +79,14 @@ Those last edge cases tend to be the ones nobody realized were ambiguous until s
 
 ### Also in this release
 
-* **`Avatar` initials** now follow upstream's grapheme and meaningful-character rules. They render through `::before` content, with an `@supports` fallback for empty alt text, and any `aria-label`, `role`, or `aria-hidden` you pass still takes precedence. 36 of the 38 missing test cases are ported. The other two depend on React render introspection, and that's documented.
-* **`Resizable` motion physics** include rubber-band overshoot, drawn-handle spring-back, close slide, and edge reveal, plus a Reduce Motion path. 90 of 97 cases are in place, and the seven render-observer-counter cases are noted as known gaps.
-* **`Popover` touch animations** scale out from where the surface meets its source, and they respect the entrance/exit tokens and reduced-motion preferences. All 31 surface-motion cases are ported.
-* **`MonthScroller` transitions** use `reducedMotionFade` on coarse pointers and snap immediately on fine pointers. Scroll positioning is flushed before the fade-in starts.
-* **`DateTimeInput`** gets native date and time segments, the `presentation` prop, the native/presentation matrix, and a console warning for explicit-native use.
-* **The theme compiler contract** is updated. It now supports data-attribute selectors, Dynamic Type sizing, motion tempo, status aliases, syntax diff slots, adaptations, and local tokens, and all theme build oracles pass against 0.7.13.
-* **The Tailwind bridge** is complete. It maps all 139 upstream tokens, and `core` now exports `./theme/tokens` and `./theme/tokens.stylex`.
-* **Smaller additions:** `MultiSelector.formatValue`, namespaced `Icon` keys, the `CardVariantMap` and `CustomTextTypes` module augmentations, and deterministic cover art for blog posts without custom images.
+- **`Avatar` initials** now follow upstream's grapheme and meaningful-character rules. They render through `::before` content, with an `@supports` fallback for empty alt text, and any `aria-label`, `role`, or `aria-hidden` you pass still takes precedence. 36 of the 38 missing test cases are ported. The other two depend on React render introspection, and that's documented.
+- **`Resizable` motion physics** include rubber-band overshoot, drawn-handle spring-back, close slide, and edge reveal, plus a Reduce Motion path. 90 of 97 cases are in place, and the seven render-observer-counter cases are noted as known gaps.
+- **`Popover` touch animations** scale out from where the surface meets its source, and they respect the entrance/exit tokens and reduced-motion preferences. All 31 surface-motion cases are ported.
+- **`MonthScroller` transitions** use `reducedMotionFade` on coarse pointers and snap immediately on fine pointers. Scroll positioning is flushed before the fade-in starts.
+- **`DateTimeInput`** gets native date and time segments, the `presentation` prop, the native/presentation matrix, and a console warning for explicit-native use.
+- **The theme compiler contract** is updated. It now supports data-attribute selectors, Dynamic Type sizing, motion tempo, status aliases, syntax diff slots, adaptations, and local tokens, and all theme build oracles pass against 0.7.13.
+- **The Tailwind bridge** is complete. It maps all 139 upstream tokens, and `core` now exports `./theme/tokens` and `./theme/tokens.stylex`.
+- **Smaller additions:** `MultiSelector.formatValue`, namespaced `Icon` keys, the `CardVariantMap` and `CustomTextTypes` module augmentations, and deterministic cover art for blog posts without custom images.
 
 ## A new home for the docs
 
