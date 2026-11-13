@@ -83,7 +83,7 @@ function publishEnv(dir) {
 }
 
 for (const target of targets) {
-	const args = ['publish', '--access', 'public'];
+	const args = ['stage', 'publish', '--access', 'public'];
 	if (dryRun) args.push('--dry-run');
 	console.log(`\n=== ${target.name}@${target.version} ===`);
 	execFileSync('bun', args, {
