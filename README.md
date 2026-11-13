@@ -47,6 +47,8 @@ An unofficial, community port. Not affiliated with, endorsed by, or supported by
 Ported by [Rohit Kushwaha (@DevRohit06)](https://github.com/DevRohit06) and maintained by
 [crqch](https://github.com/crqch) at **[astryx.crqch.dev](https://astryx.crqch.dev/)**.
 
+![astryx-svelte — Astryx components and themes, running in Svelte 5](https://raw.githubusercontent.com/yasirwhite/opendemo-media/b4ab013545bf8ef78eca2694fff1684cec2b17ee/crqch-astryx-svelte/astryx-svelte-demo.gif)
+
 Every component is authored against the same design-token references Astryx uses, so the StyleX
 compiler emits byte-identical atomic CSS — and three oracles diff that output against the
 _already published_ `@astryxdesign/*` packages on every build. It is a port you can check rather
