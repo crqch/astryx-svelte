@@ -1,23 +1,17 @@
 <!--
-	The Astryx mark in this port's own colour — the same SVG the docs site imports
-	as its favicon rather than a copy, so the two cannot drift. See
-	`docs/src/routes/+layout.svelte` for why the orange is a literal and not
-	`currentColor`.
+	The Astryx wordmark in this port's own colour. The docs site renders the same
+	artwork from `docs/src/lib/shell/astryx-wordmark.svelte`; this standalone copy
+	lets the README render it without Svelte. See `docs/src/routes/+layout.svelte`
+	for why the orange is a literal and not `currentColor`.
 
-	Every image and badge below is an absolute URL pinned to a commit, matching
-	the package READMEs, which are published to npm and have no repo to resolve a
-	relative path against. One URL across all three beats two mechanisms that can
-	drift apart.
+	Repo-local images use relative paths so the README always renders the asset
+	from the same commit. Badges and the package READMEs stay absolute (and
+	pinned), because npm has no repo to resolve a relative path against.
 -->
 
 <div align="center">
 
-<img
-	src="https://raw.githubusercontent.com/crqch/astryx-svelte/37d3aebd2335e38015274448b541c3b2a746a710/docs/src/lib/assets/favicon.svg"
-	alt=""
-	width="88"
-	height="88"
-/>
+![astryx-svelte](docs/static/astryx-wordmark.svg)
 
 # astryx-svelte
 
@@ -33,12 +27,7 @@
 
 <br />
 
-<a href="https://astryx.crqch.dev/">
-	<img
-		src="https://raw.githubusercontent.com/crqch/astryx-svelte/fada324f7e8e11ea4f59d67cc359c8ec14d7f1ef/docs/static/og.png"
-		alt="astryx-svelte — Astryx, ported to Svelte 5"
-	/>
-</a>
+![astryx-svelte — Astryx components and themes, running in Svelte 5](docs/static/astryx-svelte-demo.gif)
 
 <br />
 
