@@ -101,6 +101,12 @@ export default {
 				'The state the form treats as its default, so only the exception shows an optional/required indicator. With "optional", only fields marked isRequired show an indicator; with "required", only fields marked isOptional do. A field that restates the default shows nothing. Under "required" the unmarked fields also expose aria-required so screen readers match the visual default; aria-required only, never the native required attribute. CheckboxInput, Switch and CheckboxList are the exception: an unchecked box, an off switch or an empty group is an answer, so they take no required state from the default. A CheckboxInput or Switch is required only through its own isRequired. Leave unset for today\'s per-field behavior.'
 		},
 		{
+			name: 'defaultEntryErrorBehavior',
+			type: "'complete' | 'blur-or-enter'",
+			description:
+				"When DateInput, DateTimeInput, TimeInput, and NumberInput fields in the layout show their own entry errors: a date, time, or number the field rejects. It sets when the error shows, not when validation runs, so it is not React Aria's validationBehavior (native versus ARIA validation), and it never changes a caller status. 'complete' shows each error at the field's own moment. 'blur-or-enter' holds the message, aria-invalid, the invalid styling, the announcement, and the onEntryErrorChange report until Enter or blur; an edit that makes the entry valid or empty still clears the error at once. NumberInput shows its errors only at Enter or blur under both values. A field's own entryErrorBehavior wins. A nested FormLayout replaces the default for its fields, and unset there means 'complete'. Content in a layer, such as a Dialog opened from the form, starts without it. Leave unset for 'complete'."
+		},
+		{
 			name: 'children',
 			type: 'Snippet',
 			description:

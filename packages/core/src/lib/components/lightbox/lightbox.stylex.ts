@@ -11,6 +11,20 @@ import { focusOutlineStyles } from '../../utils/focus-outline.stylex.js';
 import { overlayPaddingReset } from '../../internal/padding.stylex.js';
 import { zoomMedia } from '../../motion/uikit/zoomMedia.js';
 
+/**
+ * Ported from Astryx's `Lightbox/Lightbox.tsx` style block at 0.7.16.
+ *
+ * The viewer is a track of pages, each a photo and its caption band. Every
+ * item is a page, a single photo too, so its photo and caption sit as a
+ * gallery page's do. The pages share the track's two rows through subgrid, so
+ * a photo centres on the same box with or without a caption, and paging never
+ * resizes it.
+ */
+
+// The caption's backing: the controls' backing colour, darker, so the caption
+// keeps 4.5:1 over any photo or backdrop behind it (WCAG 2.2 1.4.3).
+const CAPTION_BACKING = `color-mix(in srgb, ${colorVars['--color-on-light']} 90%, transparent)`;
+
 const styles = stylex.create({
 	dialog: {
 		position: 'fixed',
@@ -47,39 +61,23 @@ const styles = stylex.create({
 		height: '100%',
 		position: 'relative'
 	},
+	// The stage is the pager's viewport, a single photo's too. It fills the
+	// viewer on every presentation, so its pages have a size of their own.
 	mediaGroup: {
 		display: 'flex',
 		flexDirection: 'column',
 		alignItems: 'center',
+		alignSelf: 'stretch',
+		flexGrow: 1,
+		minHeight: 0,
 		maxWidth: '100%',
 		maxHeight: '100%',
 		// ZOOM_DISMISSING_ATTRIBUTE on the stage inside: a photo dragged to
 		// dismiss draws outside the box that hugs it.
 		overflow: { default: 'hidden', ':has([data-zoom-dismissing])': 'visible' }
 	},
-	// A zoomable photo's stage fills the viewer for every pointer, as a photo
-	// viewer's zooming scroll view does. Only a zoom target does this: around
-	// any other item, a tap on the dark area still closes the viewer.
-	mediaGroupZoom: {
-		alignSelf: 'stretch',
-		flexGrow: 1,
-		minHeight: 0
-	},
-	// A gallery's stage is the pager's viewport: it fills the viewer on every
-	// presentation, so its pages have a size of their own.
-	mediaGroupGallery: {
-		alignSelf: 'stretch',
-		flexGrow: 1,
-		minHeight: 0
-	},
-	imageWrapperFill: {
-		alignSelf: 'stretch',
-		flexGrow: 1,
-		flexShrink: 1,
-		flexBasis: 0
-	},
-	// The filling stage's group clips, so its focus ring sits inside its edge.
-	imageWrapperFocusInset: {
+	// The zoom button's box clips, so its focus ring sits inside its edge.
+	zoomButtonFocusInset: {
 		outlineOffset: {
 			default: '0',
 			':focus-visible': `calc(-1 * ${focusVars['--focus-outline-width']})`
@@ -89,90 +87,208 @@ const styles = stylex.create({
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
-		// ZOOM_DISMISSING_ATTRIBUTE, on this stage or a gallery page's: a photo
-		// dragged to dismiss draws outside it, above its caption and below the
-		// controls.
-		overflow: {
-			default: 'hidden',
-			':is([data-zoom-dismissing])': 'visible',
-			':has([data-zoom-dismissing])': 'visible'
-		},
-		zIndex: { default: null, ':is([data-zoom-dismissing])': 1 },
-		cursor: 'default',
-		userSelect: 'none',
-		minHeight: 0
-	},
-	// The stage's own pinch, pan and double tap take every touch on it, whatever
-	// the primary pointer. It fills the viewer (mediaGroupZoom, imageWrapperFill).
-	imageWrapperZoomTarget: {
-		touchAction: 'none'
-	},
-	// In a gallery the photo rows take the stage's touches, for every pointer
-	// (as imageWrapperZoomTarget). A descendant cannot allow what an ancestor's
-	// `touch-action` rules out. So the track allows only the page's pinch-zoom,
-	// and a pinch on a caption still zooms the page. The pager's pan manages the
-	// stage's own `touch-action`.
-	trackZoomTarget: {
-		touchAction: 'pinch-zoom'
-	},
-	// A zoomable page's photo box fills the page above its caption, as a
-	// single item's stage does.
-	pageMediaZoomTarget: {
-		touchAction: 'none',
 		alignSelf: 'stretch',
 		flexGrow: 1,
 		flexShrink: 1,
-		flexBasis: 0
+		flexBasis: 0,
+		position: 'relative',
+		// ZOOM_DISMISSING_ATTRIBUTE, on the current page's photo box: a photo
+		// dragged to dismiss draws outside the stage.
+		overflow: { default: 'hidden', ':has([data-zoom-dismissing])': 'visible' },
+		cursor: 'default',
+		userSelect: 'none',
+		minHeight: 0
 	},
 	// In the touch presentation, a photo without zoom leaves pinch-zoom to the
 	// page but takes one-finger drags. A drag down dismisses it.
 	imageWrapperDismissTarget: {
 		touchAction: 'pinch-zoom'
 	},
-	imageWrapperGallery: {
-		alignSelf: 'stretch',
-		flexGrow: 1,
-		flexShrink: 1,
-		flexBasis: 0,
-		position: 'relative'
+	// The photo rows take the stage's own pinch, pan and double tap, for every
+	// pointer. A descendant cannot allow what an ancestor's `touch-action`
+	// rules out. So the track allows only the page's pinch-zoom, and a pinch on
+	// the controls or a caption still zooms the page. The pager's pan manages
+	// the stage's own `touch-action`.
+	trackZoomTarget: {
+		touchAction: 'pinch-zoom'
 	},
-	// The pages stack in the track's one cell, each offset by its relative
-	// inset.
+	// The photo box is the zoom button. It takes the stage's cursor, not the
+	// reset's button cursor, so the zoom-in cursor shows only over the photo.
+	pageMediaZoomTarget: {
+		touchAction: 'none',
+		cursor: {
+			default: 'inherit',
+			':is(:disabled,[aria-disabled="true"])': 'default'
+		}
+	},
+	// Two rows that every page shares through subgrid: the photo's and the
+	// caption band's. The band has one height on every page (`captionBand`). So
+	// every photo centres on the same box, with or without a caption. The next
+	// photo slides in level with the current one, and paging never resizes it.
 	track: {
 		position: 'absolute',
 		inset: 0,
 		display: 'grid',
 		gridTemplateColumns: '100%',
-		gridTemplateRows: '100%'
+		gridTemplateRows: 'minmax(0, 1fr) auto'
 	},
-	// One page per item, the stage's size, at index × (width + gap). A page
-	// lays out its photo and caption as a single item does: the caption right
-	// under the photo, and the pair centred. Each page has its own layer.
-	// Through a busy main thread, Mobile Safari moves the track but cannot
-	// paint what it had not painted. So a page that slides in must be painted
-	// whole before it moves.
+	// One page per item, the stage's size, at index × (width + gap). The pages
+	// stack in the track's one column, offset by their relative inset. Each has
+	// its own layer. Through a busy main thread, Mobile Safari moves the track
+	// but cannot paint what it had not painted. So a page that slides in must be
+	// painted whole before it moves.
 	page: {
 		position: 'relative',
-		gridArea: '1 / 1',
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		justifyContent: 'center',
+		gridColumn: '1',
+		gridRow: '1 / span 2',
+		display: 'grid',
+		gridTemplateColumns: '100%',
+		gridTemplateRows: 'subgrid',
 		minHeight: 0,
-		minWidth: 0,
 		willChange: 'transform'
 	},
-	// A page's photo box: the zoom stage of the current page.
+	// A page's photo box: the zoom stage of the current page, in the photo
+	// row. Its caption sits in the caption band below it, so the viewer's size
+	// never changes with the item.
 	pageMedia: {
+		gridRow: '1',
+		minHeight: 0,
+		minWidth: 0,
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
-		// As the single item's stage, while a photo is dragged to dismiss.
+		// ZOOM_DISMISSING_ATTRIBUTE: a photo dragged to dismiss draws outside its
+		// box, above its caption band and below the controls. The drag fades the
+		// band, which makes it a stacking context painted after the box.
 		overflow: { default: 'hidden', ':is([data-zoom-dismissing])': 'visible' },
-		zIndex: { default: null, ':is([data-zoom-dismissing])': 1 },
-		minHeight: 0,
+		zIndex: { default: null, ':is([data-zoom-dismissing])': 1 }
+	},
+	// A gallery's caption band, under every page's photo. It is two caption
+	// lines tall whatever the caption, so the photo area stays the same. Its
+	// lines are the caption's own type, on the caption's backing. Its padding
+	// clears the screen's bottom edge and the safe area there.
+	captionBand: {
+		gridRow: '2',
+		position: 'relative',
+		display: 'flex',
+		justifyContent: 'center',
+		alignItems: 'flex-start',
+		minWidth: 0,
+		boxSizing: 'content-box',
+		// The caption Text's type, so `2lh` is two caption lines.
+		fontSize: typeScaleVars['--text-body-size'],
+		lineHeight: typeScaleVars['--text-body-leading'],
+		blockSize: `calc(${spacingVars['--spacing-2']} + 2lh)`,
+		paddingBlockEnd: `calc(${spacingVars['--spacing-3']} + env(safe-area-inset-bottom, 0px))`,
+		backgroundColor: CAPTION_BACKING
+	},
+	// The band under an open caption, which brings its own backing.
+	captionBandUnderOpen: {
+		backgroundColor: 'transparent'
+	},
+	// A page with no caption keeps the band's space, so its photo sits where
+	// every other page's does. It shows no backing there.
+	captionBandBare: {
+		backgroundColor: 'transparent'
+	},
+	captionInBand: {
+		display: 'flex',
 		minWidth: 0,
 		maxWidth: '100%'
+	},
+	// The caption's Text and its toggle. The toggle is out of the flow, so the
+	// Text takes the whole width.
+	captionBody: {
+		position: 'relative',
+		display: 'flex',
+		alignItems: 'flex-start',
+		minWidth: 0,
+		maxWidth: '100%'
+	},
+	// Lets the clamped Text shrink inside the band.
+	captionClamped: {
+		flexShrink: 1,
+		minWidth: 0
+	},
+	// The caption's lines in one block, so the clamp counts them and the floats
+	// in it wrap them. Every state renders it, with or without a toggle.
+	captionFlow: {
+		display: 'block'
+	},
+	// Physical floats: StyleX keys `inline-end` on the page's direction. So a
+	// right-to-left caption flips them, as the toggle follows its own.
+	// The toggle's place at the end of the caption's last line. The text wraps
+	// around it, so the clamp's ellipsis comes just before the toggle. Without
+	// a toggle it has no box, so it moves no line.
+	captionTogglePlace: {
+		float: {
+			default: 'right',
+			':is([dir="rtl"] *)': 'left'
+		},
+		display: 'none',
+		overflow: 'hidden',
+		whiteSpace: 'pre',
+		userSelect: 'none',
+		// The clamp draws an ellipsis on its last line. The place shows nothing.
+		visibility: 'hidden',
+		// The lines are generated, so the caption's text and its ranges hold
+		// none of them. Each line is a no-break space, and the place shows as
+		// many as the caption does. An open caption scrolls once it passes 60 %
+		// of the viewport, and then the place is not shown. 240 lines cover that
+		// at a 10px line in a window 4,000px tall.
+		'::before': {
+			content: `"${'\\A0\\A'.repeat(239)}\\A0"`
+		}
+	},
+	// The place shows one line box for each line the caption shows. Layout
+	// rounds line boxes to its own grid, and each engine rounds them its own
+	// way. So the place ends exactly where the caption's last line ends. Only
+	// its last line keeps the text away.
+	captionTogglePlaceShown: (width: number, lines: number) => ({
+		display: '-webkit-box',
+		WebkitBoxOrient: 'vertical',
+		WebkitLineClamp: lines,
+		inlineSize: width,
+		marginInlineStart: spacingVars['--spacing-1'],
+		shapeOutside: 'inset(calc(100% - 1lh + 0.5px) 0 0 0)'
+	}),
+	// The caption's link over its place: the caption's last line, inside the
+	// Text's inline padding. It takes the caption's font and line height, so
+	// it sits on that line as its text does.
+	// SYNC: `caption`'s paddingInline.
+	captionToggle: {
+		position: 'absolute',
+		insetInlineEnd: spacingVars['--spacing-3'],
+		insetBlockEnd: 0
+	},
+	// The toggle's own display wins over `hidden`'s, so this hides it.
+	captionToggleHidden: {
+		display: 'none'
+	},
+	// An open caption that scrolls keeps its toggle's width clear at every
+	// line's end. The toggle stays in view as the lines move.
+	captionTextBesideToggle: (width: number) => ({
+		paddingInlineEnd: `calc(${spacingVars['--spacing-3']} + ${width}px + ${spacingVars['--spacing-1']})`
+	}),
+	// The open caption: the same element, out of the band and over the
+	// photo's bottom, on the controls' scrim. Its last line and the toggle stay
+	// where they were, and it grows upward.
+	captionOpen: {
+		position: 'absolute',
+		insetInline: 0,
+		insetBlockEnd: 0,
+		justifyContent: 'center',
+		maxWidth: 'none',
+		paddingBlockEnd: `calc(${spacingVars['--spacing-3']} + env(safe-area-inset-bottom, 0px))`,
+		backgroundColor: CAPTION_BACKING
+	},
+	// The open caption's text, up to 60 % of the viewport tall. A finger
+	// scrolls a longer one, and the toggle stays in view beside it. A pinch on
+	// it still zooms the page.
+	captionTextOpen: {
+		maxBlockSize: `calc(60dvh - ${spacingVars['--spacing-3']} - env(safe-area-inset-bottom, 0px))`,
+		overflowY: 'auto',
+		touchAction: 'pan-y pinch-zoom'
 	},
 	// A fitted photo's zoom-in cursor shows only over the photo, where the
 	// stage sets OVER_PHOTO_ATTRIBUTE. Beside it, a click closes the viewer.
@@ -206,16 +322,23 @@ const styles = stylex.create({
 		objectFit: 'contain',
 		outline: 'none'
 	},
+	// The caption's box. Its type and color are the caption Text's, and both
+	// of its lines start at one edge.
 	caption: {
-		color: colorVars['--color-on-dark'],
-		fontSize: typeScaleVars['--text-large-size'],
-		lineHeight: typeScaleVars['--text-large-leading'],
-		textAlign: 'center',
 		paddingBlockStart: spacingVars['--spacing-2'],
 		paddingBlockEnd: 0,
 		paddingInline: spacingVars['--spacing-3'],
 		maxWidth: '600px',
 		flexShrink: 0
+	},
+	// The caption Text's type, applied by hand because this port measures the
+	// element directly (upstream's `<Text type="body">` supplies it).
+	captionText: {
+		fontSize: typeScaleVars['--text-body-size'],
+		lineHeight: typeScaleVars['--text-body-leading'],
+		color: colorVars['--color-text-primary'],
+		overflowWrap: 'break-word',
+		whiteSpace: 'normal'
 	},
 	closeButton: {
 		position: 'absolute',
@@ -226,11 +349,10 @@ const styles = stylex.create({
 	navButton: {
 		position: 'absolute',
 		top: '50%',
-		// The individual `translate` property, not `transform`: this style now
-		// lands on the Button root, and a `transform` here replaces the Button's
-		// own transform rules — measured: the `scale(0.98)` press feedback stops
-		// firing. `translate` composes with them, reproducing exactly what the
-		// removed wrapper element did (wrapper translated, button scaled).
+		// The individual `translate` property, not `transform`. This style lands
+		// on the Button root, or on its backing with zoom. A `transform` on the
+		// Button root would replace its own transform rules: measured, the
+		// `scale(0.98)` press feedback stops firing. `translate` composes with them.
 		translate: '0 -50%',
 		zIndex: 1
 	},
@@ -240,26 +362,25 @@ const styles = stylex.create({
 	navNext: {
 		insetInlineEnd: spacingVars['--spacing-3']
 	},
+	// The counter takes its own clicks in the click-through layer, so a click
+	// on it leaves the viewer open.
 	counter: {
 		position: 'absolute',
 		top: spacingVars['--spacing-3'],
 		insetInlineStart: spacingVars['--spacing-3'],
-		color: colorVars['--color-on-dark'],
-		fontSize: typeScaleVars['--text-body-size'],
-		lineHeight: typeScaleVars['--text-body-leading'],
 		zIndex: 1,
-		// The counter takes its own clicks in the click-through layer, so a click
-		// on it leaves the viewer open.
 		pointerEvents: 'auto'
 	},
 	controlButton: {
-		color: colorVars['--color-on-dark'],
 		pointerEvents: 'auto'
 	},
 	// The controls sit in layers over the viewer that pass clicks through. A
 	// drag to dismiss fades the layers, which carry no transition of their own,
-	// since a Button's opacity transition would trail the finger. They sit above
-	// the stage, even a photo dragged to dismiss.
+	// since a Button's opacity transition would trail the finger.
+	// They sit above the stage, even a photo dragged to dismiss. While a fade
+	// writes their opacity, each is a stacking context. The track's positioned
+	// pages, later in tree order, would otherwise cover them and take the taps
+	// meant for the controls.
 	chromeLayer: {
 		position: 'absolute',
 		inset: 0,
@@ -274,22 +395,30 @@ const styles = stylex.create({
 		backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 75%, transparent)`,
 		borderRadius: radiusVars['--radius-full']
 	},
-	controlIcon: {
-		color: colorVars['--color-on-dark']
-	},
 	counterBacking: {
 		backgroundColor: `color-mix(in srgb, ${colorVars['--color-on-light']} 75%, transparent)`,
 		borderRadius: radiusVars['--radius-full'],
 		paddingInline: spacingVars['--spacing-2']
+	},
+	// With zoom, the icons and the Counter's text keep the on-dark colour on
+	// the backing, whatever a theme does to the buttons or to Text.
+	controlIcon: {
+		color: colorVars['--color-on-dark']
+	},
+	counterOnDark: {
+		color: colorVars['--color-on-dark']
+	},
+	// The counter's type. Upstream renders it with `<Text type="body">`; this
+	// port keeps the counter on a plain element and applies the same type.
+	counterText: {
+		fontSize: typeScaleVars['--text-body-size'],
+		lineHeight: typeScaleVars['--text-body-leading'],
+		color: colorVars['--color-text-primary']
 	}
 });
 
-const dynamicStyles = stylex.create({
-	imageTransform: (transform: string) => ({
-		transform
-	}),
-	// One page per item, the stage's size, at index × (width + gap).
-	pagePosition: (index: number) => ({
+const pageStyles = stylex.create({
+	position: (index: number) => ({
 		insetInlineStart: `calc(${index} * (100% + ${zoomMedia.viewer.pageGap}px))`
 	})
 });
@@ -304,59 +433,27 @@ export function lightboxContainerAttrs(): SvelteStyleAttrs {
 	return sx(styles.container);
 }
 
-export function lightboxMediaGroupAttrs(
-	isZoomTarget: boolean,
-	isGallery: boolean
-): SvelteStyleAttrs {
-	return sx(
-		styles.mediaGroup,
-		isZoomTarget && !isGallery && styles.mediaGroupZoom,
-		isGallery && styles.mediaGroupGallery
-	);
+/** The stage: a track of pages, each a photo and its caption band. */
+export function lightboxMediaGroupAttrs(): SvelteStyleAttrs {
+	return sx(styles.mediaGroup);
 }
 
 /**
- * Declaration order matters and is upstream's: the gallery/fill keys set the
- * stage's box, then the focus ring, then the two cursor styles. `zoomed` beats
- * `zoomable`. The compiled lookup table in the published `dist/` encodes that
- * precedence, so reordering these would change the merge.
- *
- * The shared focus ring sits after the fill keys, as upstream applies it — it is
- * the wrapper's `role="button"` focus affordance. Through 0.3.0 this was a local
- * `zoomTarget` key holding a hand-written ring; upstream 0.4.1 replaced the key
- * outright with `focusOutlineStyles.focusVisible`.
- *
- * A drag's cursor comes from `data-zoom-dragging`, which the element carries
- * while a pan moves the photo; `imageWrapperZoomed` owns that selector.
+ * The image wrapper fills the stage. The zoom cursors are conditional; the
+ * focus ring sits on the page's photo box, not here.
  */
 export function lightboxImageWrapperAttrs(
-	isZoomTarget: boolean,
 	isZoomable: boolean,
-	isZoomed: boolean,
-	isGallery: boolean
+	isZoomed: boolean
 ): SvelteStyleAttrs {
 	return sx(
 		styles.imageWrapper,
-		isGallery && styles.imageWrapperGallery,
-		isZoomTarget && styles.imageWrapperZoomTarget,
-		isZoomTarget && styles.imageWrapperFill,
-		isZoomTarget && focusOutlineStyles.focusVisible,
-		isZoomTarget && styles.imageWrapperFocusInset,
 		isZoomable && styles.imageWrapperZoomable,
 		isZoomed && styles.imageWrapperZoomed
 	);
 }
 
-export function lightboxImageAttrs(transform: string | null): SvelteStyleAttrs {
-	return sx(styles.image, transform != null && dynamicStyles.imageTransform(transform));
-}
-
-/**
- * The gallery's track: the stage the pages stack in. It allows the page's own
- * pinch-zoom unless the stage is a zoom target, and the touch presentation's
- * one-finger drag otherwise — the same `touch-action` either way, and the
- * pager's pan manages the stage's own.
- */
+/** The track: allows the page's pinch-zoom, or the touch presentation's drag. */
 export function lightboxTrackAttrs(
 	isZoomTarget: boolean,
 	isDismissTarget: boolean
@@ -370,7 +467,7 @@ export function lightboxTrackAttrs(
 
 /** One gallery page, placed at index × (width + gap) in the track. */
 export function lightboxPageAttrs(index: number): SvelteStyleAttrs {
-	return sx(styles.page, dynamicStyles.pagePosition(index));
+	return sx(styles.page, pageStyles.position(index));
 }
 
 /** A page's photo box: the zoom stage of the current page. */
@@ -378,16 +475,88 @@ export function lightboxPageMediaAttrs(isZoomTarget: boolean): SvelteStyleAttrs 
 	return sx(styles.pageMedia, isZoomTarget && styles.pageMediaZoomTarget);
 }
 
+/** The zoom button's focus ring, inset so the page's clip keeps it whole. */
+export function lightboxZoomButtonFocusAttrs(isZoomTarget: boolean): SvelteStyleAttrs {
+	return sx(
+		isZoomTarget && focusOutlineStyles.focusVisible,
+		isZoomTarget && styles.zoomButtonFocusInset
+	);
+}
+
+/** A page's caption band: its backing, or bare when the page has no caption. */
+export function lightboxCaptionBandAttrs(
+	hasCaption: boolean,
+	isCaptionOpen: boolean
+): SvelteStyleAttrs {
+	return sx(
+		styles.captionBand,
+		!hasCaption && styles.captionBandBare,
+		isCaptionOpen && styles.captionBandUnderOpen
+	);
+}
+
+/** The caption's own box, in the band or open over the photo. */
+export function lightboxCaptionInBandAttrs(isCaptionOpen: boolean): SvelteStyleAttrs {
+	return sx(styles.captionInBand, isCaptionOpen && styles.captionOpen);
+}
+
+export function lightboxCaptionBodyAttrs(): SvelteStyleAttrs {
+	return sx(styles.captionBody);
+}
+
+/** The caption Text: clamped, or open and scrollable. */
+export function lightboxCaptionTextAttrs(
+	isCaptionOpen: boolean,
+	isBesideToggle: boolean,
+	toggleWidth: number
+): SvelteStyleAttrs {
+	return sx(
+		styles.caption,
+		styles.captionText,
+		styles.captionClamped,
+		// The clamp lives on the text itself. Only the clamped state uses it: an
+		// open caption shows every line.
+		!isCaptionOpen && dynamicStyles.captionClamp(2),
+		isCaptionOpen && styles.captionTextOpen,
+		isCaptionOpen && isBesideToggle && styles.captionTextBesideToggle(toggleWidth)
+	);
+}
+
+export function lightboxCaptionFlowAttrs(): SvelteStyleAttrs {
+	return sx(styles.captionFlow);
+}
+
+/** The toggle's place in the caption's last line, or no box when hidden. */
+export function lightboxCaptionTogglePlaceAttrs(
+	isShown: boolean,
+	width: number,
+	lines: number
+): SvelteStyleAttrs {
+	return sx(
+		styles.captionTogglePlace,
+		isShown && width > 0 && lines > 0 && styles.captionTogglePlaceShown(width, lines)
+	);
+}
+
+export function lightboxCaptionToggleAttrs(isHidden: boolean): SvelteStyleAttrs {
+	return sx(styles.captionToggle, isHidden && styles.captionToggleHidden);
+}
+
 export function lightboxVideoAttrs(): SvelteStyleAttrs {
 	return sx(styles.video);
 }
 
-export function lightboxCaptionAttrs(): SvelteStyleAttrs {
-	return sx(styles.caption);
+export function lightboxImageAttrs(transform: string | null): SvelteStyleAttrs {
+	return sx(styles.image, transform != null && dynamicStyles.imageTransform(transform));
 }
 
 export function lightboxCounterAttrs(hasZoom: boolean): SvelteStyleAttrs {
-	return sx(styles.counter, hasZoom && styles.counterBacking);
+	return sx(
+		styles.counter,
+		hasZoom && styles.counterBacking,
+		styles.counterText,
+		hasZoom && styles.counterOnDark
+	);
 }
 
 /** The click-through layer the controls sit in. */
@@ -410,13 +579,22 @@ export function lightboxNavNextBackingAttrs(): SvelteStyleAttrs {
 	return sx(styles.navButton, styles.navNext, styles.controlBacking);
 }
 
+const dynamicStyles = stylex.create({
+	imageTransform: (transform: string) => ({
+		transform
+	}),
+	// Upstream's `<Text maxLines={2}>` owns this clamp. The caption is a plain
+	// element here, so the clamp is its own style.
+	captionClamp: (lines: number) => ({
+		display: '-webkit-box',
+		WebkitBoxOrient: 'vertical',
+		WebkitLineClamp: lines,
+		overflow: 'hidden'
+	})
+});
+
 /**
  * Handed to `IconButton`'s `xstyle`, as upstream hands over the same styles.
- *
- * These were `…Attrs()` builders on wrapper `<div>`s until #4775, which deleted
- * the wrappers and put the positioning on the Button root itself. That is why
- * `navButton` had to move from `transform` to `translate` — see the note at the
- * declaration.
  */
 export const lightboxControlButtonStyle = styles.controlButton;
 export const lightboxControlIconStyle = styles.controlIcon;
@@ -424,3 +602,4 @@ export const lightboxCloseButtonStyle = styles.closeButton;
 export const lightboxNavButtonStyle = styles.navButton;
 export const lightboxNavPrevStyle = styles.navPrev;
 export const lightboxNavNextStyle = styles.navNext;
+export const lightboxCounterOnDarkStyle = styles.counterOnDark;

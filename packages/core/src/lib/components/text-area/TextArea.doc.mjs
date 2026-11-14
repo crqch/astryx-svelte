@@ -165,6 +165,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Notes',
+			value: 'Some notes'
+		}
+	},
 	props: [
 		{
 			name: 'ref',
@@ -260,6 +266,12 @@ export default {
 			type: 'number',
 			description:
 				'Maximum number of characters allowed, counted as user-perceived characters: an emoji or flag sequence counts as one. When set, a character counter (current/max) is displayed inside the input container, anchored to the bottom-right beneath the text. Does not enforce the limit natively; when exceeded the counter turns red and shows a warning icon (a non-color cue), and screen-reader users hear the remaining/over-limit count announced. Consumers validating the limit should count with characterCount (exported from the package) so enforcement matches the displayed count.'
+		},
+		{
+			name: 'htmlMaxLength',
+			type: 'number',
+			description:
+				'The native `maxlength` attribute: the browser stops typing past this many UTF-16 code units (an emoji can take two or more). It is separate from `maxLength`, the soft counter of user-perceived characters: it works without the counter, and it neither shows nor changes the counter. It can stop typing before the counter reaches its limit. TextArea adds no truncation or validation of its own, so a longer controlled value stays as set. The attribute is in the server-rendered HTML, so it applies before hydration. Validate on the server too: the browser limit does not bind requests that skip the UI.'
 		},
 		{
 			name: 'status',

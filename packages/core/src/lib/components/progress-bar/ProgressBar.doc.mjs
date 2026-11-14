@@ -134,6 +134,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Uploading files',
+			value: 60
+		}
+	},
 	props: [
 		{
 			name: 'label',

@@ -82,7 +82,7 @@
 	const resolvedWordBreak = $derived(wordBreak ?? (maxLines === 1 ? 'break-all' : 'break-word'));
 	const resolvedDisplay = $derived(maxLines > 0 || hasCapsize ? 'block' : display);
 
-	const truncation = useTruncation(() => maxLines);
+	const truncation = useTruncation(() => ({ maxLines }));
 
 	const tooltipPlacement = $derived<LayerPlacement>(
 		typeof hasTruncateTooltip === 'string' ? hasTruncateTooltip : 'above'

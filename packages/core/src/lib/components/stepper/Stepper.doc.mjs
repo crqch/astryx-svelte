@@ -38,7 +38,7 @@ export default {
 			},
 			{
 				className: 'astryx-step-indicator',
-				visualProps: ['progress', 'status']
+				visualProps: ['progress', 'status', 'disabled']
 			},
 			{
 				className: 'astryx-step-label',

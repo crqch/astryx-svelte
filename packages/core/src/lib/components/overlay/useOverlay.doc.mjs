@@ -32,7 +32,7 @@ export default {
 		},
 		{
 			name: 'options.showOn',
-			type: "'always' | 'hover' | 'focus' | 'hover-or-focus'",
+			type: "'always' | 'focus' | 'hover' | 'hover-or-focus'",
 			description:
 				"Visibility trigger, read with CSS from the container. 'hover' also reveals on focus within the container for keyboard users; 'hover-or-focus' is an alias for it. On a touch device (hover: none), a hover overlay toggles on a tap on the container instead.",
 			default: "'always'"

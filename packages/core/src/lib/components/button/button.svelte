@@ -68,6 +68,7 @@
 	import TooltipLayer from '../tooltip/tooltip-layer.svelte';
 	import VisuallyHidden from '../visually-hidden/visually-hidden.svelte';
 	import { useTooltip } from '../tooltip/use-tooltip.svelte.js';
+	import { useIsHydrating } from '../../hooks/use-is-hydrating.svelte.js';
 	import { useButtonGroup, useSize } from '../../internal/contexts.svelte.js';
 	import { useInputGroup } from '../input-group/input-group-context.svelte.js';
 	import { inputGroupItemProps } from '../input-group/group-styles.stylex.js';
@@ -179,6 +180,13 @@
 
 	// Disabled links are an accessibility anti-pattern — fall back to <button>.
 	const renderAsLink = $derived(href != null && !buttonDisabled);
+
+	// Server markup has no click guard until it hydrates, and a native submit
+	// or reset button acts on its form without one.
+	const isHydrating = useIsHydrating();
+	const renderedType = $derived(
+		buttonDisabled && isHydrating() && (type === 'submit' || type === 'reset') ? 'button' : type
+	);
 
 	// A disabled button reflects `aria-disabled` rather than the native
 	// attribute, as upstream 0.7.13 does: the control stays focusable, hover and
@@ -357,7 +365,7 @@
 	</LinkElement>
 {:else}
 	<button
-		{type}
+		type={renderedType}
 		{...groupItemProps}
 		{...inputGroupItemAttrs}
 		{...rest}

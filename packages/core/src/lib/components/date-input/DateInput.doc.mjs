@@ -228,7 +228,21 @@ export default {
 		{
 			name: 'status',
 			type: 'InputStatus',
-			description: 'Status indicator object for error, warning, or success states with a message.'
+			description:
+				'Status indicator object for error, warning, or success states with a message. For a date the field rejects, typed or picked in the native control, and for unreadable or unfinished text that Enter or blur keeps, the field shows its own error message instead; with onEntryErrorChange, an error status with a message shows in place of that message. A warning or success never replaces a rejection.'
+		},
+		{
+			name: 'onEntryErrorChange',
+			type: "(error: {kind: 'unreadable' | 'incomplete' | 'nonexistent' | 'outOfRange' | 'unavailable', text: string, date?: ISODateString} | null) => void",
+			description:
+				"Called each time the field's rejection of typed text changes, and with null when the rejection ends. kind is 'unreadable', 'incomplete' (part of a date that Enter or blur cannot finish), 'nonexistent' (a date the calendar does not have), 'outOfRange' (before min or after max), or 'unavailable' (a day dateConstraints rules out); text is the typed text; date is the Gregorian ISO date the text names, for 'outOfRange' and 'unavailable'. It also runs when a new min, max, dateConstraints, or value, a calendar pick, disabling the field, or Enter or blur changes the rejection, and never twice for the same rejection; it reports null when the typed field leaves while its rejection stands, as when a presentation or pointer change shows the native or touch picker. With it, an error status with a message replaces the field's own message, and a rejection that starts under an unchanged error message announces that message once. The native and touch pickers take no typed text, so it never reports a rejection there."
+		},
+		{
+			name: 'entryErrorBehavior',
+			type: "'complete' | 'blur-or-enter'",
+			description:
+				"When the field shows its own entry error: a typed date it rejects, as onEntryErrorChange reports it. It sets when the error shows, not when validation runs, so it is not React Aria's validationBehavior (native versus ARIA validation), and it never changes a caller status. 'complete' shows a date the calendar does not have, or one outside min, max, or dateConstraints, as soon as the typed date is complete, and unreadable or unfinished text at Enter or blur. 'blur-or-enter' holds every rejection until Enter or blur: the message, aria-invalid, the invalid styling, the announcement, and the onEntryErrorChange report then appear together. Under both values, an edit that makes the text a date or empties it clears the error at once; under 'blur-or-enter', an edit that leaves the text wrong keeps the shown error until the next Enter or blur. A date the native control refuses shows at Enter or blur under both values. The field's own value wins over the nearest FormLayout's defaultEntryErrorBehavior.",
+			default: "the nearest FormLayout's defaultEntryErrorBehavior, else 'complete'"
 		},
 		{
 			name: 'statusVariant',

@@ -28,6 +28,11 @@ const styles = stylex.create({
 		fontSize: typeScaleVars['--text-body-size'],
 		lineHeight: typeScaleVars['--text-body-leading'],
 		color: colorVars['--color-text-secondary'],
+		// Upstream isolates the text and puts `dir="ltr"` on an inner span for
+		// plain text with no right-to-left letter. A Svelte snippet cannot be
+		// inspected, so the isolation stays and the inner span is not ported;
+		// see port/debts.md.
+		unicodeBidi: 'isolate',
 		whiteSpace: 'nowrap',
 		flexShrink: 0,
 		borderWidth: borderVars['--border-width'],

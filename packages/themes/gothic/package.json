@@ -1,6 +1,6 @@
 {
 	"name": "@astryx-sv/theme-gothic",
-	"version": "0.7.14",
+	"version": "0.7.16",
 	"description": "Gothic theme for astryx-svelte \u2014 deep blue-grays and a signature display serif.",
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
@@ -48,7 +48,7 @@
 	},
 	"devDependencies": {
 		"@astryx-sv/core": "workspace:*",
-		"@astryxdesign/theme-gothic": "0.7.13",
+		"@astryxdesign/theme-gothic": "0.7.16",
 		"svelte": "^5.56.1",
 		"typescript": "^6.0.3"
 	},

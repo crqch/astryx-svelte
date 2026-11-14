@@ -270,16 +270,137 @@ const variants = stylex.create({
 	destructive: {
 		backgroundColor: colorVars['--color-error'],
 		color: colorVars['--color-on-error'],
-		// Forced colors replace the fill with ButtonFace; a border keeps the
-		// destructive fill's shape visible. A border, not an outline, leaves the
-		// shared focus ring intact.
-		borderWidth: { default: 0, '@media (forced-colors: active)': '1px' },
-		borderStyle: { default: 'none', '@media (forced-colors: active)': 'solid' },
+		// Forced colors replace the fill with ButtonFace; the solid-variant edge
+		// (`forcedColorsEdge`) keeps the destructive fill's shape visible, in this
+		// color. A border, not an outline, leaves the shared focus ring intact.
 		borderColor: { default: null, '@media (forced-colors: active)': 'CanvasText' },
 		// The ring matches the variant it rings: an accent-colored outline on a
 		// red button reads as another control's focus. Only the color differs —
 		// width, style and offset come from the shared outline.
 		outlineColor: { default: null, ':focus-visible': colorVars['--color-error'] }
+	}
+});
+
+/**
+ * "I am the last member of the group" — the trailing end cap.
+ *
+ * Not `:last-child`: several members render an invisible layer element after
+ * their button (a tooltip'd Button renders button + layer; DropdownMenu renders
+ * trigger + popover), so the layer would take the `:last-child` slot and the real
+ * trailing button would keep square corners. Layers always carry the native
+ * `popover` attribute and are never in-flow. Context layers also retain an inert
+ * `<template>` marker so they can re-resolve their position. Neither element is a
+ * group member, so "last member" means: no following element sibling besides
+ * those two pieces of layer infrastructure.
+ */
+const IS_LAST_ITEM = ':nth-last-child(1 of :not([popover]):not(template):not(dialog))';
+
+/**
+ * A solid variant's edge in forced colors. These variants separate themselves
+ * from the page with a fill alone and have no border; forced colors discards
+ * the fill, which would leave plain text with no perceivable boundary
+ * (WCAG 1.4.11). `ButtonText` is the platform's own button edge. `ghost` is
+ * flat by design and keeps none.
+ *
+ * Outside forced colors a standalone button keeps the base's borderless
+ * values, and a grouped button's longhands are `null`, so the group's own
+ * values stay. A grouped button gets only the longhands its group does not own:
+ * the group's dividers stay where they are under both StyleX style
+ * resolutions, and the group's first and last buttons close its outer edge.
+ */
+const FORCED_COLORS = '@media (forced-colors: active)';
+
+const forcedColorsEdge = stylex.create({
+	standalone: {
+		// Repeats the base's 0 and none: these keys replace the base's own.
+		borderWidth: { default: 0, [FORCED_COLORS]: '1px' },
+		borderStyle: { default: 'none', [FORCED_COLORS]: 'solid' },
+		borderColor: { default: null, [FORCED_COLORS]: 'ButtonText' }
+	},
+	groupHorizontal: {
+		borderBlockStartWidth: { default: null, [FORCED_COLORS]: '1px' },
+		borderBlockStartStyle: { default: null, [FORCED_COLORS]: 'solid' },
+		borderBlockEndWidth: { default: null, [FORCED_COLORS]: '1px' },
+		borderBlockEndStyle: { default: null, [FORCED_COLORS]: 'solid' },
+		// Repeats the group's divider and gives the first button a leading edge.
+		borderInlineStartWidth: {
+			default: borderVars['--border-width'],
+			':first-child': { default: 0, [FORCED_COLORS]: '1px' }
+		},
+		borderInlineStartStyle: {
+			default: 'solid',
+			':first-child': { default: 'none', [FORCED_COLORS]: 'solid' }
+		},
+		borderInlineEndWidth: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: '1px' }
+		},
+		borderInlineEndStyle: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'solid' }
+		}
+	},
+	groupVertical: {
+		borderInlineStartWidth: { default: null, [FORCED_COLORS]: '1px' },
+		borderInlineStartStyle: { default: null, [FORCED_COLORS]: 'solid' },
+		borderInlineEndWidth: { default: null, [FORCED_COLORS]: '1px' },
+		borderInlineEndStyle: { default: null, [FORCED_COLORS]: 'solid' },
+		// Repeats the group's divider and gives the first button a leading edge.
+		borderBlockStartWidth: {
+			default: borderVars['--border-width'],
+			':first-child': { default: 0, [FORCED_COLORS]: '1px' }
+		},
+		borderBlockStartStyle: {
+			default: 'solid',
+			':first-child': { default: 'none', [FORCED_COLORS]: 'solid' }
+		},
+		borderBlockEndWidth: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: '1px' }
+		},
+		borderBlockEndStyle: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'solid' }
+		}
+	}
+});
+
+// The color of a grouped button's forced-colors edge: `destructive` takes
+// `CanvasText`, the others `ButtonText`. These are the same longhands the edge
+// sets, so the color holds whichever order a build puts shorthands and
+// longhands in.
+const forcedColorsEdgeColor = stylex.create({
+	horizontal: {
+		borderBlockStartColor: { default: null, [FORCED_COLORS]: 'ButtonText' },
+		borderBlockEndColor: { default: null, [FORCED_COLORS]: 'ButtonText' },
+		borderInlineEndColor: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'ButtonText' }
+		}
+	},
+	horizontalOnError: {
+		borderBlockStartColor: { default: null, [FORCED_COLORS]: 'CanvasText' },
+		borderBlockEndColor: { default: null, [FORCED_COLORS]: 'CanvasText' },
+		borderInlineEndColor: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'CanvasText' }
+		}
+	},
+	vertical: {
+		borderInlineStartColor: { default: null, [FORCED_COLORS]: 'ButtonText' },
+		borderInlineEndColor: { default: null, [FORCED_COLORS]: 'ButtonText' },
+		borderBlockEndColor: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'ButtonText' }
+		}
+	},
+	verticalOnError: {
+		borderInlineStartColor: { default: null, [FORCED_COLORS]: 'CanvasText' },
+		borderInlineEndColor: { default: null, [FORCED_COLORS]: 'CanvasText' },
+		borderBlockEndColor: {
+			default: null,
+			[IS_LAST_ITEM]: { default: null, [FORCED_COLORS]: 'CanvasText' }
+		}
 	}
 });
 
@@ -338,20 +459,6 @@ const loadingStyles = stylex.create({
 		}
 	}
 });
-
-/**
- * "I am the last member of the group" — the trailing end cap.
- *
- * Not `:last-child`: several members render an invisible layer element after
- * their button (a tooltip'd Button renders button + layer; DropdownMenu renders
- * trigger + popover), so the layer would take the `:last-child` slot and the real
- * trailing button would keep square corners. Layers always carry the native
- * `popover` attribute and are never in-flow. Context layers also retain an inert
- * `<template>` marker so they can re-resolve their position. Neither element is a
- * group member, so "last member" means: no following element sibling besides
- * those two pieces of layer infrastructure.
- */
-const IS_LAST_ITEM = ':nth-last-child(1 of :not([popover]):not(template):not(dialog))';
 
 const groupStyles = stylex.create({
 	horizontal: {
@@ -453,6 +560,21 @@ export function buttonRootAttrs(input: ButtonRootStyleInput): SvelteStyleAttrs {
 		// each segment casting its own shadow onto its neighbours.
 		!group && elevationStyles[elevation],
 		width != null && dynamicStyles.width(width),
+		(variant === 'primary' || variant === 'secondary' || variant === 'destructive') &&
+			(group == null
+				? forcedColorsEdge.standalone
+				: horizontal
+					? forcedColorsEdge.groupHorizontal
+					: forcedColorsEdge.groupVertical),
+		(variant === 'primary' || variant === 'secondary' || variant === 'destructive') &&
+			group != null &&
+			(horizontal
+				? variant === 'destructive'
+					? forcedColorsEdgeColor.horizontalOnError
+					: forcedColorsEdgeColor.horizontal
+				: variant === 'destructive'
+					? forcedColorsEdgeColor.verticalOnError
+					: forcedColorsEdgeColor.vertical),
 		// AFTER the shared focus outline: the outline supplies width/style/offset
 		// for every variant, and `destructive` re-colors just the ring to match
 		// its own surface. Ordering is the mechanism — StyleX is last-wins.

@@ -122,6 +122,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Name',
+			value: 'Jordan'
+		}
+	},
 	props: [
 		{
 			name: 'type',

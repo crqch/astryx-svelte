@@ -60,6 +60,11 @@ export default {
 					'Add an icon when it helps identify the badge type quickly, but always include a text label alongside it.'
 			},
 			{
+				guidance: true,
+				description:
+					'A string or number label keeps its character order under right-to-left, so `+3` and `@alice` read as written. When a rich label mixes directions, mark the direction on your own content, for example with `dir` or `<bdi>`.'
+			},
+			{
 				guidance: false,
 				description:
 					'Apply a "success" badge to every healthy/active/normal item. If all rows show green "Active" badges, none stand out; the badge adds noise, not information. Show only the states that need user attention (errors, warnings, pending actions).'

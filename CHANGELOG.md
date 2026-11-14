@@ -9,6 +9,41 @@ release the port makes on its own has no number of its own to take. 0.3.1 is the
 ports Astryx 0.3.0, exactly as 0.3.0 did, and changes only things upstream has no counterpart for.
 Each entry states its parity target for that reason.
 
+## 0.7.16
+
+Ports Astryx `0.7.16`.
+
+### The Lightbox is a track of caption-banded pages
+
+Every media item, a single photo included, is now a page of the viewer's track. The track's two
+rows are shared by the pages through subgrid, so a photo centres on the same box with or without a
+caption, and paging never resizes it. The caption is a two-line band under the photo, over the
+viewer's full width, on the dark surface tokens; a `more`/`less` link opens the full caption over
+the photo's bottom, and an open caption scrolls past 60 % of the viewport. The accessible
+description now names the caption.
+
+### The zoom stage takes every pointer
+
+`hasZoom` now runs on a ported zoom stage: a pinch or a ctrl-wheel zooms about the fingers or the
+pointer and gives past the limits, a double tap fills the viewer, a double-click zooms 2×, the
+keyboard's `+`, `-` and `0` work, a drag or a trackpad's scroll pans with UIKit's coast and rubber
+band, pressing a moving photo catches it, and a drag down dismisses the viewer on touch. The stage
+reports an edge to the gallery pager, so a drag past a zoomed photo's edge pages.
+
+### The rest of the release
+
+The forced-colors surface edges land on Button, Dialog, Popover, ContextMenu and the DropdownMenu
+submenu; the selection controls share the new press paint (CheckboxInput, RadioListItem); the layer
+entrance reads the side it landed on; Carousel's edge pills sit inside the focus ring; Token and
+InputGroupText isolate their bidi text; the chat composer's editable keeps a line's height; and
+BottomSheet carries the scrim handoff properties. Both fidelity oracles are re-baselined against
+`@astryxdesign/core@0.7.16`.
+
+### Published
+
+Ten packages, all at `0.7.16`: `@astryx-sv/core`, `@astryx-sv/cli` and
+`@astryx-sv/theme-{neutral,matcha,butter,gothic,y2k,chocolate,stone,liquid-glass}`.
+
 ## 0.7.14
 
 Ports Astryx `0.7.13` — the same parity target as 0.7.13. **This release is the port's own, not an

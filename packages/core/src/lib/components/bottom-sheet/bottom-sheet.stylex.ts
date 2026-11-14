@@ -104,7 +104,9 @@ const styles = stylex.create({
 	 */
 	scrimClosing: {
 		'::backdrop': {
-			transitionTimingFunction: 'linear'
+			// A touch drag's close writes its spring's progress as the easing
+			// instead, so the dim clears as the sheet slides out.
+			transitionTimingFunction: 'var(--_sheet-scrim-easing, linear)'
 		}
 	},
 	// A closing sheet that keeps focus takes no pointer input during its exit.

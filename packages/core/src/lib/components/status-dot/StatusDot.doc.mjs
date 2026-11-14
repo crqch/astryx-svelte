@@ -80,6 +80,11 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Online'
+		}
+	},
 	props: [
 		{
 			name: 'variant',

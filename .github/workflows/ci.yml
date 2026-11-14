@@ -112,7 +112,7 @@ jobs:
       # See the job comment: needed for status.mjs's test-collection stage,
       # not for running the browser suite itself.
       - name: Install the browser the client test project needs
-        run: bunx playwright install --with-deps chromium
+        run: bun run --filter @astryx-sv/core test:browser-install
 
       - name: Verify
         run: bun run verify --no-client --no-docs
@@ -170,7 +170,7 @@ jobs:
       # how it went unrun in CI for its entire life: Typecheck was failing
       # first, so the Test step never got the chance to say so.
       - name: Install the browser the client test project needs
-        run: bunx playwright install --with-deps chromium
+        run: bun run --filter @astryx-sv/core test:browser-install
 
       # Built for the same reason `lib` builds: the suite imports through `$lib`,
       # but `svelte-kit sync` and the theme packages it touches expect the

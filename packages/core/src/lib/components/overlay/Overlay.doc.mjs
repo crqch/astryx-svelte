@@ -75,7 +75,7 @@ export default {
 		},
 		{
 			name: 'showOn',
-			type: "'always' | 'hover' | 'focus' | 'hover-or-focus'",
+			type: "'always' | 'focus' | 'hover' | 'hover-or-focus'",
 			description:
 				'Visibility trigger. Hover mode also reveals on focus for keyboard accessibility; hover-or-focus is an alias for hover.',
 			default: "'always'"

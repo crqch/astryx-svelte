@@ -62,7 +62,7 @@ export default {
 			}
 		],
 		description:
-			"MoreMenu is a three-dot button that opens a list of actions. Use it for secondary actions that don't need to be always visible, like in table rows, card headers, or toolbars.",
+			"MoreMenu is a three-dot button that opens a list of actions. Use it for secondary actions that don't need to be always visible, like in table rows, card headers, or toolbars. Host `data-*` attributes reach the trigger button; its accessible name, `id`, and menu disclosure attributes stay component-owned.",
 		bestPractices: [
 			{
 				guidance: true,
@@ -158,7 +158,7 @@ export default {
 			name: 'presentation',
 			type: "'popover' | 'bottom-sheet' | 'adaptive'",
 			description:
-				"Presentation policy forwarded to DropdownMenu. `adaptive` keeps the anchored popover on pointer-based layouts and uses a BottomSheet on a compact touch screen: a coarse primary pointer, and a viewport narrower than the theme `md` breakpoint (768px by default) or shorter than 500px. Omitted, the menu is the anchored popover, and under a finger, on every device, the finger that opened it picks a row only after moving 10 px. Pass 'popover' to keep the pointer behavior on every device, the settle rule included."
+				"Presentation policy forwarded to DropdownMenu. `adaptive` keeps the anchored popover on pointer-based layouts and uses a BottomSheet on a compact touch screen: a coarse primary pointer, and a viewport narrower than the theme `md` breakpoint (768px by default) or shorter than 500px. Omitted, the menu is the anchored popover, and under a finger or a pen, on every device, its trigger opens as it is pressed (inside a scroll view, after the 150 ms content-touch delay), and the opening finger picks after moving 10 px. Pass 'popover' to keep the pointer behavior on every device, a 500 ms hold included."
 		},
 		{
 			name: 'onOpenChange',
