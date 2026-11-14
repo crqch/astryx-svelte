@@ -696,10 +696,17 @@ function safeAnimate(
 			// Started after the frame time the timeline still reads: until the
 			// timeline gets there it shows its first keyframe, not the element at
 			// rest.
-			const fill = animation.effect?.getTiming().fill;
-			animation.effect?.updateTiming({
-				fill: fill === 'forwards' || fill === 'both' ? 'both' : 'backwards'
-			});
+			const effect = animation.effect;
+			if (
+				effect != null &&
+				typeof effect.getTiming === 'function' &&
+				typeof effect.updateTiming === 'function'
+			) {
+				const fill = effect.getTiming().fill;
+				effect.updateTiming({
+					fill: fill === 'forwards' || fill === 'both' ? 'both' : 'backwards'
+				});
+			}
 		}
 	}
 	const onResolve =

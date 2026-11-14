@@ -1084,11 +1084,16 @@ describe('landLayoutGlideSideways', () => {
 		Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
 			const animation = animate.apply(this, args);
 			const entry = played[played.length - 1];
+			let timing: EffectTiming = {};
 			return Object.assign(animation, {
 				effect: {
 					getKeyframes: () => entry.keyframes,
 					setKeyframes: (next: Keyframe[]) => {
 						entry.keyframes = next;
+					},
+					getTiming: () => timing,
+					updateTiming: (next: OptionalEffectTiming) => {
+						timing = { ...timing, ...next };
 					}
 				}
 			});

@@ -52,7 +52,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
 
       - name: Install the browser the client test project needs
-        run: bunx playwright install --with-deps chromium
+        run: bun run --filter @astryx-sv/core test:browser-install
 
       - name: Build packages
         run: bun run build:packages
