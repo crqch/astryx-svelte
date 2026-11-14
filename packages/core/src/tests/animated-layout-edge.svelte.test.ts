@@ -109,6 +109,9 @@ beforeEach(() => {
 				setKeyframes(frames: Keyframe[]) {
 					entry.ridden = frames;
 				},
+				getTiming() {
+					return { duration: entry.duration ?? 0 };
+				},
 				updateTiming(timing: OptionalEffectTiming) {
 					entry.duration = Number(timing.duration);
 				}
