@@ -24,7 +24,7 @@ export default {
 	params: [
 		{
 			name: 'options',
-			type: 'UseTruncationOptions',
+			type: '() => UseTruncationOptions',
 			description: 'Configuration object.',
 			required: true
 		},

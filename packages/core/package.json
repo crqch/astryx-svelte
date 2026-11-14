@@ -122,6 +122,7 @@
 		"lint": "oxfmt --check . && oxlint .",
 		"format": "oxfmt --write .",
 		"test:unit": "vitest",
+		"test:browser-install": "playwright install --with-deps chromium",
 		"test:client": "node scripts/run-client-tests.mjs",
 		"test:parity": "node scripts/compare-upstream-classes.mjs",
 		"test:css": "node scripts/compare-upstream-css.mjs",
