@@ -31,6 +31,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			level: 1,
+			children: 'Heading'
+		}
+	},
 	props: [
 		{
 			name: 'level',

@@ -43,7 +43,7 @@
 </script>
 
 <Grid columns={2} gap={2} style="width: 136px">
-	{#each PHOTOS as photo, i (photo.src)}
+	{#each PHOTOS as photo, i (photo.alt)}
 		<Thumbnail src={photo.src} alt={photo.alt} label={photo.alt} onclick={() => lightbox.open(i)} />
 	{/each}
 </Grid>

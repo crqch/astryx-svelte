@@ -109,6 +109,11 @@ export default {
 				guidance: false,
 				description:
 					'Do not use ComplexSelector for a plain single-column text list; use Selector instead.'
+			},
+			{
+				guidance: false,
+				description:
+					'Wrap a disabled ComplexSelector in Tooltip to explain why it is disabled; the text would not describe the trigger. Use the disabledMessage prop instead.'
 			}
 		]
 	},
@@ -158,6 +163,12 @@ export default {
 			name: 'isDisabled',
 			type: 'boolean',
 			description: 'Disables the selector.'
+		},
+		{
+			name: 'disabledMessage',
+			type: 'string',
+			description:
+				"Explains why the selector is disabled. With isDisabled, shows the reason in a tooltip on hover and keyboard focus, and the reason describes the trigger through aria-describedby. The disabled trigger keeps its tab stop and still cannot open. Works with renderTrigger too: the tooltip and the description go to the control you render; drop the tooltip of that control while disabled, for example tooltip={isDisabled ? undefined : 'Filter'}. Use this instead of wrapping a disabled ComplexSelector in Tooltip, whose text would not describe the trigger."
 		},
 		{
 			name: 'isLoading',

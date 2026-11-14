@@ -13,17 +13,17 @@
 | Missing here              | none                                                                     |
 | Not in upstream           | none                                                                     |
 | Theme packages            | 8 — butter, chocolate, gothic, liquid-glass, matcha, neutral, stone, y2k |
-| Upstream pin              | `@astryxdesign/core` 0.7.13                                              |
-| Ledger entries            | 45                                                                       |
+| Upstream pin              | `@astryxdesign/core` 0.7.16                                              |
+| Ledger entries            | 46                                                                       |
 
 ## Test parity
 
 |                          | Suites  | Declared cases |
 | ------------------------ | ------- | -------------- |
-| Upstream                 | 806     | 17025          |
-| Ported here              | 402     | 13371          |
-| No counterpart by design | 9       | 100            |
-| **Unported**             | **395** | **3554**       |
+| Upstream                 | 843     | 17969          |
+| Ported here              | 403     | 13964          |
+| No counterpart by design | 9       | 111            |
+| **Unported**             | **431** | **3894**       |
 
 Attribution is declared, not inferred: every file under `src/tests/` opens with a
 `PORTS: <upstream/suite.test.tsx>` marker, or `NO-UPSTREAM:` where it has no counterpart to
@@ -32,403 +32,439 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 <details><summary>Unported upstream suites</summary>
 
-| Suite                                                              | Cases |
-| ------------------------------------------------------------------ | ----- |
-| `PowerSearch/PowerSearchBottomSheet.test.tsx`                      | 181   |
-| `Tokenizer/TokenizerBottomSheet.test.tsx`                          | 90    |
-| `BottomSheet/BottomSheetStacking.test.tsx`                         | 87    |
-| `theme/themeAdaptations.test.ts`                                   | 65    |
-| `keyboard/keyboardHeight.test.ts`                                  | 56    |
-| `BottomSheet/BottomSheetReplace.test.tsx`                          | 51    |
-| `Markdown/remark.test.tsx`                                         | 51    |
-| `utils/hitArea.test.ts`                                            | 48    |
-| `keyboard/keyboardTarget.test.ts`                                  | 44    |
-| `DateInput/Wheel.test.tsx`                                         | 41    |
-| `Lightbox/zoomStage.test.ts`                                       | 38    |
-| `hooks/useActionGroupTracking.test.tsx`                            | 35    |
-| `Tooltip/useTooltip.test.tsx`                                      | 33    |
-| `Layer/useLayerKeyboardClearance.test.tsx`                         | 32    |
-| `theme/dynamicType.test.ts`                                        | 32    |
-| `ButtonGroup/ButtonGroupTracking.test.tsx`                         | 31    |
-| `Chat/useChatKeyboard.test.tsx`                                    | 31    |
-| `DateTimeInput/NativePickerSegments.test.tsx`                      | 31    |
-| `InfoTip/InfoTip.pin.test.tsx`                                     | 31    |
-| `Chat/useTriggerMenu.test.tsx`                                     | 29    |
-| `List/listLayoutUpdates.test.tsx`                                  | 29    |
-| `TimeInput/timeWheelRules.test.ts`                                 | 29    |
-| `Toast/ToastViewport.modalHost.test.tsx`                           | 29    |
-| `SideNav/SideNavRailMotion.test.tsx`                               | 27    |
-| `Typeahead/BaseTypeahead.test.tsx`                                 | 27    |
-| `Layer/layerExitCopy.test.ts`                                      | 25    |
-| `Resizable/paneReveal.test.tsx`                                    | 24    |
-| `Slider/useSliderTouch.test.tsx`                                   | 24    |
-| `utils/boxHold.test.ts`                                            | 24    |
-| `utils/interactionModality.test.ts`                                | 24    |
-| `Markdown/plugins/protocol.test.tsx`                               | 23    |
-| `TopNav/TopNav.slotPresence.test.tsx`                              | 23    |
-| `Typeahead/BaseTypeahead.incremental.test.tsx`                     | 23    |
-| `animator/createAnimator.test.ts`                                  | 22    |
-| `Chat/ChatSendButton.test.tsx`                                     | 22    |
-| `Markdown/plugins/sourceDecoration.test.tsx`                       | 21    |
-| `__tests__/BusyOwnerAnnouncement.test.tsx`                         | 20    |
-| `dragToSnapPoints/createDragToSnapPoints.test.ts`                  | 19    |
-| `Layer/outsidePress.test.ts`                                       | 19    |
-| `Lightbox/useLightbox.test.tsx`                                    | 19    |
-| `Resizable/createResizableHandle.test.ts`                          | 19    |
-| `hooks/useClickableContainer.test.tsx`                             | 18    |
-| `motion/paging.test.ts`                                            | 18    |
-| `ToggleButton/ToggleButtonGroupTracking.test.tsx`                  | 18    |
-| `virtualization/listWindow.test.ts`                                | 18    |
-| `BottomSheet/BottomSheetCloseFocus.test.tsx`                       | 17    |
-| `Calendar/hooks/useCalendarNavigation.test.ts`                     | 17    |
-| `Markdown/plugins/semanticFence.test.tsx`                          | 17    |
-| `DateInput/wheelPhysics.test.ts`                                   | 16    |
-| `hooks/useScrollOverflow.test.tsx`                                 | 16    |
-| `Table/plugins/virtualization/useTableWindow.test.tsx`             | 16    |
-| `Icon/componentIcons.test.tsx`                                     | 15    |
-| `Layer/layerScopedContext.test.tsx`                                | 15    |
-| `Markdown/plugins/sourceLines.test.tsx`                            | 15    |
-| `TimeInput/NativeTimeInput.test.tsx`                               | 15    |
-| `i18n/useTranslator.test.tsx`                                      | 14    |
-| `Markdown/blockDirection.test.tsx`                                 | 14    |
-| `Markdown/indentedFences.test.tsx`                                 | 14    |
-| `PowerSearch/PowerSearchToken.test.tsx`                            | 14    |
-| `Resizable/createResizable.test.ts`                                | 14    |
-| `SideNav/SideNav.slotPresence.test.tsx`                            | 14    |
-| `TimeInput/TimeInput.fr10.test.tsx`                                | 14    |
-| `utils/presentation.test.ts`                                       | 14    |
-| `utils/selectionLock.test.ts`                                      | 14    |
-| `Collapsible/useCollapsible.test.tsx`                              | 13    |
-| `DateInput/DateInput.fr10.test.tsx`                                | 13    |
-| `hooks/rootScrollStyles.test.ts`                                   | 13    |
-| `hooks/useScrollRegionProps.test.tsx`                              | 13    |
-| `Layer/layerClickBoundary.test.tsx`                                | 13    |
-| `Markdown/plugins/textTransform.test.ts`                           | 13    |
-| `motion/roles.test.ts`                                             | 13    |
-| `PowerSearch/PowerSearchDateZone.test.tsx`                         | 13    |
-| `TimeInput/TimeWheels.test.tsx`                                    | 13    |
-| `utils/touchHitArea.test.tsx`                                      | 13    |
-| `utils/touchPresentation.test.ts`                                  | 13    |
-| `animator/playingCardsTemplates.test.tsx`                          | 12    |
-| `BottomSheet/BottomSheetDragExit.test.tsx`                         | 12    |
-| `Chat/useChatPasteAsToken.test.ts`                                 | 12    |
-| `CheckboxList/CheckboxList.required.test.tsx`                      | 12    |
-| `DateTimeInput/DateTimeInput.fr10.test.tsx`                        | 12    |
-| `keyboard/keyboardChromium.test.ts`                                | 12    |
-| `Layer/settledBox.test.ts`                                         | 12    |
-| `MobileNav/MobileNavFocus.test.tsx`                                | 12    |
-| `theme/tokenValueCompat.test.ts`                                   | 12    |
-| `AlertDialog/useImperativeAlertDialog.test.tsx`                    | 11    |
-| `CodeBlock/languages.test.ts`                                      | 11    |
-| `hooks/useDragToSnapPoints.test.tsx`                               | 11    |
-| `Indicator/touchTarget.test.tsx`                                   | 11    |
-| `Layer/gestureCounter.test.ts`                                     | 11    |
-| `Layout/__tests__/nestedPadding.test.tsx`                          | 11    |
-| `Markdown/Markdown.fr23.perf.test.ts`                              | 11    |
-| `PowerSearch/PowerSearchTokenNaming.test.tsx`                      | 11    |
-| `Tooltip/useTooltip.showHide.test.tsx`                             | 11    |
-| `BottomSheet/BottomSheetEdgeTint.test.tsx`                         | 10    |
-| `Calendar/hooks/useCalendarDays.test.ts`                           | 10    |
-| `ComplexSelector/ComplexSelector.fr10.test.tsx`                    | 10    |
-| `Indicator/boxHold.test.tsx`                                       | 10    |
-| `internal/touch.test.ts`                                           | 10    |
-| `Layer/useBackdropPress.test.tsx`                                  | 10    |
-| `Markdown/emphasis.test.tsx`                                       | 10    |
-| `Markdown/urlSchemes.test.ts`                                      | 10    |
-| `MultiSelector/MultiSelector.openHighlight.test.tsx`               | 10    |
-| `PowerSearch/PowerSearchFilterEditor.test.tsx`                     | 10    |
-| `Resizable/paneFocus.test.tsx`                                     | 10    |
-| `Table/plugins/virtualization/useTableRowsVirtualization.test.tsx` | 10    |
-| `utils/interactionOverlay.cell.test.ts`                            | 10    |
-| `utils/typeaheadMatch.test.ts`                                     | 10    |
-| `Calendar/hooks/useCalendarConstraints.test.ts`                    | 9     |
-| `CodeBlock/CodeLanguage.test.tsx`                                  | 9     |
-| `DateInput/wheelStrip.test.ts`                                     | 9     |
-| `DateRangeInput/DateRangeInput.fr10.test.tsx`                      | 9     |
-| `hooks/longPressDetector.test.ts`                                  | 9     |
-| `hooks/scrollKeyboardDelegation.test.ts`                           | 9     |
-| `Layer/sharedContexts.test.tsx`                                    | 9     |
-| `Markdown/ast.test.ts`                                             | 9     |
-| `PowerSearch/PowerSearchDateTime.test.tsx`                         | 9     |
-| `Selector/Selector.activeOption.test.tsx`                          | 9     |
-| `Table/__tests__/Table.a11y.test.tsx`                              | 9     |
-| `Table/plugins/filtering/useTableFilterState.test.tsx`             | 9     |
-| `Table/TableWindowFallback.test.tsx`                               | 9     |
-| `BottomSheet/BottomSheetKeyboard.test.tsx`                         | 8     |
-| `Button/__tests__/Button.a11y.test.tsx`                            | 8     |
-| `CommandPalette/CommandPaletteEmpty.test.tsx`                      | 8     |
-| `DateInput/MonthScrollerSettle.test.tsx`                           | 8     |
-| `EmptyState/EmptyState.announce.test.tsx`                          | 8     |
-| `Layer/LayerProvider.test.tsx`                                     | 8     |
-| `Layer/popoverOperations.test.ts`                                  | 8     |
-| `Layer/toastHost.test.tsx`                                         | 8     |
-| `Markdown/linkDestinations.test.tsx`                               | 8     |
-| `MobileNav/MobileNavTouchPresentation.test.tsx`                    | 8     |
-| `MultiSelector/MultiSelector.fr10.test.tsx`                        | 8     |
-| `RadioList/__tests__/RadioGroup.a11y.test.tsx`                     | 8     |
-| `Resizable/resizableSlot.test.tsx`                                 | 8     |
-| `Selector/Selector.highlightFollowsValue.test.tsx`                 | 8     |
-| `Selector/Selector.openHighlight.test.tsx`                         | 8     |
-| `Table/TableRowContext.test.tsx`                                   | 8     |
-| `theme/MediaTheme.dom.test.tsx`                                    | 8     |
-| `TimeInput/Presentation.test.tsx`                                  | 8     |
-| `utils/edgeAutoscroll.test.ts`                                     | 8     |
-| `utils/sharedMutationObserver.test.ts`                             | 8     |
-| `Button/Button.hitArea.test.tsx`                                   | 7     |
-| `DateInput/DateInput.noTemporal.test.tsx`                          | 7     |
-| `Field/fieldInputFamily.test.tsx`                                  | 7     |
-| `hooks/useAnimator.test.tsx`                                       | 7     |
-| `hooks/useRenamedProp.test.tsx`                                    | 7     |
-| `Layer/layerPortalBoundary.test.ts`                                | 7     |
-| `Layer/touchTriggerTargets.test.tsx`                               | 7     |
-| `Layout/__tests__/Layout.a11y.test.tsx`                            | 7     |
-| `Link/__tests__/Link.a11y.test.tsx`                                | 7     |
-| `Markdown/Markdown.codeLanguages.test.tsx`                         | 7     |
-| `Markdown/plugins/frontmatter.test.tsx`                            | 7     |
-| `Slider/__tests__/SliderRange.a11y.test.tsx`                       | 7     |
-| `Table/TableLegacyIncrementalRender.test.tsx`                      | 7     |
-| `TabList/__tests__/Tabs.a11y.test.tsx`                             | 7     |
-| `TimeInput/TimeWheelsTouch.test.tsx`                               | 7     |
-| `__tests__/slotPresence.controls.test.tsx`                         | 6     |
-| `AppShell/AppShellSafeArea.test.tsx`                               | 6     |
-| `CheckboxInput/__tests__/Checkbox.a11y.test.tsx`                   | 6     |
-| `CodeBlock/CodeBlock.startLineNumber.test.tsx`                     | 6     |
-| `DropdownMenu/DropdownMenuForcedColors.test.tsx`                   | 6     |
-| `internal/useDismissSearchOnTouchDrag.test.tsx`                    | 6     |
-| `keyboard/keyboardModel.test.ts`                                   | 6     |
-| `Layer/layers.shared.test.ts`                                      | 6     |
-| `Layer/layerViewportInset.test.ts`                                 | 6     |
-| `Markdown/Markdown.helpers.perf.test.ts`                           | 6     |
-| `Markdown/Markdown.public.test.ts`                                 | 6     |
-| `Markdown/Markdown.renderBoundary.test.tsx`                        | 6     |
-| `NumberInput/__tests__/NumberInput.a11y.test.tsx`                  | 6     |
-| `SelectableCard/SelectableCardRadio.test.tsx`                      | 6     |
-| `Selector/Selector.fr10.test.tsx`                                  | 6     |
-| `Table/plugins/rowExpansion/useTableRowExpansion.glide.test.tsx`   | 6     |
-| `TextInput/__tests__/TextInput.a11y.test.tsx`                      | 6     |
-| `utils/inputAge.test.ts`                                           | 6     |
-| `utils/layoutViewport.test.ts`                                     | 6     |
-| `utils/sharedBrands.test.ts`                                       | 6     |
-| `utils/sharedRealm.test.ts`                                        | 6     |
-| `__tests__/modalBackdrop.test.tsx`                                 | 5     |
-| `__tests__/publicStyleXNamespaces.test.ts`                         | 5     |
-| `AlertDialog/__tests__/AlertDialog.a11y.test.tsx`                  | 5     |
-| `animator/publicSurface.test.ts`                                   | 5     |
-| `AppShell/observeMainOverflow.test.ts`                             | 5     |
-| `BottomSheet/BottomSheet.ssr.test.tsx`                             | 5     |
-| `BottomSheet/BottomSheetStacking.announce.test.tsx`                | 5     |
-| `Breadcrumbs/__tests__/Breadcrumbs.a11y.test.tsx`                  | 5     |
-| `Calendar/__tests__/Calendar.a11y.test.tsx`                        | 5     |
-| `Carousel/__tests__/Carousel.a11y.test.tsx`                        | 5     |
-| `Chat/ChatComposerTokenElement.test.tsx`                           | 5     |
-| `Chat/ChatPastedTextToken.test.tsx`                                | 5     |
-| `Collapsible/__tests__/CollapsibleGroup.a11y.test.tsx`             | 5     |
-| `DateInput/Presentation.test.tsx`                                  | 5     |
-| `dragToSnapPoints/snapTemplates.test.tsx`                          | 5     |
-| `DropdownMenu/__tests__/Menu.a11y.test.tsx`                        | 5     |
-| `DropdownMenu/__tests__/MenuButton.a11y.test.tsx`                  | 5     |
-| `Field/textEntryTraits.test.ts`                                    | 5     |
-| `gestures/__tests__/GestureHost.bundle.test.ts`                    | 5     |
-| `hooks/__tests__/useAttachmentPair.test.tsx`                       | 5     |
-| `hooks/nestedTouchPress.adopters.test.tsx`                         | 5     |
-| `i18n/__tests__/englishFallback.test.ts`                           | 5     |
-| `i18n/__tests__/InternationalizationProvider.test.tsx`             | 5     |
-| `keyboard/revealBand.test.ts`                                      | 5     |
-| `keyboard/rideKeyboard.test.ts`                                    | 5     |
-| `Layer/toastHost.lateRegistration.test.tsx`                        | 5     |
-| `Markdown/blockNesting.test.tsx`                                   | 5     |
-| `Markdown/imageAlt.test.tsx`                                       | 5     |
-| `Markdown/Markdown.rerender.test.tsx`                              | 5     |
-| `Markdown/parser.public.test.ts`                                   | 5     |
-| `Markdown/plugin-renderer/MarkdownPluginNodeRenderer.test.tsx`     | 5     |
-| `MobileNav/MobileNavRootScrollClaim.test.tsx`                      | 5     |
-| `motion/uikit/gestures.test.ts`                                    | 5     |
-| `ProgressBar/__tests__/ProgressBar.a11y.test.tsx`                  | 5     |
-| `Resizable/__tests__/ResizeHandle.a11y.test.tsx`                   | 5     |
-| `Resizable/separatorAttributes.test.ts`                            | 5     |
-| `Resizable/utils.test.ts`                                          | 5     |
-| `Selector/Selector.focusableDisabled.test.tsx`                     | 5     |
-| `Selector/Selector.searchHighlight.test.tsx`                       | 5     |
-| `Selector/Selector.searchRequired.test.tsx`                        | 5     |
-| `Slider/__tests__/Slider.a11y.test.tsx`                            | 5     |
-| `Slider/Slider.fr10.test.tsx`                                      | 5     |
-| `Stepper/Stepper.public.test.ts`                                   | 5     |
-| `Switch/useSwitchTouch.test.ts`                                    | 5     |
-| `Table/TableParentIntegrationRegression.test.tsx`                  | 5     |
-| `Table/tableRuntime.test.ts`                                       | 5     |
-| `Text/useTruncation.test.tsx`                                      | 5     |
-| `theme/syntax/defineSyntaxTheme.diff.test.ts`                      | 5     |
-| `ToggleButton/__tests__/ToggleButton.a11y.test.tsx`                | 5     |
-| `Toolbar/__tests__/Toolbar.a11y.test.tsx`                          | 5     |
-| `Tooltip/__tests__/Tooltip.a11y.test.tsx`                          | 5     |
-| `TreeList/__tests__/TreeList.a11y.test.tsx`                        | 5     |
-| `utils/nodeType.test.ts`                                           | 5     |
-| `utils/safeUrl.test.ts`                                            | 5     |
-| `__tests__/stylexMultiConditionMedia.test.ts`                      | 4     |
-| `Chat/__tests__/ChatMessageBubble.auditProvenance.test.ts`         | 4     |
-| `Collapsible/__tests__/Collapsible.a11y.test.tsx`                  | 4     |
-| `DateInput/TouchDateToday.ssr.test.tsx`                            | 4     |
-| `DropdownMenu/DropdownMenuThemeReflection.test.tsx`                | 4     |
-| `Field/textEntryTraits.public.test.ts`                             | 4     |
-| `FieldStatus/__tests__/StatusMessage.a11y.test.tsx`                | 4     |
-| `hooks/useHighlightedOptionScroll.test.ts`                         | 4     |
-| `HoverCard/popupTrigger.test.ts`                                   | 4     |
-| `InputGroup/InputGroupText.test.tsx`                               | 4     |
-| `internal/reorder.test.tsx`                                        | 4     |
-| `internal/sheetDraft.test.ts`                                      | 4     |
-| `List/ListItem.hitArea.test.tsx`                                   | 4     |
-| `Markdown/openFenceFinalNewline.test.tsx`                          | 4     |
-| `Markdown/plugins/softBreaks.test.tsx`                             | 4     |
-| `MultiSelector/MultiSelector.focusableDisabled.test.tsx`           | 4     |
-| `Resizable/useResizableForms.test.tsx`                             | 4     |
-| `Slider/sliderTouchBundle.test.ts`                                 | 4     |
-| `Table/plugins/rowStatus/useTableRowStatus.public.test.ts`         | 4     |
-| `Table/plugins/sortable/__tests__/useTableSortable.a11y.test.tsx`  | 4     |
-| `tailwind-theme.test.ts`                                           | 4     |
-| `theme/declarationBoundary.test.ts`                                | 4     |
-| `theme/themeReducedMotionMark.test.tsx`                            | 4     |
-| `Tokenizer/Tokenizer.composites.test.tsx`                          | 4     |
-| `Tokenizer/Tokenizer.ssr.test.tsx`                                 | 4     |
-| `utils/pressableCoverage.test.ts`                                  | 4     |
-| `utils/touchQueries.test.ts`                                       | 4     |
-| `utils/unicodeDigits.test.ts`                                      | 4     |
-| `virtualization/useListWindow.test.tsx`                            | 4     |
-| `__tests__/internalModulesNotExperimental.test.ts`                 | 3     |
-| `__tests__/PresentedHitTestingLab.test.tsx`                        | 3     |
-| `__tests__/withoutMatchMedia.test.tsx`                             | 3     |
-| `Calendar/Calendar.ssr.test.tsx`                                   | 3     |
-| `Calendar/CalendarToday.ssr.test.tsx`                              | 3     |
-| `Chat/ChatComposerInput.public.test.ts`                            | 3     |
-| `Chat/ChatMessageList.focusRing.test.tsx`                          | 3     |
-| `ClickableCard/ClickableCard.nestedPress.test.tsx`                 | 3     |
-| `CodeBlock/CodeBlock.highlightStyles.test.tsx`                     | 3     |
-| `CodeBlock/tokenizerBudget.test.ts`                                | 3     |
-| `ComplexSelector/ComplexSelector.focusableDisabled.test.tsx`       | 3     |
-| `DateTimeInput/Presentation.test.tsx`                              | 3     |
-| `Dialog/Dialog.ssr.test.tsx`                                       | 3     |
-| `dragToSnapPoints/createDragToSnapPoints.reducedMotion.test.ts`    | 3     |
-| `DropdownMenu/DropdownMenuDocumentRoot.test.tsx`                   | 3     |
-| `gestures/__tests__/recognizerBundle.test.ts`                      | 3     |
-| `gestures/__tests__/VelocityTracker.harness.test.ts`               | 3     |
-| `hooks/useEntryAnimation.ssr.test.tsx`                             | 3     |
-| `hooks/useIsHydrating.test.tsx`                                    | 3     |
-| `i18n/__tests__/useListFormatter.test.tsx`                         | 3     |
-| `Icon/componentIconSlots.test.ts`                                  | 3     |
-| `internal/SheetConfirmation.test.tsx`                              | 3     |
-| `Item/Item.nestedPress.test.tsx`                                   | 3     |
-| `Layer/toastHost.shared.test.tsx`                                  | 3     |
-| `Layout/__tests__/headerFooterXstyle.test.tsx`                     | 3     |
-| `List/__tests__/ListReorderSelectionLock.test.tsx`                 | 3     |
-| `Markdown/angleDestinations.test.tsx`                              | 3     |
-| `Markdown/atxHeadingIndentation.test.tsx`                          | 3     |
-| `Markdown/blockquoteMarkers.test.tsx`                              | 3     |
-| `Markdown/characterReferences.test.ts`                             | 3     |
-| `Markdown/codeSpans.test.tsx`                                      | 3     |
-| `Markdown/indentedTables.test.tsx`                                 | 3     |
-| `Markdown/linkBrackets.test.tsx`                                   | 3     |
-| `Markdown/linkTextCode.test.tsx`                                   | 3     |
-| `Markdown/listContinuation.test.tsx`                               | 3     |
-| `Markdown/longLinkLabels.test.tsx`                                 | 3     |
-| `MobileNav/MobileNavFocusRegion.test.tsx`                          | 3     |
-| `motion/android/android.test.ts`                                   | 3     |
-| `PowerSearch/PowerSearch.ssr.test.tsx`                             | 3     |
-| `PowerSearch/resolveDateTimeRangePart.test.ts`                     | 3     |
-| `RadioList/RadioList.fr10.test.tsx`                                | 3     |
-| `Resizable/shippedDirections.test.ts`                              | 3     |
-| `Resizable/useResizableConfig.test.tsx`                            | 3     |
-| `Selector/__tests__/Listbox.a11y.inventory.test.ts`                | 3     |
-| `Selector/__tests__/Selector.combobox.a11y.test.tsx`               | 3     |
-| `Table/Table.focusRing.test.tsx`                                   | 3     |
-| `Table/tableColumnAdmission.test.ts`                               | 3     |
-| `Table/TableMenuWindowFocus.test.tsx`                              | 3     |
-| `TabList/__tests__/TabDescription.test.tsx`                        | 3     |
-| `theme/publicThemeHelperContract.test.ts`                          | 3     |
-| `utils/interactionOverlay.exports.test.ts`                         | 3     |
-| `utils/presentationWithoutMatchMedia.test.tsx`                     | 3     |
-| `animator/createAnimator.server.test.ts`                           | 2     |
-| `Banner/__tests__/Alert.a11y.test.tsx`                             | 2     |
-| `BottomSheet/BottomSheetSuspense.test.tsx`                         | 2     |
-| `CheckboxList/CheckboxList.fr10.test.tsx`                          | 2     |
-| `Dialog/__tests__/Dialog.a11y.test.tsx`                            | 2     |
-| `dragToSnapPoints/createDragToSnapPoints.server.test.ts`           | 2     |
-| `dragToSnapPoints/publicSurface.test.ts`                           | 2     |
-| `DropdownMenu/DropdownMenuLazySheet.test.tsx`                      | 2     |
-| `Field/PanelSearchInput.secondDocument.test.tsx`                   | 2     |
-| `gestures/__tests__/wheelEnd.harness.test.ts`                      | 2     |
-| `hooks/actionGroupTracker.exports.test.ts`                         | 2     |
-| `hooks/deprecatedApis.public.test.ts`                              | 2     |
-| `hooks/useAnnounceRenderedText.adopters.test.tsx`                  | 2     |
-| `hooks/useBusyAnnouncement.adopters.test.tsx`                      | 2     |
-| `hooks/useScrollLock.shared.test.ts`                               | 2     |
-| `inputFontFloor.test.ts`                                           | 2     |
-| `internal/dialog-context.test.ts`                                  | 2     |
-| `Layout/layoutReset.test.tsx`                                      | 2     |
-| `Markdown/incrementalIndentation.test.tsx`                         | 2     |
-| `Markdown/linkDestinationLinear.test.tsx`                          | 2     |
-| `Markdown/listBullets.test.tsx`                                    | 2     |
-| `Markdown/listThematicBreak.test.tsx`                              | 2     |
-| `Markdown/streamingListShapes.test.tsx`                            | 2     |
-| `Markdown/trailingSpaces.test.tsx`                                 | 2     |
-| `motion/themeTiming.server.test.ts`                                | 2     |
-| `motion/transientCopy.test.ts`                                     | 2     |
-| `motion/uikit/longPress.test.ts`                                   | 2     |
-| `motion/uikit/springRows.test.ts`                                  | 2     |
-| `MultiSelector/__tests__/MultiSelector.listbox.a11y.test.tsx`      | 2     |
-| `privateAttributes/scrollAnchoring.test.ts`                        | 2     |
-| `Selector/__tests__/Selector.listbox.a11y.test.tsx`                | 2     |
-| `Selector/useCombobox.public.test.tsx`                             | 2     |
-| `Switch/__tests__/Switch.a11y.test.tsx`                            | 2     |
-| `Toast/useToast.fallbackMessages.test.tsx`                         | 2     |
-| `utils/chainEventHandlers.test.ts`                                 | 2     |
-| `utils/clickGuardTeardown.test.ts`                                 | 2     |
-| `utils/customPropertyArmLayering.test.ts`                          | 2     |
-| `utils/getNodeText.test.ts`                                        | 2     |
-| `utils/pressDisabled.test.ts`                                      | 2     |
-| `utils/pressFeedbackImports.test.ts`                               | 2     |
-| `utils/primaryClick.test.ts`                                       | 2     |
-| `utils/scrollingAncestor.test.ts`                                  | 2     |
-| `utils/scrollView.test.ts`                                         | 2     |
-| `utils/windowExtent.test.ts`                                       | 2     |
-| `Carousel/Carousel.focusRing.test.tsx`                             | 1     |
-| `CodeBlock/CodeBlock.focusRing.test.tsx`                           | 1     |
-| `CommandPalette/CommandPalette.perf.test.ts`                       | 1     |
-| `ContextMenu/ContextMenu.triggerProps.test.tsx`                    | 1     |
-| `DateInput/__tests__/valueUndefined.types.test.ts`                 | 1     |
-| `DateRangeInput/DateRangeInput.ssr.test.tsx`                       | 1     |
-| `dragToSnapPoints/createDragToSnapPoints.finePointer.test.ts`      | 1     |
-| `DropdownMenu/DropdownMenu.ssr.test.tsx`                           | 1     |
-| `DropdownMenu/DropdownMenuContext.public.test.ts`                  | 1     |
-| `DropdownMenu/DropdownMenuSheetFirstOpen.test.tsx`                 | 1     |
-| `DropdownMenu/lazyMenuBottomSheet.test.ts`                         | 1     |
-| `Field/__tests__/textFieldFocusTiming.test.tsx`                    | 1     |
-| `Field/fieldStatusPlacement.public.test.ts`                        | 1     |
-| `FieldStatus/FieldStatus.deprecation.test.ts`                      | 1     |
-| `FileInput/FileInput.fr10.test.tsx`                                | 1     |
-| `hooks/useFocusReturnVisibility.test.ts`                           | 1     |
-| `hooks/useScrollLockImports.test.ts`                               | 1     |
-| `keyboard/keyboardTarget.guide.test.ts`                            | 1     |
-| `keyboard/useMobileKeyboard.target.test.tsx`                       | 1     |
-| `Lightbox/LightboxZoomResize.test.tsx`                             | 1     |
-| `List/__tests__/ListReorderLayout.test.tsx`                        | 1     |
-| `Markdown/fenceInfo.test.tsx`                                      | 1     |
-| `NumberInput/NumberInput.fr10.test.tsx`                            | 1     |
-| `reset.until-found.test.ts`                                        | 1     |
-| `Resizable/createResizable.server.test.tsx`                        | 1     |
-| `Resizable/resizablePane.tempo.test.ts`                            | 1     |
-| `Selector/Selector.sheetActiveDescendant.test.tsx`                 | 1     |
-| `Slider/SliderDocComment.test.ts`                                  | 1     |
-| `Spinner/spinnerRotor.test.tsx`                                    | 1     |
-| `Table/TableHoverWindow.test.tsx`                                  | 1     |
-| `TextArea/TextArea.fr10.test.tsx`                                  | 1     |
-| `TextInput/TextInput.fr10.test.tsx`                                | 1     |
-| `theme/syntax/useSyntaxTheme.diff.test.tsx`                        | 1     |
-| `Tokenizer/Tokenizer.fr10.test.tsx`                                | 1     |
-| `Tokenizer/Tokenizer.props-type.test.tsx`                          | 1     |
-| `Typeahead/Typeahead.fr10.test.tsx`                                | 1     |
-| `utils/interactionOverlayXstyle.test.tsx`                          | 1     |
-| `utils/pressPaintPriority.test.ts`                                 | 1     |
-| `utils/pressPaintSource.test.ts`                                   | 1     |
-| `utils/processEnvTypes.test.ts`                                    | 1     |
+| Suite                                                                 | Cases |
+| --------------------------------------------------------------------- | ----- |
+| `PowerSearch/PowerSearchBottomSheet.test.tsx`                         | 183   |
+| `Tokenizer/TokenizerBottomSheet.test.tsx`                             | 92    |
+| `BottomSheet/BottomSheetStacking.test.tsx`                            | 87    |
+| `theme/themeAdaptations.test.ts`                                      | 65    |
+| `utils/hitArea.test.ts`                                               | 61    |
+| `keyboard/keyboardHeight.test.ts`                                     | 56    |
+| `BottomSheet/BottomSheetReplace.test.tsx`                             | 51    |
+| `Markdown/remark.test.tsx`                                            | 51    |
+| `Typeahead/BaseTypeahead.test.tsx`                                    | 48    |
+| `DateInput/Wheel.test.tsx`                                            | 45    |
+| `keyboard/keyboardTarget.test.ts`                                     | 44    |
+| `Table/plugins/virtualization/useTableColumnsVirtualization.test.tsx` | 37    |
+| `DateTimeInput/NativePickerSegments.test.tsx`                         | 36    |
+| `Tooltip/useTooltip.test.tsx`                                         | 36    |
+| `hooks/useActionGroupTracking.test.tsx`                               | 35    |
+| `NumberInput/NumberInput.rejectedEntry.test.tsx`                      | 35    |
+| `Layer/useLayerKeyboardClearance.test.tsx`                            | 32    |
+| `theme/dynamicType.test.ts`                                           | 32    |
+| `ButtonGroup/ButtonGroupTracking.test.tsx`                            | 31    |
+| `Chat/useChatKeyboard.test.tsx`                                       | 31    |
+| `InfoTip/InfoTip.pin.test.tsx`                                        | 31    |
+| `TimeInput/timeWheelRules.test.ts`                                    | 30    |
+| `Chat/useTriggerMenu.test.tsx`                                        | 29    |
+| `List/listLayoutUpdates.test.tsx`                                     | 29    |
+| `Toast/ToastViewport.modalHost.test.tsx`                              | 29    |
+| `virtualization/listWindow.test.ts`                                   | 28    |
+| `Layer/gestureCounter.test.ts`                                        | 27    |
+| `SideNav/SideNavRailMotion.test.tsx`                                  | 27    |
+| `dragToSnapPoints/createSnapDrag.test.ts`                             | 26    |
+| `Layer/layerExitCopy.test.ts`                                         | 25    |
+| `Slider/useSliderTouch.test.tsx`                                      | 25    |
+| `Resizable/paneReveal.test.tsx`                                       | 24    |
+| `TimeInput/NativeTimeInput.test.tsx`                                  | 24    |
+| `utils/boxHold.test.ts`                                               | 24    |
+| `utils/interactionModality.test.ts`                                   | 24    |
+| `Layer/outsidePress.test.ts`                                          | 23    |
+| `Markdown/plugins/protocol.test.tsx`                                  | 23    |
+| `TopNav/TopNav.slotPresence.test.tsx`                                 | 23    |
+| `Typeahead/BaseTypeahead.incremental.test.tsx`                        | 23    |
+| `animator/createAnimator.test.ts`                                     | 22    |
+| `Chat/ChatSendButton.test.tsx`                                        | 22    |
+| `TimeInput/TimeWheels.test.tsx`                                       | 22    |
+| `gestures/__tests__/contextRequest.test.ts`                           | 21    |
+| `Markdown/plugins/sourceDecoration.test.tsx`                          | 21    |
+| `Table/plugins/infiniteScroll/useTableInfiniteScroll.test.tsx`        | 21    |
+| `Table/plugins/virtualization/useTableWindow.test.tsx`                | 21    |
+| `__tests__/BusyOwnerAnnouncement.test.tsx`                            | 20    |
+| `DateInput/wheelPhysics.test.ts`                                      | 19    |
+| `dragToSnapPoints/createDragToSnapPoints.test.ts`                     | 19    |
+| `hooks/useClickableContainer.test.tsx`                                | 19    |
+| `Lightbox/useLightbox.test.tsx`                                       | 19    |
+| `Resizable/createResizableHandle.test.ts`                             | 19    |
+| `BottomSheet/BottomSheetCloseFocus.test.tsx`                          | 18    |
+| `motion/paging.test.ts`                                               | 18    |
+| `ToggleButton/ToggleButtonGroupTracking.test.tsx`                     | 18    |
+| `Calendar/hooks/useCalendarNavigation.test.ts`                        | 17    |
+| `Markdown/plugins/semanticFence.test.tsx`                             | 17    |
+| `hooks/useScrollOverflow.test.tsx`                                    | 16    |
+| `Icon/componentIcons.test.tsx`                                        | 15    |
+| `Layer/layerScopedContext.test.tsx`                                   | 15    |
+| `Markdown/plugins/sourceLines.test.tsx`                               | 15    |
+| `BottomSheet/BottomSheetDragExit.test.tsx`                            | 14    |
+| `i18n/useTranslator.test.tsx`                                         | 14    |
+| `Markdown/blockDirection.test.tsx`                                    | 14    |
+| `Markdown/indentedFences.test.tsx`                                    | 14    |
+| `Markdown/plugins/textTransform.test.ts`                              | 14    |
+| `PowerSearch/PowerSearchToken.test.tsx`                               | 14    |
+| `Resizable/createResizable.test.ts`                                   | 14    |
+| `SideNav/SideNav.slotPresence.test.tsx`                               | 14    |
+| `TimeInput/TimeInput.fr10.test.tsx`                                   | 14    |
+| `utils/presentation.test.ts`                                          | 14    |
+| `utils/selectionLock.test.ts`                                         | 14    |
+| `Collapsible/useCollapsible.test.tsx`                                 | 13    |
+| `DateInput/DateInput.fr10.test.tsx`                                   | 13    |
+| `hooks/rootScrollStyles.test.ts`                                      | 13    |
+| `hooks/useScrollRegionProps.test.tsx`                                 | 13    |
+| `Layer/layerClickBoundary.test.tsx`                                   | 13    |
+| `motion/roles.test.ts`                                                | 13    |
+| `PowerSearch/PowerSearchDateZone.test.tsx`                            | 13    |
+| `utils/touchHitArea.test.tsx`                                         | 13    |
+| `utils/touchPresentation.test.ts`                                     | 13    |
+| `animator/playingCardsTemplates.test.tsx`                             | 12    |
+| `Chat/useChatPasteAsToken.test.ts`                                    | 12    |
+| `CheckboxList/CheckboxList.required.test.tsx`                         | 12    |
+| `DateTimeInput/DateTimeInput.fr10.test.tsx`                           | 12    |
+| `keyboard/keyboardChromium.test.ts`                                   | 12    |
+| `Layer/settledBox.test.ts`                                            | 12    |
+| `MobileNav/MobileNavFocus.test.tsx`                                   | 12    |
+| `theme/tokenValueCompat.test.ts`                                      | 12    |
+| `Tooltip/useTooltip.showHide.test.tsx`                                | 12    |
+| `AlertDialog/useImperativeAlertDialog.test.tsx`                       | 11    |
+| `CodeBlock/languages.test.ts`                                         | 11    |
+| `hooks/useDragToSnapPoints.test.tsx`                                  | 11    |
+| `Indicator/touchTarget.test.tsx`                                      | 11    |
+| `internal/touch.test.ts`                                              | 11    |
+| `Layout/__tests__/nestedPadding.test.tsx`                             | 11    |
+| `Markdown/Markdown.fr23.perf.test.ts`                                 | 11    |
+| `PowerSearch/PowerSearchTokenNaming.test.tsx`                         | 11    |
+| `BottomSheet/BottomSheetEdgeTint.test.tsx`                            | 10    |
+| `Calendar/hooks/useCalendarDays.test.ts`                              | 10    |
+| `ComplexSelector/ComplexSelector.fr10.test.tsx`                       | 10    |
+| `Indicator/boxHold.test.tsx`                                          | 10    |
+| `Layer/useBackdropPress.test.tsx`                                     | 10    |
+| `Markdown/emphasis.test.tsx`                                          | 10    |
+| `Markdown/urlSchemes.test.ts`                                         | 10    |
+| `MultiSelector/MultiSelector.openHighlight.test.tsx`                  | 10    |
+| `PowerSearch/PowerSearchFilterEditor.test.tsx`                        | 10    |
+| `Resizable/paneFocus.test.tsx`                                        | 10    |
+| `Table/plugins/virtualization/useTableRowsVirtualization.test.tsx`    | 10    |
+| `utils/interactionOverlay.cell.test.ts`                               | 10    |
+| `utils/typeaheadMatch.test.ts`                                        | 10    |
+| `Calendar/hooks/useCalendarConstraints.test.ts`                       | 9     |
+| `CodeBlock/CodeLanguage.test.tsx`                                     | 9     |
+| `DateInput/wheelStrip.test.ts`                                        | 9     |
+| `DateRangeInput/DateRangeInput.fr10.test.tsx`                         | 9     |
+| `hooks/longPressDetector.test.ts`                                     | 9     |
+| `hooks/scrollKeyboardDelegation.test.ts`                              | 9     |
+| `Layer/sharedContexts.test.tsx`                                       | 9     |
+| `Markdown/ast.test.ts`                                                | 9     |
+| `PowerSearch/PowerSearchDateTime.test.tsx`                            | 9     |
+| `Selector/Selector.activeOption.test.tsx`                             | 9     |
+| `Table/__tests__/Table.a11y.test.tsx`                                 | 9     |
+| `Table/plugins/filtering/useTableFilterState.test.tsx`                | 9     |
+| `Table/TableWindowFallback.test.tsx`                                  | 9     |
+| `Text/useTruncation.test.tsx`                                         | 9     |
+| `BottomSheet/BottomSheetKeyboard.test.tsx`                            | 8     |
+| `Button/__tests__/Button.a11y.test.tsx`                               | 8     |
+| `CommandPalette/CommandPaletteEmpty.test.tsx`                         | 8     |
+| `DateInput/MonthScrollerSettle.test.tsx`                              | 8     |
+| `EmptyState/EmptyState.announce.test.tsx`                             | 8     |
+| `Layer/LayerProvider.test.tsx`                                        | 8     |
+| `Layer/popoverOperations.test.ts`                                     | 8     |
+| `Layer/toastHost.test.tsx`                                            | 8     |
+| `Markdown/linkDestinations.test.tsx`                                  | 8     |
+| `Markdown/Markdown.rerender.test.tsx`                                 | 8     |
+| `MobileNav/MobileNavTouchPresentation.test.tsx`                       | 8     |
+| `MultiSelector/MultiSelector.fr10.test.tsx`                           | 8     |
+| `RadioList/__tests__/RadioGroup.a11y.test.tsx`                        | 8     |
+| `Resizable/resizableSlot.test.tsx`                                    | 8     |
+| `Selector/Selector.highlightFollowsValue.test.tsx`                    | 8     |
+| `Selector/Selector.openHighlight.test.tsx`                            | 8     |
+| `Table/TableRowContext.test.tsx`                                      | 8     |
+| `theme/MediaTheme.dom.test.tsx`                                       | 8     |
+| `TimeInput/Presentation.test.tsx`                                     | 8     |
+| `TimeInput/TimeWheelsTouch.test.tsx`                                  | 8     |
+| `TopNav/TopNavDrawerModifiedClick.test.tsx`                           | 8     |
+| `utils/edgeAutoscroll.test.ts`                                        | 8     |
+| `utils/sharedMutationObserver.test.ts`                                | 8     |
+| `Button/Button.hitArea.test.tsx`                                      | 7     |
+| `DateInput/DateInput.noTemporal.test.tsx`                             | 7     |
+| `Field/fieldInputFamily.test.tsx`                                     | 7     |
+| `hooks/useAnimator.test.tsx`                                          | 7     |
+| `hooks/useCommittedRef.test.tsx`                                      | 7     |
+| `hooks/useRenamedProp.test.tsx`                                       | 7     |
+| `Layer/layerPortalBoundary.test.ts`                                   | 7     |
+| `Layer/touchTriggerTargets.test.tsx`                                  | 7     |
+| `Layout/__tests__/Layout.a11y.test.tsx`                               | 7     |
+| `Link/__tests__/Link.a11y.test.tsx`                                   | 7     |
+| `Markdown/Markdown.codeLanguages.test.tsx`                            | 7     |
+| `Markdown/plugins/frontmatter.test.tsx`                               | 7     |
+| `Slider/__tests__/SliderRange.a11y.test.tsx`                          | 7     |
+| `Table/TableLegacyIncrementalRender.test.tsx`                         | 7     |
+| `TabList/__tests__/Tabs.a11y.test.tsx`                                | 7     |
+| `__tests__/slotPresence.controls.test.tsx`                            | 6     |
+| `AppShell/AppShellSafeArea.test.tsx`                                  | 6     |
+| `CheckboxInput/__tests__/Checkbox.a11y.test.tsx`                      | 6     |
+| `CodeBlock/CodeBlock.startLineNumber.test.tsx`                        | 6     |
+| `DropdownMenu/DropdownMenuForcedColors.test.tsx`                      | 6     |
+| `InputGroup/InputGroupText.test.tsx`                                  | 6     |
+| `internal/useDismissSearchOnTouchDrag.test.tsx`                       | 6     |
+| `keyboard/keyboardModel.test.ts`                                      | 6     |
+| `Layer/layers.shared.test.ts`                                         | 6     |
+| `Layer/layerViewportInset.test.ts`                                    | 6     |
+| `List/__tests__/ListReorderNames.test.tsx`                            | 6     |
+| `Markdown/Markdown.helpers.perf.test.ts`                              | 6     |
+| `Markdown/Markdown.public.test.ts`                                    | 6     |
+| `Markdown/Markdown.renderBoundary.test.tsx`                           | 6     |
+| `NumberInput/__tests__/NumberInput.a11y.test.tsx`                     | 6     |
+| `SelectableCard/SelectableCardRadio.test.tsx`                         | 6     |
+| `Selector/Selector.fr10.test.tsx`                                     | 6     |
+| `Table/plugins/rowExpansion/useTableRowExpansion.glide.test.tsx`      | 6     |
+| `Table/TableIncrementalCount.test.tsx`                                | 6     |
+| `TextInput/__tests__/TextInput.a11y.test.tsx`                         | 6     |
+| `utils/inputAge.test.ts`                                              | 6     |
+| `utils/layoutViewport.test.ts`                                        | 6     |
+| `utils/sharedBrands.test.ts`                                          | 6     |
+| `utils/sharedRealm.test.ts`                                           | 6     |
+| `__tests__/modalBackdrop.test.tsx`                                    | 5     |
+| `__tests__/publicStyleXNamespaces.test.ts`                            | 5     |
+| `AlertDialog/__tests__/AlertDialog.a11y.test.tsx`                     | 5     |
+| `animator/publicSurface.test.ts`                                      | 5     |
+| `AppShell/observeMainOverflow.test.ts`                                | 5     |
+| `BottomSheet/BottomSheet.ssr.test.tsx`                                | 5     |
+| `BottomSheet/BottomSheetStacking.announce.test.tsx`                   | 5     |
+| `Breadcrumbs/__tests__/Breadcrumbs.a11y.test.tsx`                     | 5     |
+| `Button/Button.ssr.test.tsx`                                          | 5     |
+| `Calendar/__tests__/Calendar.a11y.test.tsx`                           | 5     |
+| `Carousel/__tests__/Carousel.a11y.test.tsx`                           | 5     |
+| `Chat/ChatComposerTokenElement.test.tsx`                              | 5     |
+| `Chat/ChatPastedTextToken.test.tsx`                                   | 5     |
+| `Collapsible/__tests__/CollapsibleGroup.a11y.test.tsx`                | 5     |
+| `DateInput/Presentation.test.tsx`                                     | 5     |
+| `dragToSnapPoints/snapTemplates.test.tsx`                             | 5     |
+| `DropdownMenu/__tests__/Menu.a11y.test.tsx`                           | 5     |
+| `DropdownMenu/__tests__/MenuButton.a11y.test.tsx`                     | 5     |
+| `Field/textEntryTraits.test.ts`                                       | 5     |
+| `Field/useValueReplacesEntry.test.tsx`                                | 5     |
+| `gestures/__tests__/GestureHost.bundle.test.ts`                       | 5     |
+| `hooks/__tests__/useAttachmentPair.test.tsx`                          | 5     |
+| `hooks/nestedTouchPress.adopters.test.tsx`                            | 5     |
+| `i18n/__tests__/englishFallback.test.ts`                              | 5     |
+| `i18n/__tests__/InternationalizationProvider.test.tsx`                | 5     |
+| `keyboard/revealBand.test.ts`                                         | 5     |
+| `keyboard/rideKeyboard.test.ts`                                       | 5     |
+| `Layer/layerEntranceSide.test.ts`                                     | 5     |
+| `Layer/toastHost.lateRegistration.test.tsx`                           | 5     |
+| `Markdown/blockNesting.test.tsx`                                      | 5     |
+| `Markdown/imageAlt.test.tsx`                                          | 5     |
+| `Markdown/parser.public.test.ts`                                      | 5     |
+| `Markdown/plugin-renderer/MarkdownPluginNodeRenderer.test.tsx`        | 5     |
+| `MobileNav/MobileNavRootScrollClaim.test.tsx`                         | 5     |
+| `motion/uikit/gestures.test.ts`                                       | 5     |
+| `ProgressBar/__tests__/ProgressBar.a11y.test.tsx`                     | 5     |
+| `Resizable/__tests__/ResizeHandle.a11y.test.tsx`                      | 5     |
+| `Resizable/separatorAttributes.test.ts`                               | 5     |
+| `Resizable/utils.test.ts`                                             | 5     |
+| `Selector/Selector.focusableDisabled.test.tsx`                        | 5     |
+| `Selector/Selector.searchHighlight.test.tsx`                          | 5     |
+| `Selector/Selector.searchRequired.test.tsx`                           | 5     |
+| `Slider/__tests__/Slider.a11y.test.tsx`                               | 5     |
+| `Slider/Slider.fr10.test.tsx`                                         | 5     |
+| `Stepper/Stepper.public.test.ts`                                      | 5     |
+| `Switch/useSwitchTouch.test.ts`                                       | 5     |
+| `Table/internByIdentity.test.ts`                                      | 5     |
+| `Table/TableMenuWindowFocus.test.tsx`                                 | 5     |
+| `Table/TableParentIntegrationRegression.test.tsx`                     | 5     |
+| `Table/tableRuntime.test.ts`                                          | 5     |
+| `theme/syntax/defineSyntaxTheme.diff.test.ts`                         | 5     |
+| `ToggleButton/__tests__/ToggleButton.a11y.test.tsx`                   | 5     |
+| `Toolbar/__tests__/Toolbar.a11y.test.tsx`                             | 5     |
+| `Tooltip/__tests__/Tooltip.a11y.test.tsx`                             | 5     |
+| `TreeList/__tests__/TreeList.a11y.test.tsx`                           | 5     |
+| `utils/nodeType.test.ts`                                              | 5     |
+| `utils/safeUrl.test.ts`                                               | 5     |
+| `utils/scrollView.test.ts`                                            | 5     |
+| `utils/textDirection.test.ts`                                         | 5     |
+| `__tests__/stylexMultiConditionMedia.test.ts`                         | 4     |
+| `Chat/__tests__/ChatMessageBubble.auditProvenance.test.ts`            | 4     |
+| `Collapsible/__tests__/Collapsible.a11y.test.tsx`                     | 4     |
+| `DateInput/TouchDateToday.ssr.test.tsx`                               | 4     |
+| `DropdownMenu/DropdownMenuThemeReflection.test.tsx`                   | 4     |
+| `Field/textEntryTraits.public.test.ts`                                | 4     |
+| `FieldStatus/__tests__/StatusMessage.a11y.test.tsx`                   | 4     |
+| `hooks/useHighlightedOptionScroll.test.ts`                            | 4     |
+| `HoverCard/popupTrigger.test.ts`                                      | 4     |
+| `internal/reorder.test.tsx`                                           | 4     |
+| `internal/sheetDraft.test.ts`                                         | 4     |
+| `keyboard/focusKeyboard.shared.test.tsx`                              | 4     |
+| `List/ListItem.hitArea.test.tsx`                                      | 4     |
+| `Markdown/openFenceFinalNewline.test.tsx`                             | 4     |
+| `Markdown/plugins/softBreaks.test.tsx`                                | 4     |
+| `MultiSelector/MultiSelector.focusableDisabled.test.tsx`              | 4     |
+| `Resizable/useResizableForms.test.tsx`                                | 4     |
+| `Slider/sliderTouchBundle.test.ts`                                    | 4     |
+| `Stepper/Stepper.disabledTheming.test.tsx`                            | 4     |
+| `Table/plugins/rowStatus/useTableRowStatus.public.test.ts`            | 4     |
+| `Table/plugins/sortable/__tests__/useTableSortable.a11y.test.tsx`     | 4     |
+| `Table/TablePluginLoading.test.tsx`                                   | 4     |
+| `tailwind-theme.test.ts`                                              | 4     |
+| `theme/declarationBoundary.test.ts`                                   | 4     |
+| `theme/themeReducedMotionMark.test.tsx`                               | 4     |
+| `Tokenizer/Tokenizer.composites.test.tsx`                             | 4     |
+| `Tokenizer/Tokenizer.ssr.test.tsx`                                    | 4     |
+| `utils/pressableCoverage.test.ts`                                     | 4     |
+| `utils/touchQueries.test.ts`                                          | 4     |
+| `utils/unicodeDigits.test.ts`                                         | 4     |
+| `virtualization/useListWindow.test.tsx`                               | 4     |
+| `__tests__/internalModulesNotExperimental.test.ts`                    | 3     |
+| `__tests__/PresentedHitTestingLab.test.tsx`                           | 3     |
+| `__tests__/withoutMatchMedia.test.tsx`                                | 3     |
+| `Calendar/Calendar.ssr.test.tsx`                                      | 3     |
+| `Calendar/CalendarToday.ssr.test.tsx`                                 | 3     |
+| `Chat/ChatComposerInput.public.test.ts`                               | 3     |
+| `Chat/ChatMessageList.focusRing.test.tsx`                             | 3     |
+| `ClickableCard/ClickableCard.nestedPress.test.tsx`                    | 3     |
+| `CodeBlock/CodeBlock.highlightStyles.test.tsx`                        | 3     |
+| `CodeBlock/tokenizerBudget.test.ts`                                   | 3     |
+| `ComplexSelector/ComplexSelector.focusableDisabled.test.tsx`          | 3     |
+| `DateTimeInput/Presentation.test.tsx`                                 | 3     |
+| `Dialog/Dialog.ssr.test.tsx`                                          | 3     |
+| `dragToSnapPoints/createDragToSnapPoints.reducedMotion.test.ts`       | 3     |
+| `DropdownMenu/DropdownMenuDocumentRoot.test.tsx`                      | 3     |
+| `Field/useEntryErrorReport.test.tsx`                                  | 3     |
+| `gestures/__tests__/recognizerBundle.test.ts`                         | 3     |
+| `gestures/__tests__/VelocityTracker.harness.test.ts`                  | 3     |
+| `hooks/useEntryAnimation.ssr.test.tsx`                                | 3     |
+| `hooks/useIsHydrating.test.tsx`                                       | 3     |
+| `i18n/__tests__/useListFormatter.test.tsx`                            | 3     |
+| `Icon/componentIconSlots.test.ts`                                     | 3     |
+| `internal/SheetConfirmation.test.tsx`                                 | 3     |
+| `Item/Item.nestedPress.test.tsx`                                      | 3     |
+| `keyboard/useMobileKeyboard.target.test.tsx`                          | 3     |
+| `Layer/outsidePanClaim.test.ts`                                       | 3     |
+| `Layer/toastHost.shared.test.tsx`                                     | 3     |
+| `Layout/__tests__/headerFooterXstyle.test.tsx`                        | 3     |
+| `List/__tests__/ListReorderSelectionLock.test.tsx`                    | 3     |
+| `Markdown/angleDestinations.test.tsx`                                 | 3     |
+| `Markdown/atxHeadingIndentation.test.tsx`                             | 3     |
+| `Markdown/blockquoteMarkers.test.tsx`                                 | 3     |
+| `Markdown/characterReferences.test.ts`                                | 3     |
+| `Markdown/codeSpans.test.tsx`                                         | 3     |
+| `Markdown/indentedTables.test.tsx`                                    | 3     |
+| `Markdown/linkBrackets.test.tsx`                                      | 3     |
+| `Markdown/linkTextCode.test.tsx`                                      | 3     |
+| `Markdown/listContinuation.test.tsx`                                  | 3     |
+| `Markdown/longLinkLabels.test.tsx`                                    | 3     |
+| `MobileNav/MobileNavFocusRegion.test.tsx`                             | 3     |
+| `motion/android/android.test.ts`                                      | 3     |
+| `motion/motionFrame.shared.test.ts`                                   | 3     |
+| `PowerSearch/PowerSearch.ssr.test.tsx`                                | 3     |
+| `PowerSearch/resolveDateTimeRangePart.test.ts`                        | 3     |
+| `RadioList/RadioList.fr10.test.tsx`                                   | 3     |
+| `Resizable/resizable.shared.test.ts`                                  | 3     |
+| `Resizable/shippedDirections.test.ts`                                 | 3     |
+| `Resizable/useResizableConfig.test.tsx`                               | 3     |
+| `Selector/__tests__/Listbox.a11y.inventory.test.ts`                   | 3     |
+| `Selector/__tests__/Selector.combobox.a11y.test.tsx`                  | 3     |
+| `Table/Table.focusRing.test.tsx`                                      | 3     |
+| `Table/tableColumnAdmission.test.ts`                                  | 3     |
+| `Table/TableLoadingViewport.test.tsx`                                 | 3     |
+| `TabList/__tests__/TabDescription.test.tsx`                           | 3     |
+| `theme/publicThemeHelperContract.test.ts`                             | 3     |
+| `theme/registries.shared.test.ts`                                     | 3     |
+| `theme/tokenReferences.test.ts`                                       | 3     |
+| `utils/interactionOverlay.exports.test.ts`                            | 3     |
+| `utils/pageScroller.test.ts`                                          | 3     |
+| `utils/presentationWithoutMatchMedia.test.tsx`                        | 3     |
+| `__tests__/hostDataAttributes.test.tsx`                               | 2     |
+| `animator/createAnimator.server.test.ts`                              | 2     |
+| `Banner/__tests__/Alert.a11y.test.tsx`                                | 2     |
+| `BottomSheet/BottomSheetSuspense.test.tsx`                            | 2     |
+| `Button/Button.forcedColorsEdge.test.tsx`                             | 2     |
+| `CheckboxList/CheckboxList.fr10.test.tsx`                             | 2     |
+| `Dialog/__tests__/Dialog.a11y.test.tsx`                               | 2     |
+| `dragToSnapPoints/createDragToSnapPoints.server.test.ts`              | 2     |
+| `dragToSnapPoints/publicSurface.test.ts`                              | 2     |
+| `DropdownMenu/DropdownMenuLazySheet.test.tsx`                         | 2     |
+| `Field/PanelSearchInput.secondDocument.test.tsx`                      | 2     |
+| `gestures/__tests__/wheelEnd.harness.test.ts`                         | 2     |
+| `hooks/actionGroupTracker.exports.test.ts`                            | 2     |
+| `hooks/deprecatedApis.public.test.ts`                                 | 2     |
+| `hooks/useAnnounceRenderedText.adopters.test.tsx`                     | 2     |
+| `hooks/useBusyAnnouncement.adopters.test.tsx`                         | 2     |
+| `hooks/useScrollLock.shared.test.ts`                                  | 2     |
+| `inputFontFloor.test.ts`                                              | 2     |
+| `internal/dialog-context.test.ts`                                     | 2     |
+| `Layout/layoutReset.test.tsx`                                         | 2     |
+| `Link/LinkProvider.test.tsx`                                          | 2     |
+| `List/listLayoutUpdates.shared.test.tsx`                              | 2     |
+| `Markdown/incrementalIndentation.test.tsx`                            | 2     |
+| `Markdown/linkDestinationLinear.test.tsx`                             | 2     |
+| `Markdown/listBullets.test.tsx`                                       | 2     |
+| `Markdown/listThematicBreak.test.tsx`                                 | 2     |
+| `Markdown/streamingListShapes.test.tsx`                               | 2     |
+| `Markdown/trailingSpaces.test.tsx`                                    | 2     |
+| `motion/themeTiming.server.test.ts`                                   | 2     |
+| `motion/transientCopy.test.ts`                                        | 2     |
+| `motion/uikit/longPress.test.ts`                                      | 2     |
+| `motion/uikit/springRows.test.ts`                                     | 2     |
+| `MultiSelector/__tests__/MultiSelector.listbox.a11y.test.tsx`         | 2     |
+| `privateAttributes/scrollAnchoring.test.ts`                           | 2     |
+| `Selector/__tests__/Selector.listbox.a11y.test.tsx`                   | 2     |
+| `Selector/useCombobox.public.test.tsx`                                | 2     |
+| `Switch/__tests__/Switch.a11y.test.tsx`                               | 2     |
+| `Toast/sharedIds.shared.test.tsx`                                     | 2     |
+| `Toast/useToast.fallbackMessages.test.tsx`                            | 2     |
+| `Tokenizer/Tokenizer.secondDocument.test.tsx`                         | 2     |
+| `utils/chainEventHandlers.test.ts`                                    | 2     |
+| `utils/clickGuardTeardown.test.ts`                                    | 2     |
+| `utils/customPropertyArmLayering.test.ts`                             | 2     |
+| `utils/getNodeText.test.ts`                                           | 2     |
+| `utils/pressDisabled.test.ts`                                         | 2     |
+| `utils/pressFeedbackImports.test.ts`                                  | 2     |
+| `utils/primaryClick.test.ts`                                          | 2     |
+| `utils/scrollingAncestor.test.ts`                                     | 2     |
+| `utils/windowExtent.test.ts`                                          | 2     |
+| `AppShell/useAppShellMainId.shared.test.tsx`                          | 1     |
+| `Carousel/Carousel.focusRing.test.tsx`                                | 1     |
+| `CodeBlock/CodeBlock.focusRing.test.tsx`                              | 1     |
+| `CommandPalette/CommandPalette.perf.test.ts`                          | 1     |
+| `ContextMenu/ContextMenu.triggerProps.test.tsx`                       | 1     |
+| `DateInput/__tests__/valueUndefined.types.test.ts`                    | 1     |
+| `DateRangeInput/DateRangeInput.ssr.test.tsx`                          | 1     |
+| `dragToSnapPoints/createDragToSnapPoints.finePointer.test.ts`         | 1     |
+| `DropdownMenu/DropdownMenu.ssr.test.tsx`                              | 1     |
+| `DropdownMenu/DropdownMenuContext.public.test.ts`                     | 1     |
+| `DropdownMenu/DropdownMenuSheetFirstOpen.test.tsx`                    | 1     |
+| `DropdownMenu/lazyMenuBottomSheet.test.ts`                            | 1     |
+| `DropdownMenu/MenuBottomSheetActionList.test.tsx`                     | 1     |
+| `Field/__tests__/textFieldFocusTiming.test.tsx`                       | 1     |
+| `Field/fieldStatusPlacement.public.test.ts`                           | 1     |
+| `FieldStatus/FieldStatus.deprecation.test.ts`                         | 1     |
+| `FileInput/FileInput.fr10.test.tsx`                                   | 1     |
+| `hooks/scrollOwnerRegistry.shared.test.ts`                            | 1     |
+| `hooks/useFocusReturnVisibility.test.ts`                              | 1     |
+| `hooks/useScrollLockImports.test.ts`                                  | 1     |
+| `keyboard/keyboardTarget.guide.test.ts`                               | 1     |
+| `Lightbox/LightboxZoomResize.test.tsx`                                | 1     |
+| `List/__tests__/ListReorderLayout.test.tsx`                           | 1     |
+| `Markdown/fenceInfo.test.tsx`                                         | 1     |
+| `Markdown/plugins/semanticFence.shared.test.tsx`                      | 1     |
+| `NumberInput/NumberInput.fr10.test.tsx`                               | 1     |
+| `Popover/usePopover.forcedColorsEdge.test.tsx`                        | 1     |
+| `reset.until-found.test.ts`                                           | 1     |
+| `Resizable/createResizable.server.test.tsx`                           | 1     |
+| `Resizable/resizablePane.tempo.test.ts`                               | 1     |
+| `Selector/Selector.sheetActiveDescendant.test.tsx`                    | 1     |
+| `Slider/SliderDocComment.test.ts`                                     | 1     |
+| `Spinner/spinnerRotor.test.tsx`                                       | 1     |
+| `Table/TableHoverWindow.test.tsx`                                     | 1     |
+| `TextArea/TextArea.fr10.test.tsx`                                     | 1     |
+| `TextInput/TextInput.fr10.test.tsx`                                   | 1     |
+| `theme/syntax/useSyntaxTheme.diff.test.tsx`                           | 1     |
+| `Toast/useToast.fallback.shared.test.tsx`                             | 1     |
+| `Tokenizer/Tokenizer.fr10.test.tsx`                                   | 1     |
+| `Tokenizer/Tokenizer.props-type.test.tsx`                             | 1     |
+| `Typeahead/Typeahead.fr10.test.tsx`                                   | 1     |
+| `utils/interactionOverlayXstyle.test.tsx`                             | 1     |
+| `utils/pressPaintPriority.test.ts`                                    | 1     |
+| `utils/pressPaintSource.test.ts`                                      | 1     |
+| `utils/processEnvTypes.test.ts`                                       | 1     |
 
 </details>
 
@@ -436,10 +472,10 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 
 |                            | Cases           |
 | -------------------------- | --------------- |
-| Upstream, in ported suites | 13371           |
-| Declared here              | 9617            |
-| **Short**                  | **3786**        |
-| Over, across 8 groups      | +32             |
+| Upstream, in ported suites | 13964           |
+| Declared here              | 9655            |
+| **Short**                  | **4336**        |
+| Over, across 7 groups      | +27             |
 | Beyond upstream            | 101 in 21 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s
@@ -449,99 +485,107 @@ every one of them at once. Cases with no upstream analogue are counted apart, ne
 a suite. Where one file ports several suites, or several files one suite, the shortfall is
 per connected group.
 
-<details><summary>Suites short of upstream (208)</summary>
+<details><summary>Suites short of upstream (231)</summary>
 
 | Suite                                                                                                                                                                                    | Upstream | Here | Short |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---- | ----- |
-| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 223      | 81   | 142   |
-| `SideNav/SideNav.test.tsx`                                                                                                                                                               | 252      | 116  | 136   |
-| `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 185      | 65   | 120   |
+| `DropdownMenu/DropdownMenu.test.tsx`                                                                                                                                                     | 237      | 81   | 156   |
+| `SideNav/SideNav.test.tsx`                                                                                                                                                               | 255      | 116  | 139   |
+| `Button/Button.test.tsx`<br>`Heading/Heading.test.tsx`<br>`StatusDot/StatusDot.test.tsx`<br>`Text/Text.test.tsx`                                                                         | 188      | 65   | 123   |
+| `Layer/useLayer.test.tsx`                                                                                                                                                                | 142      | 35   | 107   |
+| `DateTimeInput/DateTimeInput.test.tsx`                                                                                                                                                   | 195      | 89   | 106   |
 | `theme/defineTheme.test.ts`                                                                                                                                                              | 129      | 26   | 103   |
-| `Layer/useLayer.test.tsx`                                                                                                                                                                | 129      | 35   | 94    |
-| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 199      | 112  | 87    |
-| `Selector/Selector.test.tsx`                                                                                                                                                             | 217      | 133  | 84    |
-| `utils/pressFeedback.test.ts`                                                                                                                                                            | 97       | 14   | 83    |
-| `DateTimeInput/DateTimeInput.test.tsx`                                                                                                                                                   | 161      | 89   | 72    |
-| `BottomSheet/useSheetGestures.test.ts`                                                                                                                                                   | 109      | 45   | 64    |
-| `Slider/Slider.test.tsx`                                                                                                                                                                 | 96       | 35   | 61    |
-| `DropdownMenu/DropdownMenuSubMenu.test.tsx`                                                                                                                                              | 82       | 22   | 60    |
-| `Chat/ChatComposerInput.test.tsx`                                                                                                                                                        | 109      | 51   | 58    |
+| `Tokenizer/Tokenizer.test.tsx`                                                                                                                                                           | 164      | 61   | 103   |
+| `MultiSelector/MultiSelector.test.tsx`                                                                                                                                                   | 200      | 112  | 88    |
+| `utils/pressFeedback.test.ts`                                                                                                                                                            | 102      | 14   | 88    |
+| `DateInput/DateInput.test.tsx`                                                                                                                                                           | 170      | 84   | 86    |
+| `Selector/Selector.test.tsx`                                                                                                                                                             | 218      | 133  | 85    |
+| `BottomSheet/useSheetGestures.test.ts`                                                                                                                                                   | 126      | 45   | 81    |
+| `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 112      | 37   | 75    |
+| `Slider/Slider.test.tsx`                                                                                                                                                                 | 98       | 35   | 63    |
+| `ComplexSelector/ComplexSelector.test.tsx`                                                                                                                                               | 76       | 14   | 62    |
+| `DropdownMenu/DropdownMenuSubMenu.test.tsx`                                                                                                                                              | 83       | 22   | 61    |
+| `Chat/ChatComposerInput.test.tsx`                                                                                                                                                        | 110      | 51   | 59    |
+| `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 92       | 34   | 58    |
 | `NumberInput/NumberInput.test.tsx`                                                                                                                                                       | 174      | 117  | 57    |
-| `HoverCard/HoverCard.test.tsx`                                                                                                                                                           | 90       | 34   | 56    |
-| `Lightbox/Lightbox.test.tsx`                                                                                                                                                             | 91       | 37   | 54    |
+| `Popover/Popover.test.tsx`                                                                                                                                                               | 74       | 23   | 51    |
 | `Markdown/parser.test.ts`                                                                                                                                                                | 166      | 116  | 50    |
-| `Popover/Popover.test.tsx`                                                                                                                                                               | 73       | 23   | 50    |
+| `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 152      | 104  | 48    |
 | `Stepper/Stepper.test.tsx`                                                                                                                                                               | 96       | 48   | 48    |
-| `Tokenizer/Tokenizer.test.tsx`                                                                                                                                                           | 108      | 61   | 47    |
-| `BottomSheet/BottomSheet.test.tsx`                                                                                                                                                       | 149      | 104  | 45    |
+| `Resizable/ResizeHandle.test.tsx`                                                                                                                                                        | 60       | 14   | 46    |
 | `Dialog/Dialog.test.tsx`                                                                                                                                                                 | 85       | 40   | 45    |
-| `Resizable/ResizeHandle.test.tsx`                                                                                                                                                        | 58       | 14   | 44    |
-| `DateInput/DateInput.test.tsx`                                                                                                                                                           | 127      | 84   | 43    |
+| `Timestamp/Timestamp.test.tsx`                                                                                                                                                           | 121      | 78   | 43    |
 | `List/__tests__/ListReorder.test.tsx`                                                                                                                                                    | 62       | 20   | 42    |
-| `Timestamp/Timestamp.test.tsx`                                                                                                                                                           | 118      | 78   | 40    |
+| `CheckboxList/CheckboxList.test.tsx`                                                                                                                                                     | 90       | 51   | 39    |
 | `ContextMenu/ContextMenu.test.tsx`                                                                                                                                                       | 76       | 37   | 39    |
+| `TopNav/TopNav.test.tsx`                                                                                                                                                                 | 89       | 50   | 39    |
 | `CodeBlock/CodeBlock.test.tsx`                                                                                                                                                           | 54       | 16   | 38    |
-| `CheckboxList/CheckboxList.test.tsx`                                                                                                                                                     | 88       | 51   | 37    |
-| `Markdown/Markdown.test.tsx`                                                                                                                                                             | 105      | 68   | 37    |
+| `Markdown/Markdown.test.tsx`                                                                                                                                                             | 106      | 68   | 38    |
 | `Table/plugins/rowExpansion/useTableRowExpansion.test.tsx`                                                                                                                               | 50       | 13   | 37    |
 | `utils/plainDate.test.ts`                                                                                                                                                                | 124      | 87   | 37    |
 | `Chat/ChatMessage.test.tsx`<br>`Chat/ChatMessageBubble.test.tsx`<br>`Chat/ChatMessageList.test.tsx`<br>`Chat/ChatMessageMetadata.test.tsx`<br>`Chat/ChatSystemMessage.test.tsx`          | 79       | 43   | 36    |
-| `ComplexSelector/ComplexSelector.test.tsx`                                                                                                                                               | 49       | 14   | 35    |
+| `Item/Item.swipeLayer.test.tsx`<br>`Item/Item.test.tsx`                                                                                                                                  | 112      | 77   | 35    |
 | `AlertDialog/AlertDialog.test.tsx`                                                                                                                                                       | 46       | 12   | 34    |
+| `TimeInput/TimeInput.test.tsx`                                                                                                                                                           | 82       | 48   | 34    |
+| `List/List.test.tsx`                                                                                                                                                                     | 83       | 50   | 33    |
+| `theme/generateThemeRules.test.ts`                                                                                                                                                       | 83       | 50   | 33    |
 | `Icon/Icon.test.tsx`                                                                                                                                                                     | 65       | 33   | 32    |
 | `Chat/ChatDictationButton.test.tsx`<br>`Chat/ChatLayout.test.tsx`<br>`Chat/ChatLayoutScrollButton.test.tsx`<br>`Chat/useChatNewMessages.test.tsx`<br>`Chat/useChatStreamScroll.test.tsx` | 60       | 30   | 30    |
 | `DateInput/DateInputTouch.test.tsx`                                                                                                                                                      | 160      | 130  | 30    |
-| `Item/Item.swipeLayer.test.tsx`<br>`Item/Item.test.tsx`                                                                                                                                  | 107      | 77   | 30    |
-| `theme/generateThemeRules.test.ts`                                                                                                                                                       | 80       | 50   | 30    |
+| `Tooltip/Tooltip.test.tsx`                                                                                                                                                               | 54       | 24   | 30    |
 | `Carousel/Carousel.test.tsx`                                                                                                                                                             | 47       | 18   | 29    |
+| `hooks/useFocusTrap.test.tsx`                                                                                                                                                            | 46       | 17   | 29    |
 | `Icon/globalIconRegistry.test.tsx`                                                                                                                                                       | 47       | 18   | 29    |
+| `PowerSearch/PowerSearch.test.tsx`                                                                                                                                                       | 50       | 21   | 29    |
 | `BottomSheet/BottomSheetSwitcher.test.tsx`                                                                                                                                               | 52       | 24   | 28    |
-| `Tooltip/Tooltip.test.tsx`                                                                                                                                                               | 52       | 24   | 28    |
-| `PowerSearch/PowerSearch.test.tsx`                                                                                                                                                       | 48       | 21   | 27    |
+| `CommandPalette/CommandPalette.test.tsx`                                                                                                                                                 | 47       | 19   | 28    |
 | `CommandPalette/CommandPaletteInput.test.tsx`                                                                                                                                            | 39       | 13   | 26    |
-| `hooks/useFocusTrap.test.tsx`                                                                                                                                                            | 43       | 17   | 26    |
-| `List/List.test.tsx`                                                                                                                                                                     | 76       | 50   | 26    |
+| `FileInput/FileInput.test.tsx`                                                                                                                                                           | 87       | 62   | 25    |
 | `Link/Link.test.tsx`                                                                                                                                                                     | 61       | 36   | 25    |
 | `Spinner/Spinner.test.tsx`                                                                                                                                                               | 50       | 25   | 25    |
 | `TextInput/TextInput.test.tsx`                                                                                                                                                           | 104      | 79   | 25    |
 | `BottomSheet/BottomSheetPanel.test.tsx`                                                                                                                                                  | 31       | 7    | 24    |
 | `Chat/ChatComposer.test.tsx`                                                                                                                                                             | 29       | 5    | 24    |
-| `TopNav/TopNav.test.tsx`                                                                                                                                                                 | 74       | 50   | 24    |
-| `FileInput/FileInput.test.tsx`                                                                                                                                                           | 85       | 62   | 23    |
+| `AppShell/AppShell.test.tsx`                                                                                                                                                             | 71       | 48   | 23    |
 | `hooks/useScrollLock.test.ts`                                                                                                                                                            | 29       | 6    | 23    |
 | `Markdown/incremental.test.ts`                                                                                                                                                           | 79       | 56   | 23    |
 | `utils/focusReturn.test.ts`                                                                                                                                                              | 27       | 4    | 23    |
-| `AppShell/AppShell.test.tsx`                                                                                                                                                             | 70       | 48   | 22    |
+| `hooks/useMenuPress.test.tsx`                                                                                                                                                            | 77       | 55   | 22    |
 | `motion/animatedLayout.swap.test.ts`                                                                                                                                                     | 28       | 6    | 22    |
 | `NavMenu/NavHeadingMenu.test.tsx`                                                                                                                                                        | 45       | 23   | 22    |
 | `PowerSearch/PowerSearchEditPopover.test.tsx`                                                                                                                                            | 25       | 3    | 22    |
 | `Field/Field.test.tsx`<br>`Field/FieldLabel.test.tsx`                                                                                                                                    | 73       | 52   | 21    |
-| `CommandPalette/CommandPalette.test.tsx`                                                                                                                                                 | 39       | 19   | 20    |
+| `hooks/usePager.test.ts`                                                                                                                                                                 | 153      | 132  | 21    |
+| `DateInput/PickerWheel.test.tsx`                                                                                                                                                         | 81       | 61   | 20    |
+| `RadioList/RadioList.test.tsx`                                                                                                                                                           | 64       | 44   | 20    |
 | `ButtonGroup/ButtonGroup.test.tsx`                                                                                                                                                       | 44       | 25   | 19    |
 | `Switch/Switch.test.tsx`                                                                                                                                                                 | 71       | 52   | 19    |
 | `Table/Table.test.tsx`                                                                                                                                                                   | 140      | 121  | 19    |
 | `ToggleButton/ToggleButton.test.tsx`                                                                                                                                                     | 45       | 26   | 19    |
-| `RadioList/RadioList.test.tsx`                                                                                                                                                           | 62       | 44   | 18    |
+| `TopNav/TopNavMegaMenu.test.tsx`                                                                                                                                                         | 58       | 39   | 19    |
+| `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 34       | 16   | 18    |
 | `DateRangeInput/DateRangeInput.test.tsx`                                                                                                                                                 | 64       | 47   | 17    |
 | `hooks/useOverflow.test.ts`                                                                                                                                                              | 43       | 26   | 17    |
-| `TopNav/TopNavMegaMenu.test.tsx`                                                                                                                                                         | 56       | 39   | 17    |
+| `TopNav/TopNavMenu.test.tsx`                                                                                                                                                             | 31       | 14   | 17    |
+| `Breadcrumbs/Breadcrumbs.test.tsx`                                                                                                                                                       | 55       | 39   | 16    |
 | `hooks/useLongPress.test.tsx`                                                                                                                                                            | 25       | 9    | 16    |
 | `OverflowList/OverflowList.test.tsx`                                                                                                                                                     | 34       | 18   | 16    |
 | `Token/Token.test.tsx`                                                                                                                                                                   | 58       | 42   | 16    |
-| `TopNav/TopNavMenu.test.tsx`                                                                                                                                                             | 30       | 14   | 16    |
+| `DateInput/NativeDateField.test.tsx`                                                                                                                                                     | 49       | 34   | 15    |
 | `Kbd/Kbd.test.tsx`                                                                                                                                                                       | 31       | 16   | 15    |
 | `motion/animatedLayout.edge.test.ts`                                                                                                                                                     | 25       | 10   | 15    |
+| `TextArea/TextArea.test.tsx`                                                                                                                                                             | 102      | 87   | 15    |
 | `Typeahead/Typeahead.test.tsx`                                                                                                                                                           | 127      | 112  | 15    |
 | `Banner/Banner.test.tsx`                                                                                                                                                                 | 63       | 49   | 14    |
-| `Breadcrumbs/Breadcrumbs.test.tsx`                                                                                                                                                       | 53       | 39   | 14    |
 | `hooks/useTypeahead.test.tsx`                                                                                                                                                            | 30       | 16   | 14    |
+| `Calendar/getInitialFocusDate.test.ts`                                                                                                                                                   | 26       | 13   | 13    |
 | `Center/Center.test.tsx`                                                                                                                                                                 | 26       | 13   | 13    |
 | `CommandPalette/CommandPaletteItem.test.tsx`                                                                                                                                             | 24       | 11   | 13    |
 | `Layout/Layout.test.tsx`<br>`Layout/__tests__/edgeCompensation.test.tsx`                                                                                                                 | 47       | 34   | 13    |
-| `MetadataList/MetadataList.test.tsx`                                                                                                                                                     | 29       | 16   | 13    |
 | `Table/plugins/columnResize/useTableColumnResize.test.tsx`                                                                                                                               | 50       | 37   | 13    |
 | `theme/Theme.test.tsx`                                                                                                                                                                   | 24       | 11   | 13    |
 | `Typeahead/BaseTypeahead.menu.test.tsx`                                                                                                                                                  | 29       | 16   | 13    |
+| `CheckboxInput/CheckboxInput.test.tsx`                                                                                                                                                   | 55       | 43   | 12    |
 | `ClickableCard/ClickableCard.test.tsx`                                                                                                                                                   | 23       | 11   | 12    |
 | `CommandPalette/CommandPaletteFooter.test.tsx`<br>`CommandPalette/CommandPaletteGroup.test.tsx`<br>`CommandPalette/CommandPaletteList.test.tsx`                                          | 27       | 15   | 12    |
 | `Dialog/DialogHeader.test.tsx`                                                                                                                                                           | 29       | 17   | 12    |
@@ -550,48 +594,54 @@ per connected group.
 | `Link/useLinkComponent.test.tsx`                                                                                                                                                         | 23       | 11   | 12    |
 | `Overlay/Overlay.test.tsx`                                                                                                                                                               | 37       | 25   | 12    |
 | `theme/themingTargets.test.ts`                                                                                                                                                           | 28       | 16   | 12    |
+| `utils/timeParser.test.ts`                                                                                                                                                               | 40       | 28   | 12    |
 | `Card/Card.test.tsx`                                                                                                                                                                     | 16       | 5    | 11    |
-| `CheckboxInput/CheckboxInput.test.tsx`                                                                                                                                                   | 54       | 43   | 11    |
+| `DateTimeInput/DateTimeInputTouch.test.tsx`                                                                                                                                              | 50       | 39   | 11    |
 | `Field/InputClearButton.test.tsx`                                                                                                                                                        | 20       | 9    | 11    |
-| `Pagination/Pagination.test.tsx`                                                                                                                                                         | 102      | 92   | 10    |
+| `FormLayout/FormLayout.test.tsx`                                                                                                                                                         | 36       | 25   | 11    |
+| `Pagination/Pagination.test.tsx`                                                                                                                                                         | 103      | 92   | 11    |
+| `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 107      | 96   | 11    |
+| `Layer/useTouchTrigger.test.ts`                                                                                                                                                          | 15       | 5    | 10    |
+| `PowerSearch/PowerSearchValueEditor.test.tsx`                                                                                                                                            | 24       | 14   | 10    |
 | `theme/expandColorScale.test.ts`                                                                                                                                                         | 36       | 26   | 10    |
 | `Chat/ChatToolCalls.test.tsx`                                                                                                                                                            | 24       | 15   | 9     |
-| `DateTimeInput/DateTimeInputTouch.test.tsx`                                                                                                                                              | 48       | 39   | 9     |
+| `hooks/actionGroupTracker.test.ts`                                                                                                                                                       | 35       | 26   | 9     |
 | `hooks/useMenuHover.test.tsx`                                                                                                                                                            | 30       | 21   | 9     |
+| `motion/animator.test.ts`                                                                                                                                                                | 274      | 265  | 9     |
 | `PowerSearch/formatFilterValue.test.ts`                                                                                                                                                  | 42       | 33   | 9     |
-| `PowerSearch/PowerSearchValueEditor.test.tsx`                                                                                                                                            | 23       | 14   | 9     |
 | `Section/Section.test.tsx`                                                                                                                                                               | 29       | 20   | 9     |
-| `TextArea/TextArea.test.tsx`                                                                                                                                                             | 96       | 87   | 9     |
-| `TimeInput/TimeInput.test.tsx`                                                                                                                                                           | 57       | 48   | 9     |
+| `gestures/__tests__/GestureHost.test.ts`                                                                                                                                                 | 248      | 240  | 8     |
 | `hooks/useListFocus.test.tsx`                                                                                                                                                            | 39       | 31   | 8     |
 | `Toolbar/Toolbar.test.tsx`                                                                                                                                                               | 33       | 25   | 8     |
 | `Typeahead/TypeaheadItem.test.tsx`                                                                                                                                                       | 10       | 2    | 8     |
-| `FormLayout/FormLayout.test.tsx`                                                                                                                                                         | 32       | 25   | 7     |
 | `Grid/Grid.test.tsx`                                                                                                                                                                     | 43       | 36   | 7     |
-| `Layer/useTouchTrigger.test.ts`                                                                                                                                                          | 12       | 5    | 7     |
+| `hooks/menuPressGesture.test.ts`                                                                                                                                                         | 46       | 39   | 7     |
+| `InputGroup/InputGroup.test.tsx`                                                                                                                                                         | 25       | 18   | 7     |
+| `MoreMenu/MoreMenu.test.tsx`                                                                                                                                                             | 29       | 22   | 7     |
 | `Resizable/useResizable.test.ts`                                                                                                                                                         | 97       | 90   | 7     |
 | `Table/plugins/rowStatus/useTableRowStatus.test.tsx`                                                                                                                                     | 16       | 9    | 7     |
 | `Table/plugins/selection/useTableSelection.test.tsx`                                                                                                                                     | 25       | 18   | 7     |
 | `Table/plugins/stickyColumns/useTableStickyColumns.test.tsx`                                                                                                                             | 13       | 6    | 7     |
 | `theme/onMediaTokens.test.ts`                                                                                                                                                            | 29       | 22   | 7     |
 | `Badge/Badge.test.tsx`                                                                                                                                                                   | 14       | 8    | 6     |
+| `Calendar/Calendar.calendarSystems.test.tsx`                                                                                                                                             | 20       | 14   | 6     |
 | `CodeBlock/tokenizer.test.ts`                                                                                                                                                            | 18       | 12   | 6     |
-| `InputGroup/InputGroup.test.tsx`                                                                                                                                                         | 24       | 18   | 6     |
+| `Layer/inputHold.test.tsx`                                                                                                                                                               | 39       | 33   | 6     |
 | `Layer/layerDismissalFamilies.test.tsx`                                                                                                                                                  | 17       | 11   | 6     |
 | `Layout/__tests__/contentWidth.test.tsx`                                                                                                                                                 | 12       | 6    | 6     |
 | `MobileNav/MobileNavCloseEdgeCases.test.tsx`                                                                                                                                             | 17       | 11   | 6     |
 | `Table/plugins/tree/useTableTreeData.test.tsx`                                                                                                                                           | 44       | 38   | 6     |
 | `theme/tokens.test.ts`                                                                                                                                                                   | 32       | 26   | 6     |
-| `Calendar/Calendar.calendarSystems.test.tsx`                                                                                                                                             | 19       | 14   | 5     |
+| `hooks/useKeyboardHint.test.tsx`                                                                                                                                                         | 12       | 7    | 5     |
 | `IconButton/IconButton.test.tsx`                                                                                                                                                         | 14       | 9    | 5     |
 | `Layer/useLayerDismissal.test.tsx`                                                                                                                                                       | 25       | 20   | 5     |
 | `MobileNav/MobileNav.test.tsx`                                                                                                                                                           | 21       | 16   | 5     |
-| `MoreMenu/MoreMenu.test.tsx`                                                                                                                                                             | 27       | 22   | 5     |
 | `reset.test.ts`                                                                                                                                                                          | 7        | 2    | 5     |
 | `Table/plugins/rowIndex/useTableRowIndex.test.tsx`                                                                                                                                       | 14       | 9    | 5     |
 | `Table/plugins/sortable/useTableSortable.test.tsx`                                                                                                                                       | 45       | 40   | 5     |
 | `Thumbnail/Thumbnail.test.tsx`                                                                                                                                                           | 29       | 24   | 5     |
 | `Timestamp/tooltipEntries.test.ts`                                                                                                                                                       | 50       | 45   | 5     |
+| `utils/sharedResizeObserver.test.ts`                                                                                                                                                     | 16       | 11   | 5     |
 | `Chat/ChatComposerDrawer.test.tsx`                                                                                                                                                       | 7        | 3    | 4     |
 | `Chat/ChatTokenizedText.test.tsx`                                                                                                                                                        | 14       | 10   | 4     |
 | `FieldStatus/FieldStatus.test.tsx`                                                                                                                                                       | 37       | 33   | 4     |
@@ -599,65 +649,74 @@ per connected group.
 | `hooks/useMediaQuery.test.ts`                                                                                                                                                            | 14       | 10   | 4     |
 | `hooks/useTreeFocus.test.tsx`                                                                                                                                                            | 20       | 16   | 4     |
 | `motion/animatedLayout.slide.test.ts`                                                                                                                                                    | 13       | 9    | 4     |
+| `NumberInput/numberInputCommit.test.ts`                                                                                                                                                  | 10       | 6    | 4     |
+| `Outline/Outline.test.tsx`                                                                                                                                                               | 50       | 46   | 4     |
+| `Table/plugins/filtering/useTableFiltering.test.tsx`                                                                                                                                     | 20       | 16   | 4     |
+| `Table/plugins/sortable/useTableSortableState.test.tsx`                                                                                                                                  | 23       | 19   | 4     |
 | `theme/derivedVarRegistry.test.ts`                                                                                                                                                       | 14       | 10   | 4     |
 | `theme/useTheme.test.tsx`                                                                                                                                                                | 22       | 18   | 4     |
 | `utils/devWarning.test.ts`                                                                                                                                                               | 9        | 5    | 4     |
-| `utils/timeParser.test.ts`                                                                                                                                                               | 32       | 28   | 4     |
 | `Blockquote/Blockquote.test.tsx`                                                                                                                                                         | 11       | 8    | 3     |
+| `Calendar/Calendar.test.tsx`                                                                                                                                                             | 129      | 126  | 3     |
 | `Chat/useChatDictation.test.tsx`                                                                                                                                                         | 21       | 18   | 3     |
 | `Citation/Citation.test.tsx`                                                                                                                                                             | 19       | 16   | 3     |
 | `CodeBlock/highlightRanges.test.ts`                                                                                                                                                      | 6        | 3    | 3     |
-| `DateInput/NativeDateField.test.tsx`                                                                                                                                                     | 37       | 34   | 3     |
 | `EmptyState/EmptyState.test.tsx`                                                                                                                                                         | 23       | 20   | 3     |
 | `hooks/useClipboard.test.tsx`                                                                                                                                                            | 11       | 8    | 3     |
 | `MobileNav/MobileNavToggle.test.tsx`                                                                                                                                                     | 6        | 3    | 3     |
 | `motion/animatedLayout.test.ts`                                                                                                                                                          | 47       | 44   | 3     |
 | `Popover/PopoverPresentation.test.tsx`                                                                                                                                                   | 31       | 28   | 3     |
-| `Table/plugins/filtering/useTableFiltering.test.tsx`                                                                                                                                     | 19       | 16   | 3     |
 | `Table/plugins/groupedRows/useTableGroupedRows.test.tsx`                                                                                                                                 | 13       | 10   | 3     |
 | `theme/extensibleAxes.test.ts`                                                                                                                                                           | 6        | 3    | 3     |
 | `utils/color.test.ts`                                                                                                                                                                    | 35       | 32   | 3     |
+| `utils/timeFormat.test.ts`                                                                                                                                                               | 20       | 17   | 3     |
 | `AspectRatio/AspectRatio.test.tsx`                                                                                                                                                       | 28       | 26   | 2     |
 | `Avatar/Avatar.test.tsx`                                                                                                                                                                 | 86       | 84   | 2     |
-| `Calendar/getInitialFocusDate.test.ts`                                                                                                                                                   | 15       | 13   | 2     |
 | `Code/Code.test.tsx`                                                                                                                                                                     | 8        | 6    | 2     |
+| `DateInput/DateInput.calendar.test.tsx`                                                                                                                                                  | 38       | 36   | 2     |
 | `Divider/Divider.test.tsx`                                                                                                                                                               | 18       | 16   | 2     |
+| `gestures/__tests__/createPanGesture.test.tsx`                                                                                                                                           | 16       | 14   | 2     |
 | `hooks/scrollbarGutter.test.ts`                                                                                                                                                          | 10       | 8    | 2     |
+| `hooks/useStreamingText.test.ts`                                                                                                                                                         | 16       | 14   | 2     |
 | `i18n/__tests__/resolve.test.ts`                                                                                                                                                         | 22       | 20   | 2     |
+| `InfoTip/InfoTip.test.tsx`                                                                                                                                                               | 23       | 21   | 2     |
 | `InteractiveRoleContext/InteractiveRoleContext.test.tsx`                                                                                                                                 | 19       | 17   | 2     |
 | `Layer/layerDismissalInvariants.test.tsx`                                                                                                                                                | 17       | 15   | 2     |
 | `Layer/layerHost.test.ts`                                                                                                                                                                | 8        | 6    | 2     |
+| `Link/useLinkify.test.tsx`                                                                                                                                                               | 15       | 13   | 2     |
 | `motion/animatedLayout.presented.test.ts`                                                                                                                                                | 13       | 11   | 2     |
+| `motion/resolveMotion.tempo.test.ts`                                                                                                                                                     | 13       | 11   | 2     |
 | `Outline/parseOutlineFromMarkdown.test.ts`                                                                                                                                               | 14       | 12   | 2     |
 | `SizeContext/SizeContext.test.tsx`                                                                                                                                                       | 23       | 21   | 2     |
 | `Skeleton/Skeleton.test.tsx`                                                                                                                                                             | 6        | 4    | 2     |
+| `utils/clickGuard.test.ts`                                                                                                                                                               | 17       | 15   | 2     |
 | `utils/inputStream.test.ts`                                                                                                                                                              | 12       | 10   | 2     |
 | `VisuallyHidden/VisuallyHidden.test.tsx`                                                                                                                                                 | 9        | 7    | 2     |
 | `__tests__/stubMatchMedia.test.ts`                                                                                                                                                       | 7        | 6    | 1     |
 | `Avatar/AvatarStatusDot.test.tsx`                                                                                                                                                        | 20       | 19   | 1     |
-| `gestures/__tests__/createPanGesture.test.tsx`                                                                                                                                           | 15       | 14   | 1     |
+| `Drawer/Drawer.test.tsx`                                                                                                                                                                 | 72       | 71   | 1     |
+| `gestures/__tests__/useFingerScroll.test.tsx`                                                                                                                                            | 16       | 15   | 1     |
+| `hooks/useContainerReveal.test.tsx`                                                                                                                                                      | 12       | 11   | 1     |
 | `hooks/useHotkeys.test.ts`                                                                                                                                                               | 13       | 12   | 1     |
 | `hooks/useImageMode.test.ts`                                                                                                                                                             | 6        | 5    | 1     |
 | `hooks/useInputStatusIcon.test.tsx`                                                                                                                                                      | 7        | 6    | 1     |
-| `hooks/useKeyboardHint.test.tsx`                                                                                                                                                         | 8        | 7    | 1     |
+| `hooks/useScrollableArea.test.tsx`                                                                                                                                                       | 48       | 47   | 1     |
 | `i18n/__tests__/e2e-powersearch.test.tsx`                                                                                                                                                | 6        | 5    | 1     |
-| `InfoTip/InfoTip.test.tsx`                                                                                                                                                               | 22       | 21   | 1     |
 | `Layer/anchorName.test.ts`                                                                                                                                                               | 16       | 15   | 1     |
 | `MobileNav/MobileNavScrollbarGutter.test.tsx`                                                                                                                                            | 4        | 3    | 1     |
-| `motion/animator.test.ts`                                                                                                                                                                | 266      | 265  | 1     |
+| `motion/uikit/segmented.test.ts`                                                                                                                                                         | 9        | 8    | 1     |
 | `NavIcon/NavIcon.test.tsx`                                                                                                                                                               | 4        | 3    | 1     |
+| `Popover/popoverSurfaceMotion.test.ts`                                                                                                                                                   | 26       | 25   | 1     |
 | `PowerSearch/usePowerSearchConfig.test.ts`                                                                                                                                               | 52       | 51   | 1     |
 | `Selector/useCombobox.test.tsx`                                                                                                                                                          | 19       | 18   | 1     |
 | `Table/plugins/columnSettings/useTableColumnSettings.test.tsx`                                                                                                                           | 7        | 6    | 1     |
 | `Table/plugins/columnSettings/useTableColumnSettingsState.test.tsx`                                                                                                                      | 19       | 18   | 1     |
 | `Table/plugins/pagination/useTablePagination.test.tsx`                                                                                                                                   | 40       | 39   | 1     |
 | `Table/plugins/selection/useTableSelectionState.test.tsx`                                                                                                                                | 15       | 14   | 1     |
-| `Table/plugins/sortable/useTableSortableState.test.tsx`                                                                                                                                  | 20       | 19   | 1     |
 | `Table/plugins/tree/useTableTreeState.test.tsx`                                                                                                                                          | 37       | 36   | 1     |
 | `theme/contrast.test.ts`                                                                                                                                                                 | 11       | 10   | 1     |
 | `theme/expandMotionScale.test.ts`                                                                                                                                                        | 11       | 10   | 1     |
 | `Timer/Timer.test.tsx`                                                                                                                                                                   | 19       | 18   | 1     |
-| `Toast/ToastViewport.test.tsx`                                                                                                                                                           | 97       | 96   | 1     |
 | `Toast/useToast.test.tsx`                                                                                                                                                                | 5        | 4    | 1     |
 | `TreeList/TreeList.test.tsx`                                                                                                                                                             | 117      | 116  | 1     |
 | `utils/dateParser.test.ts`                                                                                                                                                               | 39       | 38   | 1     |
@@ -681,7 +740,7 @@ substring-matching on both sides by design and is not counted.
 |             | Blocks |
 | ----------- | ------ |
 | Ported      | 736    |
-| **Pending** | **0**  |
+| **Pending** | **3**  |
 
 Upstream ships these as CLI block templates; a docs example is a transcription of one, so
 the parity rule covers them as it covers a component. Counted per block **and target** — a
@@ -694,11 +753,11 @@ this port does not document are not counted as pending.
 | --------------------- | ------- |
 | api-divergence        | 35      |
 | deliberate-divergence | 53      |
-| divergence            | 5       |
+| divergence            | 7       |
 | port-defect-fixed     | 1       |
-| unported              | 18      |
+| unported              | 21      |
 | unported cases        | 1       |
 | upstream bug          | 1       |
 | upstream-bug          | 1       |
 | upstream-lag          | 13      |
-| **total**             | **128** |
+| **total**             | **133** |

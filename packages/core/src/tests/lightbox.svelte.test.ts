@@ -99,6 +99,18 @@ afterEach(() => {
 
 const noop = (): void => {};
 
+/**
+ * A laid-out image for the zoom cases. The stage reads the photo's used size
+ * and its natural width, which a broken `/photo.jpg` cannot supply: a 400 × 200
+ * photo fits a 1600 × 1000 stage at (600, 400), so a 2× zoom rests at
+ * translate(-200px, -100px).
+ */
+const ZOOM_PHOTO =
+	'data:image/svg+xml,' +
+	encodeURIComponent(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200"><rect width="400" height="200" fill="#888"/></svg>'
+	);
+
 function politeRegion(): HTMLElement | null {
 	return document.querySelector('[data-astryx-live-region="polite"]');
 }
@@ -447,7 +459,7 @@ describe('Lightbox', () => {
 				props: {
 					isOpen: true,
 					onOpenChange: noop,
-					media: { src: '/photo.jpg', alt: 'Photo' },
+					media: { src: ZOOM_PHOTO, alt: 'Photo' },
 					hasZoom: true
 				}
 			});
@@ -463,7 +475,7 @@ describe('Lightbox', () => {
 				props: {
 					isOpen: true,
 					onOpenChange: noop,
-					media: { src: '/photo.jpg', alt: 'Photo' },
+					media: { src: ZOOM_PHOTO, alt: 'Photo' },
 					hasZoom: true
 				}
 			});
@@ -479,7 +491,7 @@ describe('Lightbox', () => {
 				props: {
 					isOpen: true,
 					onOpenChange: noop,
-					media: { src: '/photo.jpg', alt: 'Photo' },
+					media: { src: ZOOM_PHOTO, alt: 'Photo' },
 					hasZoom: true
 				}
 			});
@@ -496,28 +508,41 @@ describe('Lightbox', () => {
 
 		it('pans with arrow keys while zoomed instead of navigating the gallery', async () => {
 			const onIndexChange = vi.fn();
+			const photos = media.map((item) => ({ ...item, src: ZOOM_PHOTO }));
 			const screen = await render(Lightbox, {
-				props: { isOpen: true, onOpenChange: noop, media, index: 1, onIndexChange, hasZoom: true }
+				props: {
+					isOpen: true,
+					onOpenChange: noop,
+					media: photos,
+					index: 1,
+					onIndexChange,
+					hasZoom: true
+				}
 			});
 			const dialog = dialogIn(screen.container);
 			const target = screen.getByRole('button', { name: 'Zoom', exact: true }).element();
 			press(target, 'Enter');
 			const img = screen.getByAltText('Image B').element();
-			// The transform rides a `--x-transform` custom property (StyleX's dynamic
-			// style), so it reads out of the `style` attribute exactly as upstream's
-			// inline `transform` does.
-			const transform = (): string => img.getAttribute('style') ?? '';
-			await expect.poll(transform).toContain('translate(0px, 0px)');
+			// The zoom stage writes the photo's individual `translate` and `scale`
+			// properties, as upstream's does. A 400 × 200 photo on the 1600 × 1000
+			// stage fits at (600, 400), so 2× rests at (-200px, -100px).
+			const transform = (): { translate: string; scale: string } => ({
+				translate: (img as HTMLElement).style.translate,
+				scale: (img as HTMLElement).style.scale
+			});
+			await expect.poll(transform).toEqual({ translate: '-200px -100px', scale: '2' });
 			// ArrowRight reveals content to the right (image shifts left) and must
 			// not fall through to gallery navigation.
 			press(dialog, 'ArrowRight');
 			expect(onIndexChange).not.toHaveBeenCalled();
-			await expect.poll(transform).toContain('translate(-25px, 0px)');
+			await expect.poll(transform).toEqual({ translate: '-250px -100px', scale: '2' });
+			// At 400 px tall the photo is shorter than the 1000 px stage, so it
+			// stays centred vertically.
 			press(dialog, 'ArrowDown');
-			await expect.poll(transform).toContain('translate(-25px, -25px)');
+			await expect.poll(transform).toEqual({ translate: '-250px -100px', scale: '2' });
 			press(dialog, 'ArrowLeft');
 			press(dialog, 'ArrowUp');
-			await expect.poll(transform).toContain('translate(0px, 0px)');
+			await expect.poll(transform).toEqual({ translate: '-200px -100px', scale: '2' });
 			expect(onIndexChange).not.toHaveBeenCalled();
 		});
 
@@ -535,7 +560,7 @@ describe('Lightbox', () => {
 				props: {
 					isOpen: true,
 					onOpenChange: noop,
-					media: { src: '/photo.jpg', alt: 'Photo' },
+					media: { src: ZOOM_PHOTO, alt: 'Photo' },
 					hasZoom: true
 				}
 			});
@@ -619,7 +644,8 @@ describe('Lightbox', () => {
 			// The container fills the whole dialog, so a click on the visual backdrop
 			// (the dark area around the media) lands on it — not on the dialog
 			// element itself.
-			const container = dialogIn(screen.container).firstElementChild;
+			const dialog = dialogIn(screen.container);
+			const container = dialog.querySelector('[data-astryx-media="dark"]')!.firstElementChild!;
 			(container as HTMLElement).click();
 			expect(onOpenChange).toHaveBeenCalledWith(false);
 		});

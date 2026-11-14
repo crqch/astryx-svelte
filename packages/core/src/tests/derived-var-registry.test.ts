@@ -352,7 +352,17 @@ const LOCAL_ONLY_VARS = new Set([
 	'--_field-status-overlap',
 	'--_press-overlay',
 	'--_tree-focus-z',
-	'--spinner-arc-fraction'
+	'--spinner-arc-fraction',
+	// The sheet drag-to-close writes these on the dialog for its backdrop: the
+	// dim's opacity and the fade's duration and easing. They are private
+	// behavior values, not a standard property on the sheet target.
+	'--_sheet-scrim-opacity',
+	'--_sheet-scrim-duration',
+	'--_sheet-scrim-easing',
+	// While the press controller paints a selection control's press, the
+	// indicator's `:active` fill stays off. A theme author changes the press
+	// through the shared press tokens, not this switch.
+	'--_indicator-active-press'
 ]);
 
 const VARS_WITHOUT_DERIVED_MAPPING = new Set([
@@ -372,6 +382,12 @@ const VARS_WITHOUT_DERIVED_MAPPING = new Set([
 	'--_toast-swipe-exit-y',
 	'--_toast-swipe-opacity',
 	'--_toast-swipe-scale',
+	// The sheet drag-to-close writes these on the dialog for its backdrop: the
+	// dim's opacity and the fade's duration and easing. They are private
+	// behavior values, not a standard property on the sheet target.
+	// While the press controller paints a selection control's press, the
+	// indicator's `:active` fill stays off. A theme author changes the press
+	// through the shared press tokens, not this switch.
 	// Geometry of the touch hit layer past a divided ListItem's border, such as
 	// a divided row's divider (0 on the last row). The ::after layer adds it to
 	// its offset so the band starts past the border. It is the layer's geometry,

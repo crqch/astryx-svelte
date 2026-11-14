@@ -104,6 +104,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Count',
+			value: 3
+		}
+	},
 	props: [
 		{
 			name: 'label',
@@ -198,7 +204,21 @@ export default {
 		{
 			name: 'status',
 			type: 'InputStatus',
-			description: 'Validation status with optional message.'
+			description:
+				'Validation status with optional message. Typing never shows a rejection: a typed number is complete only at commit. When Enter or blur meets text that is not a number, a fraction in an integer-only field, or any number while min is above max, the text stays in the field and the field shows its own error message in place of status. An error status with a message shows instead of that message, and the rejection is still announced and marks the field invalid. A warning or success status, or an error status without a message, never replaces it. A number outside an ordinary range clamps instead.'
+		},
+		{
+			name: 'onEntryErrorChange',
+			type: "(error: {kind: 'unreadable' | 'fractional' | 'outOfRange', text: string, value?: number} | null) => void",
+			description:
+				"Called each time the field's rejection of typed text changes, and with null when the rejection ends. A rejection starts only at Enter or blur. kind is 'unreadable' (text that is not a number), 'fractional' (a fraction when isIntegerOnly), or 'outOfRange' (any number while min is above max); text is the typed text; value is the number it names, for 'fractional' and 'outOfRange'. It also runs when an edit makes the text valid or empty, when a new value, min, max, or isIntegerOnly changes or ends the rejection, and when disabling the field drops the text, and never twice for the same rejection; it reports null when the field unmounts while a rejection stands. Pass an error status with a message to word the rejection yourself."
+		},
+		{
+			name: 'entryErrorBehavior',
+			type: "'complete' | 'blur-or-enter'",
+			description:
+				"When the field shows its own entry error: typed text it rejects, as onEntryErrorChange reports it. It sets when the error shows, not when validation runs, so it is not React Aria's validationBehavior (native versus ARIA validation), and it never changes a caller status. A typed number is complete only at Enter or blur, so 'complete' and 'blur-or-enter' behave the same: the message, aria-invalid, the invalid styling, the announcement, and the onEntryErrorChange report appear together at Enter or blur, never while a person types, and an edit that makes the text valid or empty clears the error at once. Set it to match the other fields of a form; the field's own value wins over the nearest FormLayout's defaultEntryErrorBehavior.",
+			default: "the nearest FormLayout's defaultEntryErrorBehavior, else 'complete'"
 		},
 		{
 			name: 'statusVariant',
@@ -263,7 +283,8 @@ export default {
 		{
 			name: 'htmlName',
 			type: 'string',
-			description: 'HTML name attribute for form submissions.'
+			description:
+				'HTML name attribute for form submissions. While blur keeps rejected text, the form posts the committed number, until the person edits the text or a new value replaces it.'
 		},
 		{
 			name: 'autoComplete',

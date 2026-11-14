@@ -96,7 +96,7 @@
 	const resolvedWordBreak = $derived(wordBreak ?? (maxLines === 1 ? 'break-all' : 'break-word'));
 	const resolvedDisplay = $derived(maxLines > 0 || hasCapsize ? 'block' : display);
 
-	const truncation = useTruncation(() => maxLines);
+	const truncation = useTruncation(() => ({ maxLines }));
 
 	// A capsize block removes a multi-line clamp.
 	const isClamped = $derived(maxLines === 1 || (maxLines > 1 && !hasCapsize));

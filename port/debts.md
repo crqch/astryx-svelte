@@ -1936,3 +1936,63 @@ violations file, and the fixtures are imported from a source module). The 10
 Badge classes are skipped by class/rule in `compare-upstream-css.mjs`; the 14
 fixture at-rule/declaration shapes sit in its `OTHER_SKIP`. Neither exists in
 this port and neither is a component rule.
+
+### The 0.7.16 grouped Tokenizer strip ships styles only
+
+- **units:** Tokenizer
+- **kind:** unported
+- **retires:** when the `InputGroup` grouped presentation is wired
+
+Upstream 0.7.16 gives a `Tokenizer` inside an `InputGroup` a single-line strip: its tokens scroll
+beside the end lane, with edge fades and an in-flow input lane. The style keys (`inGroupWrapper`,
+`inGroupTrack`, `trackFade*`, `inGroupInput`, `inGroupEndSection*`) and their builders are ported,
+and both oracles compare them, but the component still renders its wrapping field: `useScrollableArea`
+is not attached to the strip, the end lane is not taken out of flow, and the `+N more` summary is not
+computed. The styles are kept because they are the release's design constants and the class oracle
+would otherwise lose the pairing.
+
+### The 0.7.16 sheet scrim handoff ships properties only
+
+- **units:** BottomSheet
+- **kind:** unported
+- **retires:** when `writeScrimFade` and the drag's easing handoff are ported
+
+`scrimClosing` reads `--_sheet-scrim-easing` and the panel ends the three scrim vars' inheritance,
+but nothing writes them. Upstream's drag-to-close writes the spring's progress as the dim's easing
+and pins the duration to `0s` between stacked sheets; here the scrim still plays the resting fade.
+
+### The 0.7.16 layer entrance side is read, not written
+
+- **units:** Layer
+- **kind:** unported
+- **retires:** when `layerEntranceSide.ts` is ported
+
+`layerAnimations` reads `--_astryx-layer-enter-x`/`-y`/`-origin`/`-gap` with the placement's own
+side as each fallback, so an entrance still plays. Upstream also writes those values from the side
+the layer landed on after a flip, and scales the surface about that side; this port always uses the
+placement's fallback.
+
+### `InputGroupText` keeps the bidi isolation but not the inner direction span
+
+- **units:** InputGroupText
+- **kind:** divergence
+- **retires:** when a Svelte snippet can expose its text for `textDirectionProps`
+
+Upstream inspects a plain-string child and wraps it in `<span dir="ltr">` when it holds no
+right-to-left letter, so `https://` and `+3` do not reorder under an RTL page. A Svelte snippet
+cannot be inspected, so the cell keeps `unicode-bidi: isolate` and renders its children as given.
+`Token` is unaffected: its `label` is a string, and it gets the `dir` rule.
+
+### `Lightbox`'s caption is a measured element, not `Text`
+
+- **units:** Lightbox, Text
+- **kind:** divergence
+- **retires:** when `Text` can hand out its element
+
+Upstream renders the caption with `<Text type="body" maxLines={2}>` and uses the same element for
+its truncation hook. A Svelte component instance has no DOM node to attach that hook to, so this
+port renders a plain element with the same type (`captionText`) and attaches `useTruncation` to it;
+the hook is public (upstream 0.7.16's two extra options, `isExpanded` and `fullText`, are now
+implemented). The band, the clamp, the toggle, the place and the open caption's scroll state behave
+as upstream's; the delivery uses a Svelte effect and `tick` where upstream defers to a microtask
+and `flushSync`.

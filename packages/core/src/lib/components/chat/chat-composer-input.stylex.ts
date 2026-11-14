@@ -41,6 +41,10 @@ const styles = stylex.create({
 			}
 		},
 		lineHeight: `${LINE_HEIGHT_PX}px`,
+		// The editable is a flex item that scrolls, so its automatic minimum
+		// height is 0. An empty one can then lay out at 0px after a restyle,
+		// and a click on the input no longer reaches it.
+		minHeight: `${LINE_HEIGHT_PX}px`,
 		fontFamily: typographyVars['--font-family-body'],
 		color: colorVars['--color-text-primary'],
 		caretColor: colorVars['--color-accent'],

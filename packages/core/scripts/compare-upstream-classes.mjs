@@ -1801,17 +1801,24 @@ const CASES = [
 		inline: [
 			['styles.container'],
 			['styles.mediaGroup'],
-			['styles.mediaGroup', 'styles.mediaGroupZoom'],
 			['styles.video'],
-			['styles.caption'],
-			['styles.counter'],
-			['styles.counter', 'styles.counterBacking'],
 			['styles.chromeLayer'],
 			['styles.image'],
+			// The photo's stage: the base fill, and its zoomable or zoomed cursor.
+			['styles.imageWrapper'],
+			['styles.imageWrapper', 'styles.imageWrapperZoomable'],
+			['styles.imageWrapper', 'styles.imageWrapperZoomed'],
+			// The track: no gestures, the zoom stage's pinch-zoom, or the touch
+			// presentation's one-finger drag.
 			['styles.track'],
 			['styles.track', 'styles.trackZoomTarget'],
-			['styles.pageMedia'],
-			['styles.pageMedia', 'styles.pageMediaZoomTarget']
+			// The caption band: its backing, bare, or under an open caption.
+			['styles.captionBand'],
+			['styles.captionBand', 'styles.captionBandBare'],
+			['styles.captionInBand'],
+			['styles.captionInBand', 'styles.captionOpen'],
+			['styles.captionBody'],
+			['styles.captionFlow']
 		]
 	},
 	{
@@ -3142,7 +3149,10 @@ const CASES = [
 			['styles.startIconWithTokens'],
 			['styles.overflowText'],
 			['styles.sheetTriggerPlaceholder'],
-			['styles.sheetTriggerPlaceholder', 'styles.sheetTriggerPlaceholderDisabled']
+			['styles.sheetTriggerPlaceholder', 'styles.sheetTriggerPlaceholderDisabled'],
+			// 0.7.16's grouped strip: its content box is the only folded key.
+			['styles.inGroupTrackContent'],
+			['styles.inGroupTrackContent', 'styles.inGroupTrackContentTruncated']
 		]
 	},
 	{

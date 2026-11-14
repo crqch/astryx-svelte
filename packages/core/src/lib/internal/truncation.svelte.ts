@@ -1,82 +1,116 @@
 import type { Attachment } from 'svelte/attachments';
-import { observeResize, unobserveResize } from './shared-resize-observer.js';
+import { observeResize } from './shared-resize-observer.js';
+import { observeContent } from './shared-mutation-observer.js';
 
 /**
- * Overflow detection for clamped text, ported from Astryx's
- * `src/Text/useTruncation.ts`.
+ * Ported from Astryx's `Text/useTruncation.ts`.
  *
- * Upstream returns a ref callback; the Svelte equivalent is an attachment, which
- * gives us the same "run on mount, re-run when the inputs change, clean up on
- * unmount" lifecycle without a ref to thread through. `maxLines` is passed as a
- * getter so reading it inside the attachment registers the dependency — changing
- * `maxLines` re-runs the attachment, which is exactly upstream's `useCallback`
- * dependency list expressed as reactivity.
+ * Upstream returns a ref callback; the Svelte equivalent is an attachment,
+ * which gives the same mount/update/cleanup lifecycle without a ref to thread
+ * through. The options arrive as a getter, so reading `maxLines` and
+ * `isExpanded` inside the attachment registers them as dependencies.
  *
- * This only ever runs in the browser: attachments do not execute during SSR, so
- * the server renders the untruncated markup and the first client pass measures.
+ * `isExpanded` keeps the answer the clamped text last measured, so a caption
+ * that opens in full keeps its `More`/`Less` toggle mounted with its focus.
+ *
+ * @example
+ * ```svelte
+ * const truncation = useTruncation(() => ({ maxLines: 2 }));
+ * <div {@attach truncation.attach}>{text}</div>
+ * {#if truncation.isTruncated}<button>More</button>{/if}
+ * ```
  */
-/**
- * Upstream's `UseTruncationOptions`. A getter rather than a plain object: reading
- * `maxLines` inside the attachment is what registers the dependency, which is
- * upstream's `useCallback` dependency list expressed as reactivity.
- */
-export type UseTruncationOptions = () => number;
+export interface UseTruncationOptions {
+	/** Maximum number of lines before truncation. 0 disables it. */
+	maxLines: number;
+	/** Pass true while the text is shown in full; the hook keeps its clamped answer. */
+	isExpanded?: boolean;
+}
 
-/** Upstream's `UseTruncationReturn`, with `ref` replaced by `attach`. */
 export interface UseTruncationReturn {
-	/** Whether the content currently overflows its clamp. */
+	/** Whether the text is currently truncated (overflowing). */
 	readonly isTruncated: boolean;
-	/** The element's full text, for the tooltip or `title` fallback. */
+	/** The element's full text, for the tooltip. */
 	readonly fullText: string;
 	/** Attach to the clamped element with `{@attach truncation.attach}`. */
 	readonly attach: Attachment<HTMLElement>;
 }
 
-export function useTruncation(maxLines: UseTruncationOptions): UseTruncationReturn {
+export function useTruncation(options: () => UseTruncationOptions): UseTruncationReturn {
 	let isTruncated = $state(false);
 	let fullText = $state('');
+	// The last measured answer, which the text keeps while it is expanded.
+	let answer = { isTruncated: false, fullText: '' };
+	// The text an expanded element kept its answer for when it went.
+	let keptFor: HTMLElement | null = null;
 
-	function check(element: HTMLElement, lines: number): void {
-		fullText = element.textContent ?? '';
-
-		if (lines === 1) {
-			isTruncated = element.scrollWidth > element.offsetWidth;
+	function check(element: HTMLElement, maxLines: number): void {
+		if (maxLines === 0) {
+			answer = { isTruncated: false, fullText: element.textContent ?? '' };
+			isTruncated = false;
+			fullText = answer.fullText;
 			return;
 		}
 
-		// With `-webkit-line-clamp` active, browsers may report scrollHeight as the
-		// *clamped* height, so the naive scrollHeight > offsetHeight check silently
-		// returns false. A Range over the contents measures the real text box.
-		let contentHeight = element.scrollHeight;
-		try {
-			const range = document.createRange();
-			range.selectNodeContents(element);
-			contentHeight = range.getBoundingClientRect().height;
-			range.detach();
-		} catch {
-			// Fall back to scrollHeight where Range is unavailable.
+		answer.fullText = element.textContent ?? '';
+		if (maxLines === 1) {
+			answer.isTruncated = element.scrollWidth > element.offsetWidth;
+		} else {
+			// With `-webkit-line-clamp` active, browsers may report scrollHeight
+			// as the clamped height, so the naive check silently returns false. A
+			// Range over the contents measures the real text box.
+			let contentHeight = element.scrollHeight;
+			try {
+				const range = element.ownerDocument.createRange();
+				range.selectNodeContents(element);
+				contentHeight = range.getBoundingClientRect().height;
+				range.detach();
+			} catch {
+				// Fall back to scrollHeight where Range is unavailable.
+			}
+			answer.isTruncated = contentHeight > element.offsetHeight;
 		}
-		isTruncated = contentHeight > element.offsetHeight;
+		isTruncated = answer.isTruncated;
+		fullText = answer.fullText;
 	}
 
 	const attach: Attachment<HTMLElement> = (element) => {
-		const lines = maxLines();
+		const { maxLines, isExpanded = false } = options();
 
-		if (lines === 0) {
+		// Shown in full, the text keeps the answer it had when clamped.
+		if (isExpanded) {
+			isTruncated = answer.isTruncated;
+			fullText = answer.fullText;
+			if (element != null) {
+				keptFor = element;
+			}
+			return;
+		}
+
+		// A kept answer is about the text it measured. Other text starts from
+		// none, as it does after its old element goes.
+		const kept = keptFor;
+		keptFor = null;
+		if (kept != null && element !== kept) {
+			answer = { isTruncated: false, fullText: '' };
+			isTruncated = false;
+			fullText = '';
+		}
+
+		if (maxLines === 0) {
 			isTruncated = false;
 			fullText = '';
 			return;
 		}
 
-		if (typeof ResizeObserver === 'undefined') {
-			check(element, lines);
-			return;
-		}
-
-		// observeResize fires once on registration, so this covers the initial
-		// measurement as well as later resizes.
-		observeResize(element, () => check(element, lines));
-		return () => unobserveResize(element);
+		// The shared observers: the first resize notification measures a new
+		// element, and a text change that keeps the box's size still re-measures.
+		const stopResize = observeResize(element, () => check(element, maxLines));
+		const stopContent = observeContent(element, () => check(element, maxLines));
+		return () => {
+			stopResize();
+			stopContent();
+		};
 	};
 
 	return {

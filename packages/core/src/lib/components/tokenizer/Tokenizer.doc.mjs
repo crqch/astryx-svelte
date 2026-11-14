@@ -54,6 +54,11 @@ export default {
 					'Show validation status with the status prop so users know immediately when a selection is missing or invalid.'
 			},
 			{
+				guidance: true,
+				description:
+					'Use inside InputGroup only when the tokenizer needs a short prefix or suffix addon as part of one decorated input surface; the grouped row stays single-line, so keep selections few (maxEntries) or use tokenOverflowBehavior to summarize them.'
+			},
+			{
 				guidance: false,
 				description:
 					"Don't use Tokenizer for single-item selection; use Typeahead instead. Tokenizer is for building sets of two or more items."
@@ -251,7 +256,8 @@ export default {
 		{
 			name: 'hasEntriesOnFocus',
 			type: 'boolean',
-			description: 'Show bootstrap results on focus before typing.',
+			description:
+				'Show bootstrap results on focus before typing. After a pick from that list, the input keeps focus and the list stays open with the next choice active, while another choice remains.',
 			default: 'false'
 		},
 		{
@@ -289,7 +295,7 @@ export default {
 		{
 			name: 'size',
 			type: "'sm' | 'md' | 'lg'",
-			description: 'Input and token size.',
+			description: "Input and token size. Inside an InputGroup the group's size applies instead.",
 			default: "'md'"
 		},
 		{

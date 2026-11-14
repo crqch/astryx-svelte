@@ -30,8 +30,15 @@ export default {
 			{
 				name: '--_indicator-press-image',
 				description:
-					"The row's touch press image, handed down to a first-party indicator that paints its own press. Set from the press paint only while the row itself is pressed, or, under a CheckboxList row that owns the press, from that row's press paint. Only this row declares it.",
+					"The row's press image, handed down to a first-party indicator that paints its own press. Set from the press paint only while the row itself is pressed, or, under a CheckboxList row that owns the press, from that row's press paint. Only this row declares it.",
 				default: 'none',
+				private: true
+			},
+			{
+				name: '--_indicator-active-press',
+				description:
+					"Transparent while the press controller paints the row's press, and always under a CheckboxList row that owns the press, so a first-party indicator that paints its own press draws no `:active` fill under the press image. Only this row declares it.",
+				default: 'var(--color-overlay-pressed)',
 				private: true
 			}
 		]
@@ -93,6 +100,12 @@ export default {
 				description: 'An error, warning, or success message below the checkbox.'
 			}
 		]
+	},
+	playground: {
+		defaults: {
+			label: 'Add to calendar',
+			value: true
+		}
 	},
 	props: [
 		{

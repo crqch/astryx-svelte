@@ -1,6 +1,6 @@
 {
 	"name": "@astryx-sv/theme-y2k",
-	"version": "0.7.14",
+	"version": "0.7.16",
 	"description": "Y2K theme for astryx-svelte \u2014 hot pinks, lime greens, and Poppins.",
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
@@ -48,7 +48,7 @@
 	},
 	"devDependencies": {
 		"@astryx-sv/core": "workspace:*",
-		"@astryxdesign/theme-y2k": "0.7.13",
+		"@astryxdesign/theme-y2k": "0.7.16",
 		"svelte": "^5.56.1",
 		"typescript": "^6.0.3"
 	},

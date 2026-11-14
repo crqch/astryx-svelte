@@ -21,11 +21,11 @@
   },
   "@astryx.pagination.first": {
     "defaultMessage": "Go to first page",
-    "description": "Aria label for the first-page button (« double chevron) in the input pagination variant."
+    "description": "Aria label for the first-page button (\u00ab double chevron) in the input pagination variant."
   },
   "@astryx.pagination.last": {
     "defaultMessage": "Go to last page",
-    "description": "Aria label for the last-page button (» double chevron) in the input pagination variant."
+    "description": "Aria label for the last-page button (\u00bb double chevron) in the input pagination variant."
   },
   "@astryx.pagination.goToPage": {
     "defaultMessage": "Go to page {page, number}",
@@ -33,7 +33,7 @@
   },
   "@astryx.pagination.goToPageInput": {
     "defaultMessage": "Go to page",
-    "description": "Aria label for the editable page/row number box in the input pagination variant. No number — the box holds the value itself."
+    "description": "Aria label for the editable page/row number box in the input pagination variant. No number \u2014 the box holds the value itself."
   },
   "@astryx.pagination.pageLabel": {
     "defaultMessage": "Page",
@@ -52,12 +52,12 @@
     "description": "Label for the page-size selector."
   },
   "@astryx.pagination.count": {
-    "defaultMessage": "{from, number}–{to, number} of {total, number}",
-    "description": "Visible range-of-total text on a pagination bar. Example: \"1–20 of 347\"; the en-dash is translator's choice."
+    "defaultMessage": "{from, number}\u2013{to, number} of {total, number}",
+    "description": "Visible range-of-total text on a pagination bar. Example: \"1\u201320 of 347\"; the en-dash is translator's choice."
   },
   "@astryx.pagination.pageOfTotal": {
     "defaultMessage": "Page {current, number} of {total, number}",
-    "description": "Visible \"Page X of Y\" text on the compact pagination variant; also announced by screen readers. Keep short — sits in a compact toolbar."
+    "description": "Visible \"Page X of Y\" text on the compact pagination variant; also announced by screen readers. Keep short \u2014 sits in a compact toolbar."
   },
   "@astryx.pagination.pageAnnounce": {
     "defaultMessage": "Page {current, number}",
@@ -77,7 +77,7 @@
   },
   "@astryx.powersearch.editor.removeFilter": {
     "defaultMessage": "Remove filter",
-    "description": "Screen-reader-only label on the \"×\" icon button next to a filter row in the PowerSearch editor; removes that row. Imperative verb."
+    "description": "Screen-reader-only label on the \"\u00d7\" icon button next to a filter row in the PowerSearch editor; removes that row. Imperative verb."
   },
   "@astryx.powersearch.editor.groupOperator": {
     "defaultMessage": "Group operator",
@@ -121,34 +121,34 @@
   },
   "@astryx.powersearch.valueEditor.startDate": {
     "defaultMessage": "Start date",
-    "description": "Noun form-label above the start-of-range date picker in the PowerSearch value editor. Pairs with `End date` — keep the two parallel in your language."
+    "description": "Noun form-label above the start-of-range date picker in the PowerSearch value editor. Pairs with `End date` \u2014 keep the two parallel in your language."
   },
   "@astryx.powersearch.valueEditor.endDate": {
     "defaultMessage": "End date",
-    "description": "Noun form-label above the end-of-range date picker in the PowerSearch value editor. Pairs with `Start date` — keep the two parallel."
+    "description": "Noun form-label above the end-of-range date picker in the PowerSearch value editor. Pairs with `Start date` \u2014 keep the two parallel."
   },
   "@astryx.powersearch.valueEditor.entities": {
     "defaultMessage": "Entities",
-    "description": "\"Entities\" is jargon — plural noun form-label above an entity picker (people, teams, projects). Prefer a natural collective like \"items\" if your language has no equivalent."
+    "description": "\"Entities\" is jargon \u2014 plural noun form-label above an entity picker (people, teams, projects). Prefer a natural collective like \"items\" if your language has no equivalent."
   },
   "@astryx.powersearch.valueEditor.searchPlaceholder": {
-    "defaultMessage": "Search…",
-    "description": "Placeholder inside the search input in the PowerSearch entity/typeahead picker. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Placeholder inside the search input in the PowerSearch entity/typeahead picker. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.powersearch.valueEditor.enterValuePlaceholder": {
-    "defaultMessage": "Enter value…",
-    "description": "Placeholder inside a free-text single-value input in the PowerSearch value editor. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Enter value\u2026",
+    "description": "Placeholder inside a free-text single-value input in the PowerSearch value editor. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.powersearch.valueEditor.addValuesPlaceholder": {
-    "defaultMessage": "Add values…",
-    "description": "Placeholder inside a multi-value chip input where the user types items and presses Enter to add each as a chip. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Add values\u2026",
+    "description": "Placeholder inside a multi-value chip input where the user types items and presses Enter to add each as a chip. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.powersearch.valueEditor.enterNumberPlaceholder": {
-    "defaultMessage": "Enter number…",
-    "description": "Placeholder inside a numeric input in the PowerSearch value editor. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Enter number\u2026",
+    "description": "Placeholder inside a numeric input in the PowerSearch value editor. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.powersearch.valueEditor.selectValuesPlaceholder": {
-    "defaultMessage": "Select values…",
+    "defaultMessage": "Select values\u2026",
     "description": "Placeholder on a dropdown for choosing values from a fixed enum list in the PowerSearch value editor. Imperative verb (user selects, not types)."
   },
   "@astryx.powersearch.operator.contains": {
@@ -177,7 +177,7 @@
   },
   "@astryx.powersearch.operator.is": {
     "defaultMessage": "is",
-    "description": "PowerSearch equality operator for strings/enums. Example: `Status is Active`. Separate from `operator.equals` (numbers) — translations may diverge."
+    "description": "PowerSearch equality operator for strings/enums. Example: `Status is Active`. Separate from `operator.equals` (numbers) \u2014 translations may diverge."
   },
   "@astryx.powersearch.operator.isNot": {
     "defaultMessage": "is not",
@@ -201,11 +201,11 @@
   },
   "@astryx.powersearch.operator.greaterThanOrEqual": {
     "defaultMessage": "is greater than or equal to",
-    "description": "PowerSearch numeric operator, ≥. Example: `Age is greater than or equal to 21`. A shorter form (e.g. \"≥\") is fine if idiomatic."
+    "description": "PowerSearch numeric operator, \u2265. Example: `Age is greater than or equal to 21`. A shorter form (e.g. \"\u2265\") is fine if idiomatic."
   },
   "@astryx.powersearch.operator.lessThanOrEqual": {
     "defaultMessage": "is less than or equal to",
-    "description": "PowerSearch numeric operator, ≤. Example: `Priority is less than or equal to 3`. A shorter form is fine if idiomatic."
+    "description": "PowerSearch numeric operator, \u2264. Example: `Priority is less than or equal to 3`. A shorter form is fine if idiomatic."
   },
   "@astryx.powersearch.operator.before": {
     "defaultMessage": "is before",
@@ -324,8 +324,8 @@
     "description": "Screen-reader-only label of the field-list filter box in the PowerSearch Add filter sheet, shown once the config has eight or more fields. Imperative verb + plural noun."
   },
   "@astryx.powersearch.sheet.searchFieldsPlaceholder": {
-    "defaultMessage": "Search filters…",
-    "description": "Placeholder inside the field-list filter box in the PowerSearch Add filter sheet. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search filters\u2026",
+    "description": "Placeholder inside the field-list filter box in the PowerSearch Add filter sheet. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.powersearch.sheet.ungroupedFields": {
     "defaultMessage": "General",
@@ -389,7 +389,7 @@
   },
   "@astryx.appShell.skipToContent": {
     "defaultMessage": "Skip to content",
-    "description": "Text of the skip link — the first focusable element on the page, visible only while keyboard-focused. Activating it jumps focus past the navigation to the main content area. Imperative verb; keep short."
+    "description": "Text of the skip link \u2014 the first focusable element on the page, visible only while keyboard-focused. Activating it jumps focus past the navigation to the main content area. Imperative verb; keep short."
   },
   "@astryx.avatar.nameWithStatus": {
     "defaultMessage": "{name}, {status}",
@@ -405,7 +405,7 @@
   },
   "@astryx.avatarGroup.overflow": {
     "defaultMessage": "{count, number} more",
-    "description": "Accessible name for the \"+N\" overflow indicator at the end of an AvatarGroup — announces how many additional avatars are not shown. Example: `5 more`. The visible \"+N\" text is unaffected; this is the aria-label only."
+    "description": "Accessible name for the \"+N\" overflow indicator at the end of an AvatarGroup \u2014 announces how many additional avatars are not shown. Example: `5 more`. The visible \"+N\" text is unaffected; this is the aria-label only."
   },
   "@astryx.banner.dismiss": {
     "defaultMessage": "Dismiss",
@@ -469,27 +469,27 @@
   },
   "@astryx.chat.status.sending": {
     "defaultMessage": "Sending",
-    "description": "Chat send-status caption under an outgoing message while it is being transmitted. Part of the set sending → sent → delivered → read (or failed) — keep tense/aspect consistent."
+    "description": "Chat send-status caption under an outgoing message while it is being transmitted. Part of the set sending \u2192 sent \u2192 delivered \u2192 read (or failed) \u2014 keep tense/aspect consistent."
   },
   "@astryx.chat.status.sent": {
     "defaultMessage": "Sent",
-    "description": "Chat send-status caption shown once the message reaches the server. Part of the set sending → **sent** → delivered → read (or failed) — keep tense consistent."
+    "description": "Chat send-status caption shown once the message reaches the server. Part of the set sending \u2192 **sent** \u2192 delivered \u2192 read (or failed) \u2014 keep tense consistent."
   },
   "@astryx.chat.status.delivered": {
     "defaultMessage": "Delivered",
-    "description": "Chat send-status caption shown once the recipient's device received the message. Part of the set sending → sent → **delivered** → read (or failed)."
+    "description": "Chat send-status caption shown once the recipient's device received the message. Part of the set sending \u2192 sent \u2192 **delivered** \u2192 read (or failed)."
   },
   "@astryx.chat.status.read": {
     "defaultMessage": "Read",
-    "description": "Chat send-status caption shown once the recipient opened the message. English past-participle (\"has been read\", /rɛd/), not the present verb — part of the set sending → sent → delivered → **read**."
+    "description": "Chat send-status caption shown once the recipient opened the message. English past-participle (\"has been read\", /r\u025bd/), not the present verb \u2014 part of the set sending \u2192 sent \u2192 delivered \u2192 **read**."
   },
   "@astryx.chat.status.failed": {
     "defaultMessage": "Failed",
-    "description": "Chat send-status caption shown when the send attempt errored. Part of the set — the terminal failure branch, orthogonal to the sent → delivered → read success track."
+    "description": "Chat send-status caption shown when the send attempt errored. Part of the set \u2014 the terminal failure branch, orthogonal to the sent \u2192 delivered \u2192 read success track."
   },
   "@astryx.chat.messageAriaLabel": {
     "defaultMessage": "Message {status}",
-    "description": "Screen-reader-only accessible name for a chat message row. `{status}` interpolates the localized status word (e.g. `Message sent`, `Message delivered`) — reorder if needed."
+    "description": "Screen-reader-only accessible name for a chat message row. `{status}` interpolates the localized status word (e.g. `Message sent`, `Message delivered`) \u2014 reorder if needed."
   },
   "@astryx.chat.pastedText.expand": {
     "defaultMessage": "Expand",
@@ -497,7 +497,7 @@
   },
   "@astryx.checkboxList.item.checkbox": {
     "defaultMessage": "Checkbox",
-    "description": "Screen-reader-only last-ditch fallback name for a checkbox inside a list item when no label is provided. Should almost never render — consumers should supply a real label."
+    "description": "Screen-reader-only last-ditch fallback name for a checkbox inside a list item when no label is provided. Should almost never render \u2014 consumers should supply a real label."
   },
   "@astryx.commandPalette.emptySearch": {
     "defaultMessage": "No results",
@@ -677,7 +677,7 @@
   },
   "@astryx.markdown.table": {
     "defaultMessage": "Table",
-    "description": "Screen-reader-only accessible name for a table rendered inside a Markdown block. Noun (\"a table\"), not the verb. Separate from `@astryx.table.label` — translations may diverge."
+    "description": "Screen-reader-only accessible name for a table rendered inside a Markdown block. Noun (\"a table\"), not the verb. Separate from `@astryx.table.label` \u2014 translations may diverge."
   },
   "@astryx.markdownHeadingLinks.copied": {
     "defaultMessage": "Link copied",
@@ -696,8 +696,8 @@
     "description": "Label on the checkbox/toggle at the top of a MultiSelector dropdown that selects every option. \"All\" is a determiner here (as in \"all the options\"), not the pronoun."
   },
   "@astryx.multiSelector.searchPlaceholder": {
-    "defaultMessage": "Search…",
-    "description": "Placeholder inside the search input at the top of a MultiSelector's dropdown panel. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Placeholder inside the search input at the top of a MultiSelector's dropdown panel. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.multiSelector.searchOptions": {
     "defaultMessage": "Search options",
@@ -712,8 +712,8 @@
     "description": "\"Close\" = shut/dismiss, not \"nearby\". Screen-reader-only label on the close button inside a Popover."
   },
   "@astryx.selector.searchPlaceholder": {
-    "defaultMessage": "Search…",
-    "description": "Placeholder inside the search input at the top of a Selector's dropdown panel (for filtering options). Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Placeholder inside the search input at the top of a Selector's dropdown panel (for filtering options). Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.selector.searchOptions": {
     "defaultMessage": "Search options",
@@ -729,7 +729,7 @@
   },
   "@astryx.sideNav.heading.openMenu": {
     "defaultMessage": "Open menu",
-    "description": "Screen-reader-only label on the `⋯` overflow-menu button embedded in a SideNav section heading. Same string as `topNav.heading.openMenu` — translations may share."
+    "description": "Screen-reader-only label on the `\u22ef` overflow-menu button embedded in a SideNav section heading. Same string as `topNav.heading.openMenu` \u2014 translations may share."
   },
   "@astryx.tabList.label": {
     "defaultMessage": "Tabs",
@@ -745,7 +745,7 @@
   },
   "@astryx.table.filter.allPlaceholder": {
     "defaultMessage": "All",
-    "description": "Placeholder on a per-column filter dropdown when nothing is selected, meaning \"no filter — all rows match\". Determiner form (as in \"all values\"), not the pronoun."
+    "description": "Placeholder on a per-column filter dropdown when nothing is selected, meaning \"no filter \u2014 all rows match\". Determiner form (as in \"all values\"), not the pronoun."
   },
   "@astryx.table.filter.reset": {
     "defaultMessage": "Reset",
@@ -781,7 +781,7 @@
   },
   "@astryx.table.sort.ascending": {
     "defaultMessage": "Sort ascending",
-    "description": "Screen-reader-only label on a column header button that will sort the column ascending. Part of a set with `sort.descending` and `sort.clear` — keep parallel."
+    "description": "Screen-reader-only label on a column header button that will sort the column ascending. Part of a set with `sort.descending` and `sort.clear` \u2014 keep parallel."
   },
   "@astryx.table.sort.descending": {
     "defaultMessage": "Sort descending",
@@ -821,11 +821,11 @@
   },
   "@astryx.tokenizer.clearAll": {
     "defaultMessage": "Clear all",
-    "description": "Label on the \"×\" button that removes every token/chip from a Tokenizer input. Imperative verb + determiner \"all\"; short."
+    "description": "Label on the \"\u00d7\" button that removes every token/chip from a Tokenizer input. Imperative verb + determiner \"all\"; short."
   },
   "@astryx.topNav.heading.openMenu": {
     "defaultMessage": "Open menu",
-    "description": "Screen-reader-only label on the `⋯` overflow button in a TopNav section heading. Kept separate from `sideNav.heading.openMenu` so translations may diverge."
+    "description": "Screen-reader-only label on the `\u22ef` overflow button in a TopNav section heading. Kept separate from `sideNav.heading.openMenu` so translations may diverge."
   },
   "@astryx.topNav.landmarkLabel": {
     "defaultMessage": "Top navigation",
@@ -833,7 +833,7 @@
   },
   "@astryx.treeList.toggleChildren": {
     "defaultMessage": "Toggle children",
-    "description": "\"Children\" = child nodes in the tree, not human children. Screen-reader-only label on the chevron next to a TreeList item that has children — toggles the sub-list."
+    "description": "\"Children\" = child nodes in the tree, not human children. Screen-reader-only label on the chevron next to a TreeList item that has children \u2014 toggles the sub-list."
   },
   "@astryx.typeahead.emptySearchResults": {
     "defaultMessage": "No results found",
@@ -860,12 +860,12 @@
     "description": "Screen-reader-only fallback name for the breadcrumb trail (e.g. `Home > Section > Page`). Singular in English per ARIA convention; plural is fine if natural in your locale."
   },
   "@astryx.chat.composer.placeholder": {
-    "defaultMessage": "Type a message…",
-    "description": "Grey placeholder text inside the empty chat composer textarea. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Type a message\u2026",
+    "description": "Grey placeholder text inside the empty chat composer textarea. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.chat.composerDrawer.label": {
     "defaultMessage": "Items",
-    "description": "Fallback aria label for the ChatComposerDrawer — a horizontal list of attachment/tool chips. Consumers usually override with \"Attachments\", \"Tools\", etc."
+    "description": "Fallback aria label for the ChatComposerDrawer \u2014 a horizontal list of attachment/tool chips. Consumers usually override with \"Attachments\", \"Tools\", etc."
   },
   "@astryx.chat.composerInput.label": {
     "defaultMessage": "Message input",
@@ -880,8 +880,8 @@
     "description": "Screen-reader-only fallback name for a keyboard-driven command menu (usually opened with Cmd/Ctrl-K). If unfamiliar, prefer a natural equivalent like \"quick actions\"."
   },
   "@astryx.commandPalette.input.placeholder": {
-    "defaultMessage": "Search…",
-    "description": "Grey placeholder inside the CommandPalette's search input. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Grey placeholder inside the CommandPalette's search input. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.commandPalette.list.label": {
     "defaultMessage": "Commands",
@@ -929,7 +929,7 @@
   },
   "@astryx.dateInput.formatHint": {
     "defaultMessage": "e.g., {example}",
-    "description": "Placeholder hint in a DateInput / DateTimeInput date field that uses a calendar other than the Gregorian calendar, shown when the field is focused and empty. {example} is today's date, or the nearest date the field accepts, written in that calendar's numeric pattern, such as ۱۴۰۵/۸/۱۱."
+    "description": "Placeholder hint in a DateInput / DateTimeInput date field that uses a calendar other than the Gregorian calendar, shown when the field is focused and empty. {example} is today's date, or the nearest date the field accepts, written in that calendar's numeric pattern, such as \u06f1\u06f4\u06f0\u06f5/\u06f8/\u06f1\u06f1."
   },
   "@astryx.dateInput.calendarDescription": {
     "defaultMessage": "Dates use the {calendar}",
@@ -937,15 +937,15 @@
   },
   "@astryx.dateInput.resetPicking": {
     "defaultMessage": "Reset",
-    "description": "Secondary button in the mobile date picker's footer, beside Save. Removes the chosen date AND returns the calendar to the current month — it undoes the picking done so far and puts the picker back to how it opens, so prefer a word covering both, not one that only means emptying a field. Not cancel: the picker stays open afterwards and nothing is dismissed."
+    "description": "Secondary button in the mobile date picker's footer, beside Save. Removes the chosen date AND returns the calendar to the current month \u2014 it undoes the picking done so far and puts the picker back to how it opens, so prefer a word covering both, not one that only means emptying a field. Not cancel: the picker stays open afterwards and nothing is dismissed."
   },
   "@astryx.dateInput.savePicking": {
     "defaultMessage": "Save",
-    "description": "Full-width primary button that closes the mobile date picker, on the calendar. The date is already committed by the tap that chose it, so this only dismisses — but it is worded as saving because that is how the action reads to someone finishing a form. Use the word your platform uses for accepting and closing a sheet."
+    "description": "Full-width primary button that closes the mobile date picker, on the calendar. The date is already committed by the tap that chose it, so this only dismisses \u2014 but it is worded as saving because that is how the action reads to someone finishing a form. Use the word your platform uses for accepting and closing a sheet."
   },
   "@astryx.dateInput.doneChoosingMonth": {
     "defaultMessage": "Done",
-    "description": "Full-width button under the month and year wheels in the mobile date picker. It does NOT close the picker — it returns to the calendar, having set the month. Word it as finishing this step, not as finishing the whole task; the calendar's own button is the one that closes."
+    "description": "Full-width button under the month and year wheels in the mobile date picker. It does NOT close the picker \u2014 it returns to the calendar, having set the month. Word it as finishing this step, not as finishing the whole task; the calendar's own button is the one that closes."
   },
   "@astryx.dateInput.chooseMonthYear": {
     "defaultMessage": "{monthYear}, Choose month and year",
@@ -973,11 +973,11 @@
   },
   "@astryx.dateTimeInput.timeOptionsLabel": {
     "defaultMessage": "{label} options",
-    "description": "Screen-reader-only accessible name for the list of preset times that drops down from a DateTimeInput's time slot. `{label}` is the accessible name of the time field itself, already ending in the word for time — example: `Meeting time options`. Plural: the list holds every selectable time."
+    "description": "Screen-reader-only accessible name for the list of preset times that drops down from a DateTimeInput's time slot. `{label}` is the accessible name of the time field itself, already ending in the word for time \u2014 example: `Meeting time options`. Plural: the list holds every selectable time."
   },
   "@astryx.dateRangeInput.placeholder": {
     "defaultMessage": "Select date range",
-    "description": "Grey placeholder inside an empty DateRangeInput field. Represents picking a start–end date pair. Imperative verb."
+    "description": "Grey placeholder inside an empty DateRangeInput field. Represents picking a start\u2013end date pair. Imperative verb."
   },
   "@astryx.dateRangeInput.dialogLabel": {
     "defaultMessage": "Choose date range",
@@ -985,11 +985,11 @@
   },
   "@astryx.dateTimeInput.placeholder": {
     "defaultMessage": "Select a date",
-    "description": "Grey placeholder inside an empty DateTimeInput field. Note: the English says only \"date\" though the field is date+time — do not add \"and time\" unless natural."
+    "description": "Grey placeholder inside an empty DateTimeInput field. Note: the English says only \"date\" though the field is date+time \u2014 do not add \"and time\" unless natural."
   },
   "@astryx.dateTimeInput.dialogLabel": {
     "defaultMessage": "Choose date",
-    "description": "Screen-reader-only accessible name for the DateTimeInput picker dialog. Same English-only \"date\" phrasing as the placeholder — don't add \"and time\" unless natural."
+    "description": "Screen-reader-only accessible name for the DateTimeInput picker dialog. Same English-only \"date\" phrasing as the placeholder \u2014 don't add \"and time\" unless natural."
   },
   "@astryx.dateTimeInput.pickerMode": {
     "defaultMessage": "Date/time section",
@@ -1045,11 +1045,11 @@
   },
   "@astryx.moreMenu.label": {
     "defaultMessage": "More options",
-    "description": "Screen-reader-only name for the small `⋯` (three-dots) overflow button that opens a menu of additional actions. Very short — sits on a tiny icon button."
+    "description": "Screen-reader-only name for the small `\u22ef` (three-dots) overflow button that opens a menu of additional actions. Very short \u2014 sits on a tiny icon button."
   },
   "@astryx.multiSelector.selectPlaceholder": {
-    "defaultMessage": "Select…",
-    "description": "Placeholder on an empty MultiSelector trigger button. Same English as `selector.placeholder` but a separate key — plural phrasing like \"Choose items…\" is fine."
+    "defaultMessage": "Select\u2026",
+    "description": "Placeholder on an empty MultiSelector trigger button. Same English as `selector.placeholder` but a separate key \u2014 plural phrasing like \"Choose items\u2026\" is fine."
   },
   "@astryx.outline.label": {
     "defaultMessage": "Table of contents",
@@ -1060,8 +1060,8 @@
     "description": "Screen-reader-only accessible name for the PowerSearch input (a filter-builder). The visible placeholder is separate; noun form often reads better than the verb."
   },
   "@astryx.powersearch.placeholder": {
-    "defaultMessage": "Search…",
-    "description": "Grey placeholder text inside the empty PowerSearch input. Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Grey placeholder text inside the empty PowerSearch input. Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.resizable.collapsed": {
     "defaultMessage": "Collapsed",
@@ -1072,8 +1072,8 @@
     "description": "Screen-reader-only accessible name for the small draggable divider between two Resizable panels (users drag it to change the split ratio)."
   },
   "@astryx.selector.placeholder": {
-    "defaultMessage": "Select…",
-    "description": "Placeholder text on an empty Selector trigger button (a dropdown). Imperative verb; trailing `…` is one character. Very short — appears on the button face."
+    "defaultMessage": "Select\u2026",
+    "description": "Placeholder text on an empty Selector trigger button (a dropdown). Imperative verb; trailing `\u2026` is one character. Very short \u2014 appears on the button face."
   },
   "@astryx.sideNav.heading.dialogLabel": {
     "defaultMessage": "Navigation menu",
@@ -1096,8 +1096,8 @@
     "description": "Screen-reader-only accessible name for the dropdown dialog opened from a TopNavHeading's overflow menu. Kept separate from the SideNav sibling."
   },
   "@astryx.typeahead.searchPlaceholder": {
-    "defaultMessage": "Search…",
-    "description": "Placeholder inside an empty Typeahead input (a search field that suggests results as the user types). Imperative verb; trailing `…` is one character."
+    "defaultMessage": "Search\u2026",
+    "description": "Placeholder inside an empty Typeahead input (a search field that suggests results as the user types). Imperative verb; trailing `\u2026` is one character."
   },
   "@astryx.banner.collapse": {
     "defaultMessage": "Collapse",
@@ -1109,11 +1109,11 @@
   },
   "@astryx.button.loading": {
     "defaultMessage": "Loading",
-    "description": "Screen-reader-only live-region announcement while a Button is in its loading state (spinner shown, action in flight). Progressive sense (\"work in progress\"), not a noun. Kept separate from `typeahead.loading` — translations may diverge."
+    "description": "Screen-reader-only live-region announcement while a Button is in its loading state (spinner shown, action in flight). Progressive sense (\"work in progress\"), not a noun. Kept separate from `typeahead.loading` \u2014 translations may diverge."
   },
   "@astryx.chatComposerDrawer.expand": {
     "defaultMessage": "Expand {label}",
-    "description": "Screen-reader-only label on the ChatComposerDrawer toggle when the drawer is collapsed. `{label}` is the drawer's visible name — example: `Expand Attachments`. Pairs with `collapse`."
+    "description": "Screen-reader-only label on the ChatComposerDrawer toggle when the drawer is collapsed. `{label}` is the drawer's visible name \u2014 example: `Expand Attachments`. Pairs with `collapse`."
   },
   "@astryx.chatComposerDrawer.collapse": {
     "defaultMessage": "Collapse {label}",
@@ -1129,7 +1129,7 @@
   },
   "@astryx.chatLayout.newMessages": {
     "defaultMessage": "New messages",
-    "description": "Text on a floating pill at the bottom of a chat viewport when unseen messages arrive below the fold; clicking scrolls to bottom. Keep short — narrow pill."
+    "description": "Text on a floating pill at the bottom of a chat viewport when unseen messages arrive below the fold; clicking scrolls to bottom. Keep short \u2014 narrow pill."
   },
   "@astryx.chatLayoutScrollButton.scrollToBottom": {
     "defaultMessage": "Scroll to bottom",
@@ -1137,11 +1137,11 @@
   },
   "@astryx.chatMessage.messageFrom": {
     "defaultMessage": "Message from {sender}",
-    "description": "Screen-reader-only accessible name for a chat message when the sender name isn't visible. Example: `Message from Sarah`, `Message from Bot` — reorder freely."
+    "description": "Screen-reader-only accessible name for a chat message when the sender name isn't visible. Example: `Message from Sarah`, `Message from Bot` \u2014 reorder freely."
   },
   "@astryx.chatSendButton.stop": {
     "defaultMessage": "Stop",
-    "description": "Button label that replaces `Send` on the chat send button while an AI response is streaming; clicking aborts generation. Short — appears on a small button."
+    "description": "Button label that replaces `Send` on the chat send button while an AI response is streaming; clicking aborts generation. Short \u2014 appears on a small button."
   },
   "@astryx.chatSendButton.send": {
     "defaultMessage": "Send",
@@ -1177,15 +1177,15 @@
   },
   "@astryx.field.optional": {
     "defaultMessage": "Optional",
-    "description": "Visible indicator shown next to a form field's label when the field is optional (isOptional). Mutually exclusive with the required indicator. Very short — appears inline after the label text."
+    "description": "Visible indicator shown next to a form field's label when the field is optional (isOptional). Mutually exclusive with the required indicator. Very short \u2014 appears inline after the label text."
   },
   "@astryx.field.required": {
     "defaultMessage": "Required",
-    "description": "Visible indicator shown next to a form field's label when the field must be filled in (isRequired). Mutually exclusive with the optional indicator. Very short — appears inline after the label text."
+    "description": "Visible indicator shown next to a form field's label when the field must be filled in (isRequired). Mutually exclusive with the optional indicator. Very short \u2014 appears inline after the label text."
   },
   "@astryx.fileInput.clearLabel": {
     "defaultMessage": "Clear {label}",
-    "description": "Screen-reader-only label on the X that removes the selected file from a FileInput. Example: `Clear Attachment`, `Clear Résumé`."
+    "description": "Screen-reader-only label on the X that removes the selected file from a FileInput. Example: `Clear Attachment`, `Clear R\u00e9sum\u00e9`."
   },
   "@astryx.fileInput.dropHint": {
     "defaultMessage": "Drop files here",
@@ -1229,11 +1229,11 @@
   },
   "@astryx.keyboardHint.toNavigate": {
     "defaultMessage": "to navigate",
-    "description": "Trailing text in the keyboard-hint badge, shown after arrow-key icons — reads as `← → to navigate`. Lowercase sentence fragment completing the visual phrase; the badge is aria-hidden, so this is for sighted users only."
+    "description": "Trailing text in the keyboard-hint badge, shown after arrow-key icons \u2014 reads as `\u2190 \u2192 to navigate`. Lowercase sentence fragment completing the visual phrase; the badge is aria-hidden, so this is for sighted users only."
   },
   "@astryx.lightbox.mediaViewer": {
     "defaultMessage": "Media viewer",
-    "description": "Screen-reader-only fallback name for the Lightbox dialog when the current media item has no alt text. Should rarely render — consumers should provide alt."
+    "description": "Screen-reader-only fallback name for the Lightbox dialog when the current media item has no alt text. Should rarely render \u2014 consumers should provide alt."
   },
   "@astryx.lightbox.zoom": {
     "defaultMessage": "Zoom",
@@ -1249,7 +1249,7 @@
   },
   "@astryx.metadataList.showMore": {
     "defaultMessage": "Show more",
-    "description": "Button label under a MetadataList that reveals items hidden beyond the configured maximum. Toggles with `metadataList.showLess` — keep the pair parallel in your language."
+    "description": "Button label under a MetadataList that reveals items hidden beyond the configured maximum. Toggles with `metadataList.showLess` \u2014 keep the pair parallel in your language."
   },
   "@astryx.metadataList.showLess": {
     "defaultMessage": "Show less",
@@ -1273,7 +1273,7 @@
   },
   "@astryx.input.statusButton.error": {
     "defaultMessage": "Error details",
-    "description": "Accessible name for the focusable status icon button inside an input when statusVariant is 'tooltip' and the status type is error. Activating or focusing the button reveals the error message in a tooltip. Keep it short — it labels an icon-only button."
+    "description": "Accessible name for the focusable status icon button inside an input when statusVariant is 'tooltip' and the status type is error. Activating or focusing the button reveals the error message in a tooltip. Keep it short \u2014 it labels an icon-only button."
   },
   "@astryx.input.statusButton.warning": {
     "defaultMessage": "Warning details",
@@ -1297,7 +1297,7 @@
   },
   "@astryx.selector.clearLabel": {
     "defaultMessage": "Clear {label}",
-    "description": "Screen-reader-only label on the X that clears the selected value from a Selector. `{label}` is the selector's visible label — example: `Clear Country`."
+    "description": "Screen-reader-only label on the X that clears the selected value from a Selector. `{label}` is the selector's visible label \u2014 example: `Clear Country`."
   },
   "@astryx.sideNavCollapseButton.expandSidebar": {
     "defaultMessage": "Expand sidebar",
@@ -1321,7 +1321,7 @@
   },
   "@astryx.tableFiltering.filterByColumn": {
     "defaultMessage": "Filter {header}",
-    "description": "Triple-use string on per-column filter controls: visible label, placeholder, AND aria label. `{header}` is the column header — example: `Filter Name`. Keep short."
+    "description": "Triple-use string on per-column filter controls: visible label, placeholder, AND aria label. `{header}` is the column header \u2014 example: `Filter Name`. Keep short."
   },
   "@astryx.tableGroupedRows.expandGroup": {
     "defaultMessage": "Expand group {groupKey}",
@@ -1401,11 +1401,11 @@
   },
   "@astryx.textArea.charactersRemaining": {
     "defaultMessage": "{count, number} {count, plural, one {character} other {characters}} remaining",
-    "description": "Screen-reader-only announcement of how many characters the user can still type before hitting a TextArea's maxLength. Announced politely as the count nears the limit. `{count}` is the number remaining — example: `12 characters remaining`."
+    "description": "Screen-reader-only announcement of how many characters the user can still type before hitting a TextArea's maxLength. Announced politely as the count nears the limit. `{count}` is the number remaining \u2014 example: `12 characters remaining`."
   },
   "@astryx.textArea.charactersOverLimit": {
     "defaultMessage": "{count, number} {count, plural, one {character} other {characters}} over the limit",
-    "description": "Screen-reader-only assertive announcement when the user has typed past a TextArea's maxLength. `{count}` is how many characters over — example: `3 characters over the limit`."
+    "description": "Screen-reader-only assertive announcement when the user has typed past a TextArea's maxLength. `{count}` is how many characters over \u2014 example: `3 characters over the limit`."
   },
   "@astryx.textInput.clearLabel": {
     "defaultMessage": "Clear {label}",
@@ -1413,11 +1413,11 @@
   },
   "@astryx.thumbnail.remove": {
     "defaultMessage": "Remove {accessibleName}",
-    "description": "Screen-reader-only label on the \"×\" on a Thumbnail (image preview chip). `{accessibleName}` is the thumbnail's name — example: `Remove profile.jpg`."
+    "description": "Screen-reader-only label on the \"\u00d7\" on a Thumbnail (image preview chip). `{accessibleName}` is the thumbnail's name \u2014 example: `Remove profile.jpg`."
   },
   "@astryx.thumbnail.open": {
     "defaultMessage": "Open {accessibleName}",
-    "description": "\"Open\" = launch/reveal (not \"unfold\" or the adjective). Screen-reader-only name on a clickable Thumbnail — example: `Open Sunset photo`."
+    "description": "\"Open\" = launch/reveal (not \"unfold\" or the adjective). Screen-reader-only name on a clickable Thumbnail \u2014 example: `Open Sunset photo`."
   },
   "@astryx.thumbnail.fallbackName": {
     "defaultMessage": "Thumbnail",
@@ -1445,7 +1445,7 @@
   },
   "@astryx.token.remove": {
     "defaultMessage": "Remove {label}",
-    "description": "Screen-reader-only label on the \"×\" on an individual Token/chip. Example: `Remove John Smith`, `Remove Active`. Imperative verb."
+    "description": "Screen-reader-only label on the \"\u00d7\" on an individual Token/chip. Example: `Remove John Smith`, `Remove Active`. Imperative verb."
   },
   "@astryx.commandPalette.footer.navigate": {
     "defaultMessage": "Navigate",
@@ -1497,14 +1497,14 @@
   },
   "@astryx.tokenizer.tokenRemoved": {
     "defaultMessage": "Removed {label}",
-    "description": "Polite screen-reader announcement after a token is removed from a Tokenizer, by its × button or by Backspace. Live-region text, never shown on screen; `{label}` is the token's visible text."
+    "description": "Polite screen-reader announcement after a token is removed from a Tokenizer, by its \u00d7 button or by Backspace. Live-region text, never shown on screen; `{label}` is the token's visible text."
   },
   "@astryx.tokenizer.search": {
     "defaultMessage": "Search {label}",
     "description": "Accessible name of the search field at the top of a Tokenizer's bottom sheet (the touch presentation). `{label}` is the field's own label, e.g. `Search Tags`. Not shown on screen."
   },
   "@astryx.tokenizer.searchPlaceholder": {
-    "defaultMessage": "Search…",
+    "defaultMessage": "Search\u2026",
     "description": "Placeholder inside the search field at the top of a Tokenizer's bottom sheet, shown while the query is empty. Single word plus ellipsis."
   },
   "@astryx.tokenizer.noResultsDescription": {
@@ -1578,5 +1578,13 @@
   "@astryx.lightbox.mediaPosition": {
     "defaultMessage": "{alt}, {index, number} of {total, number}",
     "description": "Polite screen-reader announcement when a Lightbox moves to a media item that has alt text, composing that alt with the item's position. Live-region text, never shown on screen; example: `Sunset over the bay, 3 of 12`."
+  },
+  "@astryx.lightbox.captionMore": {
+    "defaultMessage": "more",
+    "description": "Visible label of the button after a Lightbox caption that two lines cut short, for a single photo or a gallery. It opens the full caption over the photo. Pairs with `lightbox.captionLess`."
+  },
+  "@astryx.lightbox.captionLess": {
+    "defaultMessage": "less",
+    "description": "Visible label of the same button while a Lightbox caption is open in full over the photo. It closes the full caption. Pairs with `lightbox.captionMore`."
   }
 }

@@ -57,7 +57,7 @@ export default {
 			{
 				guidance: true,
 				description:
-					'Give every nav slot an accessible name. AppShell renders TopNav and SideNav as separate navigation landmarks, and a screen reader lists them by name, so pass `label` to each one.'
+					'Give every nav slot an accessible name. AppShell renders TopNav and SideNav as separate navigation landmarks, and a screen reader lists them by name. Pass `label` to TopNav. SideNav has a translated default name; pass `aria-label` to rename it.'
 			},
 			{
 				guidance: true,

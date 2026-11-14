@@ -97,6 +97,12 @@ export default {
 			}
 		]
 	},
+	playground: {
+		defaults: {
+			label: 'Notify my team',
+			value: true
+		}
+	},
 	props: [
 		{
 			name: 'ref',

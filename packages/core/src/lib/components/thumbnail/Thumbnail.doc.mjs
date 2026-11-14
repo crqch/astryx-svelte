@@ -145,7 +145,7 @@ export default {
 			name: 'showRemoveOn',
 			type: "'always' | 'hover'",
 			description:
-				'When the remove button is visible. `hover` (the default) reveals it on hover and on keyboard focus, and keeps it visible on any touch-capable device; `always` shows it at rest. Only applies when `onRemove` is set.',
+				'When the remove button is visible. `hover` (the default) reveals it on hover and on keyboard focus, and keeps it visible under a coarse primary pointer (a phone or tablet); `always` shows it at rest. Only applies when `onRemove` is set.',
 			default: "'hover'"
 		},
 		{

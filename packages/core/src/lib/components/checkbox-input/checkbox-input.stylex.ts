@@ -12,17 +12,7 @@ import type { SizeValue } from '../../internal/types.js';
 import { indicatorScope } from '../indicator/indicator.markers.stylex.js';
 import { indicatorPressScope } from '../../internal/indicator-press.stylex.js';
 import { interactionOverlayStyles } from '../../utils/interaction-overlay.stylex.js';
-
-/** Written by the touch press controller while the row is pressed. */
-const PRESSED_ON = '[data-astryx-press="on"]';
-/** Written by the touch press controller for the press's release. */
-const PRESSED_FADING = '[data-astryx-press="fading"]';
-
-// The touch press's paint, declared by the shared overlay styles on the
-// element the controller writes to (`pressedAlpha`) at the press's strength,
-// 1 while on and 1 → 0 over the release, and inherited resolved by the layer
-// that paints it. See interaction-overlay.stylex.ts.
-const pressedOverlayImage = 'var(--_press-paint-image)';
+import { indicatorPressPaintStyles } from '../../private-attributes/press.stylex.js';
 
 /**
  * `CheckboxInput`'s styles, ported from Astryx's `CheckboxInput/CheckboxInput.tsx`.
@@ -55,19 +45,13 @@ const styles = stylex.create({
 	// outer row hands down nothing, as for the built-in box. The property has
 	// no default: a layered stylesheet ranks a default above the arms. Only this
 	// row declares it. A menu item paints its own press, so a mapped indicator
-	// there paints none.
-	indicatorPressImage: {
-		'--_indicator-press-image': {
-			default: null,
-			[PRESSED_ON]: 'var(--_press-paint-image)',
-			[PRESSED_FADING]: 'var(--_press-paint-image)'
-		}
-	},
 	// Under a row that owns the press (CheckboxRowPressContext), this row is
 	// never pressed. So it hands down that row's press paint, which the
 	// built-in box reads too.
 	indicatorRowPressImage: {
-		'--_indicator-press-image': 'var(--_checkbox-row-press-paint, none)'
+		'--_indicator-press-image': 'var(--_checkbox-row-press-paint, none)',
+		// The row paints every press, so the indicator draws no `:active` fill.
+		'--_indicator-active-press': 'transparent'
 	},
 	checkboxWrapper: {
 		position: 'relative',
@@ -118,29 +102,7 @@ const styles = stylex.create({
 			position: 'absolute',
 			inset: 0,
 			borderRadius: radiusVars['--radius-inner'],
-			pointerEvents: 'none',
-			backgroundColor: {
-				default: 'transparent',
-				[stylex.when.ancestor(':active', indicatorScope)]: {
-					default: colorVars['--color-overlay-pressed'],
-					'@media (pointer: coarse)': 'transparent'
-				}
-			},
-			// The touch press, as an image layer over the colour: an image change
-			// is discrete, so no transition can delay the onset, and the strength
-			// the row's `pressedAlpha` arms own (1 while on, 1 → 0 over the
-			// release) is what moves. Coarse pointers only, like the drop above.
-			backgroundImage: {
-				default: null,
-				[stylex.when.ancestor(PRESSED_ON, indicatorScope)]: {
-					default: null,
-					'@media (pointer: coarse)': pressedOverlayImage
-				},
-				[stylex.when.ancestor(PRESSED_FADING, indicatorScope)]: {
-					default: null,
-					'@media (pointer: coarse)': pressedOverlayImage
-				}
-			}
+			pointerEvents: 'none'
 		}
 	},
 	// The row's own checkbox when its row owns the press
@@ -149,6 +111,7 @@ const styles = stylex.create({
 	// reaches it.
 	indicatorRowPressOverlay: {
 		'::after': {
+			backgroundColor: 'transparent',
 			backgroundImage: 'var(--_checkbox-row-press-paint, none)'
 		}
 	},
@@ -233,7 +196,8 @@ export function checkboxContainerAttrs(
 		// Hover and focus reach the checkbox visual through this ancestor marker
 		// rather than props, so the whole row drives it.
 		!isDisabled && indicatorScope,
-		!isDisabled && (isRowPressSurface ? styles.indicatorRowPressImage : styles.indicatorPressImage),
+		!isDisabled &&
+			(isRowPressSurface ? styles.indicatorRowPressImage : indicatorPressPaintStyles.handDown),
 		// The touch press's strength and release live on the row the controller
 		// writes to; the layer over the checkbox box inherits and paints it.
 		// Under a row that owns the press, the box inherits that row's strength
@@ -252,7 +216,10 @@ export function checkboxWrapperAttrs(
 		styles.checkboxWrapper,
 		wrapperSizeStyles[size],
 		!isDisabled && styles.indicatorPressOverlay,
-		!isDisabled && !ownsPress && styles.indicatorRowPressOverlay
+		!isDisabled &&
+			(ownsPress
+				? [indicatorPressPaintStyles.activeFill, indicatorPressPaintStyles.image]
+				: styles.indicatorRowPressOverlay)
 	);
 }
 

@@ -70,7 +70,8 @@ const styles = stylex.create({
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
 		whiteSpace: 'nowrap',
-		minWidth: 0
+		minWidth: 0,
+		unicodeBidi: 'isolate'
 	},
 	interactive: {
 		cursor: {

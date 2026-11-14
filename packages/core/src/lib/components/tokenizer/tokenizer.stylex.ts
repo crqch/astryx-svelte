@@ -23,6 +23,17 @@ const TOKEN_ROW_INSET = `calc(${spacingVars['--spacing-1']} - 1px)`;
 // Kept in sync with useEndLaneReserve: wrapperWithTokens reads the custom
 // property directly, to keep token rows and the input short of the lane.
 const END_LANE_RESERVE_VAR = '--_tokenizer-end-lane-reserve';
+const END_LANE_INSET = spacingVars['--spacing-2'];
+
+/**
+ * Where a grouped strip's edge fade turns opaque, and how far focus scrolling
+ * keeps a focused control from a faded edge. The fade is transparent across
+ * the strip's focus-ring bleed, so a faded edge never paints into the row
+ * padding.
+ */
+const TRACK_FADE_INSET = `calc(${TOKEN_ROW_INSET} + ${spacingVars['--spacing-6']})`;
+const TRACK_FADE_FROM_LEFT = `linear-gradient(to right, transparent ${TOKEN_ROW_INSET}, black ${TRACK_FADE_INSET})`;
+const TRACK_FADE_FROM_RIGHT = `linear-gradient(to left, transparent ${TOKEN_ROW_INSET}, black ${TRACK_FADE_INSET})`;
 
 const styles = stylex.create({
 	wrapper: {
@@ -48,6 +59,104 @@ const styles = stylex.create({
 		paddingInlineEnd: `calc(${TOKEN_ROW_INSET} + var(${END_LANE_RESERVE_VAR}, 0px))`,
 		// Row gap must match paddingBlock so wrapped rows look evenly spaced.
 		rowGap: TOKEN_ROW_INSET
+	},
+	// Inside an InputGroup the tokenizer is a single-line surface: its tokens
+	// keep to one scrolling strip beside the end controls. Ported as styles at
+	// 0.7.16; the grouped presentation itself is not wired yet (port/debts.md).
+	inGroupWrapper: {
+		// InputGroup is a fixed-height, single-line surface: a second row would
+		// spill past the group's shared border, so the row never wraps. A single
+		// row of tokens fits the group height.
+		flexWrap: 'nowrap'
+	},
+	inGroupTrack: {
+		// The grouped row keeps to one line by scrolling, and only this track
+		// scrolls. The end lane is its sibling, so tokens are clipped beside the
+		// end controls instead of painting under them, and the controls hold the
+		// row's inline end while the tokens move. useScrollableArea owns the
+		// overflow declarations.
+		display: 'flex',
+		alignItems: 'center',
+		alignSelf: 'stretch',
+		flex: '1 1 0',
+		minWidth: 0,
+		// A scroll container clips at its own padding edge. Bleed back out to the
+		// row's, so a token's focus ring keeps the room the row padding gives it.
+		margin: `calc(-1 * ${TOKEN_ROW_INSET})`,
+		padding: TOKEN_ROW_INSET,
+		// A native scrollbar would take most of a 28-32px row. The edge fades show
+		// what is out of view instead, and the keyboard reaches it through the
+		// remove buttons or, when disabled, through the track itself. Forced
+		// colors restore the platform scrollbar.
+		scrollbarWidth: {
+			default: 'none',
+			// A classic scrollbar at full width takes half the row.
+			'@media (forced-colors: active)': 'thin'
+		},
+		scrollPaddingInline: TRACK_FADE_INSET
+	},
+	inGroupTrackContent: {
+		display: 'flex',
+		alignItems: 'center',
+		gap: spacingVars['--spacing-1'],
+		flex: 'none',
+		// At least the track's width, so the input can take what the tokens leave;
+		// wider once they overflow, which is the range the track scrolls.
+		minWidth: '100%'
+	},
+	inGroupTrackContentTruncated: {
+		// The "+N more" summary measures this box, so it holds the track's width.
+		width: '100%'
+	},
+	// Each fade masks an edge that hides tokens. Forced colors drop the fades,
+	// since the native scrollbar is back there.
+	trackFadeStart: {
+		maskImage: {
+			default: TRACK_FADE_FROM_LEFT,
+			':dir(rtl)': {
+				default: TRACK_FADE_FROM_RIGHT,
+				'@media (forced-colors: active)': 'none'
+			},
+			'@media (forced-colors: active)': 'none'
+		}
+	},
+	trackFadeEnd: {
+		maskImage: {
+			default: TRACK_FADE_FROM_RIGHT,
+			':dir(rtl)': {
+				default: TRACK_FADE_FROM_LEFT,
+				'@media (forced-colors: active)': 'none'
+			},
+			'@media (forced-colors: active)': 'none'
+		}
+	},
+	trackFadeBoth: {
+		maskImage: {
+			default: `linear-gradient(to right, transparent ${TOKEN_ROW_INSET}, black ${TRACK_FADE_INSET}, black calc(100% - ${TRACK_FADE_INSET}), transparent calc(100% - ${TOKEN_ROW_INSET}))`,
+			'@media (forced-colors: active)': 'none'
+		}
+	},
+	inGroupInput: {
+		// Always in flow after the last token. The empty-query hit surface of
+		// inputCompact keeps a wrapping field from growing a blank row; a grouped
+		// row cannot wrap, and its in-flow lane needs no reserve.
+		minWidth: '40px',
+		flex: '1 1 40px',
+		width: 0,
+		paddingInlineStart: `calc(${spacingVars['--spacing-2']} - ${spacingVars['--spacing-1']} + 1px)`
+	},
+	inGroupEndSection: {
+		// In flow beside the track: with one row there is no first row to pin to,
+		// so the lane takes its own width out of the row and needs no measuring.
+		position: 'static',
+		transform: 'none',
+		// Give back the gap the track's bleed takes.
+		marginInlineStart: TOKEN_ROW_INSET
+	},
+	inGroupEndSectionWithTokens: {
+		// Restore the lane's 8px inset from the border, since wrapperWithTokens
+		// reduces the row padding to 3px.
+		marginInlineEnd: `calc(${END_LANE_INSET} - ${TOKEN_ROW_INSET})`
 	},
 	startIconWithTokens: {
 		// Restore the default 8px inline-start inset when tokens are present,
@@ -412,4 +521,41 @@ export function tokenizerSheetTriggerPlaceholderAttrs(isDisabled: boolean): Svel
 /** `xstyle` for a default Token in the sheet field when the field is disabled. */
 export function tokenizerSheetTokenStyle(isDisabled: boolean): StyleArg {
 	return isDisabled ? styles.sheetTokenDisabled : undefined;
+}
+
+/**
+ * The grouped presentation's styles, ported at 0.7.16 but not wired into the
+ * component yet: the single-line strip inside an `InputGroup` is a follow-up
+ * (port/debts.md). The builders keep the keys referenced, so the class oracle
+ * can compare them against upstream, and give the eventual wiring one shape.
+ */
+export function tokenizerInGroupWrapperAttrs(): SvelteStyleAttrs {
+	return sx(styles.inGroupWrapper);
+}
+
+/** The scrolling track, with the edge fade for the edge that hides tokens. */
+export function tokenizerInGroupTrackAttrs(
+	fade: 'start' | 'end' | 'both' | null
+): SvelteStyleAttrs {
+	return sx(
+		styles.inGroupTrack,
+		fade === 'start' && styles.trackFadeStart,
+		fade === 'end' && styles.trackFadeEnd,
+		fade === 'both' && styles.trackFadeBoth
+	);
+}
+
+/** The strip's content: at least the track's width, or exactly it when truncated. */
+export function tokenizerInGroupTrackContentAttrs(isTruncated: boolean): SvelteStyleAttrs {
+	return sx(styles.inGroupTrackContent, isTruncated && styles.inGroupTrackContentTruncated);
+}
+
+/** The inline input lane after the last token. */
+export function tokenizerInGroupInputAttrs(): SvelteStyleAttrs {
+	return sx(styles.inGroupInput);
+}
+
+/** The end lane, in flow beside the track. */
+export function tokenizerInGroupEndSectionAttrs(hasTokens: boolean): SvelteStyleAttrs {
+	return sx(styles.inGroupEndSection, hasTokens && styles.inGroupEndSectionWithTokens);
 }

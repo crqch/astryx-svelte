@@ -42,6 +42,7 @@
 	import { useLinkComponent } from '../link/link-context.svelte.js';
 	import LinkElement from '../link/link-element.svelte';
 	import { useTranslator } from '../../i18n/use-translator.svelte.js';
+	import { hasStrongRightToLeft } from '../../i18n/first-strong-direction.js';
 	import Icon from '../icon/icon.svelte';
 	import TokenLink from './token-link.svelte';
 	import {
@@ -184,7 +185,16 @@
 </script>
 
 {#snippet labelSpan()}
-	<span class={labelAttrs.class} style={labelAttrs.style}>{label}</span>
+	<!--
+		Under a right-to-left page, weak and neutral characters in left-to-right
+		text reorder. Plain text with no right-to-left letter therefore lays out
+		left to right; text with one keeps the page's direction.
+	-->
+	<span
+		class={labelAttrs.class}
+		style={labelAttrs.style}
+		dir={hasStrongRightToLeft(label) ? undefined : 'ltr'}>{label}</span
+	>
 {/snippet}
 
 {#snippet removeButton()}

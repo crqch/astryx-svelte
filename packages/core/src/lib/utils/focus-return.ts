@@ -117,3 +117,81 @@ export function focusForLastInput(element: HTMLElement, options?: FocusOptions):
 	}
 	element.focus({ ...options, focusVisible: false });
 }
+
+/**
+ * Returns focus to `opener` after an overlay closes, without a scroll and with
+ * the ring the last input calls for. WebKit records the nearest focusable
+ * ancestor of a tapped button as the opener, such as a `tabindex="-1"` main
+ * region. A reveal of that region scrolls the page to its top edge.
+ */
+export function returnFocusForLastInput(opener: HTMLElement): void {
+	focusForLastInput(opener, { preventScroll: true });
+}
+
+// Whether focus rested on the page body when the current commit began
+// removing surfaces, per document. One removal can drop focus before a later
+// surface's cleanup runs, so every cleanup of the commit reads the first value.
+const focusDetachedAtRemovalStart = new WeakMap<Document, boolean>();
+
+function wasFocusDetachedBeforeRemoval(doc: Document): boolean {
+	let wasDetached = focusDetachedAtRemovalStart.get(doc);
+	if (wasDetached === undefined) {
+		wasDetached = isFocusDetached(doc);
+		focusDetachedAtRemovalStart.set(doc, wasDetached);
+		queueMicrotask(() => focusDetachedAtRemovalStart.delete(doc));
+	}
+	return wasDetached;
+}
+
+/**
+ * Prepares a focus repair for an open surface that may be removed while open
+ * (rendered only while open, or removed with its view). Removing a `<dialog>`
+ * runs no close and no browser focus return. Call this while the surface is
+ * mounted: it reads the frame that hosts the surface now, because a removed
+ * frame's document has no window. Call the returned function from the effect
+ * cleanup with the repair to run.
+ *
+ * Once the commit has finished, the repair runs only when the surface really
+ * left the document and the removal lost focus, both in the surface's
+ * document and in the document that hosts its frame. A control the user
+ * pressed outside the surface keeps its focus, and so does a surface that took
+ * focus in the same commit.
+ */
+export function prepareFocusRepairOnRemoval(
+	surface: Element,
+	options?: { keepRestingFocus?: boolean }
+): (repair: () => void) => void {
+	const host = surface.ownerDocument.defaultView?.frameElement ?? null;
+	return (repair) => {
+		if (
+			options?.keepRestingFocus === true &&
+			wasFocusDetachedBeforeRemoval(surface.ownerDocument)
+		) {
+			return;
+		}
+		queueMicrotask(() => {
+			if (surface.isConnected) {
+				return;
+			}
+			if (isFocusLost(surface) && (host == null || isFocusLost(host))) {
+				repair();
+			}
+		});
+	};
+}
+
+/**
+ * The focus repair above that returns focus to `opener` while the opener is
+ * still on the page. Call the returned function from the effect cleanup with
+ * the opener.
+ */
+export function prepareFocusReturnOnRemoval(surface: Element): (opener: Element | null) => void {
+	const repairOnRemoval = prepareFocusRepairOnRemoval(surface);
+	return (opener) => {
+		repairOnRemoval(() => {
+			if (opener != null && opener.isConnected) {
+				returnFocusForLastInput(opener as HTMLElement);
+			}
+		});
+	};
+}

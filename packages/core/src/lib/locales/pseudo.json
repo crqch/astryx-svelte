@@ -1183,5 +1183,11 @@
   },
   "@astryx.lightbox.mediaPosition": {
     "defaultMessage": "⟦{alt}, {index, number} óƒ {total, number}⟧"
+  },
+  "@astryx.lightbox.captionMore": {
+    "defaultMessage": "⟦ɱóřé⟧"
+  },
+  "@astryx.lightbox.captionLess": {
+    "defaultMessage": "⟦łéšš⟧"
   }
 }

@@ -54,6 +54,11 @@ export default {
 					'Keep labels short: one to three words. Tokens truncate with ellipsis when the text overflows.'
 			},
 			{
+				guidance: true,
+				description:
+					'Labels keep their character order under right-to-left, so `@alice`, `C++` and `example.com` read as written; a right-to-left label still reads right to left.'
+			},
+			{
 				guidance: false,
 				description:
 					"Don't use tokens for primary actions or navigation; use Button or Link instead. Tokens are for displaying metadata, not triggering workflows."

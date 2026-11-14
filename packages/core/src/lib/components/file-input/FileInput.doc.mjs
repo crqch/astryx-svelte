@@ -228,8 +228,8 @@ export default {
 			name: 'statusVariant',
 			type: "'tooltip' | 'attached' | 'detached'",
 			description:
-				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing; tooltip hides the message box and surfaces it in a tooltip on the status icon. Dropzone mode does not support attached: use detached or tooltip. From the next minor release, a dropzone resolves attached to detached and defaults to it.',
-			default: "'attached'"
+				'How the status message is placed relative to the input. attached overlaps directly below the input (bordered treatment); detached floats below as a separate element with spacing; tooltip hides the message box and surfaces it in a tooltip on the status icon. Dropzone mode does not support attached, so a dropzone defaults to detached; an explicit attached keeps its released rendering until the next minor release, which resolves it to detached.',
+			default: "'attached' in input mode; 'detached' in dropzone mode"
 		},
 		{
 			name: 'labelTooltip',

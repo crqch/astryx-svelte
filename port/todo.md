@@ -8,20 +8,18 @@ History lives in [`ledger/`](./ledger). Deviations from upstream live in [`debts
 
 ## Current goal
 
-**Full parity with Astryx `0.7.13`**, across every package except three. Set 2026-08-20 against
+**Full parity with Astryx `0.7.16`**, across every package except three. Set 2026-08-20 against
 `0.4.5`, replacing "track each upstream release and cut a matching version" — that goal was about
 staying level with upstream's _movement_; this one is about closing the distance that predates it.
 **Re-target it in the same batch the pin moves**: a goal naming a version this port no longer
 tracks is the same defect as a suite header stating a count against the wrong tag, and it went
 unnoticed for a whole release. Moved to `0.5.0` on 2026-08-25 (batch 032), to `0.5.2` on
-2026-08-31 (batch 040), and to `0.7.13` on 2026-11-11. Each move widened the distance rather than
-closing it: `0.7.13` adds five components, a new theme compiler contract (data-attribute selectors,
-dynamic type aliases, motion tempo, status roles), and the largest test delta this port has
-tracked. The new pin has ported `Timer`, `InfoTip`, `ScrollableArea`, `Drawer` and the `SnapPaging`
-subsystem. `Drawer`'s 71-case suite, its header, direction and SSR suites are complete; its 4-case
-touch-entrance suite waits on the input-hold stack. The remaining `useScrollableArea` frame/focus cases
-are test work, not a missing component. All seven theme build oracles are green against 0.7.13; the shared compiler now emits Dynamic Type
-sizes, motion tempo, status aliases, syntax diff slots, adaptations and local tokens. The size of it is in [`status.md`](./status.md), not here.
+2026-08-31 (batch 040), to `0.7.13` on 2026-11-11, and to `0.7.16` on 2026-11-14 (batch 045).
+Each move widened the distance rather than closing it: `0.7.16` rewrites `Lightbox` around a
+caption band and a gesture-driven zoom stage, adds the forced-colors surface edges and the touch
+press paint shared by the selection controls, adds Table's windowing and infinite-scroll plugins,
+and carries the largest test delta this port has tracked. All seven theme build oracles are green
+against 0.7.16. The size of the remaining surface is in [`status.md`](./status.md), not here.
 
 Out of scope, by decision: **`lab`, `charts` and `vega`**. Four of `lab`'s components
 (`CodeEditor`, `RichTextEditor`, `ThreeD`, `Sankey`) wrap React-only libraries with no drop-in
@@ -242,9 +240,9 @@ deviation, not a task.
 
 ### Tests
 
-### Both style oracles are green against the 0.7.13 pin
+### Both style oracles are green against the 0.7.16 pin
 
-- [x] **Finish the 0.7.13 class-oracle re-baseline.** `test:parity` reports **0 mismatches** over
+- [x] **Finish the 0.7.16 class-oracle re-baseline.** `test:parity` reports **0 mismatches** over
       the shared style keys and inline call sites. The re-baseline closed the 1,036-report list by
       porting the subsystem the reports named, not by adding claims: PowerSearch/Tokenizer sheet
       presentations, ProgressBar touch, MultiSelector's grid/action model, Lightbox's gallery pager
@@ -257,6 +255,8 @@ deviation, not a task.
       corrected dark palette, 56 `--color-data-*` tokens), the missing container-corner, focus-owner,
       gliding/travelling and menu-press-lit modules ported, and the remaining skips named in
       [`debts.md`](./debts.md) for unported subsystems and upstream's compiled test fixtures.
+      The 0.7.16 bump closed the forced-colors edges, the selection controls' shared press paint,
+      the layer entrance variables, and ContainerReveal's pointer query.
 
 - [ ] Fold the two per-file `Intl.DateTimeFormat` locale stubs into the client project's `en-US`
       config pin now that it exists, so there's one mechanism instead of three

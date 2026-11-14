@@ -4,72 +4,83 @@ import { durationVars, easeVars, spacingVars } from '../../styles/tokens.stylex.
 
 /**
  * Shared entry animations for layer-based components, ported from Astryx's
- * `Layer/layerAnimations.stylex.ts`.
+ * `Layer/layerAnimations.stylex.ts` at 0.7.16.
  *
  * Opt-in: a component passes one through `<Layer xstyle={…}>`, which is where
- * upstream passes it through `layer.render(…, {xstyle})`.
+ * upstream passes it through `layer.render(…, {xstyle})`. Apply it to the
+ * element that fills the layer (its surface), not to the layer: Chromium lays
+ * an anchored layer out again on each frame that its own style animates.
+ *
+ * An anchored layer's entrance slides from, and scales about, the side the
+ * layer lands on after any flip. The layer runtime writes that side
+ * (`layerEntranceSide.ts`) as `--_astryx-layer-enter-x`/`-y`, the scale's
+ * origin and the room to the trigger. The fallbacks below are the placement's
+ * own side, for a layer nothing writes to.
  *
  * @example
  * ```svelte
- * <!-- Direction-aware (for components that know placement): -->
  * <Layer {layer} {placement} xstyle={layerAnimations[placement]}>…</Layer>
- *
- * <!-- Fixed direction: -->
- * <Layer {layer} xstyle={layerAnimations.below}>…</Layer>
  * ```
  */
+
+const ENTER_X = '--_astryx-layer-enter-x';
+const ENTER_Y = '--_astryx-layer-enter-y';
+const ENTER_ORIGIN = '--_astryx-layer-enter-origin';
+const ENTER_GAP = '--_astryx-layer-enter-gap';
+// One step: the spacing token, or the room to the trigger when that is less.
+const STEP = `min(${spacingVars['--spacing-2']}, var(${ENTER_GAP}, ${spacingVars['--spacing-2']}))`;
 
 const enterBelow = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateY(calc(-1 * ${spacingVars['--spacing-2']})) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, 0) * ${STEP}), calc(var(${ENTER_Y}, -1) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateY(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
 const enterAbove = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateY(${spacingVars['--spacing-2']}) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, 0) * ${STEP}), calc(var(${ENTER_Y}, 1) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateY(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
 const enterEnd = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateX(calc(-1 * ${spacingVars['--spacing-2']})) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, -1) * ${STEP}), calc(var(${ENTER_Y}, 0) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateX(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
 const enterStart = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateX(${spacingVars['--spacing-2']}) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, 1) * ${STEP}), calc(var(${ENTER_Y}, 0) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateX(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
-// RTL: the horizontal entrance nudge is a physical translateX, so it must
-// mirror under RTL — a layer on the inline-end/start side must slide in from
-// the correct physical side following the reading flow. Only the horizontal
-// (translateX) keyframes need mirroring; the vertical enterAbove/enterBelow
-// (translateY) entrances are direction-neutral and are left as-is.
+// RTL: the horizontal fallback is a physical translate, so it mirrors under
+// RTL. A layer on the inline-end or inline-start side then slides in from the
+// physical side that follows the reading flow. Only the horizontal fallbacks
+// mirror; the vertical ones are direction-neutral. The side the runtime writes
+// is physical already.
 const enterEndRtl = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateX(${spacingVars['--spacing-2']}) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, 1) * ${STEP}), calc(var(${ENTER_Y}, 0) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateX(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
 const enterStartRtl = stylex.keyframes({
 	from: {
 		opacity: 0,
-		transform: `translateX(calc(-1 * ${spacingVars['--spacing-2']})) scale(0.95)`
+		transform: `translate(calc(var(${ENTER_X}, -1) * ${STEP}), calc(var(${ENTER_Y}, 0) * ${STEP})) scale(0.95)`
 	},
-	to: { opacity: 1, transform: 'translateX(0) scale(1)' }
+	to: { opacity: 1, transform: 'translate(0, 0) scale(1)' }
 });
 
 // Reduce Motion under a finger: the same entrance without its travel. A touch
@@ -91,7 +102,10 @@ const animationBase = {
 			reducedMotionFadeConsts.duration
 	},
 	animationTimingFunction: easeVars['--ease-standard'],
-	animationFillMode: 'backwards' as const
+	animationFillMode: 'backwards' as const,
+	// The origin is a plain style, not a keyframe: a keyframe that animates it
+	// would keep the entrance off the compositor.
+	transformOrigin: `var(${ENTER_ORIGIN}, 50% 50%)`
 };
 
 /**

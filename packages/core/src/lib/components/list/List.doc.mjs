@@ -72,14 +72,10 @@ export default {
 		],
 		anatomy: [
 			{
-				name: 'List title',
-				required: true,
-				description: 'Heading that labels the list.'
-			},
-			{
-				name: 'Description',
+				name: 'Header',
 				required: false,
-				description: 'Supplementary text below the title.'
+				description:
+					'Optional content above the rows, from the header prop. It labels the list, and screen readers announce it as the list name.'
 			},
 			{
 				name: 'List items',

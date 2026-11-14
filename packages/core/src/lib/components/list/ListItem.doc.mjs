@@ -78,7 +78,8 @@ export default {
 		{
 			name: 'isDisabled',
 			type: 'boolean',
-			description: 'Disabled state; sets aria-disabled on the item.',
+			description:
+				'Disabled state; interactive rows stay keyboard-reachable, expose aria-disabled, and cannot activate.',
 			default: 'false'
 		},
 		{

@@ -132,7 +132,6 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	// Upstream's 0.7.13 `Item.doc.mjs` still says `'start' | 'center'` while
 	// `Item.tsx` declares `'first-line'`. The source is ground truth.
 	'MultiSelector.startIcon',
-	'NumberInput.status',
 	'PowerSearch.onChange',
 	'PowerSearch.startIcon',
 	'PowerSearch.status',
@@ -153,7 +152,6 @@ const PORT_DOC_TYPE_DEBT = new Set([
 	'Theme.theme',
 	'TextArea.status',
 	'TextInput.status',
-	'TimeInput.status',
 	'Toast.onDismiss',
 	'Toast.onHide',
 	'Tokenizer.startIcon',
