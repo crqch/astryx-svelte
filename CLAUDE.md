@@ -256,12 +256,12 @@ token, and the set that actually needed changing was neither (batch 040).
   it up.
 - **The StyleX unplugin collects CSS at transform time, not at tree-shake time.** Every module the
   bundler loads contributes rules — a barrel import means the whole package — and `generateBundle`
-  emits the merged set *after* shaking, so the JS tree-shakes and the CSS does not. The `astryx()`
+  emits the merged set _after_ shaking, so the JS tree-shakes and the CSS does not. The `astryx()`
   preset carries a companion (`astryx-svelte:tree-shake-collected-css`, `enforce: 'post'`) that
   filters the emitted sheet to the atomic classes the final chunks and prerendered HTML reference,
   closed over the companion properties (`--x…`) and keyframes the kept rules need — a
   `defineConsts` module's JS shakes away while its declarations are still required, and dropping
-  them ships `var(--x…)` nothing declares. Pruning the collector's *raw* rules instead cannot
+  them ships `var(--x…)` nothing declares. Pruning the collector's _raw_ rules instead cannot
   work: `processStylexRules` inlines and renames cross-module references based on the set it is
   given, so raw-name closures dangle. Deleting the companion silently restores full-sheet CSS in
   every consumer build; filtering without the closure silently unstyles margins and sizes. Dev

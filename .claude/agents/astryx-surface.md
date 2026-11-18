@@ -20,14 +20,14 @@ that is how they must stay here.
 
 ## Where things live
 
-| What                      | Path                                                                                  |
-| ------------------------- | ------------------------------------------------------------------------------------- |
-| Upstream per-unit barrels | `reference/astryx-upstream/packages/core/src/<Name>/index.ts`                         |
-| Upstream package manifest | `reference/astryx-upstream/packages/core/package.json`                                |
-| Upstream shared barrels   | `.../src/{utils,hooks,i18n}/index.ts`                                                 |
-| Our barrel                | `packages/core/src/lib/index.ts`                                                      |
-| Our subpath barrels       | `packages/core/src/lib/{utils,hooks,i18n,theme}/index.ts`                             |
-| Our manifest              | `packages/core/package.json`                                                          |
+| What                      | Path                                                                              |
+| ------------------------- | --------------------------------------------------------------------------------- |
+| Upstream per-unit barrels | `reference/astryx-upstream/packages/core/src/<Name>/index.ts`                     |
+| Upstream package manifest | `reference/astryx-upstream/packages/core/package.json`                            |
+| Upstream shared barrels   | `.../src/{utils,hooks,i18n}/index.ts`                                             |
+| Our barrel                | `packages/core/src/lib/index.ts`                                                  |
+| Our subpath barrels       | `packages/core/src/lib/{utils,hooks,i18n,theme}/index.ts`                         |
+| Our manifest              | `packages/core/package.json`                                                      |
 | Built types               | `packages/core/dist/**/*.d.ts` (after `bun run --filter @astryx-sv/core prepack`) |
 
 ## What to check
