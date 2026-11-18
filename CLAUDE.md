@@ -254,6 +254,20 @@ token, and the set that actually needed changing was neither (batch 040).
   JSX. `internal/sx.ts` is the adapter from `stylex.props()` to Svelte's `class`/`style`.
 - Adding a **new** `.stylex.ts` file requires a dev-server restart — StyleX's dev cache doesn't pick
   it up.
+- **The StyleX unplugin collects CSS at transform time, not at tree-shake time.** Every module the
+  bundler loads contributes rules — a barrel import means the whole package — and `generateBundle`
+  emits the merged set *after* shaking, so the JS tree-shakes and the CSS does not. The `astryx()`
+  preset carries a companion (`astryx-svelte:tree-shake-collected-css`, `enforce: 'post'`) that
+  filters the emitted sheet to the atomic classes the final chunks and prerendered HTML reference,
+  closed over the companion properties (`--x…`) and keyframes the kept rules need — a
+  `defineConsts` module's JS shakes away while its declarations are still required, and dropping
+  them ships `var(--x…)` nothing declares. Pruning the collector's *raw* rules instead cannot
+  work: `processStylexRules` inlines and renames cross-module references based on the set it is
+  given, so raw-name closures dangle. Deleting the companion silently restores full-sheet CSS in
+  every consumer build; filtering without the closure silently unstyles margins and sizes. Dev
+  serves the full sheet by design. `vite-preset.test.ts` guards the seam; a consumer-side
+  measurement, not the oracles, is what catches a regression here — the oracles read source,
+  never a bundle.
 - **A `stylex.create` key that nothing in the module references is compiled away**, so adding a
   style group is invisible until a component actually uses it — the class oracle reports it as
   `ours: (absent)` and its "style keys checked" total does not move, which reads exactly like the
