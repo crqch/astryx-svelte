@@ -476,7 +476,7 @@ Cases are `it`/`test` declarations, so an `it.each` counts once rather than per 
 | Declared here              | 9655            |
 | **Short**                  | **4336**        |
 | Over, across 7 groups      | +27             |
-| Beyond upstream            | 101 in 21 files |
+| Beyond upstream            | 106 in 21 files |
 
 A ported suite may still fall short of the one it ports. That shortfall is the front’s
 worklist, and it is measured here rather than restated in each suite’s header — a header’s
