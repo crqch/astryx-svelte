@@ -2,6 +2,26 @@
 	"name": "@astryx-sv/theme-neutral",
 	"version": "0.7.16",
 	"description": "Neutral theme for astryx-svelte \u2014 the default Astryx look.",
+	"keywords": [
+		"astryx",
+		"astryx-svelte",
+		"svelte",
+		"svelte5",
+		"svelte-5",
+		"sveltekit",
+		"stylex",
+		"design-system",
+		"theme",
+		"themes",
+		"theming",
+		"design-tokens",
+		"dark-mode",
+		"ui",
+		"css",
+		"neutral",
+		"default-theme",
+		"minimal"
+	],
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
 		"url": "https://github.com/crqch/astryx-svelte/issues"
