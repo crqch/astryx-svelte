@@ -44,15 +44,16 @@ import '@astryx-sv/theme-neutral/theme.css';
 
 That is the entire setup. `dist` ships compiled, so nothing needs to run StyleX.
 
-`astryx.css` carries every component's styles — 131 kB, one `@layer astryx-base`, checked against
-`@astryxdesign/core`'s published stylesheet on every test run: 1,463 shared atomic classes, zero
-differing rules. The cost is that you ship every component's CSS whether you use it or not.
+`astryx.css` carries every component's styles in one `@layer astryx-base`, checked against
+`@astryxdesign/core`'s published stylesheet on every test run. The cost is that you ship every
+component's CSS whether you use it or not — the right trade when you use most of the system, the
+wrong one when you use a handful. For a handful, route 2 ships only what your app imports.
 
 ### 2. Compile it yourself, from `source`
 
 Every subpath also publishes a `source` condition pointing at the TypeScript. Ask your bundler for
-it and compile the package yourself, and you emit only the atomic classes your app actually reaches
-— smaller than the whole stylesheet, at the cost of configuration:
+it and compile the package yourself, and you emit only the styles of the components your app
+actually imports — a fraction of the whole stylesheet, at the cost of configuration:
 
 ```ts
 // vite.config.ts — alongside the preset below
@@ -86,10 +87,16 @@ That is the whole setup. `astryx()` takes `include` (further packages that ship 
 `.stylex.js`), `rootDir` (the StyleX module-resolution root — a monorepo importing `.stylex`
 modules across packages wants the workspace root, not the default `process.cwd()`), and `dev`.
 
-<details>
-<summary>What the preset does, and why it is three things rather than one</summary>
+The subset is per-app, not per-component: shared style modules — the spacing and container scales,
+the theme's token declarations — come along with any component that uses them, whole. And the
+pruning is the preset's job, not the compiler's: `@stylexjs/unplugin` on its own collects rules from
+every module it transforms and emits them all after tree-shaking, so without the preset's companion
+plugin the JS shakes and the CSS does not. Dev serves the full sheet; only builds are pruned.
 
-The plugin compiles the styles. The other two exist because Vite has **two separate ways to route a
+<details>
+<summary>What the preset does, and why it is four things rather than one</summary>
+
+The plugin compiles the styles. The next two exist because Vite has **two separate ways to route a
 dependency _around_ its own plugin pipeline**, and each defeats the compiler on its own:
 
 ```ts
@@ -119,6 +126,15 @@ export default defineConfig({
 	ssr: { noExternal: ['@astryx-sv/core'] }
 });
 ```
+
+The fourth is a size fix rather than a correctness one. The compiler collects rules in `transform`
+— every module the bundler loads, which for a barrel import is this whole package — and emits the
+merged set in `generateBundle`, after tree-shaking has decided what survives. A companion plugin
+then filters that emitted sheet down to the atomic classes the final chunks and prerendered markup
+reference, closed over the companion custom properties and keyframes the kept rules need — their
+declaring modules' JS shakes away even though the declarations are still required. Everything else
+in the asset (your CSS, resets, themes) is kept byte for byte, and no rule is ever rewritten: the
+filter drops rules, it does not recompile them.
 
 Written by hand, these options must match this package's own build **exactly**, or the atomic CSS
 you compile differs from the output verified against upstream. The preset is the only form in which
