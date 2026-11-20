@@ -3,6 +3,26 @@
 	"displayName": "CLI",
 	"version": "0.7.16",
 	"description": "Scaffold projects, browse templates, generate themes, and get agent-ready docs from the command line.",
+	"keywords": [
+		"astryx",
+		"astryx-svelte",
+		"svelte",
+		"svelte5",
+		"svelte-5",
+		"sveltekit",
+		"stylex",
+		"cli",
+		"design-system",
+		"scaffolding",
+		"templates",
+		"theming",
+		"theme-generator",
+		"codemod",
+		"swizzle",
+		"docs",
+		"ai-agents",
+		"developer-tools"
+	],
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
 		"url": "https://github.com/crqch/astryx-svelte/issues"

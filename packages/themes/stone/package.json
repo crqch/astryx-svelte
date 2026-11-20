@@ -2,6 +2,27 @@
 	"name": "@astryx-sv/theme-stone",
 	"version": "0.7.16",
 	"description": "Stone theme for astryx-svelte \u2014 warm stone and slate, earthy and understated.",
+	"keywords": [
+		"astryx",
+		"astryx-svelte",
+		"svelte",
+		"svelte5",
+		"svelte-5",
+		"sveltekit",
+		"stylex",
+		"design-system",
+		"theme",
+		"themes",
+		"theming",
+		"design-tokens",
+		"dark-mode",
+		"ui",
+		"css",
+		"stone",
+		"slate",
+		"earthy",
+		"minimal"
+	],
 	"homepage": "https://github.com/crqch/astryx-svelte#readme",
 	"bugs": {
 		"url": "https://github.com/crqch/astryx-svelte/issues"
